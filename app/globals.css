@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-/* Design tokens — the single source of truth for color, type, space, motion.
-   See CLAUDE.md §3 and §8.2: never hardcode a hex; always build against these. */
-@import "./sbdaymaker_tokens.css";
+/* NOTE: the design tokens (sbdaymaker_tokens.css) and the component layer
+   (components.css) are imported as CSS modules in app/layout.tsx, in order,
+   so the cascade is: tokens → these overrides → components. (Chaining them via
+   CSS @import here breaks Tailwind v4's dev pipeline under Turbopack.) */
 
 /* Point the token font variables at the webfonts loaded in app/layout.tsx
    (next/font/google). The token names stay the contract; these resolve them. */

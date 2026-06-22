@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+// CSS load order is the cascade order: tokens first, then Tailwind + token-var
+// overrides (globals), then the component layer.
+import "./sbdaymaker_tokens.css";
 import "./globals.css";
+import "./components.css";
 
 // Brand type per CLAUDE.md §5: Fraunces (display), Inter (body/UI), JetBrains Mono (data).
 const fraunces = Fraunces({
