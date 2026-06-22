@@ -1,0 +1,143 @@
+/* sbdaymaker_tokens.css — Status: v9 canon · 2026-06-21 · design-system source of truth */
+/* ==========================================================================
+   SB Daymaker — Design Tokens  (resolves Pre-Build Audit Gap C5)
+   The single source of truth for color, type, space, motion.
+   Drop into the app root (or mirror into tailwind.config).  AA-safe by design.
+   ========================================================================== */
+
+:root {
+
+  /* ---- PALETTE (brand) -------------------------------------------------- */
+  --plaster:    #F6F1E7;   /* warm white — primary background            */
+  --plaster-2:  #EFE7D8;   /* secondary surface / dividers               */
+  --paper:      #FCFAF5;   /* cards / raised surfaces                    */
+
+  --ink:        #241C16;   /* brown-black — primary text  (14.9:1 ✓)     */
+  --ink-2:      #4A4038;   /* secondary text              ( 9.0:1 ✓)     */
+
+  --pacific:      #16586A; /* teal — links, accents on text ( 7.1:1 ✓)   */
+  --pacific-dark: #0E3C49; /* deep teal — dark surfaces                  */
+
+  --terracotta: #C0532E;   /* tile — large headings / UI only            */
+  --tile-light: #E08A5B;   /* fills / borders only — NEVER text on light  */
+  --gold:       #E0A82E;   /* golden hour — fills / icons only on light   */
+  --sage:       #7E8B6B;   /* chaparral — large / UI only                */
+  --line:       #D8CDB8;   /* hairline rules                             */
+
+  --purple:     #9C6B9E;   /* persona accent — large / UI only           */
+  --forest:     #3E7C5A;   /* persona accent — large / UI only           */
+
+  /* ---- AA-SAFE TEXT VARIANTS -------------------------------------------
+     When an accent MUST carry small text on a light background, use these
+     darkened variants (each clears 4.5:1 on --plaster).                   */
+  --gold-text:   #7A5E13;  /* readable "gold" for small labels            */
+  --sage-text:   #566049;
+  --terra-text:  #9E3F20;
+
+  /* ---- SEMANTIC TOKENS --------------------------------------------------
+     Build against THESE, not raw palette, so contrast rules stay enforced. */
+  --bg:            var(--plaster);
+  --surface:       var(--paper);
+  --text:          var(--ink);       /* body text — always Ink/Ink2/Pacific */
+  --text-muted:    var(--ink-2);
+  --text-link:     var(--pacific);
+  --border:        var(--line);
+  --accent:        var(--terracotta);/* decorative / large only             */
+
+  /* Severity (admin + status) */
+  --sev-blocker: #B23A2E;
+  --sev-high:    #C77D1E;
+  --sev-med:     #9A8A3E;
+  --sev-low:     #3E7C5A;
+
+  /* ---- TYPE -------------------------------------------------------------- */
+  --font-display: 'Fraunces', Georgia, serif;     /* headlines, with restraint */
+  --font-body:    'Inter', system-ui, sans-serif; /* body + UI                  */
+  --font-mono:    'JetBrains Mono', monospace;     /* data, code, timestamps    */
+
+  /* Type scale (1.25 ratio, rem) */
+  --text-xs:   0.75rem;   /* 12px — captions, eyebrows         */
+  --text-sm:   0.875rem;  /* 14px — secondary UI               */
+  --text-base: 1rem;      /* 16px — body (never smaller)       */
+  --text-lg:   1.25rem;   /* 20px — card titles                */
+  --text-xl:   1.563rem;  /* 25px — section titles             */
+  --text-2xl:  1.953rem;  /* 31px — screen titles              */
+  --text-3xl:  2.441rem;  /* 39px — hero                       */
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-semi:    600;
+  --weight-bold:    700;
+  --weight-black:   900;  /* Fraunces display only             */
+
+  --leading-tight: 1.1;
+  --leading-snug:  1.3;
+  --leading-body:  1.6;
+
+  /* Minimum body size is 16px and minimum touch target is 44x44 — a11y floor */
+  --tap-min: 44px;
+
+  /* ---- SPACE (4px base) -------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- RADIUS / SHADOW --------------------------------------------------- */
+  --radius-sm: 7px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(36,28,22,.06), 0 8px 24px rgba(36,28,22,.06);
+  --shadow-sheet: 0 -8px 40px rgba(36,28,22,.18);
+
+  /* ---- MOTION -----------------------------------------------------------
+     Signature interactions: sun entry/pulse, heart pop, urgency pulse,
+     first-looks dot, sheet slide.  Honor prefers-reduced-motion (below).   */
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);  /* heart pop            */
+
+  --dur-fast:   140ms;   /* taps, toggles            */
+  --dur-base:   240ms;   /* sheets, fades            */
+  --dur-slow:   520ms;   /* sun entry                */
+  --dur-pulse:  2400ms;  /* sun glow / live dots     */
+
+  /* ---- BREAKPOINTS (reference — use in media queries) ------------------- */
+  /* mobile (base) <600 · tablet 600–1023 · desktop ≥1024 · wide ≥1280       */
+}
+
+/* Reduced motion: kill loops, keep instant feedback.  (WCAG 2.2 AA floor) */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms;
+  }
+  /* The app must also disable sun-pulse, urgency-pulse, and first-looks-dot
+     loop animations under this query (static state instead). */
+}
+
+/* ==========================================================================
+   COMPONENT VARIANTS (the contract — full styles live in the build)
+   --------------------------------------------------------------------------
+   BUTTON
+     .btn-primary   bg --pacific,    text --paper,  radius --radius-pill
+     .btn-secondary bg transparent,  text --pacific, border 1.5px --pacific
+     .btn-cta       bg --terracotta, text --paper   (large text only)
+     All buttons: min-height --tap-min; visible :focus-visible ring (--pacific)
+   CARD
+     .card          bg --surface, radius --radius-md, shadow --shadow-card
+     .card-pick     side-by-side image + body (hero editorial card)
+   SHEET (bottom sheet)
+     slide up --dur-base --ease-out; --shadow-sheet; backdrop fade
+   HEART (save)
+     pop on toggle: scale 1→1.25→1 over --dur-base --ease-spring
+     REQUIRES aria-label="Save {title}" / "Saved {title}" (a11y)
+   BADGE / PILL
+     persona color as FILL with --paper or --ink text (never accent-on-light text)
+   ========================================================================== */

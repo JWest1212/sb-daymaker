@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Product Bible</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tileLt:#E08A5B;
+    --gold:#E0A82E; --sage:#7E8B6B; --line:#D8CDB8; --paper:#FCFAF5;
+    --purple:#9C6B9E; --forest:#3E7C5A;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--plaster); color:var(--ink); font-family:'Inter',system-ui,sans-serif; line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+
+  /* ---------- COVER ---------- */
+  .cover{position:relative; overflow:hidden; background:linear-gradient(165deg,#1b4a5a 0%,#2c6b78 42%,#d98a4a 88%,#e0a82e 110%); color:#fff; padding:90px 56px 70px;}
+  .cover .sun{position:absolute; top:60px; right:80px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,#FFF3D0 0%,var(--gold) 60%,rgba(224,168,46,0) 72%); box-shadow:0 0 100px 36px rgba(224,168,46,.55);}
+  .cover svg.range{position:absolute; bottom:0; left:0; width:100%; height:130px; opacity:.9;}
+  .cover .eyebrow{position:relative; z-index:2; font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; opacity:.92;}
+  .cover h1{position:relative; z-index:2; font-size:60px; font-weight:900; line-height:.98; letter-spacing:-1.5px; margin:14px 0 0; text-shadow:0 3px 24px rgba(0,0,0,.3);}
+  .cover .sub{position:relative; z-index:2; font-size:19px; font-weight:500; margin-top:18px; max-width:580px; opacity:.95;}
+  .cover .meta{position:relative; z-index:2; margin-top:34px; display:flex; gap:14px; flex-wrap:wrap; font-size:13px; font-weight:600;}
+  .cover .meta span{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); padding:8px 14px; border-radius:22px; backdrop-filter:blur(6px);}
+
+  .wrap{max-width:1040px; margin:0 auto; padding:0 32px;}
+  section{padding:54px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  .kicker{font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--tile); margin-bottom:10px;}
+  h2.sec{font-family:'Fraunces',serif; font-size:38px; font-weight:600; letter-spacing:-.8px; line-height:1.05; margin:0 0 8px;}
+  h3{font-family:'Fraunces',serif; font-size:23px; font-weight:600; letter-spacing:-.3px; margin:34px 0 12px; color:var(--pacificDk);}
+  h4{font-size:15px; font-weight:700; margin:20px 0 8px; color:var(--ink);}
+  p{margin:0 0 14px; color:var(--ink2);}
+  .lead{font-size:18.5px; color:var(--ink); line-height:1.6;}
+  strong{color:var(--ink); font-weight:700;}
+
+  /* ---------- TOC ---------- */
+  .toc{background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:26px 30px; margin-top:8px;}
+  .toc ol{margin:0; padding-left:0; counter-reset:toc; list-style:none;}
+  .toc li{counter-increment:toc; padding:9px 0; border-bottom:1px dashed var(--line); display:flex; align-items:baseline; gap:14px;}
+  .toc li:last-child{border-bottom:none;}
+  .toc li::before{content:counter(toc,decimal-leading-zero); font-family:'Fraunces',serif; font-weight:600; color:var(--tile); font-size:15px; min-width:26px;}
+  .toc a{text-decoration:none; font-weight:600; color:var(--ink);}
+  .toc .desc{color:var(--sage); font-weight:500; font-size:13.5px; margin-left:auto; text-align:right;}
+
+  /* ---------- cards / layout ---------- */
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:22px 24px; margin:14px 0;}
+  .card.tealtint{background:linear-gradient(135deg,rgba(22,88,106,.06),rgba(22,88,106,.02)); border-color:rgba(22,88,106,.2);}
+  .card.goldtint{background:linear-gradient(135deg,rgba(224,168,46,.1),rgba(224,168,46,.03)); border-color:rgba(224,168,46,.35);}
+  .card.tiletint{background:linear-gradient(135deg,rgba(192,83,46,.07),rgba(192,83,46,.02)); border-color:rgba(192,83,46,.25);}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr;} .cover{padding:60px 28px 50px;} .cover h1{font-size:42px;} .wrap{padding:0 20px;} .showcase{flex-direction:column; align-items:center;}}
+
+  .mono{font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace; font-size:12.5px; background:var(--plaster2); padding:1px 6px; border-radius:5px; color:var(--ink2);}
+  .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:5px 11px; border-radius:20px; background:var(--plaster2); color:var(--ink2); margin:2px;}
+  .pill.green{background:rgba(126,139,107,.2); color:#4a5a3a;}
+  .pill.gold{background:rgba(224,168,46,.22); color:#8a6310;}
+  .pill.tile{background:rgba(192,83,46,.16); color:#9a3a1e;}
+  .pill.pac{background:rgba(22,88,106,.14); color:#0E3C49;}
+
+  .callout{border-left:4px solid var(--gold); background:var(--plaster2); padding:16px 20px; border-radius:0 12px 12px 0; margin:18px 0;}
+  .callout.tile{border-left-color:var(--tile);}
+  .callout.pac{border-left-color:var(--pacific);}
+  .callout .ctitle{font-weight:700; color:var(--ink); margin-bottom:4px; font-size:14px;}
+
+  ul.clean{margin:10px 0 16px; padding-left:0; list-style:none;}
+  ul.clean li{position:relative; padding:6px 0 6px 28px; color:var(--ink2);}
+  ul.clean li::before{content:""; position:absolute; left:6px; top:14px; width:7px; height:7px; border-radius:2px; background:var(--tile); transform:rotate(45deg);}
+
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px; background:var(--paper); border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+  th{background:var(--pacificDk); color:#fff; text-align:left; padding:12px 14px; font-weight:600; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px;}
+  td{padding:11px 14px; border-top:1px solid var(--line); color:var(--ink2);}
+  tr:nth-child(even) td{background:rgba(216,205,184,.14);}
+  td strong{color:var(--ink);}
+
+  /* ============================================================
+     PHONE FRAME + APP UI (scoped with .app- prefix)
+     ============================================================ */
+  .showcase{display:flex; gap:34px; align-items:flex-start; margin:24px 0;}
+  .showcase .notes{flex:1; min-width:240px; padding-top:6px;}
+  .phone{width:300px; flex-shrink:0; background:#15110d; border-radius:38px; padding:11px; box-shadow:0 30px 60px -24px rgba(20,40,50,.5), 0 0 0 2px rgba(216,205,184,.3); position:relative;}
+  .phone-screen{background:var(--plaster); border-radius:28px; overflow:hidden; position:relative; height:600px;}
+  .phone-notch{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:120px; height:26px; background:#15110d; border-radius:0 0 16px 16px; z-index:60;}
+  .annot{display:flex; gap:11px; padding:11px 0; border-bottom:1px dashed var(--line);}
+  .annot:last-child{border-bottom:none;}
+  .annot .n{flex-shrink:0; width:24px; height:24px; border-radius:7px; background:var(--tile); color:#fff; font-size:12px; font-weight:700; display:grid; place-items:center;}
+  .annot .t{font-size:13.5px; color:var(--ink2); line-height:1.45;}
+  .annot .t b{color:var(--ink);}
+  .caption{text-align:center; font-size:12.5px; color:var(--sage); font-weight:600; margin-top:10px; font-style:italic;}
+
+  /* app header */
+  .app-header{display:flex; align-items:center; justify-content:space-between; padding:30px 16px 11px; background:rgba(246,241,231,.96); position:relative; z-index:5;}
+  .app-logo{display:flex; align-items:center; gap:8px;}
+  .app-logo .mark{width:26px; height:26px; border-radius:7px; background:var(--pacific); display:grid; place-items:center; color:var(--gold); font-weight:900; font-family:'Fraunces',serif; font-size:14px;}
+  .app-logo .nm{font-family:'Fraunces',serif; font-weight:600; font-size:14px; letter-spacing:-.3px; line-height:1;}
+  .app-logo .tg{font-size:7.5px; color:var(--sage); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-top:2px;}
+
+  /* hero */
+  .app-hero{position:relative; overflow:hidden; padding:18px 16px 0; min-height:148px;}
+  .app-hero.evening{background:linear-gradient(180deg,#1b4a5a,#2c6b78 35%,#d98a4a 80%,#e0a82e);}
+  .app-hero.day{background:linear-gradient(180deg,#3d8aa0,#6fb3c4 55%,#e8d9b8);}
+  .app-hero.rain{background:linear-gradient(180deg,#4a5560,#6b7480 55%,#9aa3ad);}
+  .app-sun{position:absolute; right:30px; top:14px; width:42px; height:42px; border-radius:50%; background:radial-gradient(circle,#FFF3D0,var(--gold) 60%,rgba(224,168,46,0) 72%); box-shadow:0 0 46px 14px rgba(224,168,46,.5);}
+  .app-cloud{position:absolute; right:24px; top:18px; width:54px; height:20px; background:rgba(255,255,255,.5); border-radius:20px; filter:blur(2px);}
+  .app-range-svg{position:absolute; bottom:0; left:0; width:100%; height:62px; opacity:.9;}
+  .app-hero-c{position:relative; z-index:2; color:#fff;}
+  .app-date{font-size:8.5px; font-weight:700; letter-spacing:1.6px; text-transform:uppercase; opacity:.92; text-shadow:0 1px 6px rgba(0,0,0,.3);}
+  .app-cond{display:flex; gap:7px; margin-top:11px; flex-wrap:wrap;}
+  .app-cond span{display:flex; align-items:center; gap:4px; background:rgba(255,255,255,.2); padding:4px 8px; border-radius:16px; font-size:9.5px; font-weight:600; text-shadow:0 1px 4px rgba(0,0,0,.3); backdrop-filter:blur(3px);}
+
+  /* control stack */
+  .app-controls{position:relative; z-index:4; background:var(--plaster); padding-top:11px;}
+  .app-seg{display:flex; gap:3px; background:var(--plaster2); border-radius:10px; padding:3px; margin:0 16px;}
+  .app-seg button{flex:1; padding:7px 0; border-radius:7px; border:none; font-size:11px; font-weight:700; background:transparent; color:#8a7f70; font-family:'Inter',sans-serif;}
+  .app-seg button.on{background:#fff; color:var(--pacific); box-shadow:0 1px 6px rgba(20,40,50,.1);}
+  .app-lens{display:flex; align-items:center; gap:8px; margin:10px 16px 0; padding:9px 12px; border-radius:11px; border:1.5px solid var(--line); background:#fff;}
+  .app-lens .ic{width:24px; height:24px; border-radius:6px; display:grid; place-items:center; flex-shrink:0; color:#fff;}
+  .app-lens .lb{flex:1;}
+  .app-lens .lb .k{font-size:8px; color:var(--sage); font-weight:700; letter-spacing:.6px; text-transform:uppercase; display:block; line-height:1;}
+  .app-lens .lb .v{font-size:13px; font-weight:700; color:var(--ink);}
+  .app-lens .ch{font-size:10.5px; color:var(--pacific); font-weight:700;}
+  .app-filter{margin:9px 16px 0; display:flex; align-items:center; gap:6px; font-size:11px; font-weight:600; color:var(--sage);}
+  .app-filter .fbtn{display:inline-flex; align-items:center; gap:5px; padding:6px 11px; border-radius:18px; border:1.5px dashed var(--line); background:transparent; color:var(--ink2); font-weight:700; font-size:10.5px;}
+
+  /* Option C hero pick card — embedded inside .app-hero */
+  .app-hpc{position:relative; z-index:3; display:flex; align-items:stretch; background:rgba(246,241,231,.97); border-radius:14px; overflow:hidden; box-shadow:0 10px 26px rgba(0,0,0,.26); margin:8px 0 14px;}
+  .app-hpc-img{width:90px; flex-shrink:0; position:relative;}
+  .app-hpc-body{padding:10px 12px; flex:1; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:3px;}
+  .app-hpc-eyebrow{font-size:7.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--tile);}
+  .app-hpc-title{font-family:'Fraunces',serif; font-size:13.5px; font-weight:700; line-height:1.1; letter-spacing:-.3px; color:var(--ink);}
+  .app-hpc-meta{font-size:9px; font-weight:600; color:var(--pacific);}
+  .app-hpc-cta{font-size:9px; font-weight:700; color:var(--tile); margin-top:1px;}
+  .app-hpc-tag{position:absolute; top:7px; left:7px; background:var(--gold); color:var(--ink); font-size:7px; font-weight:800; padding:3px 6px; border-radius:8px; letter-spacing:.3px;}
+  .app-hpc-heart{position:absolute; top:7px; right:7px; width:22px; height:22px; border-radius:50%; background:rgba(20,30,35,.4); display:grid; place-items:center; color:#fff; font-size:11px;}
+
+  /* Rail card heart button */
+  .app-rc-heart{position:absolute; bottom:6px; right:6px; width:22px; height:22px; border-radius:50%; background:rgba(20,30,35,.45); display:grid; place-items:center; color:#fff; font-size:11px;}
+
+  /* first looks rail */
+  @keyframes newPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.4);}}
+  .app-rail-h{display:flex; align-items:center; gap:6px; margin:16px 16px 8px;}
+  .app-rail-h .dot{width:7px; height:7px; border-radius:50%; background:var(--tile); animation:newPulse 1.8s ease-in-out infinite;}
+  .app-rail-h .lbl{font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--tile);}
+  .app-rail{display:flex; gap:9px; overflow:hidden; padding:0 16px 4px;}
+  .app-rail-card{flex-shrink:0; width:128px; border-radius:13px; overflow:hidden; background:#fff; border:1px solid var(--line);}
+  .app-rail-card .img{height:74px; position:relative;}
+  .app-rail-card .flag{position:absolute; top:7px; left:7px; background:var(--gold); color:var(--ink); font-size:7.5px; font-weight:800; padding:3px 6px; border-radius:10px; letter-spacing:.3px;}
+  .app-rail-card .meta{padding:8px 9px;}
+  .app-rail-card .nm{font-family:'Fraunces',serif; font-size:12px; font-weight:600; line-height:1.1;}
+  .app-rail-card .sub{font-size:9px; color:var(--pacific); font-weight:600; margin-top:2px;}
+
+  /* section head in app */
+  .app-sh{margin:18px 16px 10px;}
+  .app-sh .k{font-size:9.5px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--tile);}
+  .app-sh .t{font-family:'Fraunces',serif; font-size:17px; font-weight:600; letter-spacing:-.3px; line-height:1.1; margin-top:2px;}
+
+  /* small list card */
+  .app-lc{display:flex; gap:0; margin:11px 16px 0; background:#fff; border-radius:14px; overflow:hidden; border:1px solid var(--line);}
+  .app-lc .thumb{width:72px; flex-shrink:0;}
+  .app-lc .lcb{padding:10px 12px; flex:1; min-width:0;}
+  .app-lc .lct{font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:.4px; padding:3px 7px; border-radius:12px; display:inline-block; color:#fff; margin-bottom:5px;}
+  .app-lc .lcn{font-family:'Fraunces',serif; font-size:14px; font-weight:600; line-height:1.1; letter-spacing:-.2px;}
+  .app-lc .lcm{font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:3px;}
+
+  /* happy hour block */
+  .app-hh{margin:16px 16px 0; background:linear-gradient(135deg,var(--pacific),var(--pacificDk)); border-radius:16px; padding:15px 15px 7px; color:#fff; position:relative; overflow:hidden;}
+  .app-hh .live{display:flex; align-items:center; gap:6px;}
+  .app-hh .live .pulse{width:7px; height:7px; border-radius:50%; background:#7CE0A8; box-shadow:0 0 8px #7CE0A8;}
+  .app-hh .live .lbl{font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;}
+  .app-hh .hht{font-family:'Fraunces',serif; font-size:16px; font-weight:600; margin:5px 0 10px; letter-spacing:-.3px;}
+  .app-hh .row{display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-top:1px solid rgba(255,255,255,.14);}
+  .app-hh .row:first-of-type{border-top:none;}
+  .app-hh .rn{font-weight:700; font-size:11.5px;}
+  .app-hh .rd{font-size:9.5px; color:rgba(255,255,255,.82); margin-top:1px;}
+  .app-hh .rt{font-size:8.5px; font-weight:700; padding:4px 7px; border-radius:14px; white-space:nowrap;}
+  .app-hh .rt.soon{background:rgba(224,82,46,.95);} .app-hh .rt.ok{background:rgba(255,255,255,.16);}
+  .app-hh .conf{font-size:8px; color:rgba(255,255,255,.5); margin-top:1px;}
+
+  /* bottom nav */
+  .app-nav{position:absolute; bottom:0; left:0; right:0; display:flex; border-top:1px solid var(--line); background:rgba(246,241,231,.96); backdrop-filter:blur(8px); z-index:10;}
+  .app-nav button{flex:1; padding:9px 0 11px; background:none; border:none; display:flex; flex-direction:column; align-items:center; gap:3px; color:#9a8f80; position:relative;}
+  .app-nav button.on{color:var(--pacific);}
+  .app-nav .ico{font-size:17px; line-height:1;}
+  .app-nav .lb{font-size:8.5px; font-weight:600;}
+  .app-nav .badge{position:absolute; top:5px; right:calc(50% - 16px); background:var(--tile); color:#fff; font-size:7.5px; font-weight:700; min-width:14px; height:14px; border-radius:7px; display:grid; place-items:center; padding:0 3px;}
+
+  .app-scroll{position:absolute; inset:0; overflow:hidden;}
+  .fade-bottom{position:absolute; bottom:46px; left:0; right:0; height:30px; background:linear-gradient(transparent,var(--plaster)); z-index:9; pointer-events:none;}
+
+  /* persona sheet */
+  .app-sheet-scrim{position:absolute; inset:0; background:rgba(20,28,22,.45); z-index:20;}
+  .app-sheet{position:absolute; left:0; right:0; bottom:0; background:var(--plaster); border-radius:20px 20px 0 0; padding:9px 16px 16px; z-index:21; max-height:88%; overflow:hidden;}
+  .app-sheet .grab{width:36px; height:4px; border-radius:4px; background:var(--line); margin:5px auto 11px;}
+  .app-sheet .sh-k{font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--tile);}
+  .app-sheet .sh-t{font-family:'Fraunces',serif; font-size:18px; font-weight:600; letter-spacing:-.3px; margin-bottom:10px;}
+  .app-persona{display:flex; align-items:center; gap:11px; padding:10px 11px; border-radius:13px; border:2px solid var(--line); background:#fff; margin-bottom:7px;}
+  .app-persona.sel{border-color:var(--pacific);}
+  .app-persona .pic{width:36px; height:36px; border-radius:9px; display:grid; place-items:center; flex-shrink:0; color:#fff; font-size:17px;}
+  .app-persona .pn{font-size:13.5px; font-weight:700; line-height:1.15; display:block;}
+  .app-persona .pd{font-size:10px; color:#6a5f54;}
+
+  /* detail screen */
+  .app-detail-img{height:170px; position:relative;}
+  .app-detail-back{position:absolute; top:36px; left:14px; width:32px; height:32px; border-radius:50%; background:rgba(20,30,35,.45); display:grid; place-items:center; color:#fff; backdrop-filter:blur(5px); z-index:5;}
+  .app-detail-acts{position:absolute; top:36px; right:14px; display:flex; gap:7px; z-index:5;}
+  .app-detail-acts span{width:32px; height:32px; border-radius:50%; background:rgba(20,30,35,.45); display:grid; place-items:center; color:#fff; backdrop-filter:blur(5px);}
+  .app-detail-body{padding:16px;}
+  .app-detail-ttl{font-family:'Fraunces',serif; font-size:21px; font-weight:600; line-height:1.08; letter-spacing:-.4px;}
+  .app-tagrow{display:flex; gap:5px; flex-wrap:wrap; margin:10px 0; align-items:center;}
+  .app-tagrow .gf{font-size:9.5px; color:#6a5f54; font-weight:600;}
+  .app-ptag{display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:4px 8px; border-radius:14px; background:#fff;}
+  .app-detail-blurb{font-size:11.5px; line-height:1.55; color:#4a4038; margin:12px 0;}
+  .app-facts{border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:3px 0; margin:14px 0;}
+  .app-fact{display:flex; align-items:center; gap:10px; padding:9px 0;}
+  .app-fact .fi{width:30px; height:30px; border-radius:8px; background:#fff; border:1px solid var(--line); display:grid; place-items:center; color:var(--pacific); flex-shrink:0; font-size:14px;}
+  .app-fact .fk{font-size:8px; color:var(--sage); font-weight:700; letter-spacing:.5px; text-transform:uppercase;}
+  .app-fact .fv{font-size:11.5px; font-weight:600; color:var(--ink); margin-top:1px;}
+  .app-bigbuy{width:100%; background:var(--tile); color:#fff; border:none; padding:13px; border-radius:11px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px;}
+  .app-buynote{text-align:center; font-size:9px; color:var(--sage); font-weight:600; margin-top:7px;}
+  .app-secondary{width:100%; background:#fff; color:var(--ink); border:1.5px solid var(--line); padding:11px; border-radius:11px; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:9px;}
+
+  /* map screen */
+  .app-map{position:absolute; inset:0; background:linear-gradient(160deg,#bfe0e4,#a9d4cf 45%,#e8dcc0); overflow:hidden;}
+  .app-map-toggle{position:absolute; top:40px; left:50%; transform:translateX(-50%); display:flex; gap:3px; background:rgba(255,255,255,.9); border-radius:11px; padding:3px; z-index:10; box-shadow:0 5px 14px -6px rgba(20,40,50,.4);}
+  .app-map-toggle button{padding:7px 13px; border-radius:8px; border:none; font-size:10.5px; font-weight:700; background:transparent; color:#6a5f54;}
+  .app-map-toggle button.on-e{background:var(--tile); color:#fff;}
+  .app-map-toggle button.on-h{background:var(--pacific); color:#fff;}
+  .app-pin{position:absolute; transform:translate(-50%,-100%); display:flex; flex-direction:column; align-items:center;}
+  .app-pin .lbl{color:#fff; padding:5px 9px; border-radius:16px; font-size:9.5px; font-weight:700; white-space:nowrap; box-shadow:0 5px 12px -4px rgba(20,40,50,.5); display:flex; align-items:center; gap:4px;}
+  .app-pin .stem{width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; margin-top:-1px;}
+  .app-pin.e .lbl{background:var(--tile);} .app-pin.e .stem{border-top:6px solid var(--tile);}
+  .app-pin.h .lbl{background:var(--pacific);} .app-pin.h .stem{border-top:6px solid var(--pacific);}
+  .app-nearme{position:absolute; bottom:62px; right:14px; background:#fff; border:none; border-radius:13px; padding:9px 12px; display:flex; align-items:center; gap:5px; font-size:11px; font-weight:700; color:var(--pacific); box-shadow:0 7px 18px -7px rgba(20,40,50,.45); z-index:10;}
+  .app-mapcount{position:absolute; bottom:62px; left:14px; background:rgba(36,28,22,.86); color:#fff; border-radius:13px; padding:8px 12px; font-size:10.5px; font-weight:600; backdrop-filter:blur(5px); z-index:10;}
+
+  /* plan my night timeline */
+  .app-timeline{padding:14px 16px;}
+  .app-tl-item{display:flex; gap:10px;}
+  .app-tl-time{flex-shrink:0; width:50px; text-align:right; font-size:10px; font-weight:700; color:var(--pacific); padding-top:13px;}
+  .app-tl-mid{display:flex; flex-direction:column; align-items:center; flex-shrink:0;}
+  .app-tl-dot{width:13px; height:13px; border-radius:50%; background:var(--tile); border:2.5px solid var(--plaster); box-shadow:0 0 0 1.5px var(--tile); margin-top:14px;}
+  .app-tl-line{width:2px; flex:1; background:var(--line); min-height:20px;}
+  .app-tl-card{flex:1; background:#fff; border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:4px;}
+  .app-tl-card .tn{font-family:'Fraunces',serif; font-size:13.5px; font-weight:600; line-height:1.1;}
+  .app-tl-card .tm{font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:2px;}
+  .app-tl-travel{display:flex; align-items:center; gap:5px; font-size:9px; color:var(--sage); font-weight:600; padding:5px 0 5px 60px;}
+  .app-tl-gap{flex:1; background:linear-gradient(135deg,rgba(224,168,46,.16),rgba(224,168,46,.05)); border:1.5px dashed var(--gold); border-radius:12px; padding:10px 12px; margin-bottom:4px;}
+  .app-tl-gap .gt{font-size:10.5px; font-weight:700; color:#8a6310;}
+  .app-tl-gap .gs{font-size:9.5px; color:#6a5f54; margin-top:2px;}
+  .app-tl-summary{background:var(--plaster2); border-radius:12px; padding:11px 13px; margin-bottom:14px;}
+  .app-tl-summary .ss{font-size:8.5px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:var(--tile);}
+  .app-tl-summary .st{font-family:'Fraunces',serif; font-size:13.5px; font-weight:600; line-height:1.25; margin-top:3px; color:var(--ink);}
+
+  /* IA diagram */
+  .ia{background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:28px; margin:18px 0;}
+  .ia-root{display:flex; flex-direction:column; align-items:center; gap:0;}
+  .ia-node{background:var(--pacific); color:#fff; padding:11px 20px; border-radius:12px; font-weight:700; font-size:14px; text-align:center;}
+  .ia-node.sub{background:#fff; color:var(--ink); border:1.5px solid var(--line); font-size:12.5px; padding:9px 14px; font-weight:600;}
+  .ia-connector{width:2px; height:22px; background:var(--line);}
+  .ia-row{display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:0;}
+  .ia-col{display:flex; flex-direction:column; align-items:center;}
+  .ia-children{display:flex; flex-direction:column; gap:6px; margin-top:10px; padding-top:14px; border-top:2px solid var(--line); width:100%;}
+  .ia-leaf{background:var(--plaster2); border-radius:8px; padding:6px 10px; font-size:11px; font-weight:600; color:var(--ink2); text-align:center;}
+
+  /* flow steps */
+  .flow{display:flex; align-items:stretch; gap:0; flex-wrap:wrap; margin:18px 0;}
+  .flow-step{flex:1; min-width:130px; background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px; position:relative;}
+  .flow-step .fnum{font-family:'Fraunces',serif; font-size:13px; font-weight:700; color:var(--tile);}
+  .flow-step .fttl{font-weight:700; font-size:13.5px; margin:6px 0 4px; color:var(--ink);}
+  .flow-step .fdesc{font-size:11.5px; color:var(--ink2); line-height:1.4;}
+  .flow-arrow{display:flex; align-items:center; color:var(--sage); font-size:20px; padding:0 4px;}
+  @media(max-width:860px){.flow-arrow{transform:rotate(90deg);} .flow-step{min-width:100%;}}
+
+  /* delighter cards */
+  .delight{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:18px 0;}
+  @media(max-width:860px){.delight{grid-template-columns:1fr;}}
+  .delight-c{background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:20px 22px; position:relative; overflow:hidden;}
+  .delight-c .emoji{font-size:26px; margin-bottom:8px;}
+  .delight-c h4{margin:0 0 6px;}
+  .delight-c p{font-size:13px; margin:0; line-height:1.5;}
+  .delight-c::after{content:""; position:absolute; right:-30px; bottom:-30px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle,rgba(224,168,46,.1),transparent 70%);}
+
+  /* admin surface cards */
+  .admin-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin:18px 0;}
+  @media(max-width:860px){.admin-grid{grid-template-columns:1fr;}}
+  .admin-c{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:18px 20px; border-left:4px solid var(--pacific);}
+  .admin-c .anum{font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--pacific);}
+  .admin-c h4{margin:4px 0 6px;}
+  .admin-c p{font-size:12.5px; margin:0; line-height:1.5;}
+
+  .footer{padding:40px 32px 60px; text-align:center; color:var(--sage); font-size:13px;}
+</style>
+</head>
+<body>
+<div style="background:#C0532E;color:#FCFAF5;font:600 13px/1.45 system-ui,-apple-system,sans-serif;padding:10px 16px;text-align:center;">Status: v9 canon · 2026-06-21 · Reconciled to the v9 three-section cut (Explore · Saved · Discover SB): five tabs → three, the My Plan section retired, Nearby → the Near Me in-view sort, the guides regrouped (neighborhood + theme). <strong>The wireframe (02b) remains the canonical tiebreaker on any UI question.</strong></div>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="sun"></div>
+  <svg class="range" viewBox="0 0 1200 130" preserveAspectRatio="none">
+    <path d="M0,130 L0,72 Q120,32 260,56 T520,42 Q660,18 820,54 T1080,40 L1200,62 L1200,130 Z" fill="#0E3C49" opacity="0.5"/>
+    <path d="M0,130 L0,94 Q160,64 340,82 T700,72 Q900,54 1040,84 L1200,76 L1200,130 Z" fill="#0E3C49" opacity="0.8"/>
+  </svg>
+  <div class="eyebrow">Product Bible &middot; The Complete Reference</div>
+  <h1 class="serif">SB&nbsp;Daymaker</h1>
+  <div class="sub">Every screen, feature, flow, and delighter — the full record of what the product is and how it feels to use. Updated to the happenings-first cascade.</div>
+  <div class="meta">
+    <span>📱 Mobile-first</span>
+    <span>📄 Document 2 — Product Bible</span>
+    <span>🎨 Rendered screens inline</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ============ TOC ============ -->
+<section id="toc">
+  <div class="kicker">Contents</div>
+  <h2 class="sec">The full product, mapped</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#essence">The essence</a><span class="desc">What it is in one breath</span></li>
+      <li><a href="#ia">Information architecture</a><span class="desc">Every screen, mapped</span></li>
+      <li><a href="#home">The home screen &amp; hero</a><span class="desc">The daily ritual</span></li>
+      <li><a href="#lens">Occasion tags (the Lens)</a><span class="desc">What are you up to?</span></li>
+      <li><a href="#horizons">Time horizons</a><span class="desc">Today / Week / Month</span></li>
+      <li><a href="#firstlooks">First Looks &amp; detail</a><span class="desc">New openings + place pages</span></li>
+      <li><a href="#live">Happy Hour &amp; Near Me</a><span class="desc">Light at launch</span></li>
+      <li><a href="#plan">Saved &amp; sharing</a><span class="desc">The personal layer</span></li>
+      <li><a href="#content">The content model</a><span class="desc">What lives inside</span></li>
+      <li><a href="#personas">The ten occasion tags</a><span class="desc">In full</span></li>
+      <li><a href="#flows">User flows</a><span class="desc">The key journeys</span></li>
+      <li><a href="#delight">Delighter moments</a><span class="desc">What makes it special</span></li>
+      <li><a href="#weather">Weather-reactivity</a><span class="desc">The app reads the sky</span></li>
+      <li><a href="#admin">The admin cockpit</a><span class="desc">The founder's side</span></li>
+      <li><a href="#inventory">Feature inventory</a><span class="desc">Everything, listed</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ ESSENCE ============ -->
+<section id="essence">
+  <div class="kicker">01 — The Essence</div>
+  <h2 class="sec">What SB Daymaker is, in one breath</h2>
+  <p class="lead">A mobile-first daily companion for Santa Barbara that you open like you check the weather. It answers one human question — <em>"what's worth doing in Santa Barbara today?"</em> — then helps you <strong>find it, save it, and share it</strong>, with the warmth and judgment of a knowing local friend.</p>
+  <p style="font-size:15px;color:var(--pacificDk);font-weight:600;margin-top:-4px;">Positioning: <em>Find what's worth doing in Santa Barbara today — find it, save it, share it.</em></p>
+
+  <div class="grid3" style="margin-top:24px;">
+    <div class="card tealtint">
+      <h4 style="margin-top:0;">It's a ritual, not a search tool</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">You don't come to look something up — you open it each morning and it tells you what today in SB is about. The hero is the product.</p>
+    </div>
+    <div class="card goldtint">
+      <h4 style="margin-top:0;">It's happenings-first</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">The spine is <em>what's actually happening</em> — ranked in a three-tier cascade (dated → recurring → evergreen) so the screen is never empty. The defensible lane Yelp/Google can't own.</p>
+    </div>
+    <div class="card tiletint">
+      <h4 style="margin-top:0;">It's personal &amp; frictionless</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">Occasion tags tune it to what you're up to, an on-device save layer needs no account, and you can share your saved list as a view-only link — no account to open it.</p>
+    </div>
+  </div>
+
+  <div class="callout pac">
+    <div class="ctitle">The north star for every design decision</div>
+    Would a knowing local friend do this? They'd give you their genuine pick, not a list. They'd know it's raining and suggest indoors. They'd say "park on Anacapa, the Funk Zone lots are a trap." Every feature serves that voice — warm, specific, never breathless, never a database.
+  </div>
+</section>
+
+<!-- ============ IA ============ -->
+<section id="ia">
+  <div class="kicker">02 — Information Architecture</div>
+  <h2 class="sec">Every screen, mapped</h2>
+  <p class="lead">SB Daymaker is a focused app with three primary sections in the bottom nav (Explore · Saved · Discover SB), plus overlays (the Lens sheet, detail screens) that appear in context. Deliberately shallow — never more than a tap or two from anywhere.</p>
+
+  <div class="ia">
+    <div class="ia-root">
+      <div class="ia-node">SB Daymaker — Consumer App</div>
+      <div class="ia-connector"></div>
+    </div>
+    <div class="ia-row">
+      <div class="ia-col">
+        <div class="ia-node sub">🌅 Explore</div>
+        <div class="ia-children">
+          <div class="ia-leaf">Living editorial hero</div>
+          <div class="ia-leaf">Horizon: Today / Week / Month</div>
+          <div class="ia-leaf">Lens + Refine controls</div>
+          <div class="ia-leaf">First Looks + New This Week</div>
+          <div class="ia-leaf">Cascade feed (lead-and-blend)</div>
+          <div class="ia-leaf">Near Me sort</div>
+          <div class="ia-leaf">One Perfect SB Day card</div>
+          <div class="ia-leaf">Happy Hour list (light)</div>
+          <div class="ia-leaf">Submit event (footer)</div>
+        </div>
+      </div>
+      <div class="ia-col">
+        <div class="ia-node sub">❤️ Saved</div>
+        <div class="ia-children">
+          <div class="ia-leaf">Want to go / Been (two states)</div>
+          <div class="ia-leaf">Auto-grouped + type chips</div>
+          <div class="ia-leaf">Near Me sort</div>
+          <div class="ia-leaf">Share one or a batch &rarr; link</div>
+          <div class="ia-leaf">Magic-link save-restore</div>
+        </div>
+      </div>
+      <div class="ia-col">
+        <div class="ia-node sub">🧭 Discover SB</div>
+        <div class="ia-children">
+          <div class="ia-leaf">Neighborhood guides (by zone)</div>
+          <div class="ia-leaf">Theme guides (by tag)</div>
+          <div class="ia-leaf">Live happenings scoped to each</div>
+          <div class="ia-leaf">"✦ For you" on Lens match</div>
+          <div class="ia-leaf">Submit link (footer)</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:22px; padding-top:18px; border-top:2px dashed var(--line);">
+      <span class="pill pac">Overlays appear in context</span>
+      <span class="pill">Occasion-tag sheet</span>
+      <span class="pill">Place / event detail</span>
+      <span class="pill">First-run gentle overlay banner</span>
+      <span class="pill">Filter / Near-Me anchor sheets</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="ctitle">The three orthogonal controls</div>
+    The whole app is navigated by three controls that never collide: <b>Horizon</b> (when — Today/Week/Month, all time-filters over one happenings model), <b>Tag</b> (what you're up to — the ten occasion tags; sets <em>what</em>, while the cascade sets <em>order</em>), and <b>Filter</b> (mood — demoted, collapsed by default). Each answers exactly one question.
+  </div>
+</section>
+
+<!-- ============ HOME ============ -->
+<section id="home">
+  <div class="kicker">03 — The Home Screen &amp; Hero</div>
+  <h2 class="sec">The daily ritual</h2>
+  <p class="lead">The home screen opens on a two-layer hero: a living sky strip (sun tracking time of day, conditions at a glance) with a compact editorial pick card embedded inside the hero itself — surfacing from the mountain silhouette. No greeting needed. The first thing you see tells you exactly where to be. This is the signature surface, the reason someone opens the app each morning.</p>
+
+  <div class="showcase">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-header">
+            <div class="app-logo"><div class="mark">S</div><div><div class="nm">SB Daymaker</div><div class="tg">Santa Barbara, daily</div></div></div>
+          </div>
+          <div class="app-hero evening" style="padding-bottom:12px;">
+            <div class="app-sun" style="left:72%;top:18%;"></div>
+            <svg class="app-range-svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+              <path d="M0,120 L0,70 Q120,30 260,55 T520,40 Q660,18 820,52 T1080,38 L1200,60 L1200,120 Z" fill="#0E3C49" opacity="0.55"/>
+              <path d="M0,120 L0,92 Q160,62 340,80 T700,70 Q900,52 1040,82 L1200,74 L1200,120 Z" fill="#0E3C49" opacity="0.8"/>
+            </svg>
+            <div class="app-hero-c">
+              <div class="app-date">Thursday, June 19</div>
+              <div class="app-cond"><span>☀️ 71° clear</span><span>🌊 Surf 2–3ft</span><span>🌅 Sunset 8:04</span></div>
+            </div>
+            <!-- Option C pick card — embedded inside the hero -->
+            <div class="app-hpc">
+              <div class="app-hpc-img" style="background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);">
+                <div class="app-hpc-tag">✨ Tonight's pick</div>
+                <div class="app-hpc-heart">♡</div>
+              </div>
+              <div class="app-hpc-body">
+                <div class="app-hpc-eyebrow">Catch a Show</div>
+                <div class="app-hpc-title">Trombone Shorty &amp; Orleans Avenue</div>
+                <div class="app-hpc-meta">📍 Santa Barbara Bowl · 6:30 PM</div>
+                <div class="app-hpc-cta">Get tickets ↗</div>
+              </div>
+            </div>
+          </div>
+          <div class="app-controls">
+            <div class="app-seg"><button class="on">Today</button><button>This Week</button><button>This Month</button></div>
+            <div style="display:flex;gap:7px;padding:8px 14px 0;">
+              <div style="flex:1;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:20px;border:1.5px solid var(--line);background:#fff;font-size:10px;font-weight:700;"><span>✦ Any Vibe</span><span style="margin-left:auto;color:var(--pacific);">▾</span></div>
+              <div style="display:flex;align-items:center;padding:8px 13px;border-radius:20px;border:1.5px solid var(--line);background:#fff;font-size:10px;font-weight:700;white-space:nowrap;">⚙ Refine ▾</div>
+            </div>
+          </div>
+          <div class="app-rail-h"><span class="dot"></span><span class="lbl">Just Opened &amp; Coming Soon</span></div>
+          <div class="app-rail">
+            <div class="app-rail-card">
+              <div class="img" style="background:linear-gradient(135deg,#C0532E,#E0A82E);">
+                <div class="flag">JUST OPENED</div>
+                <div class="app-rc-heart">♡</div>
+              </div>
+              <div class="meta"><div class="nm">Bettina</div><div class="sub">Montecito · Pizza</div></div>
+            </div>
+            <div class="app-rail-card">
+              <div class="img" style="background:linear-gradient(135deg,#7E8B6B,#16586A);">
+                <div class="flag">OPENING SOON</div>
+                <div class="app-rc-heart">♡</div>
+              </div>
+              <div class="meta"><div class="nm">The Mill</div><div class="sub">Funk Zone · Café</div></div>
+            </div>
+            <div class="app-rail-card">
+              <div class="img" style="background:linear-gradient(135deg,#16586A,#3d8aa0);">
+                <div class="flag">JUST OPENED</div>
+                <div class="app-rc-heart">♡</div>
+              </div>
+              <div class="meta"><div class="nm">Lighthouse</div><div class="sub">Mesa · Wine bar</div></div>
+            </div>
+          </div>
+          <div class="app-sh"><div class="k">Also worth it</div><div class="t">More ways to spend the day</div></div>
+          <div class="app-lc">
+            <div class="thumb" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"></div>
+            <div class="lcb"><span class="lct" style="background:#7E8B6B;">Free</span><div class="lcn">First Thursday — Funk Zone Art Walk</div><div class="lcm">Funk Zone · Free · 5:00 PM</div></div>
+          </div>
+          <div class="app-lc">
+            <div class="thumb" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"></div>
+            <div class="lcb"><span class="lct" style="background:#C0532E;">Date Night</span><div class="lcn">Sunset Jazz at the Lobero</div><div class="lcm">Lobero Theatre · $45 · 8:00 PM</div></div>
+          </div>
+          <div class="app-hh" style="margin-top:14px;">
+            <div class="live"><span class="pulse"></span><span class="lbl">Happy Hour · Around town</span></div>
+            <div class="hht">Pouring near you</div>
+            <div class="row"><div><div class="rn">The Lark <span style="font-weight:500;font-size:8.5px;color:rgba(255,255,255,.6);">· 0.3 mi</span></div><div class="rd">$1 oysters + $9 spritzes</div></div><div class="rt ok" style="font-size:8.5px;">✓ 4 days ago</div></div>
+            <div class="row"><div><div class="rn">Loquita <span style="font-weight:500;font-size:8.5px;color:rgba(255,255,255,.6);">· 0.4 mi</span></div><div class="rd">Half-price gildas, $7 vermouth</div></div><div class="rt ok" style="font-size:8.5px;">✓ 2 days ago</div></div>
+            <div style="text-align:center;padding:9px 0 3px;font-size:9px;font-weight:700;opacity:.8;">Confirmed dates, not live timers — live → Phase 2</div>
+          </div>
+          <div class="fade-bottom"></div>
+        </div>
+        <div class="app-nav">
+          <button class="on"><span class="ico">🌅</span><span class="lb">Explore</span></button>
+          <button><span class="ico">❤️</span><span class="lb">Saved</span></button>
+          <button><span class="ico">🧭</span><span class="lb">Discover SB</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="annot"><div class="n">1</div><div class="t"><b>The living hero — two layers.</b> The sky strip tracks the real time of day (sun position, gradient, conditions pills) — no greeting text. Below it, a compact side-by-side editorial pick card surfaces from the mountain silhouette. The eyebrow is context-aware: "This morning's move" / "This afternoon's pick" / "✨ Tonight's pick" / "☁️ Gray day move." No blurb in the hero — just eyebrow, title, venue + time, and a CTA. The card speaks for itself.</div></div>
+      <div class="annot"><div class="n">2</div><div class="t"><b>Horizon control.</b> Today / This Week / This Month — one tap reflows the whole surface. Today is the singular ritual; the hero card persists across all three.</div></div>
+      <div class="annot"><div class="n">3</div><div class="t"><b>Compact dual-button controls row.</b> "✦ Any Vibe ▾" opens the Lens persona sheet; "⚙ Refine ▾" opens the filter sheet. A single tight row — all complexity lives in bottom sheets, invisible until needed. When filters are active, the Refine button shows a count badge.</div></div>
+      <div class="annot"><div class="n">4</div><div class="t"><b>Filter, demoted further.</b> Vibe chips (Free, Walkable, Indoor, Under $50) live inside the Refine bottom sheet and are contextual to the active Lens — the screen stays calm for first-time and older users.</div></div>
+      <div class="annot"><div class="n">5</div><div class="t"><b>Just Opened &amp; Coming Soon rail.</b> First Looks — the inherently-fresh content that drives the weekly-check habit. Each card shows a "JUST OPENED" or "OPENING SOON" gold flag, and a small heart button in the bottom-right corner of the thumbnail for quick saves without opening the detail screen. The section header dot pulses.</div></div>
+      <div class="annot"><div class="n">6</div><div class="t"><b>The editorial pick card — inside the hero, not below it.</b> Option C side-by-side layout: thumbnail left, text column right. One curated thing per day (place <em>or</em> event), auto-drafted and founder-approved. "Get tickets" hands off to AXS/TM. SB Daymaker never transacts. The editorial blurb lives on the detail screen, not here.</div></div>
+      <div class="annot"><div class="n">7</div><div class="t"><b>"Also worth it" + Happy Hour teaser.</b> Below the First Looks rail: a section labelled "Also worth it · More ways to spend the day" surfaces secondary picks as compact horizontal list cards. On gray days this becomes "Also worth it · indoors." Below that, a light "happy hours around town" teaser (honest "last confirmed" dates, no live timers). A "share your list →" banner appears dynamically once anything is saved.</div></div>
+    </div>
+  </div>
+  <div class="caption">The home screen, evening state — the daily ritual surface</div>
+</section>
+
+<!-- ============ LENS ============ -->
+<section id="lens">
+  <div class="kicker">04 — Occasion Tags (the Lens)</div>
+  <h2 class="sec">"What are you up to?"</h2>
+  <p class="lead">A strong <em>supporting</em> feature (not the headline — the real edge is the happenings spine + curation + ritual + local depth). Reframed from six identity personas to ten <em>occasion/intent tags</em>: most SB tools filter by category (music, theater, kids); SB Daymaker asks <em>what you're up to</em>. Tap "✦ Any Vibe" and a bottom sheet of big, thumb-sized cards slides up; pick one and the app filters. The tag sets <em>what</em> is shown; the cascade always sets <em>order</em> — they're orthogonal (Nightlife naturally returns event-heavy results because those things are dated, not via a special rule).</p>
+
+  <div class="showcase">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <!-- dimmed home behind -->
+        <div class="app-scroll" style="filter:brightness(.6);">
+          <div class="app-header"><div class="app-logo"><div class="mark">S</div><div><div class="nm">SB Daymaker</div></div></div></div>
+          <div class="app-hero evening" style="min-height:120px; padding-bottom:8px;"><div class="app-sun"></div>
+            <svg class="app-range-svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,120 L0,70 Q120,30 260,55 T520,40 Q660,18 820,52 T1080,38 L1200,60 L1200,120 Z" fill="#0E3C49" opacity="0.55"/><path d="M0,120 L0,92 Q160,62 340,80 T700,70 Q900,52 1040,82 L1200,74 L1200,120 Z" fill="#0E3C49" opacity="0.8"/></svg>
+            <div class="app-hero-c"><div class="app-date">Thursday, June 19</div><div class="app-cond"><span>☀️ 71° clear</span><span>🌊 Surf 2–3ft</span></div></div>
+            <div class="app-hpc" style="opacity:.7;"><div class="app-hpc-img" style="background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);"><div class="app-hpc-tag">✨ Tonight's pick</div></div><div class="app-hpc-body"><div class="app-hpc-title">Trombone Shorty &amp; Orleans Avenue</div><div class="app-hpc-meta">📍 Santa Barbara Bowl · 6:30 PM</div></div></div>
+          </div>
+        </div>
+        <div class="app-sheet-scrim"></div>
+        <div class="app-sheet">
+          <div class="grab"></div>
+          <div class="sh-k">What are you up to?</div>
+          <div class="sh-t serif">Pick an occasion</div>
+          <div class="app-persona sel"><div class="pic" style="background:#241C16;">✦</div><div><span class="pn">Any Vibe</span><span class="pd">Everything on, no filter</span></div><div style="margin-left:auto; color:var(--pacific);">✓</div></div>
+          <div class="app-persona"><div class="pic" style="background:#C0532E;">🍷</div><div><span class="pn">Date Night</span><span class="pd">Evenings worth dressing up for</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#7E8B6B;">👨‍👩‍👧</div><div><span class="pn">Family Day</span><span class="pd">Kid-friendly &amp; daytime, stroller-OK</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#241C16;">🌃</div><div><span class="pn">Nightlife / After Dark</span><span class="pd">Going out — bars, clubs, late</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#16586A;">🎵</div><div><span class="pn">Catch a Show</span><span class="pd">The Bowl, SOhO, Lobero &amp; clubs</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#9C6B9E;">🎨</div><div><span class="pn">Arts &amp; Culture</span><span class="pd">Galleries, museums, First Thursday</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#3E7C5A;">⛰️</div><div><span class="pn">Outdoors &amp; Active</span><span class="pd">Trails, tide pools, beach &amp; markets</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#8a3d6b;">🍇</div><div><span class="pn">Wine &amp; Food</span><span class="pd">Tastings, dinners, the Funk Zone</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#E0A82E;">🎉</div><div><span class="pn">Free in SB</span><span class="pd">Good days, no cover charge</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#2d7d8f;">🧑‍🤝‍🧑</div><div><span class="pn">Hosting Visitors</span><span class="pd">Showing someone the city's best</span></div></div>
+          <div class="app-persona"><div class="pic" style="background:#4a4038;">🚶</div><div><span class="pn">Solo</span><span class="pd">Out on your own, at your pace</span></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="annot"><div class="n">1</div><div class="t"><b>The bottom sheet.</b> Big tappable cards — icon, name, plain-language description. The pattern is deliberately kind to an older, simplicity-seeking demographic: everything's thumb-sized, no tiny chips, one tap deep.</div></div>
+      <div class="annot"><div class="n">2</div><div class="t"><b>Ten occasion tags.</b> Date Night · Family Day · Nightlife/After Dark · Catch a Show · Arts &amp; Culture · Outdoors &amp; Active · Wine &amp; Food · Free in SB · Hosting Visitors · Solo (scroll). Intent-based — you pick what you're <em>up to</em>, and the four new tags (Nightlife, Wine &amp; Food, Hosting Visitors, Solo) serve SB's largest under-served cohorts: students/young locals, foodies, residents playing host, and solo-goers.</div></div>
+      <div class="annot"><div class="n">3</div><div class="t"><b>Pure content labeling.</b> Tags live on the <span class="mono">thing_tags</span> junction (confidence + provenance) — no per-request AI, no constraint broken. <b>One Perfect SB Day</b> is a separate day-tripper <em>entry point</em>, not a tag.</div></div>
+      <div class="annot"><div class="n">4</div><div class="t"><b>First-run introduction.</b> On first open, a gentle overlay banner rises from the bottom of the screen while the app is already visible and usable behind it. It asks <b>"What vibe are you looking for?"</b> — warmer and more action-oriented than a blocking screen. Users can dismiss ("Just show me everything →") at any time. The differentiator is introduced, never imposed.</div></div>
+      <div class="annot"><div class="n">5</div><div class="t"><b>It filters everything.</b> The chosen tag filters the feed and the Discover SB guides across all three horizons; the cascade still sets order beneath it. Tag = what you're up to. Horizon = when. Filter = mood.</div></div>
+    </div>
+  </div>
+  <div class="caption">The occasion-tag sheet — ten intent tags; the tag sets <em>what</em>, the cascade sets <em>order</em></div>
+</section>
+
+<!-- ============ HORIZONS ============ -->
+<section id="horizons">
+  <div class="kicker">05 — Time Horizons</div>
+  <h2 class="sec">Today, This Week, This Month</h2>
+  <p class="lead">Three time horizons — but all <em>time-filters over the one happenings model</em> (the same cascade), not separate systems. The progression is singular → planning → aspirational, and each serves a different person and moment. This Month is kept deliberately lightweight.</p>
+
+  <div class="showcase" style="justify-content:center; flex-wrap:wrap; gap:24px;">
+    <!-- WEEK -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-header"><div class="app-logo"><div class="mark">S</div><div><div class="nm">SB Daymaker</div></div></div></div>
+          <div class="app-controls" style="padding-top:8px;">
+            <div class="app-seg"><button>Today</button><button class="on">This Week</button><button>This Month</button></div>
+          </div>
+          <div class="app-sh"><div class="k">Next 7 days</div><div class="t">Plan your week in Santa Barbara</div></div>
+          <div style="padding:0 16px;">
+            <div style="display:flex; gap:12px; margin-bottom:16px;">
+              <div style="flex-shrink:0; width:42px; text-align:center;"><div style="font-size:9px; font-weight:700; color:var(--tile); letter-spacing:1px;">THU</div><div class="serif" style="font-size:22px; font-weight:600; line-height:1;">19</div></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:7px;">
+                <div style="background:#fff; border:1px solid var(--line); border-radius:11px; padding:9px 11px;"><div class="serif" style="font-size:13px; font-weight:600;">Trombone Shorty</div><div style="font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:1px;">SB Bowl · $59+</div></div>
+                <div style="background:#fff; border:1px solid var(--line); border-radius:11px; padding:9px 11px;"><div class="serif" style="font-size:13px; font-weight:600;">First Thursday Art Walk</div><div style="font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:1px;">Funk Zone · Free</div></div>
+              </div>
+            </div>
+            <div style="display:flex; gap:12px; margin-bottom:16px;">
+              <div style="flex-shrink:0; width:42px; text-align:center;"><div style="font-size:9px; font-weight:700; color:var(--tile); letter-spacing:1px;">SAT</div><div class="serif" style="font-size:22px; font-weight:600; line-height:1;">21</div></div>
+              <div style="flex:1; display:flex; flex-direction:column; gap:7px;">
+                <div style="background:#fff; border:1px solid var(--line); border-radius:11px; padding:9px 11px;"><div class="serif" style="font-size:13px; font-weight:600;">Saturday Farmers Market</div><div style="font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:1px;">Santa Barbara &amp; Cota · Free</div></div>
+                <div style="background:#fff; border:1px solid var(--line); border-radius:11px; padding:9px 11px;"><div class="serif" style="font-size:13px; font-weight:600;">Tide Pool Walk</div><div style="font-size:9.5px; color:var(--pacific); font-weight:600; margin-top:1px;">Coal Oil Point · Free</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="fade-bottom"></div>
+        </div>
+        <div class="app-nav"><button class="on"><span class="ico">🌅</span><span class="lb">Explore</span></button><button><span class="ico">❤️</span><span class="lb">Saved</span></button><button><span class="ico">🧭</span><span class="lb">Discover SB</span></button></div>
+      </div>
+    </div>
+    <!-- MONTH -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-header"><div class="app-logo"><div class="mark">S</div><div><div class="nm">SB Daymaker</div></div></div></div>
+          <div class="app-controls" style="padding-top:8px;">
+            <div class="app-seg"><button>Today</button><button>This Week</button><button class="on">This Month</button></div>
+          </div>
+          <div class="app-sh"><div class="k">The big rocks</div><div class="t">Worth circling on your calendar</div></div>
+          <div style="padding:0 16px; display:flex; flex-direction:column; gap:11px;">
+            <div style="border-radius:15px; overflow:hidden; position:relative; min-height:118px; background:linear-gradient(135deg,#C0532E,#E0A82E); display:flex; flex-direction:column; justify-content:flex-end;">
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.62));"></div>
+              <div style="position:relative; padding:12px 14px; color:#fff;"><div style="display:inline-block; background:var(--gold); color:var(--ink); font-size:9px; font-weight:800; padding:3px 8px; border-radius:12px; margin-bottom:6px;">Jun 21</div><div class="serif" style="font-size:17px; font-weight:600; line-height:1.1;">Summer Solstice Celebration</div><div style="font-size:10px; opacity:.9; margin-top:2px;">Downtown · Alameda Park</div><div style="font-size:10.5px; margin-top:5px; font-weight:500;">The parade. 50,000 people. SB's signature day.</div></div>
+            </div>
+            <div style="border-radius:15px; overflow:hidden; position:relative; min-height:118px; background:linear-gradient(135deg,#7E8B6B,#16586A); display:flex; flex-direction:column; justify-content:flex-end;">
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.62));"></div>
+              <div style="position:relative; padding:12px 14px; color:#fff;"><div style="display:inline-block; background:var(--gold); color:var(--ink); font-size:9px; font-weight:800; padding:3px 8px; border-radius:12px; margin-bottom:6px;">Jul 17–18</div><div class="serif" style="font-size:17px; font-weight:600; line-height:1.1;">California Wine Festival</div><div style="font-size:10px; opacity:.9; margin-top:2px;">Chase Palm Park</div><div style="font-size:10.5px; margin-top:5px; font-weight:500;">Coastal tasting, 200+ wines on the lawn.</div></div>
+            </div>
+          </div>
+          <div class="fade-bottom"></div>
+        </div>
+        <div class="app-nav"><button class="on"><span class="ico">🌅</span><span class="lb">Explore</span></button><button><span class="ico">❤️</span><span class="lb">Saved</span></button><button><span class="ico">🧭</span><span class="lb">Discover SB</span></button></div>
+      </div>
+    </div>
+  </div>
+  <div class="caption">Left: This Week — the day-by-day planning rail. Right: This Month — the aspirational big-rocks view.</div>
+
+  <div class="grid3" style="margin-top:24px;">
+    <div class="card"><span class="pill tile">Singular</span><h4>Today</h4><p style="margin-bottom:0; font-size:13px;">The curated ritual — the cascade's best Tier-1 pick as hero, then a lead-and-blend feed beneath. Emotional, editorial, the reason to open daily.</p></div>
+    <div class="card"><span class="pill gold">Planning</span><h4>This Week</h4><p style="margin-bottom:0; font-size:13px;">A day-by-day rail. Save from any horizon; your picks collect in Saved, ready to share.</p></div>
+    <div class="card"><span class="pill green">Aspirational</span><h4>This Month</h4><p style="margin-bottom:0; font-size:13px;">Kept <strong>lightweight</strong> — a simple, clean marquee-events list (festivals, Solstice, big shows). A glance-once "when should I come" view, mostly visitor-planning + SEO; the saved engineering effort goes to Today/This Week.</p></div>
+  </div>
+</section>
+
+<!-- ============ FIRST LOOKS & DETAIL ============ -->
+<section id="firstlooks">
+  <div class="kicker">06 — First Looks &amp; The Detail Screen</div>
+  <h2 class="sec">New openings, and the place page</h2>
+  <p class="lead">First Looks is the emotional engine — the "I want to be first to know" instinct that's powerful in a place like SB — and it feeds a dedicated <strong>"New This Week in SB"</strong> surface (new openings, newly added places, notable additions) that also populates the 2×/week email. Tapping any card opens a focused detail screen: rich, editorial, with a clean ticket/visit hand-off and the personal-layer actions.</p>
+
+  <div class="showcase">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-detail-img" style="background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);">
+            <div class="app-detail-back">‹</div>
+            <div class="app-detail-acts"><span>♡</span><span>↗</span></div>
+            <div style="position:absolute; bottom:12px; left:14px; display:inline-flex; align-items:center; gap:4px; background:var(--gold); color:var(--ink); font-size:9px; font-weight:800; padding:4px 9px; border-radius:14px;">✨ SB Daymaker pick</div>
+          </div>
+          <div class="app-detail-body">
+            <div class="app-detail-ttl">Trombone Shorty &amp; Orleans Avenue</div>
+            <div class="app-tagrow"><span class="gf">Great for:</span><span class="app-ptag" style="border:1.5px solid #16586A; color:#16586A;">🎵 Catch a Show</span><span class="app-ptag" style="border:1.5px solid #C0532E; color:#C0532E;">🍷 Date Night</span></div>
+            <div class="app-detail-blurb">The Bowl's stone amphitheater under open sky is the only way to hear NOLA brass the way it's meant to carry. The seats fill fast once the sun drops behind the Mesa, so locals arrive with a blanket and a bottle from the Funk Zone. Parking's tight — leave the car downtown and walk up Milpas.</div>
+            <div class="app-facts">
+              <div class="app-fact"><div class="fi">📅</div><div><div class="fk">When</div><div class="fv">Thursday, June 19 · 6:30 PM</div></div></div>
+              <div class="app-fact"><div class="fi">📍</div><div style="flex:1;"><div class="fk">Where</div><div class="fv">1122 N Milpas St</div></div><span style="font-size:9.5px; color:var(--tile); font-weight:700;">Directions</span></div>
+              <div class="app-fact"><div class="fi">🎟</div><div><div class="fk">Tickets</div><div class="fv">$59–$95</div></div></div>
+            </div>
+            <button class="app-bigbuy">Get tickets on AXS ↗</button>
+            <div class="app-buynote">You'll finish your purchase on AXS — SB Daymaker never handles payment</div>
+            <button class="app-secondary">♡ Want to go</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="annot"><div class="n">1</div><div class="t"><b>Full-bleed header.</b> The photo (Google Places for businesses, Pexels for ambient) with back, save, and share. Lazy-loaded so it only fetches when viewed — the key cost control.</div></div>
+      <div class="annot"><div class="n">2</div><div class="t"><b>"Great for" occasion tags.</b> Shows which occasion tags this matches, color-coded. AI-tagged with a confidence threshold and a negative-rule safety layer (a 21+ venue can never be tagged Family Day; a non-free thing can never be tagged Free in SB).</div></div>
+      <div class="annot"><div class="n">3</div><div class="t"><b>The editorial blurb.</b> Longer-form than the card — AI-drafted from extracted facts in the house voice, with real SB texture, then founder-approved. Original prose, never copied (copyright-clean).</div></div>
+      <div class="annot"><div class="n">4</div><div class="t"><b>Hard facts.</b> When / where / price, with tappable directions. Clean and scannable.</div></div>
+      <div class="annot"><div class="n">5</div><div class="t"><b>The hand-off, made honest.</b> "Get tickets on AXS" with the explicit note that SB Daymaker never handles payment — the legal posture made visible and trustworthy to the user.</div></div>
+      <div class="annot"><div class="n">6</div><div class="t"><b>Personal layer reachable here.</b> "＋ Save" adds the item as <b>"want to go"</b> (one tap to flip to "been" later). The single save CTA on every detail screen — clean and focused. The shareable saved-list link lives in Saved, not here. The discover → save → share loop stays uncluttered.</div></div>
+    </div>
+  </div>
+  <div class="caption">The detail screen — focused, editorial, with the trustworthy ticket hand-off</div>
+</section>
+
+<!-- ============ LIVE LAYERS ============ -->
+<section id="live">
+  <div class="kicker">07 — Happy Hour &amp; Near Me</div>
+  <h2 class="sec">Light at launch — Happy Hour &amp; Near Me</h2>
+  <p class="lead">Both ship <strong>light at launch</strong> to keep the solo build and maintenance lean. <strong>Happy Hour V1</strong> is a curated "happy hours around town" list with honest "last confirmed" dates — no live countdowns. <strong>Near Me V1</strong> is an in-view <em>sort</em> on Explore &amp; Saved — not a screen, not a map. The two mockups below show the <em>Phase-2</em> vision (live Happy Hour countdowns + the full Mapbox map); the V1 surfaces are described in the cards beneath.</p>
+
+  <div class="showcase" style="justify-content:center; flex-wrap:wrap; gap:24px;">
+    <!-- HAPPY HOUR -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-header"><div class="app-logo"><div class="mark">S</div><div><div class="nm">SB Daymaker</div></div></div></div>
+          <div class="app-hh">
+            <div class="live"><span class="pulse"></span><span class="lbl">Happy hour · live now</span></div>
+            <div class="hht serif">Pouring near you</div>
+            <div class="row"><div><div class="rn">The Lark <span style="font-weight:500; font-size:9.5px; color:rgba(255,255,255,.6);">· 0.3 mi</span></div><div class="rd">$1 oysters + $9 spritzes</div><div class="conf">✓ confirmed 4 days ago</div></div><div class="rt ok">ends 47m</div></div>
+            <div class="row"><div><div class="rn">Loquita <span style="font-weight:500; font-size:9.5px; color:rgba(255,255,255,.6);">· 0.4 mi</span></div><div class="rd">Half-price gildas, $7 vermouth</div><div class="conf">✓ confirmed 2 days ago</div></div><div class="rt ok">ends 92m</div></div>
+            <div class="row"><div><div class="rn">Brophy Bros <span style="font-weight:500; font-size:9.5px; color:rgba(255,255,255,.6);">· 1.1 mi</span></div><div class="rd">$2 off all drafts, harbor view</div><div class="conf">✓ confirmed 6 days ago</div></div><div class="rt soon">18 min left</div></div>
+          </div>
+          <div style="padding:14px 16px;">
+            <div style="font-size:10.5px; color:var(--sage); font-weight:600; text-align:center;">Operator-submitted · re-confirmed regularly for freshness</div>
+          </div>
+          <div class="fade-bottom"></div>
+        </div>
+        <div class="app-nav"><button class="on"><span class="ico">🌅</span><span class="lb">Explore</span></button><button><span class="ico">❤️</span><span class="lb">Saved</span></button><button><span class="ico">🧭</span><span class="lb">Discover SB</span></button></div>
+      </div>
+    </div>
+    <!-- MAP -->
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-map">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+            <path d="M0,86 Q30,80 55,88 T100,84 L100,100 L0,100 Z" fill="#7fbcc4" opacity="0.55"/>
+            <path d="M0,92 Q35,87 60,94 T100,90 L100,100 L0,100 Z" fill="#5aa6b0" opacity="0.6"/>
+            <path d="M20,18 L34,12 L52,20 L46,30 L28,28 Z" fill="#cde0bf" opacity="0.5"/>
+          </svg>
+          <div style="position:absolute; top:14px; left:0; right:0; text-align:center; color:#0E3C49; font-size:9px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; opacity:.6;">Santa Barbara</div>
+          <div class="app-map-toggle"><button class="on-e">Places</button><button>Happy Hours</button></div>
+          <div class="app-pin e" style="left:40%; top:50%;"><div class="lbl">🎟 Lobero</div><div class="stem"></div></div>
+          <div class="app-pin e" style="left:62%; top:36%;"><div class="lbl">🎟 SB Bowl</div><div class="stem"></div></div>
+          <div class="app-pin e" style="left:54%; top:64%;"><div class="lbl">🎟 The Lark</div><div class="stem"></div></div>
+          <div class="app-pin e" style="left:30%; top:72%;"><div class="lbl">🎟 SOhO</div><div class="stem"></div></div>
+          <div class="app-mapcount">12 places · Everything</div>
+          <div class="app-nearme">🧭 Near me</div>
+        </div>
+        <div class="app-nav"><button class="on"><span class="ico">🌅</span><span class="lb">Explore</span></button><button><span class="ico">❤️</span><span class="lb">Saved</span></button><button><span class="ico">🧭</span><span class="lb">Discover SB</span></button></div>
+      </div>
+    </div>
+  </div>
+  <div class="caption">Phase-2 vision. Left: live Happy Hour countdowns. Right: the full Mapbox map. <strong>In V1, Happy Hour is a light "last confirmed" list and Near Me is an in-view sort — no map.</strong></div>
+
+  <div class="grid2" style="margin-top:24px;">
+    <div class="card tealtint">
+      <h4 style="margin-top:0;">Happy Hour — light at launch (live → P2)</h4>
+      <p style="margin-bottom:0; font-size:13.5px;"><b>V1:</b> a curated "happy hours around town" list with honest <b>"last confirmed"</b> dates — no live countdowns, no urgency. Live countdowns are the <em>most operationally expensive feature to maintain</em> (constant re-confirmation; wrong data is worse than none), so the live version — real-time countdowns off <span class="mono">happy_hour_windows</span> with venue-assisted freshness — moves to <b>Phase 2</b>, where the cascade unions it as a Tier-2 layer.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">Near Me — an in-view sort (full map → P2)</h4>
+      <p style="margin-bottom:0; font-size:13.5px;"><b>V1:</b> Near Me is a <b>sort</b> that lives inside Explore &amp; Saved — there is no standalone Nearby screen and no map canvas. <b>Location anchor:</b> geolocation first → on grant, the user's neighborhood floats to the top; on deny, default to an SB center <em>and</em> surface a short neighborhood picker (one-tap re-anchor; changeable anytime). It reuses <span class="mono">nearby_zone</span> + lat/lng. The full Mapbox map (clustering, sub-tabs, lens/horizon/filter sync) → <b>Phase 2</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SAVED & SHARING ============ -->
+<section id="plan">
+  <div class="kicker">08 &mdash; Saved &amp; Sharing</div>
+  <h2 class="sec">The personal layer &mdash; saved, and shareable</h2>
+  <p class="lead">The personal layer is the moat &mdash; the half no calendar offers. Save anything on-device (no account, no login): each save is <strong>"want to go"</strong> (default) or <strong>"been,"</strong> one tap to flip. The Saved screen auto-groups by time relevance, carries the <strong>Near Me</strong> sort, and lets you <strong>share</strong> &mdash; one item or a multi-select batch &mdash; as a view-only link a friend opens and can save their own copy. A passwordless magic link restores your saves on any device. <em>(The retired My Plan itinerary builder is replaced by this simpler share &mdash; see the v9 note.)</em></p>
+
+  <div class="showcase">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-scroll">
+          <div class="app-header"><div class="app-logo"><div class="mark">S</div><div><div class="nm">Saved</div><div class="tg" style="font-size:8px;color:var(--sage);font-weight:600;">On your phone, no account</div></div></div><span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--pacific);">↗ Share</span></div>
+          <div style="display:flex;gap:8px;padding:8px 16px 10px;">
+            <div style="flex:1;padding:8px 0;text-align:center;border-radius:11px;background:var(--pacific);color:#fff;font-size:11px;font-weight:700;">Want to go &middot; 3</div>
+            <div style="flex:1;padding:8px 0;text-align:center;border-radius:11px;border:1.5px solid var(--line);color:var(--ink2);font-size:11px;font-weight:700;">Been &middot; 1</div>
+          </div>
+          <div style="display:flex;gap:6px;padding:0 16px 10px;flex-wrap:wrap;">
+            <span style="padding:6px 12px;border-radius:18px;background:var(--pacific);color:#fff;font-size:10px;font-weight:700;">All</span>
+            <span style="padding:6px 12px;border-radius:18px;border:1.5px solid var(--line);font-size:10px;font-weight:700;color:var(--ink2);">Events</span>
+            <span style="padding:6px 12px;border-radius:18px;border:1.5px solid var(--line);font-size:10px;font-weight:700;color:var(--ink2);">Places</span>
+            <span style="padding:6px 12px;border-radius:18px;border:1.5px solid var(--line);font-size:10px;font-weight:700;color:var(--ink2);">📍 Near Me</span>
+          </div>
+          <div style="padding:6px 16px 4px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tile);">Tonight</div>
+          <div class="app-lc"><div class="thumb" style="background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);"></div><div class="lcb"><span class="lct" style="background:#16586A;">Catch a Show</span><div class="lcn">Trombone Shorty &amp; Orleans Avenue</div><div class="lcm">SB Bowl &middot; $59&ndash;95</div></div></div>
+          <div style="padding:10px 16px 4px;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sage);">Places &amp; Experiences</div>
+          <div class="app-lc"><div class="thumb" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div><div class="lcb"><span class="lct" style="background:#7E8B6B;">Free</span><div class="lcn">Butterfly Beach</div><div class="lcm">Montecito &middot; Free</div></div></div>
+          <div style="padding:14px 16px 0;"><button class="app-bigbuy" style="background:var(--pacific);">↗ Share my list →</button><div style="text-align:center;font-size:9.5px;color:var(--sage);margin-top:6px;">Pick one or several &mdash; friends open the link &amp; can save their own copy. No account.</div></div>
+          <div class="fade-bottom"></div>
+        </div>
+        <div class="app-nav"><button><span class="ico">🌅</span><span class="lb">Explore</span></button><button class="on"><span class="ico">❤️</span><span class="lb">Saved</span></button><button><span class="ico">🧭</span><span class="lb">Discover SB</span></button></div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="annot"><div class="n">1</div><div class="t"><b>Two states &mdash; want to go / been.</b> Every saved item is "want to go" (default) or "been," one tap to flip. The screen leads with "want to go." This two-state save is the fuel for the later relationship features (diary, recap, Regular status).</div></div>
+      <div class="annot"><div class="n">2</div><div class="t"><b>Auto-grouped, with filters.</b> Saves auto-group by time relevance (Tonight &middot; This Week &middot; Happy Hours &middot; Places &amp; Experiences), with type-filter chips. The <b>Near Me</b> sort re-orders the list by neighborhood (geolocation &rarr; anchor), collapsing the groups into one closest-first list.</div></div>
+      <div class="annot"><div class="n">3</div><div class="t"><b>Share &mdash; one or many.</b> Tap Share, pick a single item or a multi-select batch; SB Daymaker writes a snapshot to <span class="mono">shared_states</span> (kind <span class="mono">shared_list</span>) and hands a <b>view-only link</b> to the native share sheet. Anyone opens it to see the picks and save their own copy &mdash; no account to view, <b>no recipient PII stored, no send cost</b>. (Not real-time co-editing &mdash; that needs accounts, out of scope.)</div></div>
+      <div class="annot"><div class="n">4</div><div class="t"><b>One Perfect SB Day seeds it.</b> The Explore card drops a hand-curated morning-to-sunset lineup straight into this list (deterministic &mdash; no AI at tap time), ready to tweak and share. The day-tripper's front door.</div></div>
+      <div class="annot"><div class="n">5</div><div class="t"><b>Save-restore without an account.</b> Because saves are on-device, a passwordless <b>"email me a link to restore my saves"</b> magic link brings them back on a new device &mdash; sync without a login wall. The user's own email is the only PII (the existing subscriber boundary).</div></div>
+    </div>
+  </div>
+  <div class="caption">Saved &mdash; two-state saves, the Near Me sort, and a view-only share link. The personal layer no competitor in SB has.</div>
+</section>
+
+<!-- ============ CONTENT MODEL ============ -->
+<section id="content">
+  <div class="kicker">09 — The Content Model</div>
+  <h2 class="sec">What lives inside</h2>
+  <p class="lead">Everything in SB Daymaker is a "thing" in one unified model — a place, an event, a First Look, or a happy hour — now classified by a <strong>happening tier</strong> that drives the whole-app cascade. This is what lets the hero, feed, the Near Me sort, and the saved list all draw from one pool, in one order: a tasting room's wine night and a concert are both just "happenings."</p>
+
+  <div class="callout pac">
+    <div class="ctitle">The happenings-first cascade — the spine</div>
+    Every thing carries a stored <span class="mono">happening_tier</span> (1/2/3), a <span class="mono">happening_category</span> (one of 16), and a <span class="mono">reason_to_go</span>. <b>Tier 1</b> = discrete dated happenings (this show, festival) — leads, owns the hero. <b>Tier 2</b> = recurring rhythms (Wednesday wine night, First Thursday) via a <span class="mono">recurring_schedules</span> table. <b>Tier 3</b> = evergreen, activity-framed reasons-to-go (dog beach, sunset hike) — the anti-empty floor, where <b>no bare places</b> are allowed. Tier is <b>derived from structure</b> (has-date → 1, has-schedule → 2, else 3); the AI proposes only the category. <b>Lead-and-blend:</b> Tier-1 leads (cap ~4), Tier-2/3 backfill to a minimum feed length, so the screen is full on quiet <em>and</em> busy nights.
+  </div>
+
+  <div class="grid2">
+    <div class="card tealtint">
+      <span class="pill pac">type: place</span>
+      <h4>Evergreen places — the Tier-3 floor</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">The standing fabric of SB: restaurants, bars, cafés, tasting rooms, shops, beaches, trails, parks. A hand-curated core of ~100–150, AI-drafted blurbs, founder-approved — each framed as a <em>reason to go</em>, never a bare listing. <b>The anti-empty floor: the city is never empty.</b></p>
+    </div>
+    <div class="card goldtint">
+      <span class="pill gold">type: firstlook</span>
+      <h4>First Looks</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">New openings + "opening soon." Curated, high-touch, high-delight. The freshness engine that drives the weekly-check habit.</p>
+    </div>
+    <div class="card tiletint">
+      <span class="pill tile">type: event</span>
+      <h4>Events — Tier-1, the lead</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">Dated happenings now <em>lead</em> the cascade and own the hero when one exists. Sourced from Ticketmaster API + venue calendars + civic feeds. Ticketing hands off to AXS/TM — SB Daymaker never transacts.</p>
+    </div>
+    <div class="card">
+      <span class="pill green">type: happyhour</span>
+      <h4>Happy hours — a Tier-2 layer</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">Operator-submitted, with the "last confirmed" freshness model. V1 ships as a curated list; the cascade unions <span class="mono">happy_hour_windows</span> as Tier-2 (live countdowns → Phase 2).</p>
+    </div>
+  </div>
+
+  <h3>What every "thing" carries</h3>
+  <p>The shared structure that makes the Lens, the Near Me sort, and the guides work across all types:</p>
+  <div>
+    <span class="pill">type (place / event / firstlook / happyhour)</span>
+    <span class="pill">happening_tier (1/2/3)</span>
+    <span class="pill">happening_category (1 of 16)</span>
+    <span class="pill">reason_to_go</span>
+    <span class="pill">title + AI editorial blurb</span>
+    <span class="pill">neighborhood + nearby_zone + lat/lng</span>
+    <span class="pill">price band</span>
+    <span class="pill">occasion tags (+ confidence)</span>
+    <span class="pill">time-of-day fit</span>
+    <span class="pill">photo_source + attribution</span>
+    <span class="pill">last_confirmed (freshness)</span>
+    <span class="pill">date/time (Tier-1) · recurring_schedules (Tier-2)</span>
+  </div>
+
+  <div class="callout pac">
+    <div class="ctitle">Why unified matters</div>
+    A separate "places" vs "events" model would force a merge everywhere downstream. The unified "thing" model means one pool feeds every surface — and the happening-tier classification is exactly what the happenings-first cascade requires (horizons are just time-filters over it). Adding a new content type later is a field, not a rebuild.
+  </div>
+
+  <h3>Plus: the Discover SB guides — neighborhood + theme</h3>
+  <p>Evergreen, image-rich, single-page editorial guides — written once, refreshed occasionally. Each open guide also surfaces the <em>live happenings</em> scoped to it (neighborhood guides match on <span class="mono">nearby_zone</span>; theme guides match on tag), so a guide is never just static prose:</p>
+  <div style="margin-bottom:12px;"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tile);margin-bottom:6px;">By neighborhood</div>
+    <span class="pill">The Funk Zone</span>
+    <span class="pill">Downtown &amp; State St.</span>
+    <span class="pill">The Waterfront</span>
+    <span class="pill">Montecito</span>
+    <span class="pill">The Mesa</span>
+  </div>
+  <div><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tile);margin-bottom:6px;">By theme</div>
+    <span class="pill gold">A Perfect Funk Zone Afternoon</span>
+    <span class="pill gold">Free Santa Barbara</span>
+    <span class="pill gold">First-Timer's Santa Barbara</span>
+    <span class="pill gold">Santa Barbara with Kids</span>
+    <span class="pill gold">Rainy Day in Santa Barbara</span>
+  </div>
+
+  <h3>How content actually arrives</h3>
+  <p>Ticketed shows are the easy ~10% (Ticketmaster + venue facts). The other ~90% — community happenings, new openings, grassroots and social-first events — comes from a portfolio of channels, with two public submission forms as the scaling engine:</p>
+  <div class="grid2">
+    <div class="card tealtint">
+      <h4 style="margin-top:0;">📝 "Submit your event"</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">Organizers of pop-ups and grassroots happenings push their own events in (the same model the official SB tourism site uses). They can even paste an Instagram caption — AI parses it into clean fields. Incentive: the best submissions get featured in the weekend digest. <b>This is how social-first events arrive — without scraping any platform.</b></p>
+    </div>
+    <div class="card goldtint">
+      <h4 style="margin-top:0;">🍷 "Claim / update your business"</h4>
+      <p style="margin-bottom:0; font-size:13.5px;">Venues &amp; restaurants submit happy hours, new openings, and (Phase 2) their own photos. Sourcing and business development in one form.</p>
+    </div>
+  </div>
+  <p style="font-size:13.5px;">Supplemented by: the city civic calendar (facts), the local-media openings beat (Siteline, Edhat — monitored as leads for First Looks), human-curated monitoring of public SB accounts, and partner-authorized social feeds. <b>Direct Facebook/Instagram scraping is deliberately out of scope</b> — it's a terms-of-service breach that breaks constantly; SB Daymaker is a destination organizers post <em>to</em>, not a crawler that takes <em>from</em> them.</p>
+</section>
+
+<!-- ============ PERSONAS ============ -->
+<section id="personas">
+  <div class="kicker">10 — The Ten Occasion Tags</div>
+  <h2 class="sec">The occasion tags, in full</h2>
+  <p class="lead">Ten occasion/intent tags ("what are you up to?"), reframed from six identity personas and expanded to reach SB's largest under-served cohorts (students/nightlife, hosts, foodies, solo). Each is a filter over real "thing" attributes — stored on the <span class="mono">thing_tags</span> junction — so it's never vaporware, and <b>no per-request AI</b> is involved. The tag sets <em>what</em>; the cascade sets <em>order</em>.</p>
+
+  <table>
+    <tr><th>Tag</th><th>The intent</th><th>What it surfaces (across all tiers)</th></tr>
+    <tr><td><strong>🍷 Date Night</strong></td><td>An evening worth dressing up for</td><td>Romantic venues, evening events, sunset spots</td></tr>
+    <tr><td><strong>👨‍👩‍👧 Family Day</strong></td><td>Out with the kids</td><td>Kid-friendly, daytime, stroller-OK</td></tr>
+    <tr><td><strong>🌃 Nightlife / After Dark</strong></td><td>Going out tonight</td><td>Bars, clubs, DJ/trivia nights, late spots <em>(serves students &amp; young locals)</em></td></tr>
+    <tr><td><strong>🎵 Catch a Show</strong></td><td>See something live</td><td>The Bowl, SOhO, Lobero, club shows, residencies</td></tr>
+    <tr><td><strong>🎨 Arts &amp; Culture</strong></td><td>A cultural outing</td><td>Galleries, museums, First Thursday, the mission</td></tr>
+    <tr><td><strong>⛰️ Outdoors &amp; Active</strong></td><td>Getting outside / moving</td><td>Hikes, tide pools, beach, markets, races, run clubs</td></tr>
+    <tr><td><strong>🍇 Wine &amp; Food</strong></td><td>Eating/tasting as the point</td><td>Tasting rooms, dinners, the Funk Zone, food events <em>(the region's signature)</em></td></tr>
+    <tr><td><strong>🏷️ Free in SB</strong></td><td>A great day that costs nothing</td><td>Everything no-cost — big for budget visitors &amp; students</td></tr>
+    <tr><td><strong>🧑‍🤝‍🧑 Hosting Visitors</strong></td><td>Showing someone the city</td><td>The must-sees, marquee events, standing markets <em>(a huge SB use case)</em></td></tr>
+    <tr><td><strong>🚶 Solo</strong></td><td>Out on your own</td><td>Screenings, open-mics, bookstores, cafés, easy outings</td></tr>
+  </table>
+
+  <div class="callout">
+    <div class="ctitle">Design rules behind the set</div>
+    Each tag is (1) <b>an occasion/intent, not an identity</b> — "what are you up to?" beats "who are you?"; (2) <b>intelligible to locals and visitors alike</b>; (3) <b>mappable to real data</b> with no per-request AI; and (4) <b>orthogonal to the cascade</b> — it returns things from all three tiers, and the cascade orders them. The Lens is now a <b>strong supporting feature, not the headline differentiator</b> (the real edge is the happenings spine + curation + ritual + local depth). <b>One Perfect SB Day</b> is a separate day-tripper entry point, not a tag.
+  </div>
+</section>
+
+<!-- ============ FLOWS ============ -->
+<section id="flows">
+  <div class="kicker">11 — User Flows</div>
+  <h2 class="sec">The key journeys</h2>
+
+  <h3>The core daily loop</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="fnum">01</div><div class="fttl">Open</div><div class="fdesc">App opens on the golden-hour hero — today's conditions and the one curated pick.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">02</div><div class="fttl">Tune</div><div class="fdesc">Pick an occasion tag ("Date Night") and horizon ("This Week") — the feed filters; the cascade still orders.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">03</div><div class="fttl">Browse</div><div class="fdesc">Browse the cascade feed (Tier-1 leads, Tier-2/3 blended), First Looks &amp; New This Week. Tap into detail screens.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">04</div><div class="fttl">Save</div><div class="fdesc">Heart the things you like — saved on-device as "want to go," no account, zero friction.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">05</div><div class="fttl">Save &amp; share</div><div class="fdesc">Your picks collect in Saved — share the list as a view-only link friends open and copy. Tickets hand off to AXS.</div></div>
+  </div>
+
+  <h3>The visitor journey</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="fnum">01</div><div class="fttl">Arrives</div><div class="fdesc">A weekend visitor opens the app, sees "This Month" big-rocks and "First-Timer's SB" guide.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">02</div><div class="fttl">Orients</div><div class="fdesc">The Near Me sort shows what's around their hotel; "One Perfect SB Day" offers a ready-made arc. The evergreen depth shines.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">03</div><div class="fttl">Plans the trip</div><div class="fdesc">Saves a dinner, a beach, a show. Shares the saved list as a <b>real view-only link</b> companions can open and copy — and emails themselves a save-restore link for the phone.</div></div>
+  </div>
+
+  <h3>The "it's raining" journey</h3>
+  <div class="flow">
+    <div class="flow-step"><div class="fnum">01</div><div class="fttl">Gray morning</div><div class="fdesc">Marine layer won't burn off. User opens the app out of habit.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">02</div><div class="fttl">App reads the sky</div><div class="fdesc">Hero card tag becomes "☁️ Gray day move," surfaces an indoor pick. The secondary feed filters to indoor-only under "The gray day playbook." Feels magical.</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="fnum">03</div><div class="fttl">Saved day</div><div class="fdesc">Museum, a cozy tasting room, MOXI with the kids — the day's rescued.</div></div>
+  </div>
+</section>
+
+<!-- ============ DELIGHT ============ -->
+<section id="delight">
+  <div class="kicker">12 — Delighter Moments</div>
+  <h2 class="sec">What makes it special</h2>
+  <p class="lead">The small touches that turn a useful app into a beloved one — the things that make someone smile and come back.</p>
+
+  <div class="delight">
+    <div class="delight-c"><div class="emoji">🌅</div><h4>The living editorial hero</h4><p>The sky tracks time of day; the sun pulses softly. But now the hero also surfaces today's pick as an editorial card — not below the fold, inside the hero itself. The first thing you see tells you exactly where to be.</p></div>
+    <div class="delight-c"><div class="emoji">🌧️</div><h4>It reads the weather</h4><p>On a gray day the hero tag becomes "☁️ Gray day move," the pick swaps to an indoor option, and the whole secondary feed pivots to indoor-only under "The gray day playbook." An app that visibly cares about your actual day.</p></div>
+    <div class="delight-c"><div class="emoji">🆕</div><h4>Being first to know</h4><p>The Just Opened rail makes you the friend who knows what's new. Inherently shareable local news — "did you hear [spot] opened?" Each rail card has a heart button for a quick save without opening the detail.</p></div>
+    <div class="delight-c"><div class="emoji">🤫</div><h4>Local wisdom in the copy</h4><p>"Park on Anacapa, the Funk Zone lots are a trap." The blurbs carry insider texture no database has — the voice of someone who lives here.</p></div>
+    <div class="delight-c"><div class="emoji">🔗</div><h4>A list you can actually send</h4><p>Share your saved list and you get a real link — not just a screenshot. Whoever you're going with opens it, sees the spots, and saves their own copy to tweak. Sharing becomes social, and the link quietly grows the app.</p></div>
+    <div class="delight-c"><div class="emoji">🎯</div><h4>Made-for-me feeling</h4><p>Choosing "Family Day" on a clear Saturday surfaces a completely different SB than "Nightlife" on a Friday. The app feels personal without an account.</p></div>
+    <div class="delight-c"><div class="emoji">❤️</div><h4>The heart pop</h4><p>A spring animation plays on every save — scale up, settle back, instant confirmation. Small, but it makes saving feel satisfying rather than invisible.</p></div>
+    <div class="delight-c"><div class="emoji">🌅</div><h4>One Perfect SB Day</h4><p>For the ~64% of visitors here for the day, a one-tap ready-made morning-to-sunset lineup drops straight into your saved list to tweak and share. The day-tripper's front door — packaging, not new machinery.</p></div>
+  </div>
+</section>
+
+<!-- ============ WEATHER ============ -->
+<section id="weather">
+  <div class="kicker">13 — Weather-Reactivity</div>
+  <h2 class="sec">The app reads the sky</h2>
+  <p class="lead">Weather isn't just displayed — it's acted upon. The reactivity is assertive on bad days and invisible on nice ones, so it shows up exactly when it's useful.</p>
+
+  <div class="showcase" style="justify-content:center; gap:24px; flex-wrap:wrap;">
+    <div style="text-align:center;">
+      <div class="phone" style="width:230px;">
+        <div class="phone-notch" style="width:90px;"></div>
+        <div class="phone-screen" style="height:300px;">
+          <div class="app-hero day" style="min-height:300px; padding-top:28px; padding-bottom:10px;">
+            <div class="app-cloud" style="opacity:.4;"></div><div class="app-sun" style="right:24px;"></div>
+            <div class="app-hero-c">
+              <div class="app-date">Friday, June 20</div>
+              <div class="app-cond"><span>☀️ 74° clear</span><span>🌅 Sunset 8:05</span></div>
+            </div>
+            <div class="app-hpc" style="margin-top:18px;">
+              <div class="app-hpc-img" style="background:linear-gradient(135deg,#3d8aa0,#16586A 80%);"><div class="app-hpc-tag">This morning's move</div><div class="app-hpc-heart">♡</div></div>
+              <div class="app-hpc-body"><div class="app-hpc-eyebrow">Outdoors</div><div class="app-hpc-title">Mesa Lane Steps</div><div class="app-hpc-meta">📍 The Mesa · Morning best</div><div class="app-hpc-cta">View details ↗</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px; color:var(--sage); font-weight:600; margin-top:8px;">Nice day → app behaves normally</div>
+    </div>
+    <div style="text-align:center;">
+      <div class="phone" style="width:230px;">
+        <div class="phone-notch" style="width:90px;"></div>
+        <div class="phone-screen" style="height:300px;">
+          <div class="app-hero rain" style="min-height:300px; padding-top:28px; padding-bottom:10px;">
+            <div class="app-cloud" style="background:rgba(255,255,255,.35);"></div>
+            <div class="app-hero-c">
+              <div class="app-date">Saturday, June 21</div>
+              <div class="app-cond"><span>☁️ 61° overcast</span><span>🌫️ Low clouds</span></div>
+            </div>
+            <div class="app-hpc" style="margin-top:18px;">
+              <div class="app-hpc-img" style="background:linear-gradient(135deg,#4a5560,#6b7480 80%);"><div class="app-hpc-tag" style="background:rgba(255,255,255,.25);color:#fff;">☁️ Gray day move</div><div class="app-hpc-heart">♡</div></div>
+              <div class="app-hpc-body"><div class="app-hpc-eyebrow">Arts &amp; Culture</div><div class="app-hpc-title">SB Museum of Art</div><div class="app-hpc-meta">📍 Downtown · Open till 5</div><div class="app-hpc-cta">View details ↗</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px; color:var(--sage); font-weight:600; margin-top:8px;">Gray day → pick swaps to indoor, eyebrow changes</div>
+    </div>
+  </div>
+  <div class="caption">Left: on a clear day the hero behaves normally — the pick card eyebrow reads "This morning's move" / "This afternoon's pick" / "✨ Tonight's pick." Right: on a gray day the pick swaps to an indoor option and the eyebrow becomes "☁️ Gray day move." The feed below also pivots to indoor-only: "Also worth it · indoors" / "The gray day playbook."</div>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section id="admin">
+  <div class="kicker">14 — The Admin Cockpit</div>
+  <h2 class="sec">The founder's side</h2>
+  <p class="lead">SB Daymaker is two-sided. The admin cockpit is your private, password-protected dashboard — works on desktop <em>and</em> mobile (approving the daily edition from your phone over coffee is the real use case). Every surface follows one pattern: <b>the AI proposes, you approve.</b> ~15 minutes a day keeps the whole product running.</p>
+
+  <div class="admin-grid">
+    <div class="admin-c"><div class="anum">Surface 01 — daily use</div><h4>The Daily Approval queue</h4><p>Opens to tomorrow's auto-drafted edition — hero pick + secondary picks + AI blurbs. Approve, or swap a pick / edit a line. Auto-publishes with your veto (ships unless you stop it). Sixty seconds.</p></div>
+    <div class="admin-c"><div class="anum">Surface 02</div><h4>The Content Review queue</h4><p>Everything AI drafted that wants a glance — new blurbs, any occasion tag below the confidence threshold, and anything caught by a negative-rule gate (a Tier-1 with no date, a Tier-3 with no reason-to-go, a 21+ tagged Family Day). Violations surface loudly.</p></div>
+    <div class="admin-c"><div class="anum">Surface 03</div><h4>The Staleness board</h4><p>Happy hours, recurring rhythms, and places sorted by "last confirmed," oldest first. One tap = "still good" (resets the clock) or update/remove. How time-sensitive data stays trustworthy without becoming a chore.</p></div>
+    <div class="admin-c"><div class="anum">Surface 04</div><h4>First Looks composer</h4><p>Create a First Look: add the place, a photo, opening date; AI drafts the blurb in your voice; tweak, publish. The high-touch, high-delight surface.</p></div>
+    <div class="admin-c"><div class="anum">Surface 05 — heavy at launch</div><h4>Evergreen place manager</h4><p>Your clean interface to seed and edit the ~150 core places — happening category, reason-to-go, neighborhood, price, occasion tags, time-of-day fit, and any recurring schedule; AI drafts the blurb; you approve.</p></div>
+    <div class="admin-c"><div class="anum">Surface 06</div><h4>Guides editor</h4><p>Create and refresh the Discover SB guides (neighborhood + theme) — assemble stops, reorder, edit intros.</p></div>
+  </div>
+
+  <div class="callout pac">
+    <div class="ctitle">Why it's a co-equal MVP deliverable</div>
+    The consumer app literally cannot run day-to-day without the cockpit — every AI draft, every staleness check, every First Look needs a home. It's far cheaper to build than the consumer app (Supabase gives auth + data nearly for free), and it's all one review-and-approve pattern pointed at six content types. A daily email tells you when tomorrow's edition is ready; the same cockpit assembles the 2×/week email (Wed + Fri) for your one-tap veto.
+  </div>
+</section>
+
+<!-- ============ INVENTORY ============ -->
+<section id="inventory">
+  <div class="kicker">15 — Feature Inventory</div>
+  <h2 class="sec">Everything, listed</h2>
+  <p class="lead">The complete MVP feature set, for reference. Everything in this document, enumerated.</p>
+
+  <h3>Consumer app — MVP</h3>
+  <table>
+    <tr><th>Feature</th><th>What it does</th></tr>
+    <tr><td><strong>Golden-hour hero</strong></td><td>Two-layer design: sky strip (sun-tracking, conditions pills, no greeting) + living editorial pick card surfacing from the mountain silhouette with context-aware eyebrow copy, title, venue/time, CTA. Reacts to time of day and weather.</td></tr>
+    <tr><td><strong>Time horizons</strong></td><td>Today / This Week / This Month — time-filters over one happenings model; This Month kept lightweight (marquee list)</td></tr>
+    <tr><td><strong>Occasion tags (the Lens)</strong></td><td>Ten-tag bottom sheet (compact "✦ Any Vibe ▾" button) that filters the app; tag sets <em>what</em>, cascade sets <em>order</em>; first-run gentle overlay banner ("What vibe are you looking for?") — app usable behind it. A supporting feature, not the headline.</td></tr>
+    <tr><td><strong>Filter (demoted)</strong></td><td>Vibe chips live inside the "⚙ Refine ▾" bottom sheet, contextual to active Lens. Compact dual-button row (Lens + Refine) replaces old tall pill + chip stack.</td></tr>
+    <tr><td><strong>First Looks + New This Week</strong></td><td>New + opening-soon spots (pulsing dot, per-card hearts) plus a dedicated "New This Week in SB" surface that also feeds the 2×/week email; the freshness engine</td></tr>
+    <tr><td><strong>Evergreen places (Tier-3 floor)</strong></td><td>The curated core of SB places, each framed as a reason-to-go — the anti-empty floor of the cascade</td></tr>
+    <tr><td><strong>Detail screens</strong></td><td>Focused place/event pages with editorial blurb (long-form), occasion tags, ticket hand-off, "＋ Save" CTA (saves as "want to go"). The shareable saved-list link lives in Saved.</td></tr>
+    <tr><td><strong>Happy Hour (light at launch)</strong></td><td>V1: a curated "happy hours around town" list with "last confirmed" dates — no live countdowns. Teaser on Explore links to it. Live countdowns + venue freshness → Phase 2.</td></tr>
+    <tr><td><strong>Near Me (in-view sort)</strong></td><td>V1: a sort — not a screen — on Explore &amp; Saved. Geolocation first → neighborhood floats up; on deny, default to an SB center + a one-tap neighborhood picker. No map tiles. Full Mapbox map (clustering, sub-tabs, filter-sync) → Phase 2.</td></tr>
+    <tr><td><strong>City guides (Discover SB)</strong></td><td>Two groups — neighborhood + theme guides — each surfacing the live happenings scoped to it; Lens-matched theme guide shows a "✦ For you" badge; "Submit event" link in footer</td></tr>
+    <tr><td><strong>Save (on-device, two-state)</strong></td><td>Heart anything; each save is "want to go" (default) or "been," one tap to flip; spring pop on save; no account. Saved screen leads with "want to go," auto-groups by time, type filter chips. Passwordless magic-link restores saves on a new device.</td></tr>
+    <tr><td><strong>Share a saved list</strong></td><td>From Saved: pick one item or a multi-select batch → a <strong>view-only link</strong> (written to <span class="mono">shared_states</span>, kind <span class="mono">shared_list</span>) handed to the native share sheet. Anyone opens it to see the picks and save their own copy — no recipient PII, no send cost. <strong>One Perfect SB Day</strong> seeds the list. (Replaces the retired My Plan.)</td></tr>
+        <tr><td><strong>Weather-reactivity</strong></td><td>Assertive on bad days, invisible on nice days. Gray day: hero card tag becomes "☁️ Gray day move," surfaces indoor pick; secondary feed filters to indoor-only; section label becomes "The gray day playbook."</td></tr>
+    <tr><td><strong>Email — first-class, 2×/week</strong></td><td>Midweek "What's On" (Wed) + weekend "The Local's Weekend" (Fri); covers new + upcoming; AI-assembled from approved content, founder auto-sends with veto; single opt-in, never a wall. (Web push for installed users → Phase 2.)</td></tr>
+    <tr><td><strong>Submit-an-event form</strong></td><td>Public form for organizers to push grassroots/social-first events (AI parses pasted captions); routes to admin review</td></tr>
+    <tr><td><strong>Claim-your-business form</strong></td><td>Public form for venues to submit happy hours, openings, and (Phase 2) photos</td></tr>
+  </table>
+
+  <h3>Admin cockpit — MVP (all six surfaces)</h3>
+  <table>
+    <tr><th>Surface</th><th>Purpose</th></tr>
+    <tr><td><strong>Daily Approval</strong></td><td>Approve/edit tomorrow's auto-drafted edition</td></tr>
+    <tr><td><strong>Content Review</strong></td><td>Review AI drafts + low-confidence occasion tags + tier-gate violations</td></tr>
+    <tr><td><strong>Staleness board</strong></td><td>Re-confirm aging happy hours / places</td></tr>
+    <tr><td><strong>First Looks composer</strong></td><td>Create new-opening features</td></tr>
+    <tr><td><strong>Evergreen place manager</strong></td><td>Seed + edit the core places</td></tr>
+    <tr><td><strong>Guides editor</strong></td><td>Build + refresh the flagship guides</td></tr>
+  </table>
+
+  <h3>The three Tier-1 AI jobs (invisible infrastructure)</h3>
+  <div class="grid3">
+    <div class="card"><h4 style="margin-top:0;">Cascade / hero ranking</h4><p style="margin-bottom:0; font-size:13px;">Tier-1 leads and takes the hero; Tier-2/3 backfill (lead-and-blend). Weighs scarcity, marquee, weather fit, variety.</p></div>
+    <div class="card"><h4 style="margin-top:0;">Category + occasion tagging</h4><p style="margin-bottom:0; font-size:13px;">Proposes each thing's category (1 of 16) + occasion tags, with a confidence threshold + negative-rule safety. Tier is derived from structure, not tagged.</p></div>
+    <div class="card"><h4 style="margin-top:0;">Editorial blurbs</h4><p style="margin-bottom:0; font-size:13px;">Original house-voice copy from extracted facts (copyright-clean). The live app is fully deterministic — no per-tap AI.</p></div>
+  </div>
+
+  <div class="callout">
+    <div class="ctitle">Phase 2 (committed) &amp; never (out of scope)</div>
+    <div style="font-size:12px;font-weight:700;color:var(--pacificDk);margin:2px 0 6px;">Phase 2, sequenced:</div>
+    <span class="pill gold">Web push (installed users)</span>
+    <span class="pill gold">Full Mapbox map</span>
+    <span class="pill gold">Live Happy Hour countdowns</span>
+    <span class="pill gold">Full Spanish-language layer</span>
+    <span class="pill gold">Operator-submitted photos</span>
+    <span class="pill gold">Account-based cross-device sync</span>
+    <div style="font-size:12px;font-weight:700;color:var(--tile);margin:12px 0 6px;">Never / out of scope:</div>
+    <span class="pill">In-app ticketing / payment</span>
+    <span class="pill">Reviews / ratings</span>
+    <span class="pill">Full account system</span>
+    <span class="pill">AI-written digest synthesis</span>
+    <span class="pill">Follow-graphs</span>
+    <span class="pill">Natural-language search</span>
+    <span class="pill">Real-time collaborative itinerary builder</span>
+    <span class="pill">Live crowding / parking</span>
+  </div>
+</section>
+
+</div>
+
+<div class="footer">
+  <div class="serif" style="font-size:20px; color:var(--ink); margin-bottom:6px;">SB Daymaker</div>
+  Product Bible &middot; Document 2 &middot; v3 — happenings-first<br>
+  <span style="font-style:italic;">Rendered screens are visual representations of the intended product; the production build uses live data, real maps, and real photography.</span>
+</div>
+
+<script>
+  // Robust TOC navigation — works even inside sandboxed iframe previews.
+  document.querySelectorAll('.toc a[href^="#"]').forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var target = document.getElementById(id);
+      if (target){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+        if (history && history.replaceState) history.replaceState(null,'','#'+id);
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Innovation &amp; Differentiation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;
+    --blocker:#B23A2E;--high:#C77D1E;--med:#9A8A3E;--low:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#C0532E,#E0A82E 130%);color:var(--paper);padding:62px 0 54px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(252,250,245,.45),rgba(252,250,245,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(36,28,22,.7);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(40px,7vw,64px);line-height:.98;margin:0 0 16px;letter-spacing:-.01em;color:#241C16;}
+  .cover .lede{font-size:18px;max-width:680px;color:rgba(36,28,22,.86);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(36,28,22,.12);border:1px solid rgba(36,28,22,.2);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:#241C16;}
+  section{padding:44px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);font-weight:600;letter-spacing:.04em;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(25px,4vw,35px);line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 22px;max-width:780px;}
+  p{margin:0 0 14px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:24px 0 6px;}
+  ul{margin:0 0 14px;padding-left:20px;}
+  li{margin:0 0 7px;}
+  .stage-head{display:flex;align-items:center;gap:12px;margin:30px 0 6px;}
+  .stage-head .ico{font-size:22px;}
+  .stage-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:11px 13px;font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:11px 13px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--terra);white-space:nowrap;font-size:13px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+  .p-low{background:#E7F0E9;color:var(--low);}
+  .p-med{background:#F6EFD9;color:var(--med);}
+  .p-high{background:#F6E5D2;color:var(--high);}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:20px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .northstar{background:linear-gradient(150deg,#0E3C49,#16586A);color:var(--paper);border:none;border-radius:16px;padding:30px 30px;margin:22px 0;box-shadow:var(--shadow);}
+  .northstar .k{color:var(--gold);}
+  .northstar .big{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(22px,3.4vw,30px);line-height:1.16;margin:6px 0 10px;}
+  .northstar p{color:rgba(252,250,245,.9);margin:0;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0;}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:18px 20px;box-shadow:var(--shadow);}
+  .card .cl{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--terra);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px;}
+  .card h4{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:0 0 8px;}
+  .card .idea{margin:0 0 9px;font-size:14.5px;}
+  .card .idea b{font-weight:600;}
+  .card .idea .lives{color:var(--ink2);font-size:13px;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:32px 0;margin-top:48px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Innovation &amp; Differentiation Study</div>
+    <h1>Your Santa<br>Barbara</h1>
+    <p class="lede">Why a curation app can win in a town that already has Yelp, Google, and Visit SB — and the small set of buildable ideas that make SB Daymaker structurally hard to copy. The north-star: the app reflects your <em>accumulating relationship with the city</em> back to you.</p>
+    <div class="badges">
+      <span class="badge">📄 Document 7 — Innovation</span>
+      <span class="badge">⭐ North-star: "Your Santa Barbara"</span>
+      <span class="badge">🌅 Status: v9 canon</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="callout" style="margin-top:30px;border-left-color:var(--tile);background:#FBF0EA;">
+    <div class="k">v9 — aligned to the three-section cut</div>
+    <p style="margin:0;">This study is written against the v9 shape of the app: <strong>three sections — Explore · Saved · Discover SB</strong>, with <strong>Near Me</strong> as an in-view sort and <strong>sharing</strong> as a view-only saved-list link. Every "Do Now" idea below names which of those three surfaces it lives on, so nothing here implies the retired Map or My Plan. <strong>Status: v9 canon · 2026-06-21.</strong></p>
+  </div>
+
+  <div class="callout" style="border-left-color:var(--pacific);">
+    <div class="k">Reconciliation note — read this first</div>
+    <p style="margin:0 0 6px;">This document was <strong>regenerated</strong> from the locked findings (the "Your Santa Barbara" north-star, "been"-marking as the governing dependency, the four moats, and the locked V1 build sequence) and re-aligned to v9. It is <strong>not</strong> a byte-restore of the earlier file, which wasn't available to rebuild from.</p>
+    <p style="margin:0;">The <strong>strategy spine</strong> (gap → moats → north-star → been-marking → sequence → solo ceiling) is solid and matches the rest of the canon. The one thing to <strong>reconcile against your locked master</strong> is the exact "Do Now" idea roster and its <span class="mono">A#/B#/D#</span> codes in §05 — the anchor ideas (A1 been-diary, A2 recap, B7 golden-hour, B8 marine-layer voice, D12 signed-voice + trust, D13 locals'-secret) are confident; ideas I rounded the set out with are flagged <span class="pill p-med">verify</span>.</p>
+  </div>
+
+  <!-- 01 -->
+  <section id="s1">
+    <div class="sec-num">01 — The question</div>
+    <h2>Why would anyone use this instead of Google?</h2>
+    <p class="sub">Every honest differentiation study starts here. Santa Barbara already has Yelp (reviews), Google (everything), TripAdvisor (visitors), and Visit SB / the Independent (a static calendar). A new app earns its place only if it does something those four structurally <em>cannot</em>.</p>
+    <p>The directories win on <strong>coverage</strong> — every restaurant, every rating, forever. SB Daymaker cannot out-cover them and should never try. But coverage answers <em>"what exists?"</em> It does not answer the question a resident or a returning visitor actually asks, which is <em>"what's worth doing in Santa Barbara today, and what do I, specifically, do with it?"</em></p>
+    <p>That question has two halves the directories leave on the floor: a <strong>happenings half</strong> (what's actually on — shows, markets, the first-Thursday art walk — not a frozen list of places) and a <strong>relationship half</strong> (the app knowing your Santa Barbara: where you've been, what you keep coming back to, the city you're slowly building a history with). The first half keeps the app useful. The second half is what makes it <em>yours</em> — and it is the half no directory will ever build, because a directory's whole business is being the same for everyone.</p>
+  </section>
+
+  <!-- 02 -->
+  <section id="s2">
+    <div class="sec-num">02 — The four moats</div>
+    <h2>What actually defends the product</h2>
+    <p class="sub">Four advantages, in order. The first three keep SB Daymaker alive and useful. The fourth is the one a competitor with more money still couldn't copy — because it's built out of the user's own history, not the operator's content.</p>
+    <table class="tbl">
+      <thead><tr><th>Moat</th><th>What it is</th><th>Why directories can't take it</th></tr></thead>
+      <tbody>
+        <tr><td class="id">1 · Happenings</td><td>The three-tier cascade — discrete dated events → recurring rhythms → evergreen reasons-to-go — so the screen is never empty.</td><td>Their unit is the <em>place</em>, owned forever; ours is the <em>happening</em>, true only today. Compiling that is editorial work they don't do.</td></tr>
+        <tr><td class="id">2 · Voice</td><td>Editorial curation at scale — AI drafts, founder approves — with a point of view and an incorruptible-ranking promise.</td><td>An algorithm optimizing for engagement reads differently from a knowing local friend. Trust is a posture, not a feature they can switch on.</td></tr>
+        <tr><td class="id">3 · Floor</td><td>The evergreen Tier-3 layer — always-on, activity-framed reasons to go — that solves the "empty app on a quiet Tuesday" risk.</td><td>It's insurance for the spine, not a competing directory. It exists to keep the lights on, cheaply, solo.</td></tr>
+        <tr><td class="id">4 · Relationship</td><td><strong>"Your Santa Barbara"</strong> — the accumulating, on-device record of where you've <em>been</em>, reflected back as a felt sense of belonging.</td><td><strong>This is the real moat.</strong> It's made of the user's own history. A competitor can copy a feature; they can't copy three years of <em>your</em> Saturdays.</td></tr>
+      </tbody>
+    </table>
+    <p>Moats 1–3 are already specified across the canon (Documents 2, 3, 5). This study is mostly about <strong>moat 4</strong> — naming it, and turning it into a small set of things you can actually build solo in V1.</p>
+  </section>
+
+  <!-- 03 -->
+  <section id="s3">
+    <div class="sec-num">03 — The north-star</div>
+    <h2>The app reflects your city back to you</h2>
+    <div class="northstar">
+      <div class="k">North-star finding</div>
+      <div class="big">"Your Santa Barbara" — over weeks, the app quietly accumulates a relationship with the city on your behalf, and then reflects it back so you feel it.</div>
+      <p>Discovery gets you in the door. The relationship is why you stay. Most discovery apps are amnesiacs — every open is a cold start. SB Daymaker's edge is <em>memory</em>: it remembers your Santa Barbara, and occasionally shows it to you in a way that feels like a gift rather than a dashboard.</p>
+    </div>
+    <p>The emotional target is the small lift of <em>"oh — that's my year in this town."</em> Not points, not badges-for-their-own-sake, not a quantified-self chart. A warm, slightly surprising reflection of a life being lived in a specific, beautiful place. That feeling is the product's deepest differentiator, and it costs almost nothing to run because it's computed on-device from data the user already created by tapping one button.</p>
+  </section>
+
+  <!-- 04 -->
+  <section id="s4">
+    <div class="sec-num">04 — The governing dependency</div>
+    <h2>Everything hangs on "been"-marking</h2>
+    <p class="sub">The entire relationship layer draws from a single interaction: the two-state save, where a user flips a saved item from "want to go" to <strong>"been."</strong> That one tap is the fuel tank. Nail it before anything that feeds on it.</p>
+    <p>This is the most important sequencing fact in the whole study. Every Cluster-A idea — the diary, the recap, the My-SB card, the "regular" recognition, memory lane — is downstream of "been." If the been-mark is fiddly, forgettable, or unrewarding, the fuel tank stays empty and every relationship feature built on top renders blank. So the build order is non-negotiable on this point:</p>
+    <ul>
+      <li><strong>First, make "been" effortless and quietly satisfying</strong> — one tap from a saved item, a soft confirmation, no forms. It already lives in the v9 schema as the two-state save and on the Saved screen as the "been" flip.</li>
+      <li><strong>Then build the diary (A1)</strong> — the simplest possible consumer of been-data: a quiet list of everywhere you've been. This proves the tank is filling.</li>
+      <li><strong>Only then the recap (A2)</strong> — the keystone payoff that turns a list into "your Santa Barbara."</li>
+    </ul>
+    <div class="callout">
+      <div class="k">The rule</div>
+      <p style="margin:0;">No relationship feature ships before the been-mark feels good and the diary proves data is accumulating. Build the fuel tank and the fuel gauge before the engine.</p>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="s5">
+    <div class="sec-num">05 — The slate</div>
+    <h2>The "Do Now" ideas for V1</h2>
+    <p class="sub">A small, buildable set — clustered by what they serve and tagged by which of the three v9 surfaces they live on. Each is scoped to survive the solo-operator ceiling (§07). Complexity is a rough build-effort read for a non-technical founder working with Claude Code.</p>
+
+    <div class="stage-head"><span class="ico">🪪</span><h3>Cluster A — The relationship layer (the moat)</h3></div>
+    <div class="grid">
+      <div class="card">
+        <div class="cl">A1 · Been-diary</div>
+        <h4>The quiet log of where you've been</h4>
+        <p class="idea">A simple, scrollable record of everywhere you've flipped to "been." No scores. The fuel gauge that proves the relationship is accumulating. <span class="lives">Lives in: <b>Saved</b> (a "Been" view alongside "Want to go").</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;Reads existing on-device save data; no new infrastructure.</p>
+      </div>
+      <div class="card">
+        <div class="cl">A2 · Recap Lite — the keystone</div>
+        <h4>"Your Santa Barbara," reflected back</h4>
+        <p class="idea">A periodic, warm summary of your been-data — your neighborhoods, your most-returned-to spots, a season in a glance — designed to feel like a gift and to be shared. The emotional payoff of the whole moat. <span class="lives">Lives in: <b>Saved</b> (surfaced card) → shareable via the saved-list-share mechanism.</span></p>
+        <p class="idea"><span class="pill p-med">build: medium</span> &nbsp;Deterministic aggregation on-device; the craft is in the copy + the single shareable visual.</p>
+      </div>
+      <div class="card">
+        <div class="cl">A3 · My-SB card <span class="pill p-med">verify</span></div>
+        <h4>A shareable identity snapshot</h4>
+        <p class="idea">A single, handsome card — your top zones, your streak of weeks-with-a-been, your leading occasion tags — built to share. The recap's portable cousin; a quiet growth loop. <span class="lives">Lives in: <b>Saved</b> → native share sheet.</span></p>
+        <p class="idea"><span class="pill p-med">build: medium</span> &nbsp;Same data as A2, one designed card; gate behind A1/A2 shipping first.</p>
+      </div>
+      <div class="card">
+        <div class="cl">A4 · "Regular" recognition <span class="pill p-med">verify</span></div>
+        <h4>The app notices you keep coming back</h4>
+        <p class="idea">When you've been to a place or zone enough times, a gentle, earned <em>"you're a regular here"</em> — recognition, not gamification. Belonging made visible, in voice. <span class="lives">Lives in: <b>Explore</b> / detail (a soft line on a place you frequent).</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;A threshold on been-counts + a line of copy. Keep it rare so it stays meaningful.</p>
+      </div>
+      <div class="card">
+        <div class="cl">A5 · Memory lane <span class="pill p-med">verify</span></div>
+        <h4>"A year ago, you went to…"</h4>
+        <p class="idea">Occasionally resurface a past been-item at a resonant moment (a year on; same season). A small, warm surprise that deepens the relationship without nagging. <span class="lives">Lives in: <b>Explore</b> (an occasional card) — strictly opt-out-able, never spammy.</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;A date check over been-data; the risk is tone, not engineering.</p>
+      </div>
+    </div>
+
+    <div class="stage-head"><span class="ico">🌅</span><h3>Cluster B — The living surface (the daily hook)</h3></div>
+    <div class="grid">
+      <div class="card">
+        <div class="cl">B7 · Golden-hour moment</div>
+        <h4>The hero that's alive</h4>
+        <p class="idea">The signature surface: a golden-hour hero where the sun tracks the real time of day with live conditions. The reason to open the app like you check the weather. <span class="lives">Lives in: <b>Explore</b> (the hero).</span></p>
+        <p class="idea"><span class="pill p-med">build: medium</span> &nbsp;Already specified; the craft is the motion + reduced-motion fallback.</p>
+      </div>
+      <div class="card">
+        <div class="cl">B8 · Marine-layer voice</div>
+        <h4>The app reads the actual SB sky</h4>
+        <p class="idea">Weather-reactive voice — assertive on a gray day ("gray day move," indoor picks), invisible on a perfect one. The app feels like it's <em>in</em> Santa Barbara with you. <span class="lives">Lives in: <b>Explore</b> (hero tag + feed filter).</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;OpenWeather read → one branch in the hero copy + an indoor filter.</p>
+      </div>
+    </div>
+
+    <div class="stage-head"><span class="ico">✍️</span><h3>Cluster D — Voice &amp; trust (curation, made visible)</h3></div>
+    <div class="grid">
+      <div class="card">
+        <div class="cl">D12 · Signed voice + trust page</div>
+        <h4>A point of view, and a promise stated out loud</h4>
+        <p class="idea">Picks read as written by a knowing local, and a public "why you can trust this" page states the incorruptible-curation rule plainly: <em>the ranker never reads sponsor status.</em> Best-in-class curators market this; SB Daymaker had kept it internal. <span class="lives">Lives in: <b>Explore</b> voice + a standalone trust page.</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;Mostly copy + one static page. High trust-per-effort.</p>
+      </div>
+      <div class="card">
+        <div class="cl">D13 · Locals'-secret layer</div>
+        <h4>The texture a directory can't fake</h4>
+        <p class="idea">A short "local's note" on detail screens — the insider line ("park on Anacapa; the Funk Zone lots are a trap") that signals a human who actually goes there. <span class="lives">Lives in: <b>Explore</b> / detail screens.</span></p>
+        <p class="idea"><span class="pill p-low">build: low</span> &nbsp;An optional field on a thing + founder-written notes; AI can draft, you approve.</p>
+      </div>
+    </div>
+
+    <div class="stage-head"><span class="ico">🧭</span><h3>Cluster C — Exploration nudges <span class="pill p-med">verify</span></h3></div>
+    <div class="grid">
+      <div class="card">
+        <div class="cl">C9 · Corners you haven't turned <span class="pill p-med">verify</span></div>
+        <h4>A gentle push past your habits</h4>
+        <p class="idea">Uses been-data <em>inversely</em>: a nudge toward a neighborhood or category you haven't tried, framed as invitation not nag. Turns the relationship layer into discovery fuel. <span class="lives">Lives in: <b>Discover SB</b> (a "new to you" prompt).</span></p>
+        <p class="idea"><span class="pill p-med">build: medium</span> &nbsp;Inverse of been-zones × the guide set; depends on A1 data existing first.</p>
+      </div>
+      <div class="card">
+        <div class="cl">C10 · "What's back" <span class="pill p-med">verify</span></div>
+        <h4>The thing you loved last year has returned</h4>
+        <p class="idea">Ties the happenings spine to memory: when a seasonal happening you marked "been" returns, surface it warmly. Where the relationship moat and the happenings moat reinforce each other. <span class="lives">Lives in: <b>Explore</b> (a returning-favorite card).</span></p>
+        <p class="idea"><span class="pill p-high">build: higher</span> &nbsp;Needs seasonal recurrence matching against been-history; a strong Phase-2 candidate if V1 is tight.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="s6">
+    <div class="sec-num">06 — The sequence</div>
+    <h2>The order to build them in</h2>
+    <p class="sub">The locked V1 sequence. It front-loads small confidence-building wins, then builds the moat spine in dependency order, then rounds out. A non-technical founder should resist the urge to start with the exciting recap — it's built last among the keystones, on purpose.</p>
+    <table class="tbl">
+      <thead><tr><th>Order</th><th>Ship</th><th>Why here</th></tr></thead>
+      <tbody>
+        <tr><td class="id">1 · Warm-ups</td><td>D12 (signed voice + trust page) · D13 (locals'-secret) · B7 (golden-hour) · B8 (marine-layer voice)</td><td>Low-build, high-character wins that establish voice and trust. They make the app <em>feel</em> like SB Daymaker before any heavy machinery — and they don't depend on been-data.</td></tr>
+        <tr><td class="id">2 · The fuel</td><td>Effortless "been"-marking → <strong>A1 been-diary</strong></td><td>The governing dependency (§04). Make the been-mark satisfying, then prove the tank fills with the simplest consumer of that data.</td></tr>
+        <tr><td class="id">3 · The keystone</td><td><strong>A2 recap lite</strong></td><td>The emotional payoff — "Your Santa Barbara." Only meaningful once A1 shows data is accumulating. This is the moment the moat becomes felt.</td></tr>
+        <tr><td class="id">4 · Round out</td><td>A3 My-SB card · A4 "regular" · A5 memory lane · C9 corners</td><td>Each feeds on the now-proven been-data and the recap. Add by appetite, not all at once; every one is gated on the fuel tank being real.</td></tr>
+        <tr><td class="id">P2 · Defer</td><td>C10 "what's back" · richer seasonal recap</td><td>Seasonal recurrence matching is the heaviest lift and the least certain payoff at launch. A clean Phase-2 candidate.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 07 -->
+  <section id="s7">
+    <div class="sec-num">07 — The binding constraint</div>
+    <h2>The solo-operator ceiling decides everything</h2>
+    <p class="sub">In every bold growth scenario, the limiting factor isn't market size — it's that one person can spend ~15 minutes a day on this. That ceiling, not ambition, is the real filter on the idea slate.</p>
+    <p>It's why this study is short. A bigger team would chase the social graph, user reviews, a full quantified-self dashboard, real-time co-editing. Each of those is a daily-maintenance tax or a moderation burden a solo founder cannot pay. The ideas that survived the cut share three properties, and any future idea should be tested against them:</p>
+    <ul>
+      <li><strong>Computed, not curated.</strong> The relationship features (A1–A5) run on-device from data the user creates by tapping. They add zero daily operator work — the best kind of feature for this constraint.</li>
+      <li><strong>Voice over volume.</strong> The trust and locals'-secret ideas (D12, D13) are write-once character, not a content treadmill.</li>
+      <li><strong>No new moderation surface.</strong> Nothing here invites user-generated content that a solo founder would have to police. The been-mark is private and on-device; sharing is opt-in and view-only.</li>
+    </ul>
+    <div class="callout">
+      <div class="k">The test for any future idea</div>
+      <p style="margin:0;">Does it add daily operator work, a moderation burden, or new always-on infrastructure? If yes, it's Phase 2 at the earliest — no matter how good it sounds.</p>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="s8">
+    <div class="sec-num">08 — The anti-differentiation</div>
+    <h2>What we deliberately don't do</h2>
+    <p class="sub">Differentiation is as much about refusal as invention. These are the tempting features that would blur the product, tax the operator, or quietly betray the trust promise — and are out of scope on purpose.</p>
+    <ul>
+      <li><strong>Reviews &amp; ratings.</strong> That's Yelp's moat, a moderation nightmare, and the opposite of a curated point of view. The voice <em>is</em> the rating.</li>
+      <li><strong>A social graph / follower mechanics.</strong> Sharing is a view-only link, not a network. No feeds to moderate, no follower counts to chase.</li>
+      <li><strong>Gamification for its own sake.</strong> "Regular" status and the recap are recognition and reflection, not points-grinding. The moment it feels like a game to win, the warmth dies.</li>
+      <li><strong>A quantified-self dashboard.</strong> "Your Santa Barbara" is a felt reflection, not a stats page. Charts would trade the gift for a chore.</li>
+      <li><strong>In-app transactions / accounts.</strong> Stays out (canon): low PII, on-device, no account wall. The relationship lives on the device, which is exactly why it can't be commoditized.</li>
+    </ul>
+    <p>Held together, the refusals are the point: SB Daymaker is the discovery app that <em>remembers your city with you</em>, run by one person, that never becomes a directory, a social network, or a casino. That sentence is the differentiation.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 7 · Innovation &amp; Differentiation</span>
+    <span>"Your Santa Barbara" · v9 canon · the moat is memory.</span>
+  </div>
+</footer>
+
+</body>
+</html>

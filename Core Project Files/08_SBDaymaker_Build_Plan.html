@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Build Plan (click-by-click)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;--blocker:#B23A2E;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#C0532E,#E0A82E 130%);color:var(--paper);padding:60px 0 50px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(252,250,245,.45),rgba(252,250,245,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(36,28,22,.7);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(36px,6.4vw,58px);line-height:1.0;margin:0 0 16px;letter-spacing:-.01em;color:#241C16;}
+  .cover .lede{font-size:18px;max-width:710px;color:rgba(36,28,22,.86);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(36,28,22,.12);border:1px solid rgba(36,28,22,.2);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:#241C16;}
+  section{padding:38px 0 6px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(23px,4vw,32px);line-height:1.06;margin:4px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 16px;max-width:790px;}
+  p{margin:0 0 13px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:20px;margin:22px 0 6px;}
+  h4{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin:18px 0 6px;}
+  ul,ol{margin:0 0 13px;padding-left:22px;}
+  li{margin:0 0 8px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .money{background:#FBEEEA;border:1px solid #E7C3B7;border-left:4px solid var(--terra);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .money .k{color:var(--terra);}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  .tcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow);}
+  .tcard .t{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin-bottom:4px;}
+  .tcard.bot{border-left:4px solid var(--pacific);}
+  .tcard.you{border-left:4px solid var(--terra);}
+  .rhythm{background:#EAF0F2;border:1px solid #BcD3D9;border-radius:13px;padding:6px 24px 12px;margin:16px 0;}
+  .rhythm ol{counter-reset:r;list-style:none;padding-left:0;margin:14px 0 8px;}
+  .rhythm ol li{position:relative;padding-left:42px;margin-bottom:12px;}
+  .rhythm ol li::before{counter-increment:r;content:counter(r);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:var(--pacific);color:var(--paper);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .phase{background:linear-gradient(150deg,#0E3C49,#16586A);color:var(--paper);border-radius:14px;padding:22px 26px;margin:30px 0 0;box-shadow:var(--shadow);}
+  .phase .pn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
+  .phase h2{color:var(--paper);margin:6px 0 8px;}
+  .phase .goal{color:rgba(252,250,245,.93);margin:0;font-size:15.5px;}
+  .pbody{background:var(--paper);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;padding:16px 24px 22px;margin:0 0 6px;box-shadow:var(--shadow);}
+  .track{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin:2px 0;}
+  .t-you{background:#F6E0DA;color:var(--terra);}
+  .t-bot{background:#E4EEF2;color:var(--pacific);}
+  .substep{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--pacific-d);margin:18px 0 4px;}
+  .prompt{background:#241C16;color:#F1E9DC;border-radius:11px;padding:15px 18px;margin:10px 0 14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;}
+  .prompt .lbl{display:block;color:var(--gold);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .checkwrap{background:#F0F4EC;border:1px solid #CBDBC0;border-radius:12px;padding:14px 20px 6px;margin:14px 0 4px;}
+  .checkwrap .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--forest);margin-bottom:6px;}
+  .check{list-style:none;padding-left:0;margin:6px 0 4px;}
+  .check li{position:relative;padding-left:30px;margin-bottom:8px;font-size:14.5px;}
+  .check li::before{content:"☐";position:absolute;left:0;top:-1px;font-size:18px;color:var(--forest);font-weight:700;}
+  .warn{color:var(--blocker);font-weight:600;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:30px 0;margin-top:46px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">The Capstone · Click-by-Click Build Runbook</div>
+    <h1>Build SB Daymaker,<br>one click at a time</h1>
+    <p class="lede">Written assuming you've <em>never</em> set up a website, a database, or a coding tool. You won't write code — Claude Code writes it; you click, paste, and check. Ten phases, in order. Each ends with a list that tells you exactly where to click to confirm it worked.</p>
+    <div class="badges">
+      <span class="badge">📄 Document 8 — Build Plan</span>
+      <span class="badge">🖱️ No experience assumed</span>
+      <span class="badge">🌅 Status: v9 canon</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="money" style="margin-top:28px;">
+    <div class="k">Before you spend a dollar — three things to know</div>
+    <ol style="margin:6px 0 0;">
+      <li><strong>Claude Code needs a PAID Claude plan.</strong> The free plan does not include it. You'll need at least <strong>Claude Pro (~$17–20/month)</strong>. Heavy days can hit Pro's limits; the Max plan raises them, but start with Pro.</li>
+      <li><strong>There are two different "Claude" logins.</strong> (a) Your <strong>Claude subscription</strong> powers the build tool (Claude Code). (b) An <strong>Anthropic API key</strong> powers your app's nightly writing — only set up in Phase 8. If that's confusing now, ignore it; each phase tells you which you need.</li>
+      <li><strong>Running cost after launch ≈ $45/month</strong> plus your Claude plan. Everything below starts on a free tier; you pay only as you grow.</li>
+    </ol>
+  </div>
+
+  <section style="border-top:none;">
+    <h2>How to read this guide</h2>
+    <div class="twocol">
+      <div class="tcard bot"><div class="t">🤖 Claude builds</div><div>You paste a short instruction and let Claude Code work. You never type code.</div></div>
+      <div class="tcard you"><div class="t">🧑 You do</div><div>Things only you can do — make an account, copy a key, click a website button. Spelled out click-by-click.</div></div>
+    </div>
+    <div class="callout">
+      <div class="k">When a screen doesn't match this guide</div>
+      <p style="margin:0;">Websites change their buttons often. If something doesn't look exactly like what's written here, <strong>don't panic — ask Claude Code</strong>: e.g. <em>"I'm on the Supabase site trying to find my project's API keys — walk me through where to click."</em> It can guide you to the current spot.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>How every build step works</h2>
+    <p class="sub">Read this once — it's the rhythm of the whole build. From Phase 1 on, every phase is the same five moves, so you never have to wonder "what do I actually do?"</p>
+    <div class="rhythm">
+      <ol>
+        <li><strong>Open your project in VS Code.</strong> Open the VS Code app. The first time, point it at your project: <span class="mono">File</span> menu → <strong>Open Folder</strong> → choose your <span class="mono">sb-daymaker</span> folder. After that it remembers.</li>
+        <li><strong>Open Claude Code.</strong> In VS Code's left-hand strip of icons, click the <strong>Claude</strong> icon. A chat box appears — that's your builder.</li>
+        <li><strong>Paste the phase's kickoff prompt</strong> and press Enter. Claude shows a <strong>plan</strong> (a numbered list of what it'll do). <strong>Read it.</strong> If it mentions a <em>Map</em> or <em>My Plan</em> feature (both removed), say <em>"that's removed in v9, re-read CLAUDE.md and revise."</em> Otherwise approve it (type <em>"yes, go ahead"</em> or click Approve).</li>
+        <li><strong>Let it build; answer its questions.</strong> It may pause to ask you to paste a key or confirm a choice. Do it, and it continues.</li>
+        <li><strong>Run the app and look at it.</strong> Claude starts a "development server" and shows a web address like <span class="mono">http://localhost:3000</span>. Ctrl-click (Cmd-click on Mac) it, or paste it into your browser — the app opens. <em>That's how you "look at" the app in every checklist.</em> To stop it, click the terminal area and press <strong>Ctrl + C</strong>.</li>
+      </ol>
+      <p style="margin:4px 0 6px;"><strong>Two safety nets, always there:</strong> <em>Plan mode</em> (make Claude show the plan before touching anything) and <em>rewind</em> (if a change breaks something, say <em>"undo the last change"</em> and you're back to when it worked). You can't permanently break anything.</p>
+    </div>
+  </section>
+
+  <!-- PHASE 0 -->
+  <div class="phase">
+    <div class="pn">Phase 0 · all YOU · click-by-click</div>
+    <h2>Set up your tools and accounts</h2>
+    <p class="goal">Every account and program exists, you're signed in, and a blank "coming soon" page is live on the internet. This is the most clicking — it gets much smoother after this.</p>
+  </div>
+  <div class="pbody">
+    <div class="substep">0.1 — Create a GitHub account (where your code is stored)</div>
+    <ol>
+      <li>In your browser, go to <strong>github.com</strong>. Click <strong>Sign up</strong>; enter an email, password, username; verify your email.</li>
+      <li>Click the <strong>+</strong> icon (top-right) → <strong>New repository</strong>.</li>
+      <li>Name it <span class="mono">sb-daymaker</span>, leave the rest as-is, click the green <strong>Create repository</strong>. Leave the tab open.</li>
+    </ol>
+    <p><strong>✅ Check:</strong> you see a page titled <span class="mono">sb-daymaker</span>.</p>
+
+    <div class="substep">0.2 — Install Node.js (the engine that runs your app on your computer)</div>
+    <ol>
+      <li>Go to <strong>nodejs.org</strong>. Click the big <strong>LTS</strong> download button (the stable version).</li>
+      <li>Open the downloaded file; click through <strong>Continue / Next → Agree → Install → Finish</strong>, accepting defaults.</li>
+    </ol>
+    <p><strong>✅ Check:</strong> Claude Code confirms this for you in step 0.7 — nothing to verify by hand.</p>
+
+    <div class="substep">0.3 — Install VS Code (where you'll see your project and talk to Claude Code)</div>
+    <ol>
+      <li>Go to <strong>code.visualstudio.com</strong>; download for your computer; install (drag to Applications on Mac; Next/Next/Finish on Windows).</li>
+      <li>Open <strong>VS Code</strong>. A welcome screen appears — leave it open.</li>
+    </ol>
+    <p><strong>✅ Check:</strong> the VS Code app opens and shows a "Welcome" tab.</p>
+
+    <div class="substep">0.4 — Install Claude Code &amp; sign in (your AI builder)</div>
+    <p>Requires a <strong>paid</strong> Claude plan. If you don't have one, go to <strong>claude.com</strong> and upgrade to <strong>Pro</strong> first.</p>
+    <ol>
+      <li>In VS Code's far-left icon strip, click the <strong>Extensions</strong> icon (four squares). A search box appears.</li>
+      <li>Type <span class="mono">Claude Code</span>. Find the result <strong>published by Anthropic</strong> and click <strong>Install</strong>.</li>
+      <li>A <strong>Claude</strong> icon appears in the left strip. Click it → click <strong>Sign in</strong>. Your browser opens; log in to your Claude account and approve. Return to VS Code.</li>
+    </ol>
+    <div class="checkwrap"><div class="k">✅ Check it worked</div>
+      <ul class="check">
+        <li>A Claude chat panel is visible inside VS Code.</li>
+        <li>It shows you as <strong>signed in</strong> (no more "Sign in" button).</li>
+        <li>If anything's off, type in the panel: <em>"Are you set up correctly? Run a diagnostic."</em></li>
+      </ul>
+    </div>
+    <p style="font-size:14px;color:var(--ink2);"><em>Alternative if the extension gives trouble: a graphical <strong>Claude Desktop app</strong> at claude.com/download, or a one-line terminal installer on the official setup page. The extension is simplest for most people.</em></p>
+
+    <div class="substep">0.5 — Create your Supabase account &amp; project (your database)</div>
+    <ol>
+      <li>Go to <strong>supabase.com</strong> → <strong>Start your project</strong>. Easiest: <strong>Continue with GitHub</strong>.</li>
+      <li>Click <strong>New project</strong>. Name it <span class="mono">sb-daymaker</span>; <strong>create a database password and write it down somewhere safe</strong>; pick the region closest to California; click <strong>Create new project</strong>.</li>
+      <li>Wait 1–2 minutes for setup. Leave the tab open.</li>
+    </ol>
+    <p><strong>✅ Check:</strong> you land on a project dashboard with a left menu (Table Editor, SQL Editor…).</p>
+
+    <div class="substep">0.6 — Create your Vercel account (where your app lives online)</div>
+    <ol>
+      <li>Go to <strong>vercel.com</strong> → <strong>Sign Up</strong> → <strong>Continue with GitHub</strong> and approve.</li>
+    </ol>
+    <p><strong>✅ Check:</strong> you see the Vercel dashboard.</p>
+
+    <div class="substep">0.7 — 🤖 First build: scaffold the app and put it online</div>
+    <p>Open the Claude panel in VS Code (rhythm move 2) and paste this:</p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md and Phase 0 of the Build Plan. Check that Node.js is installed correctly. Then scaffold a Next.js (App Router) project for SB Daymaker in this folder, wire in sbdaymaker_tokens.css as the design tokens, and create one placeholder home page that says "SB Daymaker — coming soon" styled with those tokens. Then walk me, click by click, through connecting this folder to my GitHub repo and deploying it live to Vercel. Use Plan mode and show me the plan first. Assume I'm non-technical and explain each thing you ask me to do.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 0 is done when</div>
+      <ul class="check">
+        <li>In VS Code's left panel, a list of project files appeared (folders like <span class="mono">app</span>, a file <span class="mono">package.json</span>) — the app was created.</li>
+        <li>You opened <span class="mono">http://localhost:3000</span> (rhythm move 5) and saw a <strong>"SB Daymaker — coming soon"</strong> page in warm cream/terracotta with a serif headline — <strong>not</strong> plain black-on-white.</li>
+        <li>Your GitHub <span class="mono">sb-daymaker</span> page now shows code files (refresh the tab).</li>
+        <li><strong>You opened the Vercel link (ends in <span class="mono">.vercel.app</span>) on your phone and saw the same page.</strong> 🎉 Your app is on the internet.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase">
+    <div class="pn">Phase 1</div>
+    <h2>Database &amp; practice content</h2>
+    <p class="goal">The database structure is created in Supabase, the app can read it, and ~25 pieces of practice content exist so later screens have something to show.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">YOU — get your Supabase details ready (paste when Claude asks):</span></p>
+    <ol>
+      <li>In your Supabase project, click <strong>Connect</strong> (top) — or the gear-shaped <strong>Project Settings</strong> (bottom-left) → <strong>API Keys</strong>.</li>
+      <li>Copy two values (click the copy icon by each): the <strong>Project URL</strong> (like <span class="mono">https://abcd1234.supabase.co</span>) and the <strong>Publishable key</strong> (starts <span class="mono">sb_publishable_…</span>). <em>If your project only shows a "Legacy" tab with an "anon" key, copy that anon key instead — it works too.</em></li>
+    </ol>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md and Phase 1. Load sbdaymaker_schema.sql into my Supabase database (walk me through running it in Supabase's SQL Editor if you can't do it directly), connect this Next.js app to Supabase using the Project URL and publishable key I'll paste, and make a simple test page that lists rows from the things table so we can confirm the connection works. Plan mode first. Explain anything you need me to click.</div>
+    <p><strong>Then load practice content:</strong> open <span class="mono">09_SBDaymaker_Seed_Data_Guide.html</span> and follow <strong>Stage 1</strong>. Don't do real content yet.</p>
+    <div class="checkwrap"><div class="k">✅ Phase 1 is done when</div>
+      <ul class="check">
+        <li><strong>See your tables:</strong> in Supabase, click <strong>Table Editor</strong> (left menu). You see tables named <span class="mono">things</span>, <span class="mono">guides</span>, <span class="mono">shared_states</span>, and more.</li>
+        <li><strong>See your rows:</strong> click the <span class="mono">things</span> table — about <strong>25 rows</strong> fill the grid.</li>
+        <li><strong>See it in the app:</strong> open the test page Claude made; it lists those items — proving the app reads the database.</li>
+        <li>The Seed Guide's own Stage-1 checklist all passed.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase">
+    <div class="pn">Phase 2</div>
+    <h2>The design system (reusable building blocks)</h2>
+    <p class="goal">The standard visual parts (buttons, cards, tags, pop-up sheets, loading placeholders) exist once, so every screen later looks consistent.</p>
+  </div>
+  <div class="pbody">
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, sbdaymaker_tokens.css, and Phase 2. Build the core reusable UI components from the tokens — buttons, a content card, chips/tags, a bottom pop-up sheet, grey "skeleton" loading placeholders, and empty-state blocks. Put them all on one hidden preview page at "/kitchen-sink" so I can see them together. Match the wireframe's look. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 2 is done when</div>
+      <ul class="check">
+        <li>Open the address Claude gives ending in <span class="mono">/kitchen-sink</span>. You see all the pieces on one page.</li>
+        <li>Buttons and cards look <strong>warm and rounded</strong> with the brand fonts — not a plain grey form.</li>
+        <li>Loading areas show <strong>soft grey placeholder shapes</strong> ("skeletons"), not a spinning circle.</li>
+        <li>Clicking a card gives a small, pleasing press animation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="phase">
+    <div class="pn">Phase 3</div>
+    <h2>The app frame &amp; the three tabs</h2>
+    <p class="goal">The three-section shell exists and you can move between sections. Still empty inside — just the frame.</p>
+  </div>
+  <div class="pbody">
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the wireframe (02b_SBDaymaker_Wireframe.html), and Phase 3. Build the app shell with a bottom navigation bar of exactly three tabs — Explore, Saved, Discover SB — and switching between them. Each section is an empty placeholder for now, each showing its warm in-voice empty-state message. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 3 is done when</div>
+      <ul class="check">
+        <li>Open the app. At the <strong>bottom</strong> is a bar with <strong>exactly three</strong> buttons: Explore · Saved · Discover SB.</li>
+        <li><span class="warn">⚠️ If you see a Map tab or a My Plan tab,</span> tell Claude <em>"those are removed in v9, re-read CLAUDE.md and fix the navigation."</em></li>
+        <li>Tapping each of the three tabs switches the screen.</li>
+        <li>Each empty screen shows a friendly sentence, not a blank page.</li>
+        <li><strong>Phone check:</strong> open it on your phone (Vercel link), or make the browser window very narrow — it stays tidy.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 4 -->
+  <div class="phase">
+    <div class="pn">Phase 4 · the heart</div>
+    <h2>Explore (the main daily screen)</h2>
+    <p class="goal">The time-of-day hero, the scrolling feed, the tag filters, the Near Me sort, the save button, and the "One Perfect SB Day" card.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">YOU — get an OpenWeather key ready:</span></p>
+    <ol>
+      <li>Go to <strong>openweathermap.org</strong>, create a free account, confirm your email.</li>
+      <li>Click your name (top-right) → <strong>My API keys</strong>. Copy the key. Paste it to Claude when asked.</li>
+    </ol>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the wireframe, and Phase 4. Build the Explore screen: the golden-hour hero (reflects time of day + weather), the happenings-first cascade feed using the fixture data, the occasion-tag filter, the Near Me in-view sort (ask for the phone's location; if denied, show a neighborhood picker instead — no map), the save button with the "want to go"/"been" two states, and the One Perfect SB Day card that fills the saved list. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 4 is done when (open the app, Explore tab)</div>
+      <ul class="check">
+        <li>A large <strong>hero</strong> sits at top and reflects time of day / weather.</li>
+        <li>Below it, a <strong>feed of cards</strong> shows different things to do.</li>
+        <li><strong>Tapping a tag</strong> (e.g. "Date Night") filters the feed.</li>
+        <li>Tapping <strong>Near Me</strong> re-orders the list; if asked to allow location, try both — when denied, a <strong>neighborhood picker</strong> appears (and <strong>no map</strong>).</li>
+        <li>Tapping the <strong>heart/save</strong> saves the card; you can switch it between "want to go" and "been."</li>
+        <li>The <strong>One Perfect SB Day</strong> card adds several items to your saved list at once.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 5 -->
+  <div class="phase">
+    <div class="pn">Phase 5</div>
+    <h2>Saved &amp; sharing</h2>
+    <p class="goal">Your saved list with two states, the Near Me sort, the share-a-list link, and the "email me my saves" backup.</p>
+  </div>
+  <div class="pbody">
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the wireframe, and Phase 5. Build the Saved screen: the saved list grouped sensibly, the "want to go"/"been" toggle with a separate "Been" view, the Near Me sort, the share flow (let me pick one or several items, then create a view-only link via the phone's share sheet, saved to shared_states as a shared_list), and the magic-link save-restore ("email me a link to restore my saves"). No accounts/logins. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 5 is done when (open the Saved tab)</div>
+      <ul class="check">
+        <li>Items you saved earlier appear, grouped; the empty version shows a friendly message.</li>
+        <li>You can flip an item between <strong>want to go</strong> and <strong>been</strong>, and view a <strong>"Been"</strong> list.</li>
+        <li><strong>Sharing test:</strong> select an item or two, tap <strong>Share</strong> — your device's share menu opens and gives a link.</li>
+        <li><strong>Open that link on a different device</strong> (or a private/incognito window): it shows the list and lets you <strong>save your own copy without logging in.</strong></li>
+        <li>Tap <strong>"email me a link to restore my saves,"</strong> open the email's link, and confirm your saves come back.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 6 -->
+  <div class="phase">
+    <div class="pn">Phase 6</div>
+    <h2>Discover SB (the guides)</h2>
+    <p class="goal">Neighborhood guides and theme guides, where opening a guide shows the live things happening within it.</p>
+  </div>
+  <div class="pbody">
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the wireframe, and Phase 6. Build Discover SB: two groups of guides — neighborhood guides (scoped by zone) and theme guides (matched by occasion tag) — and a guide page that shows the guide's writing plus the live happenings scoped to it (neighborhood guides match things by nearby_zone; theme guides match by tag). Items inside are savable. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 6 is done when (open the Discover SB tab)</div>
+      <ul class="check">
+        <li>You see <strong>two groups</strong> of guides: neighborhoods and themes.</li>
+        <li>Open a <strong>neighborhood</strong> guide — it shows things from that area.</li>
+        <li>Open a <strong>theme</strong> guide — it shows things matching that theme.</li>
+        <li>You can <strong>save</strong> an item from inside a guide.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 7 -->
+  <div class="phase">
+    <div class="pn">Phase 7</div>
+    <h2>Detail pages, submissions &amp; email signup</h2>
+    <p class="goal">The full info page for a thing, a "submit a place/event" form, and the email newsletter signup.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">YOU — get a Resend key ready (for sending email):</span></p>
+    <ol>
+      <li>Go to <strong>resend.com</strong>, sign up, confirm your email.</li>
+      <li>Click <strong>API Keys</strong> → <strong>Create API Key</strong>. Copy it (starts <span class="mono">re_</span>). Paste to Claude when asked.</li>
+    </ol>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the wireframe, and Phase 7. Build the detail page for a thing (full info, the local's-secret note, a save button, and a "get tickets" hand-off link to an external site), the submit-a-thing form (saves to the submissions table), and the email digest signup (saves to subscribers and sends a confirmation via Resend). Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 7 is done when</div>
+      <ul class="check">
+        <li><strong>Tap any card</strong> — a full detail page opens with all its info.</li>
+        <li>The <strong>"Get tickets"</strong> button opens an outside website (the app never takes payment).</li>
+        <li><strong>Submit test:</strong> fill the submit form, then in Supabase → <strong>Table Editor</strong> → <span class="mono">submissions</span>, confirm a new row appeared.</li>
+        <li><strong>Email test:</strong> sign up for the digest with your own email — confirm a new row in <span class="mono">subscribers</span> <em>and</em> a confirmation email in your inbox.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 8 -->
+  <div class="phase">
+    <div class="pn">Phase 8 · the engine room</div>
+    <h2>The nightly autopilot &amp; your approval screen</h2>
+    <p class="goal">Automation that keeps the app fresh with almost no daily work — it gathers content, has Claude write blurbs/tags overnight, and shows it to you to approve in one tap. This is Document 9, Stage 2, automated.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">YOU — set up the app's own AI key and the schedule:</span></p>
+    <ol>
+      <li><strong>The app's Claude key (different from your Claude Code login):</strong> go to <strong>platform.claude.com</strong> (the Anthropic Console), sign in, click <strong>API Keys</strong> → <strong>Create Key</strong>, copy it (starts <span class="mono">sk-ant-</span>). Paste to Claude Code as a <strong>secret</strong> when asked. <em>Billed per use, separate from your subscription.</em></li>
+      <li><strong>Your Supabase secret key:</strong> Supabase → <strong>Project Settings → API Keys</strong> → copy the <strong>Secret key</strong> (<span class="mono">sb_secret_…</span>; or the legacy <strong>service_role</strong> key if that's what you see). <span class="warn">This one is powerful — only paste it where Claude tells you (server-side), never into a public place.</span></li>
+      <li><strong>Turn on the schedule:</strong> Claude will have you set your <strong>Vercel</strong> project to the <strong>Pro</strong> plan (needed for scheduled jobs) and will set the nightly timer.</li>
+    </ol>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, the architecture doc, Document 9, and Phase 8. Build the nightly pipeline: one scheduled job that gathers facts, batch-enriches them with the Claude API on the cheapest model to add blurbs/tags/tier/category — using ONLY the facts provided, never inventing places, dates, or times — and stages them for review. Then build an admin "cockpit" screen where I approve or reject each item in one tap before it goes live. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 8 is done when</div>
+      <ul class="check">
+        <li>You can <strong>trigger the job manually</strong> (Claude shows you how) and watch new items appear in the approval screen.</li>
+        <li>The <strong>cockpit</strong> lists staged items with AI-written blurbs and tags.</li>
+        <li>You can <strong>approve/reject</strong>; only approved items show in the public app.</li>
+        <li><strong>Spot-check (important):</strong> pick a few items and confirm the AI <strong>did not invent</strong> an address or time — compare to the real source (per Document 9).</li>
+        <li>The <strong>nightly schedule</strong> is set (Claude confirms the timer) and runs on its own.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 9 -->
+  <div class="phase">
+    <div class="pn">Phase 9 · launch</div>
+    <h2>Launch — installable, accessible, real, and live</h2>
+    <p class="goal">The app installs to a phone like a real app, works for everyone, is fast, runs on your own web address, and is filled with real Santa Barbara content.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">YOU:</span></p>
+    <ol>
+      <li><strong>Real content:</strong> open <strong>Document 9</strong> and run <strong>Stage 2</strong> for real — the ~100–150 verified things. (The one slow, human part. Quality over quantity.)</li>
+      <li><strong>Your web address:</strong> Vercel → your project → <strong>Settings → Domains</strong> to buy or connect a custom domain. Claude walks you through it.</li>
+    </ol>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md and Phase 9. Make SB Daymaker an installable app (PWA — home-screen install + offline shell), run an accessibility pass to the WCAG 2.2 AA standard (color contrast, labels, keyboard use, reduced motion), speed it up, and prepare the production launch on my custom domain. Give me a final pre-launch checklist and walk me through the domain step. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 9 is done when</div>
+      <ul class="check">
+        <li><strong>Install test:</strong> open the app on your phone's browser, use the browser menu, choose <strong>"Add to Home Screen."</strong> It appears as an icon and opens full-screen like a real app.</li>
+        <li><strong>Real content</strong> is loaded and the practice fixtures are deleted.</li>
+        <li><strong>Accessibility:</strong> ask Claude to <em>"run an accessibility check and show me the results"</em> — it reports a pass (or fixes what it finds). Eyeball it: text is readable, buttons easy to tap.</li>
+        <li><strong>Speed:</strong> loads quickly on your phone on cellular, not just wifi.</li>
+        <li><strong>It's live on your own domain</strong> (not just the <span class="mono">.vercel.app</span> address). 🎉 You launched.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- WRAP -->
+  <section>
+    <h2>When something goes wrong (it will — that's normal)</h2>
+    <ul>
+      <li><strong>A red error appeared:</strong> select the whole message, copy it, paste it to Claude Code, type <em>"this errored — please fix it."</em> Repeat until clean. You don't need to understand it.</li>
+      <li><strong>A change made things worse:</strong> type <em>"undo your last change"</em> or use Claude Code's rewind to go back, then retry with a clearer request.</li>
+      <li><strong>Claude built the wrong thing</strong> (a Map or My Plan): <em>"that's removed in v9 — re-read CLAUDE.md and redo the plan."</em></li>
+      <li><strong>A website's buttons don't match this guide:</strong> describe what you see to Claude Code and ask it to walk you to the right spot.</li>
+      <li><strong>Unsure a phase is done?</strong> If any box is unticked, it's not. Don't move on.</li>
+    </ul>
+    <div class="callout">
+      <div class="k">Deliberately saved for after launch (Phase 2)</div>
+      <p style="margin:0;">The full map, push notifications, the operator-photo program, paid sponsor placements, and the richer seasonal recap. None block launch. Ship the three-tab core, prove people open it daily, then expand.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 8 · Build Plan (click-by-click)</span>
+    <span>Keep CLAUDE.md, Doc 09, and the Credentials file open beside you · one phase at a time</span>
+  </div>
+</footer>
+
+</body>
+</html>

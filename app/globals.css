@@ -1,26 +1,35 @@
 @import "tailwindcss";
 
+/* Design tokens — the single source of truth for color, type, space, motion.
+   See CLAUDE.md §3 and §8.2: never hardcode a hex; always build against these. */
+@import "./sbdaymaker_tokens.css";
+
+/* Point the token font variables at the webfonts loaded in app/layout.tsx
+   (next/font/google). The token names stay the contract; these resolve them. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", monospace;
 }
 
+/* Mirror the semantic color tokens into Tailwind's theme so future phases can
+   use utilities like `bg-bg`, `text-accent`, `border-border`. Kept to colors
+   only for Phase 0 (fonts/space/radius get mapped as components arrive). */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-link: var(--text-link);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
 }

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Platform Architecture (v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,var(--pacific-d),var(--pacific) 55%,#2d7d8f 130%);color:var(--paper);padding:60px 0 52px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-70px;bottom:-110px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(224,168,46,.5),rgba(224,168,46,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--gold);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(38px,6.5vw,60px);line-height:1;margin:0 0 14px;letter-spacing:-.01em;}
+  .cover .lede{font-size:18px;max-width:680px;color:rgba(252,250,245,.92);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(252,250,245,.12);border:1px solid rgba(252,250,245,.22);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:500;}
+  section{padding:42px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);font-weight:600;letter-spacing:.04em;}
+  .upd{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#FBF1DC;color:#8a6a14;padding:2px 8px;border-radius:5px;margin-left:8px;vertical-align:middle;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4vw,34px);line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 20px;max-width:780px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:24px 0 6px;}
+  p{margin:0 0 13px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .toc{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:24px 28px;margin:32px 0 0;box-shadow:var(--shadow);}
+  .toc h4{font-family:'Fraunces',serif;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--sage);margin:0 0 14px;font-weight:600;}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:t;display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;}
+  .toc li{counter-increment:t;border-bottom:1px solid var(--plaster2);padding:7px 0;}
+  .toc li a{display:flex;gap:11px;text-decoration:none;color:var(--ink);font-size:14.5px;align-items:baseline;}
+  .toc li a::before{content:counter(t,decimal-leading-zero);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--terra);font-weight:600;}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:11px 13px;font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:11px 13px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--terra);border-radius:12px;padding:16px 20px;margin:18px 0;box-shadow:var(--shadow);}
+  .callout.note{border-left-color:var(--gold);background:#FBF6EA;}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  pre{background:var(--ink);color:#Efe7d8;border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;margin:14px 0;}
+  pre .c{color:#9aa897;}
+  pre .k{color:#E0A82E;}
+  .trace{list-style:none;padding:0;margin:14px 0;}
+  .trace li{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--pacific);border-radius:10px;padding:12px 16px;margin:9px 0;box-shadow:var(--shadow);font-size:14.5px;}
+  .trace b{color:var(--pacific);}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:32px 0;margin-top:48px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.toc ol{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Platform Architecture · Technical Reference</div>
+    <h1>How SB Daymaker<br>runs</h1>
+    <p class="lede">The complete technology and data architecture — every stack, source, pipeline, job, and constraint that makes the product run. Updated for the happenings-first cascade, the 2×/week email channel, and the magic-link save / saved-list-share infrastructure.</p>
+    <div class="badges">
+      <span class="badge">⚙️ Next.js · Supabase · Vercel Pro</span>
+      <span class="badge">📄 Document 3 — Architecture</span>
+      <span class="badge">🤖 Claude-powered editorial</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="callout note" style="margin-top:30px;border-left-color:var(--tile,#C0532E);">
+    <div class="k">v9 — the three-section cut (current; binding)</div>
+    <p style="margin:0;">SB Daymaker is now <strong>three sections: Explore · Saved · Discover SB.</strong> The <strong>Map screen and the My Plan itinerary builder are removed.</strong> Architectural consequences carried through this document: <strong>Near Me</strong> is an in-view <strong>sort</strong> (geolocation → neighborhood anchor) on Explore and Saved — not a screen; <strong>sharing</strong> is a view-only <strong>saved-list link</strong> (<span class="mono">shared_states.kind='shared_list'</span>) replacing the plan-link; <strong>One Perfect SB Day</strong> is an Explore card that seeds the saved list; <strong>Discover SB</strong> guides carry a <span class="mono">kind</span> + <span class="mono">zone</span> and surface live happenings. <strong>Mapbox leaves the V1 stack</strong> (full map → Phase 2). <strong>Status: v9 canon · 2026-06-21.</strong></p>
+  </div>
+
+  <div class="callout note" style="margin-top:18px;">
+    <div class="k">v3 — what changed (earlier)</div>
+    <p style="margin:0;">This version integrates the <strong>16 Locked UX Decisions</strong> (rationale in Document 6) and the <strong>7 follow-on decisions</strong> resolved afterward. The architectural deltas: the <strong>happenings-first cascade</strong> (a stored <span class="mono">happening_tier</span> + <span class="mono">recurring_schedules</span>), <strong>occasion tags</strong> (<span class="mono">thing_tags</span>, was <span class="mono">thing_personas</span>), the <strong>2×/week email cron</strong>, <strong>web push for installed users</strong> (Phase 2), and the <strong>magic-link save-restore + shareable saved-list link</strong> infrastructure (<span class="mono">shared_states</span>). The authoritative data contract is now <span class="mono">sbdaymaker_schema.sql</span>; the design system is <span class="mono">sbdaymaker_tokens.css</span>.</p>
+  </div>
+
+  <div class="toc">
+    <h4>The technical blueprint</h4>
+    <ol>
+      <li><a href="#s1">Architecture overview</a></li>
+      <li><a href="#s2">The technology stack</a></li>
+      <li><a href="#s3">The data architecture</a></li>
+      <li><a href="#s4">Data sources &amp; ingestion</a></li>
+      <li><a href="#s5">The image pipeline</a></li>
+      <li><a href="#s6">The AI layer</a></li>
+      <li><a href="#s7">Background jobs &amp; automation</a></li>
+      <li><a href="#s8">The admin cockpit</a></li>
+      <li><a href="#s9">The personal layer &amp; sharing</a></li>
+      <li><a href="#s10">Security, privacy &amp; cost</a></li>
+      <li><a href="#s11">Deployment &amp; environments</a></li>
+      <li><a href="#s12">A day in the data</a></li>
+      <li><a href="#s13">Key architectural decisions</a></li>
+    </ol>
+  </div>
+
+  <section id="s1">
+    <div class="sec-num">01 — The whole system</div>
+    <h2>Architecture overview <span class="upd">updated</span></h2>
+    <p class="sub">A two-sided web application on a deliberately lean, solo-operable stack: a Next.js app on <strong>Vercel Pro</strong>, a Supabase (Postgres) data layer, a Claude-powered editorial engine, and a small set of licensed external data/media APIs. One person can run it in minutes a day.</p>
+    <table class="tbl">
+      <thead><tr><th>Layer</th><th>What it holds</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Client</strong></td><td>Consumer app (Next.js / React, <strong>installable PWA</strong>, mobile-first) · Admin cockpit (desktop + mobile)</td></tr>
+        <tr><td><strong>Application / edge</strong></td><td>Next.js API routes &amp; server actions · Vercel Cron (Pro) · the image resolver</td></tr>
+        <tr><td><strong>Data</strong></td><td>Supabase Postgres (things <em>with happening-tier</em>, thing_tags, recurring_schedules, happy_hour_windows, guides, editions, submissions, subscribers, <strong>shared_states</strong>, audit) · Supabase Auth (admin + 2FA) · Supabase Storage (operator photos, later) · device storage (two-state saved list)</td></tr>
+        <tr><td><strong>Intelligence</strong></td><td>Claude API — blurbs · cascade ranking · category + occasion tagging (the live app is deterministic, not here)</td></tr>
+        <tr><td><strong>External</strong></td><td>Ticketmaster · venue/civic feeds · submission forms · operator submissions · local-media beat · Pexels / Wikimedia / Google Places · <strong>Mapbox</strong> (Phase 2 full map) · OpenWeather · <strong>Resend</strong> (2×/week email + magic-link delivery) · Vercel Web Analytics</td></tr>
+      </tbody>
+    </table>
+    <p>Every choice optimizes for <strong>one-person operability and low fixed cost</strong>: managed services over self-hosted infra, batch jobs over real-time, on-device state over accounts, and AI-drafts-you-approve over manual production.</p>
+  </section>
+
+  <section id="s2">
+    <div class="sec-num">02 — What it's built with</div>
+    <h2>The technology stack <span class="upd">updated</span></h2>
+    <table class="tbl">
+      <thead><tr><th>Layer</th><th>Tech</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Build</td><td>Cursor</td><td>The founder's primary tool</td></tr>
+        <tr><td>Framework</td><td>Next.js (App Router)</td><td>UI + API + server actions + SSR/ISR for guides</td></tr>
+        <tr><td>UI</td><td>React + Tailwind</td><td>Tokens in <span class="mono">sbdaymaker_tokens.css</span></td></tr>
+        <tr><td>Hosting / edge</td><td><strong>Vercel Pro</strong></td><td>Precise cron + Fluid Compute for the pipeline; better logs</td></tr>
+        <tr><td>Database</td><td>Supabase (Postgres)</td><td>Free in dev; <strong>Pro by launch</strong> — backups + no 7-day pause</td></tr>
+        <tr><td>Auth</td><td>Supabase Auth <strong>+ 2FA</strong></td><td>Admin only; login rate-limited</td></tr>
+        <tr><td>Intelligence</td><td>Claude API</td><td>Blurbs/ranking/tagging — <strong>tiered Haiku/Sonnet</strong></td></tr>
+        <tr><td>Location</td><td><strong>Browser Geolocation + neighborhood lookup</strong></td><td>Powers the Near Me sort — no map tiles in V1 (Mapbox → Phase 2)</td></tr>
+        <tr><td>Weather</td><td>OpenWeather</td><td>Weather-reactivity + conditions</td></tr>
+        <tr><td>Email</td><td><strong>Resend</strong></td><td><strong>First-class 2×/week edition</strong> (midweek + weekend) + the "edition ready" nudge + magic-link save-restore delivery</td></tr>
+        <tr><td>Analytics</td><td><strong>Vercel Web Analytics</strong></td><td>Cookieless — no consent banner</td></tr>
+        <tr><td>Scheduling</td><td>Vercel Cron (Pro)</td><td>One nightly orchestrator + a <strong>2×/week email cron (Wed + Fri)</strong> + the shared_states expiry reaper</td></tr>
+        <tr><td>Push</td><td>Web Push (installed PWA)</td><td><strong>Phase 2 fast-follow</strong> — installed users only; tonight's pick, saved-event reminder, big First Look; ≤1/day</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Deliberately NOT in the stack:</strong> a separate backend server, Kubernetes, Redis, a queue, microservices, or end-user auth.</p>
+  </section>
+
+  <section id="s3">
+    <div class="sec-num">03 — The unified model</div>
+    <h2>The data architecture <span class="upd">updated</span></h2>
+    <p class="sub">The heart is the unified <strong>"thing"</strong> model — places, events, First Looks, and happy hours in one table with a <span class="mono">type</span> discriminator — now classified by a <strong>happening tier</strong> that drives the whole-app cascade, so the hero, feed, Near Me sort, Discover SB guides, and saved list all draw from one pool, in one order. <strong>The schema is specified and runnable in <span class="mono">sbdaymaker_schema.sql</span>, which supersedes the earlier illustrative sketch.</strong></p>
+    <div class="callout">
+      <div class="k">The happenings-first cascade — the spine</div>
+      <p style="margin:0 0 8px;">Every <span class="mono">thing</span> carries a stored <span class="mono">happening_tier</span> (1/2/3) + a <span class="mono">happening_category</span> (one of 16) + a <span class="mono">reason_to_go</span>. <strong>Tier is derived from structure</strong>, not AI-judged: has a specific date → <strong>Tier 1</strong> (discrete, dated — leads, owns the hero); carries a <span class="mono">recurring_schedules</span> row → <strong>Tier 2</strong> (recurring rhythm, on its scheduled days); neither → <strong>Tier 3</strong> (evergreen, activity-framed — the anti-empty floor). The AI proposes only the <em>category</em>.</p>
+      <p style="margin:0;"><strong>Lead-and-blend (deterministic):</strong> Tier-1 leads (cap ~4) → Tier-2 active-today fills → Tier-3 always backfills to a minimum feed length (~12), so the screen is full on quiet <em>and</em> busy nights. <strong>Two negative-rule gates</strong> (code): Tier-1 with no date → block + route to Review; Tier-3 with no <span class="mono">reason_to_go</span> → block + route to Review ("no bare places"). Horizons (This Week / This Month) are <strong>time-filters over this one model</strong>, not separate systems.</p>
+    </div>
+    <h3>What the hardened schema added</h3>
+    <table class="tbl">
+      <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="mono">things</span></td><td>The unified unit, with constrained enums, the <strong>happening classification</strong> (<span class="mono">happening_tier</span> / <span class="mono">happening_category</span> / <span class="mono">reason_to_go</span>), <span class="mono">nearby_zone</span> (kills the client AREA_TO_HOOD), <span class="mono">indoor</span>, <span class="mono">is_21_plus</span>, photo fields, <span class="mono">hero_eligible</span>, <span class="mono">is_featured</span>/<span class="mono">sponsor_id</span></td></tr>
+        <tr><td><span class="mono">recurring_schedules</span></td><td><strong>New.</strong> Tier-2 recurring rhythms (day-of-week + start/end + label + last_confirmed); mirrors <span class="mono">happy_hour_windows</span>. A thing with a row here surfaces as Tier 2 on those days</td></tr>
+        <tr><td><span class="mono">thing_tags</span></td><td>Junction — <strong>occasion tag</strong> (the 10) + confidence + provenance (was <span class="mono">thing_personas</span>). Sets <em>what</em> is shown; the cascade sets <em>order</em></td></tr>
+        <tr><td><span class="mono">happy_hour_windows</span></td><td>Real day-of-week + start/end schedules (live countdown is <strong>Phase 2</strong>; V1 ships a "last confirmed" list). The cascade unions these as Tier-2</td></tr>
+        <tr><td><span class="mono">guides</span> · <span class="mono">guide_stops</span></td><td>Stops as rows; a stop can link to a real <span class="mono">thing</span> (deep-link + savable)</td></tr>
+        <tr><td><span class="mono">editions</span> · <span class="mono">edition_picks</span></td><td>Ordered hero + secondary slots; one-hero-per-edition constraint</td></tr>
+        <tr><td><span class="mono">submissions</span></td><td>Raw public-form payloads + submitter PII + consent, before parsing</td></tr>
+        <tr><td><span class="mono">subscribers</span></td><td>Email opt-in — double opt-in + unsubscribe tokens</td></tr>
+        <tr><td><span class="mono">shared_states</span></td><td><strong>New.</strong> One token→payload store for the <strong>magic-link save-restore</strong> (kind=save_restore, user's own email) + the <strong>shareable saved-list link</strong> (kind=shared_list, no recipient PII). Opaque tokens; sliding expiry; service-role only</td></tr>
+        <tr><td><span class="mono">sponsors</span> · <span class="mono">audit_log</span></td><td>Reserved monetization (Phase 2) · the AI/approval accountability trail</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="k">Identity model — no accounts, one PII boundary</div>
+      <p style="margin:0;">There is <strong>no end-user <em>account</em> table</strong> — saves live on-device (two-state: "want to go" / "been"). Stored end-user PII is limited to the user's <em>own</em> email — digest opt-in (<span class="mono">subscribers</span>) and the optional magic-link save-restore delivery address (<span class="mono">shared_states</span>) — treated as one boundary. Saved-list share-links store <strong>no</strong> recipient contact info (shared via the native share sheet). Public reads are limited to <span class="mono">status = 'published'</span> via RLS; submissions/subscribers/sponsors/audit/<strong>shared_states</strong> are service-role only.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <div class="sec-num">04 — Where content comes from</div>
+    <h2>Data sources &amp; ingestion <span class="upd">updated</span></h2>
+    <p class="sub">Ticketed APIs are the easy ~10%; the other ~90% comes from a portfolio of sources. All ingestion pulls <strong>facts</strong> — never source marketing copy. Inbound from the public forms lands in the <span class="mono">submissions</span> table first, then is parsed and approved into a draft <span class="mono">thing</span>.</p>
+    <h3>Sourcing posture — scrape facts, with guardrails</h3>
+    <p>The decision is to scrape facts, made defensible by guardrails (because <em>hiQ v. LinkedIn</em> established that a site's Terms of Service — not copyright — is the controlling risk):</p>
+    <table class="tbl">
+      <thead><tr><th>Guardrail</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Check <span class="mono">robots.txt</span> + ToS per source first</td><td>Civic gov calendar is lowest-risk; commercial venue/tourism sites are higher-risk</td></tr>
+        <tr><td>Never create an account or click through a ToS</td><td>That's what converts public scraping into breach of contract</td></tr>
+        <tr><td>Prefer official API / iCal / RSS feeds first</td><td>Same facts, explicitly published — far lower risk than scraping a page</td></tr>
+        <tr><td>Good-citizen scraping (honest UA, rate limits, off-peak)</td><td>Lowers trespass-to-chattels exposure</td></tr>
+        <tr><td>Per-source adapters that fail gracefully + alert</td><td>Submission engine + manual curation are the fallback when one breaks</td></tr>
+        <tr><td>Pre-launch IP/tech attorney review</td><td>Cheap, high-value de-risking of the whole posture</td></tr>
+      </tbody>
+    </table>
+    <p>The <strong>copyright-clean guarantee</strong> still holds architecturally: the pipeline stores facts only; the <span class="mono">blurb</span> column is populated solely by the AI writing original prose. <strong>Direct FB/IG scraping remains out of scope.</strong></p>
+  </section>
+
+  <section id="s5">
+    <div class="sec-num">05 — Photos, legally &amp; cheaply</div>
+    <h2>The image pipeline <span class="upd">updated</span></h2>
+    <p class="sub">A resolver picks the cheapest legal source per context. The big correction: Google photos are fetched with a <strong>referrer-restricted client key — not a server proxy.</strong></p>
+    <pre><span class="c">// resolver order — cheapest legal source wins</span>
+<span class="k">function</span> resolvePhoto(thing){
+  <span class="k">if</span> (thing.photo_source === <span class="k">'owned'</span>)  <span class="k">return</span> ownedUrl(thing);      <span class="c">// Phase 2</span>
+  <span class="k">if</span> (isAmbient(thing))   <span class="k">return</span> pexels(thing.photo_query);   <span class="c">// free, curated</span>
+  <span class="k">if</span> (isLandmark(thing))  <span class="k">return</span> wikimedia(thing.title);      <span class="c">// free, CC, attributed</span>
+  <span class="k">if</span> (thing.place_id)     <span class="k">return</span> googlePhoto(thing.place_id);   <span class="c">// referrer-keyed, lazy</span>
+  <span class="k">return</span> placeholderGradient(thing.type);                      <span class="c">// branded fallback</span>
+}</pre>
+    <p><strong>Why a referrer-restricted key, not a proxy:</strong> Maps keys are designed for client-side use locked to a domain, so a leaked key is useless elsewhere — and we avoid paying a Vercel function invocation + bandwidth on every photo (which could exceed the photo cost itself).</p>
+    <h3>Safeguards (all in the build)</h3>
+    <p>Lazy-load every image (the cost lever — Google photos can't be cached); a hard Google billing cap + alert (~$50/mo); resolution order (free sources first); branded placeholder + blur-up; Wikimedia attribution rendered on landmark images. Build on <strong>Places API (New)</strong>; re-confirm the Place Photo SKU (<strong>$7/1k after 1k free/mo</strong>, confirmed) + caching terms at billing setup.</p>
+  </section>
+
+  <section id="s6">
+    <div class="sec-num">06 — The editorial engine</div>
+    <h2>The AI layer <span class="upd">updated</span></h2>
+    <p class="sub">The Claude API is invisible infrastructure serving curation. It runs <strong>three nightly jobs</strong> — the live app is <em>not</em> one of them; every section is deterministic (see §09).</p>
+    <table class="tbl">
+      <thead><tr><th>Job</th><th>Output</th><th>Validation</th><th>Model</th></tr></thead>
+      <tbody>
+        <tr><td>Editorial blurbs</td><td>plain text</td><td>length + no-copied-phrasing; regenerate on fail</td><td>Haiku</td></tr>
+        <tr><td>Category + occasion tagging</td><td>structured (tool use)</td><td>enum-valid category + negative-rules + confidence threshold (tier is derived, not tagged)</td><td>Haiku</td></tr>
+        <tr><td>Cascade / hero ranking</td><td>structured</td><td>ids exist + hero_eligible + Tier-1-leads + lead-and-blend variety</td><td>Sonnet</td></tr>
+        <tr><td>Submission parse</td><td>structured</td><td>schema + sanitize (untrusted input)</td><td>Haiku</td></tr>
+      </tbody>
+    </table>
+    <h3>The negative-rule layer — code, not prose</h3>
+    <p>Runs after the model, before any write: <span class="mono">is_21_plus → strip 'family_day'</span> · <span class="mono">price_band ≠ free → strip 'free_sb'</span> · <span class="mono">happening_tier = 1 &amp;&amp; no date → block + route to Review</span> · <span class="mono">happening_tier = 3 &amp;&amp; no reason_to_go → block + route to Review</span> · <span class="mono">confidence &lt; 0.6 → don't publish, route to Content Review</span> · <span class="mono">tag_source = founder → overrides</span>. <strong>Model IDs are pinned</strong> (never "latest"); every call has a timeout + 1 retry + fallback (skip &amp; flag; hero → evergreen). Cost is cents/day at this batch size.</p>
+  </section>
+
+  <section id="s7">
+    <div class="sec-num">07 — The nightly pipeline</div>
+    <h2>Background jobs &amp; automation <span class="upd">updated</span></h2>
+    <p class="sub">A <strong>single orchestrator function</strong> on Vercel Pro runs the steps <em>in sequence</em> (race-free), with Fluid Compute for duration headroom. This replaces the earlier sketch of six independently-scheduled crons, which couldn't guarantee ordering on any tier.</p>
+    <pre><span class="c">// one orchestrated nightly run (early morning)</span>
+ingest()        <span class="c">// TM API + venue/civic facts (guardrailed) + inbound submissions</span>
+  .then(normalize)  <span class="c">// → unified things, dedupe (fuzzy title+venue+date), geocode + cache</span>
+  .then(enrich)     <span class="c">// Claude blurbs + category + occasion tags; tier DERIVED from structure; negative rules + the 2 tier-gates applied</span>
+  .then(staleCheck) <span class="c">// flag/drop happy hours + recurring + places past last_confirmed</span>
+  .then(draftEdition) <span class="c">// Claude cascade-ranks → hero (best Tier-1) + lead-and-blend feed; weather-aware</span>
+  .then(notify);    <span class="c">// email "edition ready"; auto-publishes by veto if untouched</span>
+
+<span class="c">// 2×/week email cron — assembles from the ALREADY-APPROVED cascade (no net-new editorial)</span>
+wednesday(() => assembleMidweek().then(sendWithVeto));   <span class="c">// "What's On": tonight + out-this-week + just-opened</span>
+friday(()    => assembleWeekend().then(sendWithVeto));   <span class="c">// "The Local's Weekend": marquee + week-ahead + evergreen + a guide</span>
+
+<span class="c">// daily reaper — sliding-expiry sweep of shared_states (idle plan + save-restore tokens)</span>
+daily(() => reapExpiredSharedStates());</pre>
+    <p><strong>Graceful degradation</strong> throughout — if a step fails, it's skipped and flagged, and the hero falls back to the evergreen "perfect SB day" card. The ritual is never blank.</p>
+  </section>
+
+  <section id="s8">
+    <div class="sec-num">08 — The founder's side</div>
+    <h2>The admin cockpit <span class="upd">updated</span></h2>
+    <p class="sub">A private Next.js area behind Supabase Auth <strong>+ 2FA + login rate-limiting</strong>, responsive for desktop and mobile. Every surface is the same pattern — <strong>AI proposes, you approve</strong> — with auto-publish-with-veto.</p>
+    <table class="tbl">
+      <thead><tr><th>Surface</th><th>Does</th></tr></thead>
+      <tbody>
+        <tr><td>Daily Approval</td><td>Approve/swap/edit tomorrow's drafted edition</td></tr>
+        <tr><td>Content Review</td><td>AI drafts + low-confidence tags + <strong>form submissions</strong> (sanitized; captions treated as untrusted)</td></tr>
+        <tr><td>Staleness board</td><td>Re-confirm aging happy hours / recurring rhythms / places by <span class="mono">last_confirmed</span></td></tr>
+        <tr><td>First Looks composer</td><td>Create new-opening features</td></tr>
+        <tr><td>Place manager</td><td>Seed/edit the core places (heavy at launch — see the launch gate)</td></tr>
+        <tr><td>Guides editor</td><td>Create/refresh the flagship guides</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="s9">
+    <div class="sec-num">09 — On-device, no accounts</div>
+    <h2>The personal layer &amp; sharing <span class="upd">updated</span></h2>
+    <p class="sub">The save → share loop is the moat — the half no calendar offers — and it runs <strong>entirely client-side and fully deterministic — no per-request AI.</strong></p>
+    <h3>Save durability — the honest caveat</h3>
+    <p>Saves persist in device <span class="mono">localStorage</span>, each with one of <strong>two states — "want to go" (default) or "been."</strong> iOS Safari can evict storage for non-installed sites after ~7 idle days, and there are no accounts to restore from. Mitigations: the app is an <strong>installable PWA</strong> that nudges home-screen install (durable storage + the Phase-2 push channel), plus a <strong>passwordless magic-link save-restore</strong> — "email me a link to restore my saves" writes a one-off snapshot to <span class="mono">shared_states</span> (kind=save_restore) keyed by an opaque token and emailed to the user's <em>own</em> address; opening it restores saves on any device. <strong>No password, no login wall.</strong> Full accounts stay deferred.</p>
+    <h3>Near Me — an in-view sort (no map, no Mapbox in V1)</h3>
+    <p>Near Me is a <strong>sort</strong> available on Explore and Saved, not a screen. Geolocation first → on grant, the user's neighborhood floats to the top; on deny/unavailable, default to an SB center (downtown/State St.) <strong>and</strong> a one-tap neighborhood picker. It reads the stored <span class="mono">nearby_zone</span> on each thing (no client-side AREA_TO_HOOD, no map tiles). The full Mapbox map is Phase 2.</p>
+    <h3>Sharing — the view-only saved-list link</h3>
+    <p>From Saved, the user shares <strong>one item or a multi-select batch</strong>. The surviving social artifact is a saved-list view-link — deterministic, client-driven, no AI:</p>
+    <pre><span class="c">// Share a saved list (no AI) — pick one or many, then share</span>
+list = saved.filter(s =&gt; selected.has(s.id))   <span class="c">// one item or a multi-select batch</span>
+token = buildSharedList(list)   <span class="c">// → shared_states(kind=shared_list); payload = thing ids</span>
+
+<span class="c">// One Perfect SB Day — a deterministic, hand-curated lineup</span>
+perfectDay() =&gt; seedSaved([<span class="k">'x2'</span>,<span class="k">'p3'</span>,<span class="k">'p1'</span>,<span class="k">'p2'</span>])  <span class="c">// seeds the saved list; reuses existing things</span>
+
+<span class="c">// Shareable saved-list link — viewable + copy-to-tweak, NO account to view</span>
+shareList(token) =&gt; navigator.share(listUrl(token))  <span class="c">// native share sheet; no recipient PII stored</span></pre>
+    <p>The link writes a list of thing ids to <span class="mono">shared_states</span> (kind=<span class="mono">shared_list</span>) under an opaque token; anyone can open it to <strong>view the picks</strong> and <strong>save their own copy</strong> (no real-time co-edit — that needs accounts). Delivery is the OS share sheet, so the user picks iMessage/WhatsApp/email and SB Daymaker stores no friend's contact info and pays no send cost. <strong>One Perfect SB Day</strong> is a one-tap, hand-curated morning-to-sunset lineup on Explore that seeds the saved list to tweak and share. <em>(Retired in v9: the timed itinerary, the .ics export, the haversine travel estimate, and the drum-roll picker — all part of the removed My Plan builder.)</em></p>
+  </section>
+
+  <section id="s10">
+    <div class="sec-num">10 — The guardrails</div>
+    <h2>Security, privacy &amp; cost <span class="upd">updated</span></h2>
+    <h3>Security</h3>
+    <p>Supabase Auth + RLS (public reads published rows only); secret keys (TM, Claude, weather, Supabase service role) server-side only; the Google Maps key is client-side but <strong>referrer-restricted</strong>. Admin: <strong>2FA + login rate-limiting</strong>. Public forms: <strong>captcha + rate-limit, input sanitization + output encoding, and pasted captions treated strictly as untrusted data (prompt-injection mitigation).</strong> CSRF posture defined for server actions.</p>
+    <h3>Privacy &amp; accessibility</h3>
+    <p>Near-zero personal data: no accounts, saves on-device. The only stored PII is the user's <em>own</em> email — digest opt-in <strong>and</strong> the optional magic-link save-restore address — treated as one boundary (consent + unsubscribe; opaque tokens; sliding expiry; a light privacy review at build time confirms token entropy + that the reaper deletes). Saved-list share-links store no recipient PII. Analytics is cookieless. <strong>WCAG 2.2 AA is the build floor</strong> — the palette usage rule keeps text contrast compliant; aria-labels, focus, keyboard nav, and reduced-motion are in the quality floor.</p>
+    <h3>Cost (re-derived)</h3>
+    <p>The old "$0–40/mo" assumed free tiers + the Google $200 umbrella credit, which ended Feb 28 2025. Reliable production ≈ <strong>~$45/mo platform</strong> (Vercel Pro + Supabase Pro) before metered photos ($7/1k after 1k free, the dominant variable). All-in ≈ $93/mo at 100 weekly users, ~$300 at 500, ~$557 at 1,000 — before the operator-photo program bends photos down. Still remarkably cheap; the framing is now honest. (Full table: Document 5 §04.)</p>
+  </section>
+
+  <section id="s11">
+    <div class="sec-num">11 — Cursor → Vercel → Supabase</div>
+    <h2>Deployment &amp; environments <span class="upd">updated</span></h2>
+    <p class="sub">Build in Cursor → push to GitHub → Vercel deploys (preview per push, production on merge). Supabase holds the data.</p>
+    <table class="tbl">
+      <thead><tr><th>Concern</th><th>Approach</th></tr></thead>
+      <tbody>
+        <tr><td>Environments</td><td>Supabase <span class="mono">dev</span> + <span class="mono">prod</span> projects; Vercel preview vs. production; env vars scoped per env</td></tr>
+        <tr><td>Migrations</td><td>Supabase migrations tracked in the repo</td></tr>
+        <tr><td>Seed</td><td>Seed scripts for the curated core (supports the launch-content gate)</td></tr>
+        <tr><td>Backups</td><td>Supabase Pro daily backups by launch (free tier keeps zero)</td></tr>
+        <tr><td>Tests / CI</td><td>e2e smoke tests on the core loop (open → save → plan → hand-off); CI on push</td></tr>
+        <tr><td>PWA</td><td>Manifest + service-worker offline shell; install prompt; ISR for guides</td></tr>
+        <tr><td>Observability</td><td>Vercel logs/analytics; Supabase dashboard; Google Cloud billing alerts</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="s12">
+    <div class="sec-num">12 — End-to-end trace</div>
+    <h2>A day in the data <span class="upd">updated</span></h2>
+    <p class="sub">Following tonight's hero pick from source to screen.</p>
+    <ul class="trace">
+      <li><b>Early AM — Orchestrate.</b> The nightly function ingests the TM API + the Bowl's calendar facts (guardrailed), normalizes "Trombone Shorty, June 19, 6:30 PM" to a <span class="mono">things</span> row, dedupes, geocodes (cached).</li>
+      <li><b>Enrich.</b> Claude (Haiku) drafts the blurb, sets category <span class="mono">live_music</span> and tags <span class="mono">catch_a_show, date_night</span> with confidence; tier is <strong>derived</strong> as <span class="mono">1</span> (it has a date); the negative-rule layer + the two tier-gates run; it's written <span class="mono">status: draft</span>.</li>
+      <li><b>Rank.</b> Claude (Sonnet) cascade-ranks — this Tier-1 thing leads and takes the hero; Tier-2/3 backfill the feed (lead-and-blend); it writes a draft <span class="mono">edition</span> + ordered <span class="mono">edition_picks</span>.</li>
+      <li><b>Notify.</b> You get an <em>email</em>: "Tonight's edition is ready." You approve in the cockpit (or it auto-publishes by veto).</li>
+      <li><b>Serve.</b> A user opens the PWA. The app reads the published edition; the hero renders; the Bowl photo lazy-loads from Google via the <em>referrer-restricted key</em> only when scrolled into view.</li>
+      <li><b>Personal.</b> They heart it → spring-pop → saved to device storage as <span class="mono">want_to_go</span>. A "Share your list →" nudge appears. From Saved they pick one or several and share a <strong>real saved-list view-link</strong> (written to <span class="mono">shared_states</span>, kind=<span class="mono">shared_list</span>) via the native share sheet — a friend opens it, sees the picks, saves their own copy. One Perfect SB Day can seed the list with a ready-made lineup first.</li>
+      <li><b>Hand-off.</b> "Get tickets" opens the AXS URL. SB Daymaker never touches the transaction.</li>
+    </ul>
+  </section>
+
+  <section id="s13">
+    <div class="sec-num">13 — The record</div>
+    <h2>Key architectural decisions <span class="upd">updated</span></h2>
+    <table class="tbl">
+      <thead><tr><th>Decision</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td>Happenings-first cascade</td><td>The defensible lane vs. Yelp/Google is <em>what's happening</em>; a 3-tier cascade (tier derived from structure) keeps the anti-empty guarantee via the Tier-3 floor</td></tr>
+        <tr><td>Email first-class, 2×/week</td><td>The proven retention engine in local discovery; assembled from approved content, founder veto — stays in budget</td></tr>
+        <tr><td>Occasion tags (thing_tags)</td><td>Intent tags beat 6 broad identities; pure labeling, no per-request AI; tags set <em>what</em>, the cascade sets <em>order</em></td></tr>
+        <tr><td>Magic-link save-restore + saved-list share-link</td><td>Sync + social sharing without an account wall; one <span class="mono">shared_states</span> store; only the user's own email is PII</td></tr>
+        <tr><td>Near Me sort (V1) / full map (P2)</td><td>Near Me is an in-view sort (geolocation → neighborhood-pick fallback), not a screen; the heavy Mapbox map is Phase 2</td></tr>
+        <tr><td>Hardened, specified schema</td><td>The illustrative sketch couldn't carry the real features; <span class="mono">sbdaymaker_schema.sql</span> is the contract</td></tr>
+        <tr><td>Vercel Pro + single orchestrator</td><td>Hobby cron can't sequence dependent jobs; one orchestrated run is race-free</td></tr>
+        <tr><td>Scrape facts, with guardrails</td><td>hiQ shows ToS/contract is the real risk; feeds-first + no-account + attorney review de-risk it</td></tr>
+        <tr><td>Referrer-restricted photo key</td><td>Maps keys are built for client use; avoids per-photo proxy cost/latency</td></tr>
+        <tr><td>Live app fully deterministic</td><td>Keeps "batch AI only" true; every section renders from pre-computed data — no per-tap AI</td></tr>
+        <tr><td>Installable PWA + save export</td><td>Protects the on-device moat against iOS storage eviction without accounts</td></tr>
+        <tr><td>Email-led at launch; web push P2 (installed users)</td><td>Push only reaches installed users (small at launch); email carries V1 retention, push fast-follows once installs grow</td></tr>
+        <tr><td>WCAG 2.2 AA floor + palette rule</td><td>A barbell audience including seniors; accessibility serves everyone + ADA-prudent</td></tr>
+        <tr><td>Mapbox → Phase 2 only</td><td>V1 Near Me uses geolocation + a neighborhood lookup; no map SDK or token at launch</td></tr>
+        <tr><td>Reliable-tier cost (~$45/mo)</td><td>The "$0" framing assumed a dead Google credit; this is the honest, still-cheap floor</td></tr>
+        <tr><td>Unified "thing" model · on-device save · auto-publish-with-veto · facts-not-copy · hand-off-never-transact</td><td>Unchanged from v1 — still the through-line: one-person operability and low fixed cost</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 3 · Platform Architecture v3</span>
+    <span>Reconciled to the 16 Locked UX Decisions + 7 follow-ons. <span class="mono">sbdaymaker_schema.sql</span> &amp; tokens are the build's source of truth.</span>
+  </div>
+</footer>
+
+</body>
+</html>

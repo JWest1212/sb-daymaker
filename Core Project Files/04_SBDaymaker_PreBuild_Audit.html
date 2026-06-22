@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Pre-Build Audit (annotated)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacific-d:#0E3C49;
+    --terra:#C0532E; --tile:#E08A5B;
+    --gold:#E0A82E; --sage:#7E8B6B; --line:#D8CDB8;
+    --purple:#9C6B9E; --forest:#3E7C5A;
+    --blocker:#B23A2E; --high:#C77D1E; --med:#9A8A3E; --low:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--plaster);color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;line-height:1.62;
+    font-size:16px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+
+  /* ---- COVER ---- */
+  .cover{
+    background:linear-gradient(160deg,var(--pacific-d),var(--pacific) 55%,#2d7d8f 130%);
+    color:var(--paper);padding:64px 0 56px;position:relative;overflow:hidden;
+  }
+  .cover::after{
+    content:"";position:absolute;right:-80px;bottom:-120px;width:360px;height:360px;border-radius:50%;
+    background:radial-gradient(circle,rgba(224,168,46,.55),rgba(224,168,46,0) 65%);
+  }
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;
+    color:var(--gold);margin-bottom:14px;
+  }
+  .cover h1{
+    font-family:'Fraunces',serif;font-weight:900;font-size:clamp(40px,7vw,68px);
+    line-height:.98;margin:0 0 16px;letter-spacing:-.01em;
+  }
+  .cover .lede{font-size:18px;max-width:680px;color:rgba(252,250,245,.92);margin:0 0 26px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{
+    background:rgba(252,250,245,.12);border:1px solid rgba(252,250,245,.22);
+    padding:7px 13px;border-radius:30px;font-size:13px;font-weight:500;color:var(--paper);
+    backdrop-filter:blur(4px);
+  }
+
+  /* ---- SECTION SCAFFOLD ---- */
+  section{padding:46px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{
+    font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);
+    font-weight:600;letter-spacing:.04em;
+  }
+  h2{
+    font-family:'Fraunces',serif;font-weight:700;font-size:clamp(26px,4vw,38px);
+    line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;
+  }
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 24px;max-width:760px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:30px 0 8px;}
+  p{margin:0 0 14px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;color:var(--ink);}
+
+  /* ---- TOC ---- */
+  .toc{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:26px 30px;margin:34px 0 0;box-shadow:var(--shadow);}
+  .toc h4{font-family:'Fraunces',serif;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--sage);margin:0 0 16px;font-weight:600;}
+  .toc ol{list-style:none;margin:0;padding:0;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:8px 30px;}
+  .toc li{counter-increment:toc;border-bottom:1px solid var(--plaster2);padding:8px 0;}
+  .toc li a{display:flex;gap:12px;text-decoration:none;color:var(--ink);font-size:15px;align-items:baseline;}
+  .toc li a::before{content:counter(toc,decimal-leading-zero);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--terra);font-weight:600;}
+  .toc li a:hover{color:var(--pacific);}
+
+  /* ---- CALLOUT ---- */
+  .callout{
+    background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--terra);
+    border-radius:12px;padding:18px 22px;margin:20px 0;box-shadow:var(--shadow);
+  }
+  .callout.verdict{border-left-color:var(--gold);background:#FBF6EA;}
+  .callout.good{border-left-color:var(--forest);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+
+  /* ---- TABLES ---- */
+  .tbl{width:100%;border-collapse:collapse;margin:18px 0;font-size:14.5px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:12px 14px;font-weight:600;font-size:12.5px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:12px 14px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .tbl td.center{text-align:center;}
+  .num{font-family:'JetBrains Mono',monospace;font-weight:600;}
+
+  /* score chips */
+  .score{font-family:'JetBrains Mono',monospace;font-weight:600;display:inline-block;min-width:42px;text-align:center;padding:3px 8px;border-radius:7px;color:#fff;font-size:13px;}
+  .s0,.s1{background:var(--blocker);} .s2{background:var(--high);} .s3{background:var(--med);} .s4{background:var(--forest);} .s5{background:var(--pacific);}
+
+  /* severity pills */
+  .sev{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 10px;border-radius:30px;color:#fff;white-space:nowrap;text-transform:uppercase;}
+  .sev-blocker{background:var(--blocker);} .sev-high{background:var(--high);} .sev-med{background:var(--med);} .sev-low{background:var(--low);}
+
+  /* coverage status pills */
+  .st{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:7px;white-space:nowrap;}
+  .st-full{background:#E4F0E9;color:#27613f;} .st-part{background:#FBF1DC;color:#8a6a14;} .st-stub{background:#F7E5DC;color:#9c4421;} .st-none{background:#F3DAD6;color:#982e26;}
+
+  /* ---- FINDING CARDS ---- */
+  .dim-head{display:flex;align-items:baseline;gap:12px;margin:36px 0 4px;}
+  .dim-head .tag{font-family:'JetBrains Mono',monospace;background:var(--ink);color:var(--paper);font-size:13px;font-weight:600;padding:4px 10px;border-radius:7px;}
+  .dim-head h3{margin:0;font-size:23px;}
+  .find{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:18px 20px;margin:14px 0;box-shadow:var(--shadow);}
+  .find-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:10px;}
+  .find-id{font-family:'JetBrains Mono',monospace;color:var(--terra);font-weight:600;font-size:13px;}
+  .find-title{font-family:'Fraunces',serif;font-weight:600;font-size:18px;line-height:1.25;margin:2px 0 0;}
+  .find dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:7px 14px;font-size:14.5px;}
+  .find dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--sage);padding-top:3px;white-space:nowrap;}
+  .find dd{margin:0;}
+  .find dd.rec{color:var(--ink);}
+  .rec-flag{font-weight:700;color:var(--pacific);}
+  .grounded{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:#E4F0E9;color:#27613f;padding:2px 7px;border-radius:5px;margin-left:6px;vertical-align:middle;}
+
+  /* decision / punch lists */
+  .dlist{counter-reset:dec;list-style:none;padding:0;margin:18px 0;}
+  .dlist li{counter-increment:dec;background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px 18px 14px 52px;margin:10px 0;position:relative;box-shadow:var(--shadow);}
+  .dlist li::before{content:counter(dec);position:absolute;left:16px;top:13px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--paper);background:var(--pacific);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .dlist .q{font-weight:600;}
+  .punch{list-style:none;padding:0;margin:16px 0;}
+  .punch li{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--plaster2);}
+  .punch li .body{flex:1;}
+
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .src{font-size:13px;}
+  .src li{margin:6px 0;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:34px 0;margin-top:50px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .pill-legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;}
+  @media(max-width:680px){
+    .toc ol{grid-template-columns:1fr;}
+    .find dl{grid-template-columns:1fr;gap:3px;}
+    .find dt{padding-top:9px;}
+  }
+</style>
+</head>
+<body>
+<div style="background:#C0532E;color:#FCFAF5;font:600 13px/1.45 system-ui,-apple-system,sans-serif;padding:10px 16px;text-align:center;">Status: v9 rename · This document predates the v9 three-section cut (Explore · Saved · Discover SB). Some screen-level detail (the old 5 tabs, Map, My Plan) is superseded — <strong>CLAUDE.md and the wireframe are authoritative for current UI.</strong></div>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Gate Review · Pre-Build Audit</div>
+    <h1>Is SB&nbsp;Today<br>ready to build?</h1>
+    <p class="lede">A production-grade audit of all five project documents — reviewed through a Product, Architecture, and UI/UX lens — to determine whether the spec is complete enough to generate a build guide, and to name exactly what isn't.</p>
+    <div class="badges">
+      <span class="badge">📄 Document 4 — Pre-Build Audit</span>
+      <span class="badge">🔎 26 findings · 12 decisions</span>
+      <span class="badge">📐 Verdict: not yet build-ready</span>
+      <span class="badge">🗓️ Grounded in 2025–26 sources</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="callout verdict" style="margin-top:30px;">
+    <div class="k">Post-audit update — read alongside the UX-decision layer</div>
+    <p style="margin:0 0 10px;"><strong>This audit remains the gate-review record, but several of its findings were later revised by the 16 Locked UX Decisions + 7 follow-on decisions</strong> (rationale in Document 6; integrated into the v4 context, the v2 schema, and the v3 product/architecture docs). Where this audit and those decisions conflict, <strong>the decisions govern.</strong> The specific revisions:</p>
+    <p style="margin:0 0 6px;"><strong>• Place-first → happenings-first.</strong> The audit assumed a flat place-first spine; the product is now organized around a three-tier <em>happenings cascade</em> (discrete-dated → recurring → evergreen), with the evergreen tier as the anti-empty floor. The unified "thing" model is unchanged; a <span class="mono">happening_tier</span> classification + <span class="mono">recurring_schedules</span> table were added.</p>
+    <p style="margin:0 0 6px;"><strong>• Accessibility / the drum-roll picker (Blocker 5).</strong> The audit flagged the need for an accessible alternative to the drum-roll time picker. <em>Resolved by removal</em> — My Plan is now light-by-default and uses a standard native time input; the wizard is an optional path.</p>
+    <p style="margin:0 0 6px;"><strong>• The localStorage "moat" (Finding B8).</strong> The audit flagged iOS eviction of on-device saves. Now mitigated by a passwordless magic-link save-restore (the <span class="mono">shared_states</span> token store) in addition to the PWA install nudge.</p>
+    <p style="margin:0 0 6px;"><strong>• Map &amp; Happy Hour scope.</strong> Both ship <em>light</em> at launch (a Nearby list; a "last confirmed" happy-hour list) with the full Mapbox map and live countdowns deferred to Phase 2 — trimming the heaviest build/maintenance surfaces for the solo operator.</p>
+    <p style="margin:0 0 6px;"><strong>• Personas → occasion tags.</strong> The six identity personas became ten occasion/intent tags (<span class="mono">thing_tags</span>), demoted from "headline differentiator" to a supporting feature.</p>
+    <p style="margin:0;"><strong>• Email &amp; re-engagement.</strong> Email is promoted to a first-class 2×/week channel (the proven local-discovery retention engine); web push for installed users is a committed Phase-2 fast-follow. Success metrics (WAU) and the accessibility floor (WCAG 2.2 AA) called for in this audit are carried forward unchanged.</p>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h4>What's in this audit</h4>
+    <ol>
+      <li><a href="#verdict">Executive verdict</a></li>
+      <li><a href="#scorecard">Build-readiness scorecard</a></li>
+      <li><a href="#matrix">Feature-coverage matrix</a></li>
+      <li><a href="#findings-a">Findings · Product &amp; Scope</a></li>
+      <li><a href="#findings-b">Findings · Architecture</a></li>
+      <li><a href="#findings-c">Findings · UI/UX &amp; Design</a></li>
+      <li><a href="#findings-d">Findings · Cross-Cutting</a></li>
+      <li><a href="#drift">Doc-drift &amp; consistency log</a></li>
+      <li><a href="#decisions">Open decisions before the guide</a></li>
+      <li><a href="#punch">"To reach build-ready" punch list</a></li>
+      <li><a href="#evidence">Evidence &amp; sources</a></li>
+    </ol>
+  </div>
+
+  <!-- ============ 1. VERDICT ============ -->
+  <section id="verdict">
+    <div class="sec-num">01 — The bottom line</div>
+    <h2>Executive verdict</h2>
+    <p class="sub">Read this first. The rest of the document is the evidence behind it.</p>
+
+    <div class="callout verdict">
+      <div class="k">Verdict</div>
+      <p style="margin:0 0 12px;"><strong>Not yet ready to generate a production-grade build guide — but the gap is specification, not strategy.</strong> The product is exceptionally well-designed at the experience level and the strategy is coherent and defensible; the prototype is genuinely impressive. The gating problems are concentrated in four areas, none fatal and most resolvable by <em>decision</em> rather than further research:</p>
+      <p style="margin:0 0 8px;"><strong>1. The data layer and pipeline are labeled "illustrative" — and they are.</strong> The schema is missing whole tables and fields the real features need, and the nightly pipeline is a sketch with no failure behavior.</p>
+      <p style="margin:0 0 8px;"><strong>2. ~90% of the product depends on scrapers and a legal posture that aren't built or verified.</strong> The <span class="mono">facts-not-copy</span> rule solves copyright, but the <em>hiQ v. LinkedIn</em> precedent shows the controlling risk is each site's Terms of Service — which the docs don't address.</p>
+      <p style="margin:0 0 8px;"><strong>3. Several load-bearing platform assumptions are outdated or constrained.</strong> The 6-job sequential pipeline can't run on Vercel's free tier as drawn; iOS can evict the <span class="mono">localStorage</span> saves that are described as "the moat"; and the cost model rests on a Google credit that ended in February 2025.</p>
+      <p style="margin:0;"><strong>4. There are no success metrics, no acceptance criteria, and accessibility is asserted but unverified</strong> — which matters because the audience is explicitly older and simplicity-seeking.</p>
+    </div>
+
+    <p><strong>The five hardest blockers gating the build guide:</strong> (1) harden the data model — add the missing <span class="mono">submissions</span> table, the structured happy-hour window, photo URLs, the neighborhood enum, and every <span class="mono">jsonb</span> shape; (2) resolve the pipeline-and-hosting architecture, because the design doesn't deploy on Hobby cron; (3) settle the sourcing mechanism and a per-source ToS review — the project's top combined technical-and-legal risk; (4) define success metrics, analytics, and acceptance criteria; (5) commit an accessibility floor with a real contrast audit and an accessible alternative to the drum-roll picker.</p>
+
+    <p>Recommended next step is a focused <strong>decision-and-specification pass</strong> (see §9), not more analysis. Once those decisions are made, a build guide can be both correct and genuinely buildable.</p>
+  </section>
+
+  <!-- ============ 2. SCORECARD ============ -->
+  <section id="scorecard">
+    <div class="sec-num">02 — Where it stands</div>
+    <h2>Build-readiness scorecard</h2>
+    <p class="sub">Each domain scored 0–5 for how ready it is to hand to a build. 0–1 = not buildable as written · 2 = sketched, needs hardening · 3 = mostly there, gaps remain · 4 = build-ready with minor notes · 5 = fully specified.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Domain</th><th class="center">Score</th><th>One-line justification</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Product &amp; Scope</strong></td><td class="center"><span class="score s3">3.0</span></td><td>Vision and feature set are outstanding; missing metrics, acceptance criteria, cold-start plan, and empty states.</td></tr>
+        <tr><td><strong>Data / Schema</strong></td><td class="center"><span class="score s2">2.0</span></td><td>Unified "thing" model is sound in concept; schema is illustrative — missing a submissions table, structured HH window, photo URLs, neighborhood enum, jsonb shapes.</td></tr>
+        <tr><td><strong>Pipelines / Jobs</strong></td><td class="center"><span class="score s1">1.5</span></td><td>Nightly pipeline is a sketch; no idempotency/retry/dedupe/timeout; doesn't map onto Hobby cron; the scraping layer is undefined.</td></tr>
+        <tr><td><strong>AI Layer</strong></td><td class="center"><span class="score s2">2.0</span></td><td>Prompts and the safety concept are good; no output schemas/validation, no cost/timeout budget, negative-rule layer unspecified, My Plan AI-vs-deterministic contradiction.</td></tr>
+        <tr><td><strong>Integrations</strong></td><td class="center"><span class="score s2">2.0</span></td><td>Providers chosen; per-dependency limits/failure modes unspecified; Google pricing model outdated; scraped-source ToS unverified.</td></tr>
+        <tr><td><strong>Security</strong></td><td class="center"><span class="score s2">2.0</span></td><td>RLS + server-side keys are right; public forms unhardened (spam / XSS / prompt-injection); no admin 2FA or rate-limit; sanitization unspecified.</td></tr>
+        <tr><td><strong>Performance / PWA</strong></td><td class="center"><span class="score s1">1.5</span></td><td>"Open like the weather" demands a perf budget; none exists; PWA-vs-responsive unresolved; no service-worker/offline/ISR; push-vs-email ambiguous; iOS storage eviction unaddressed.</td></tr>
+        <tr><td><strong>UI States</strong></td><td class="center"><span class="score s2">2.0</span></td><td>Happy paths beautifully designed; loading / empty / error / offline / no-results states largely undefined across surfaces.</td></tr>
+        <tr><td><strong>Accessibility</strong></td><td class="center"><span class="score s1">1.5</span></td><td>Claimed via "big tap targets" but unverified; contrast suspect; no aria/focus/keyboard/reduced-motion; drum-roll picker inaccessible for the stated demographic.</td></tr>
+        <tr><td><strong>Design System</strong></td><td class="center"><span class="score s3">2.5</span></td><td>Tokens, fonts, and signature defined in prose and embedded in wireframe CSS; no consolidated token file, spacing scale, component variants, or motion spec for handoff.</td></tr>
+        <tr><td><strong>Legal / Compliance</strong></td><td class="center"><span class="score s1">1.5</span></td><td>Copyright posture is sound; the ToS/contract risk that actually matters per hiQ is unaddressed; no privacy policy, ToS, consent, or accessibility-compliance artifacts.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="k">Overall verdict</div>
+      <p style="margin:0;"><strong>≈ 2.0 / 5 — "design-complete, build-underspecified."</strong> The experience layer is ready; the engineering, data, and compliance layers are not. The build guide is gated by four things: schema + pipeline hardening, the scraping + legal engine, the cron/PWA/storage platform constraints, and the metrics + acceptance-criteria + accessibility floor.</p>
+    </div>
+  </section>
+
+  <!-- ============ 3. MATRIX ============ -->
+  <section id="matrix">
+    <div class="sec-num">03 — Feature by feature</div>
+    <h2>Feature-coverage matrix</h2>
+    <p class="sub">Every MVP feature, rated for how completely it's specified. The distinction that matters most for a build guide: a feature that <em>looks</em> finished in the prototype but is faked behind the glass.</p>
+
+    <div class="pill-legend">
+      <span class="st st-full">Fully specified</span>
+      <span class="st st-part">Partially specified</span>
+      <span class="st st-stub">Stubbed in prototype</span>
+      <span class="st st-none">Undefined</span>
+    </div>
+
+    <table class="tbl">
+      <thead><tr><th>Feature</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td>Golden-hour hero</td><td><span class="st st-part">Partial</span></td><td>Visual fully designed and weather-reactive; the daily edition-selection and ranking inputs are only sketched. Fallback is well-defined.</td></tr>
+        <tr><td>Time horizons (Today/Week/Month)</td><td><span class="st st-part">Partial</span></td><td>UI designed; week/month data sourcing is thin and depends on the unspecified pipeline.</td></tr>
+        <tr><td>Persona Lens + retune</td><td><span class="st st-part">Partial</span></td><td>UI and client-side filter work; the AI tagging that feeds it has no output contract or eval.</td></tr>
+        <tr><td>First-run banner</td><td><span class="st st-stub">Stubbed</span></td><td>Works in the prototype; the persistence flag and re-show logic are undefined, and storage eviction re-triggers it.</td></tr>
+        <tr><td>Filter (Refine sheet)</td><td><span class="st st-full">Full</span></td><td>Simple, designed, and working as a pure client control.</td></tr>
+        <tr><td>First Looks rail</td><td><span class="st st-part">Partial</span></td><td>UI designed; sourcing is manual curation, only partially scoped (who, cadence, minimum).</td></tr>
+        <tr><td>Evergreen places</td><td><span class="st st-part">Partial</span></td><td>UI designed; no seeding plan, ordering, hour estimate, or minimum-to-launch count.</td></tr>
+        <tr><td>Detail screens</td><td><span class="st st-part">Partial</span></td><td>Designed; the real lazy-load image path and directions deep-link need a concrete design.</td></tr>
+        <tr><td>Happy Hour Now</td><td><span class="st st-part">Partial</span></td><td>UI designed; the structured HH time-window data model is missing — the prototype's "ends 47m" is a faked integer, not a schedule.</td></tr>
+        <tr><td>Map</td><td><span class="st st-stub">Stubbed</span></td><td>Fake coordinates, no real Mapbox/Google layer; clustering and 150-pin scale undefined.</td></tr>
+        <tr><td>City guides</td><td><span class="st st-part">Partial</span></td><td>UI and content designed; the SSR/ISR config that the SEO thesis depends on, and the <span class="mono">stops</span> schema, are undefined.</td></tr>
+        <tr><td>Save (on-device)</td><td><span class="st st-stub">Stubbed</span></td><td>Prototype uses an in-memory <span class="mono">Set</span>, not <span class="mono">localStorage</span>; and iOS can evict <span class="mono">localStorage</span>, which undercuts the "moat."</td></tr>
+        <tr><td>Saved auto-grouping</td><td><span class="st st-full">Full</span></td><td>Client-side grouping logic is designed and working.</td></tr>
+        <tr><td>My Plan wizard</td><td><span class="st st-part">Partial</span></td><td>UI, 4-tier sort, and Surprise Me work; travel computation, the gap-filler, ICS export, and the share card are all stubbed or absent.</td></tr>
+        <tr><td>Add to calendar (.ics)</td><td><span class="st st-none">Undefined</span></td><td>"Add to calendar" is a toast; <span class="mono">buildICS</span> is named in the architecture but does not exist.</td></tr>
+        <tr><td>Share plan card</td><td><span class="st st-none">Undefined</span></td><td>"Share this plan" is a toast; <span class="mono">buildShareCard</span> does not exist.</td></tr>
+        <tr><td>Weather-reactivity</td><td><span class="st st-part">Partial</span></td><td>UI states designed and toggleable; the live weather API integration and indoor-filter pipeline are partial.</td></tr>
+        <tr><td>Optional digest email</td><td><span class="st st-none">Undefined</span></td><td>No opt-in storage, double opt-in, unsubscribe, or assembly defined; the stored email is PII the schema doesn't hold.</td></tr>
+        <tr><td>Submit-an-event form</td><td><span class="st st-part">Partial</span></td><td>UI exists; no validation, no spam/XSS/prompt-injection controls, no <span class="mono">submissions</span> table to land in.</td></tr>
+        <tr><td>Claim-your-business form</td><td><span class="st st-part">Partial</span></td><td>Same as above.</td></tr>
+        <tr><td>Admin cockpit (6 surfaces)</td><td><span class="st st-part">Partial</span></td><td>Concept and reusable pattern are clear; the actual screens/flows aren't in the prototype and auth hardening is undefined.</td></tr>
+        <tr><td>AI jobs (ranking/tagging/plan)</td><td><span class="st st-part">Partial</span></td><td>Concept clear; contracts, validation, cost budget undefined; the My Plan AI-vs-deterministic question is open.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 4. FINDINGS A ============ -->
+  <section id="findings-a">
+    <div class="sec-num">04 — The findings</div>
+    <h2>Severity-ranked findings</h2>
+    <p class="sub">Grouped by lens. Each finding names the gap, why it threatens the build, a severity, a clearly-labelled recommendation, and which document to update. <span class="grounded">Grounded</span> marks findings verified against current external sources (see §11).</p>
+
+    <div class="pill-legend">
+      <span class="sev sev-blocker">🔴 Build-blocker</span>
+      <span class="sev sev-high">🟠 High</span>
+      <span class="sev sev-med">🟡 Medium</span>
+      <span class="sev sev-low">🟢 Low</span>
+    </div>
+
+    <div class="dim-head"><span class="tag">A</span><h3>Product &amp; Scope</h3></div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A1</span><div class="find-title">No success metrics or analytics — and "weekly active user" is undefined</div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Phase 1's stated goal is "prove the ritual," but there is no KPI, no instrumentation, and no definition of the ritual working. With no accounts, "weekly active users" — the unit the entire growth and revenue model is built on — is never operationally defined or measured.</dd>
+        <dt>Why it blocks</dt><dd>You can't build, or evaluate, toward an undefined target. A build guide that omits analytics ships a product that can't tell you if it's succeeding.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> choose a privacy-preserving, cookieless analytics tool (e.g. Plausible, or Vercel Web Analytics) to stay consistent with the no-accounts/low-PII posture; define "WAU" operationally (e.g. unique device-days per rolling 7 days); and specify a minimal event taxonomy — <span class="mono">app_open, lens_select, save, plan_complete, ticket_handoff</span>.</dd>
+        <dt>Update</dt><dd>Business Plan + a new short Metrics &amp; Analytics spec.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A2</span><div class="find-title">No acceptance criteria / definition-of-done for any feature</div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The docs describe intent richly but contain no testable "done" conditions for any feature.</dd>
+        <dt>Why it blocks</dt><dd>A production-grade build guide is a set of acceptance criteria. Without them the builder invents the boundary of every feature, and "done" becomes a matter of opinion.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> author acceptance criteria per MVP feature (Given/When/Then or a checklist) before generating the guide — start with the highest-ambiguity features (My Plan, the pipeline, the hero edition selection, the admin cockpit).</dd>
+        <dt>Update</dt><dd>A new Acceptance Criteria doc, or inline per-feature in the Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A3</span><div class="find-title">Cold-start / content seeding is unplanned — and it's the critical-path bottleneck</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>"~100–150 evergreen places" has no launch list, no ordering, no founder-hour estimate, and no minimum-to-launch threshold; the same is true for the 5 guides, First Looks, and seed happy hours. The docs flag the place manager as "heavy at launch" but never scope that load.</dd>
+        <dt>Why it blocks</dt><dd>Approving 150 AI-drafted blurbs by hand is the single biggest launch effort, and a daily-ritual app launched with thin content fails its first impression. Without a defined launch gate you can't tell when you're ready to go live.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> define a launch-content checklist with minimum viable counts (e.g. ≥N places spread across all neighborhoods, all 5 guides live, ≥M confirmed happy hours) as an explicit go-live gate, plus a realistic hour estimate for the seeding pass.</dd>
+        <dt>Update</dt><dd>Business Plan / Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A4</span><div class="find-title">Empty and error states are largely undefined</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Only the hero fallback is specified. Empty Saved, empty My Plan (no saves), zero live happy hours, a quiet First Looks week, location-denied, offline, and no-search-results are all undefined.</dd>
+        <dt>Why it blocks</dt><dd>Empty and failure states are where most real-world sessions diverge from the demo, and they carry the brand voice. Leaving them undefined means the builder ships blank screens or generic errors that contradict the "knowing local friend" tone.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> define copy and behavior for every empty/error state in a single surface × state matrix (overlaps with C1), written in the product's voice — "an empty screen is an invitation to act," not a dead end.</dd>
+        <dt>Update</dt><dd>Product Bible + Wireframe.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A5</span><div class="find-title">First-run / onboarding edge cases unspecified</div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>First-run is detected by a <span class="mono">localStorage</span> flag, so cleared storage, incognito, or iOS eviction (see B8) re-onboards the user on every visit; whether the banner ever returns deliberately is undefined.</dd>
+        <dt>Why it blocks</dt><dd>Lower severity, but it shapes a returning user's first impression and interacts with the storage-durability issue.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide the re-show policy explicitly and accept (or mitigate) re-onboarding for storage-less sessions.</dd>
+        <dt>Update</dt><dd>Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A6</span><div class="find-title">The weekend digest is MVP but underspecified — and contradicts "no users table"</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The digest is in MVP scope, but there's no double opt-in, no unsubscribe (legally required under CAN-SPAM), no assembly logic, and no sender-domain authentication (SPF/DKIM/DMARC via Resend). Critically, opt-in emails are <strong>real stored PII</strong>, which directly contradicts the repeated "deliberate absence: no users table" claim.</dd>
+        <dt>Why it blocks</dt><dd>It's both a legal requirement and a schema gap — the architecture has nowhere to store a subscriber, a consent record, or an unsubscribe token.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> add a <span class="mono">subscribers</span> table (email, consent timestamp, unsubscribe token, status), implement one-click unsubscribe, and reframe the "no users table" claim as "no <em>end-user account</em> table" so it's accurate.</dd>
+        <dt>Update</dt><dd>Architecture (schema) + Business Plan.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">A7</span><div class="find-title">Monetization has no representation in the build</div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>"Featured / sponsored listings" is the highest-fit revenue path, yet there's no schema field, no labeling component, and no placement/ranking rule. The trust guardrail — "sponsored never displaces the genuinely-best pick" — is unenforceable without a defined mechanism.</dd>
+        <dt>Why it blocks</dt><dd>Even if revenue is Phase 2, retrofitting sponsorship into ranking later is exactly the kind of rework the project avoided for photos by pre-building the resolver. The same foresight should apply here.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide whether the MVP schema reserves <span class="mono">is_featured</span> / <span class="mono">sponsor_id</span> fields and a single clearly-labeled placement slot now, so the trust rule is structurally enforceable later.</dd>
+        <dt>Update</dt><dd>Architecture (schema) + Product Bible.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ FINDINGS B ============ -->
+  <section id="findings-b">
+    <div class="dim-head"><span class="tag">B</span><h3>Architecture &amp; Engineering</h3></div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B1</span><div class="find-title">The schema is illustrative and incomplete for the real feature set</div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The <span class="mono">things</span> table and friends are explicitly "illustrative" and, audited against the features, are missing: a <strong>submissions</strong> table (raw pasted caption + submitter contact PII + consent, <em>before</em> parsing into a draft); <strong><span class="mono">ends_at</span> and a structured happy-hour window</strong> (day-of-week recurrence + start/end clock times — the prototype's <span class="mono">ends:&nbsp;47</span> integer is a countdown, not a schedule); a <strong>stored photo URL/query</strong> for Pexels/Wikimedia (only <span class="mono">photo_source</span> exists); <strong><span class="mono">is_featured</span>/sponsor</strong> fields; <strong>hero-eligibility / ranking weight</strong>; the <strong><span class="mono">guides.stops</span> jsonb shape</strong> and whether stops foreign-key to <span class="mono">things</span>; <strong><span class="mono">editions.pick_ids</span> ordering/cap</strong>; a <strong>canonical neighborhood enum</strong> (the client hard-codes <span class="mono">AREA_TO_HOOD</span>); and <strong>persona-id integrity</strong> (a <span class="mono">text[]</span> plus a separate <span class="mono">tag_confidence</span> jsonb is fragile and unconstrained).</dd>
+        <dt>Why it blocks</dt><dd>The schema is the foundation every other layer sits on. A build guide written against an illustrative schema will need rework the moment happy hours, submissions, or the map are implemented for real.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> promote the schema from illustrative to specified — add the missing tables and fields above, and define every <span class="mono">jsonb</span> shape concretely. This is the single highest-value pre-build artifact.</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B2</span><div class="find-title">The nightly pipeline doesn't run on Vercel Hobby cron as drawn — and is otherwise unspecified <span class="grounded">Grounded</span></div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Vercel's <strong>Hobby</strong> tier allows cron at a <strong>once-per-day cadence with imprecise timing</strong> — a job set for a given hour can fire anywhere within that hour. The designed schedule (02:00 ingest → 02:30 enrich → 03:00 stale → 06:00 draft → 06:01 notify → Thu 07:00 digest) has <strong>sequential dependencies</strong> (ingest must finish before enrich starts) that imprecise within-the-hour timing breaks. Separately, no idempotency, retry, partial-failure handling, or <strong>dedupe algorithm</strong> is defined, and standard (Hobby) function <strong><span class="mono">maxDuration</span> caps at 60s</strong> — a multi-site scrape plus a batch Claude call will very likely exceed it (<span class="mono">FUNCTION_INVOCATION_TIMEOUT</span>).</dd>
+        <dt>Why it blocks</dt><dd>The pipeline is the engine of the whole product, and as drawn it cannot be deployed on the free tier the cost model assumes.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> pick one — (a) <strong>Vercel Pro</strong> (~$20/mo, precise scheduling; revise the "$0–40/mo" thesis), (b) a <strong>single daily orchestrator cron</strong> that runs the steps in sequence internally, with chunking/queueing to stay under the duration cap, or (c) an <strong>external scheduler</strong> (cron-job.org, GitHub Actions) hitting your API routes. Then specify the dedupe rule (fuzzy match on normalized title + venue + date), the geocoding provider + caching, and per-step failure handling.</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B3</span><div class="find-title">The scraping layer — ~90% of the product — is unbuilt and the legal posture is incomplete <span class="grounded">Grounded</span></div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The non-ticketed content engine depends on scrapers that are neither built nor specified: no tooling choice (headless browser vs. HTML parser), no per-site selectors, no anti-bot or maintenance plan, and no owner for when a venue redesigns its site. Legally, <em>hiQ v. LinkedIn</em> establishes that the CFAA does <em>not</em> bar scraping public data — but a site's <strong>Terms of Service is enforceable as breach of contract</strong>, plus trespass to chattels (hiQ took a $500K judgment and shut down). So <span class="mono">facts-not-copy</span> correctly handles copyright but leaves the <em>controlling</em> ToS/contract risk unaddressed for the named commercial sources (SB Bowl, Granada, Lobero, SOhO, Visit SB, santabarbaraca.com). The civic government calendar is the lowest-risk source.</dd>
+        <dt>Why it blocks</dt><dd>This is the product. If the scrapers don't exist and the legal posture on the commercial sources is wrong, the "easy 10%" (licensed APIs) ships and the "90%" that is the actual differentiator doesn't.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide a sourcing mechanism <em>per source</em> — strongly prefer official APIs, RSS, public iCal feeds, and explicit partner permission over scraping; lean on the submission engine for the rest. Commission a <strong>per-source ToS review</strong> before scraping any commercial site. Treat this as the project's #1 combined technical-and-legal risk, not a footnote.</dd>
+        <dt>Update</dt><dd>Architecture + Business Plan (legal).</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B4</span><div class="find-title">The AI layer has no concrete contracts</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Prompts exist as snippets, but there's no output schema/validation (JSON mode / tool use), no per-job token/cost budget, no timeout/rate-limit/failure handling, no model-version pinning, and no blurb eval or repetition control. The negative-rule safety layer is <em>described</em> but not specified as code — what's the rule set, where does it run, and what happens when the model violates it?</dd>
+        <dt>Why it blocks</dt><dd>The AI is "invisible infrastructure," and infrastructure needs contracts. Without validation and a defined safety rule set, the most trust-sensitive surface (persona tagging) is protected by prose, not code.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> define structured-output contracts with a validation + fallback step, an explicit negative-rule set implemented as code that runs after generation, model pinning, and a small blurb-quality check. Resolve the My Plan question separately (B5).</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B5</span><div class="find-title">My Plan "intelligence": AI vs. deterministic is a genuine, unresolved fork</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The architecture lists "My Plan intelligence" as an <em>on-demand Tier-1 AI job</em>; the wireframe implements it as pure client-side sorting + a random shuffle. <span class="mono">computeTravel</span> and the gap-filler ("you've got 90 minutes — Loquita's a 4-min walk") are named/shown but absent from the real logic.</dd>
+        <dt>Why it blocks</dt><dd>These are opposite builds. Per-request AI on the one interactive surface contradicts the "batch-only, trivial cost" principle and adds latency to the product's signature moment; the deterministic version is cheaper but loses the "feels like a friend" gap-fill.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide deterministic vs. AI for the pick list explicitly; specify the travel-time source (Mapbox or Google distance) for real; and decide whether gap-fill and the share/ICS exports (currently toasts) ship in MVP or move to a labeled fast-follow.</dd>
+        <dt>Update</dt><dd>Architecture + Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B6</span><div class="find-title">Image resolver: a proxy contradiction plus quality gaps <span class="grounded">Grounded</span></div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Good news first: the "$7 per 1,000 after 1,000 free" Place Photo figure is <strong>confirmed current</strong> (it's the Enterprise "Places Photo" SKU). But the architecture says to <em>proxy</em> Google photos server-side so the key isn't exposed — and proxying every photo through Vercel functions adds invocation cost and latency that can <em>exceed</em> the photo cost itself. There's also no placeholder/blur-up strategy, Pexels category queries risk generic stock ("food" → stock pasta), and Wikimedia attribution rendering is undefined. Note also that the classic Places API is now <strong>"Legacy"</strong>; new builds should target Places API (New).</dd>
+        <dt>Why it blocks</dt><dd>Images are the dominant variable cost and the dominant first impression; the fetch path is load-bearing for both cost and UX, and the current design is internally contradictory.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide the real fetch path (an HTTP-referrer-restricted client key is the lighter option vs. a server proxy), add placeholder + attribution components, define a Pexels query-quality approach, and build against <strong>Places API (New)</strong> — re-confirming its Place Photo SKU and caching terms at billing setup.</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B7</span><div class="find-title">No performance budget, no PWA decision, and push-vs-email is ambiguous <span class="grounded">Grounded</span></div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>"Open it like the weather" makes cold-start the entire UX, yet there's no Core Web Vitals target, no service-worker/offline strategy, no ISR/SSR configuration for the SEO guides the growth thesis depends on, and no image-CDN plan. Whether this is a true PWA or a responsive web app is unresolved. And iOS web push works <strong>only for PWAs installed to the Home Screen</strong>, triggered by a user gesture — so the founder "edition ready" <em>push</em> requires the founder to install the PWA; email (Resend) is simpler and platform-independent.</dd>
+        <dt>Why it blocks</dt><dd>Performance is the product for a daily ritual; the guides' SEO is the inbound channel; and the nudge mechanism changes what gets built.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide PWA vs. responsive; set an explicit CWV budget; configure ISR for guides and an offline shell; and use <strong>email</strong> for the edition nudge (or specify that the founder installs the PWA).</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B8</span><div class="find-title">The "moat" is weaker than stated — iOS can evict the localStorage saves <span class="grounded">Grounded</span></div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The personal layer ("the moat") rests on saves living in <span class="mono">localStorage</span> — but the prototype uses in-memory state, and on iOS Safari can <strong>evict <span class="mono">localStorage</span>/IndexedDB for non-installed sites after roughly 7 days of inactivity</strong>. Because there are no accounts, there is <em>no backup path</em>. The exact "occasional visitor" case the product courts — save on this trip, return next trip — is precisely where eviction bites.</dd>
+        <dt>Why it blocks</dt><dd>An architectural assumption (durable on-device storage) is materially weaker on iOS than the docs imply, and it undercuts a feature the strategy calls a moat.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> decide a durability strategy — nudge Home-Screen install for durability, and/or offer an optional lightweight export/sync — and set expectations honestly in the UI copy. This is also the strongest concrete argument for eventually adding optional accounts.</dd>
+        <dt>Update</dt><dd>Architecture + Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B9</span><div class="find-title">No per-dependency limits / failure matrix <span class="grounded">Grounded</span></div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>No documented free-tier limit, cap behavior, or graceful degradation per third party: Ticketmaster (≈5,000 calls/day, 5 req/s — verify current), Google Places/Geocoding (per-SKU caps post-March-2025; the old $200 umbrella credit is gone), OpenWeather, Mapbox, Resend, Anthropic, and Supabase — whose <strong>free tier pauses after 7 days of inactivity and keeps zero backups</strong>.</dd>
+        <dt>Why it blocks</dt><dd>Each dependency has a different cliff; without a matrix, the app degrades unpredictably and the founder is surprised by both outages and bills.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> build a one-page dependency matrix (limit / behavior at cap / fallback) and decide free-vs-paid per service. Note that Supabase's pause + zero-backup behavior is a real risk during the labor-intensive seeding phase.</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B10</span><div class="find-title">Public forms and admin auth are an unhardened attack surface</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The public submission forms have no captcha or rate-limit (spam), a stored XSS risk via pasted captions later rendered in the cockpit, and an <strong>AI prompt-injection</strong> vector — a malicious caption fed to the parsing model could try to manipulate it. Admin auth is a single email-and-password account with no 2FA, no login rate-limit, and no defined CSRF posture for server actions.</dd>
+        <dt>Why it blocks</dt><dd>Public write endpoints plus an LLM in the loop is a classic injection surface, and a single un-MFA'd admin account is the keys to the whole product.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> specify input sanitization + output encoding, a captcha + rate-limit on public forms, prompt-injection mitigations (treat captions strictly as untrusted data, never instructions), and admin 2FA + login rate-limiting.</dd>
+        <dt>Update</dt><dd>Architecture (security).</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B11</span><div class="find-title">Build operability baseline is undefined</div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>No test strategy (unit/integration/e2e), no migration workflow named, no seed scripts, no DB backup/restore plan (free Supabase keeps zero backups), no staging-data strategy, and no CI.</dd>
+        <dt>Why it blocks</dt><dd>For a solo-run product, operability <em>is</em> sustainability; the absence of backups and migrations is how a hobby project loses its data and momentum.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> define a minimum baseline — a migration tool, a seed script, backups (via Supabase Pro or scheduled dumps), and a handful of e2e smoke tests on the critical loop.</dd>
+        <dt>Update</dt><dd>Architecture.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">B12</span><div class="find-title">The cost model rests on an outdated Google framing and understates reliable-production cost <span class="grounded">Grounded</span></div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The Place Photo unit cost survives, but the model's framing assumes the old world where a <strong>$200 monthly credit absorbed mixed Google usage — that credit ended Feb 28, 2025</strong>, replaced by per-SKU free caps. And a <em>reliable</em> production deployment realistically needs Vercel Pro (~$20) + Supabase Pro (~$25) ≈ <strong>$45/mo in platform fees alone</strong>, before photos — versus the "$0–40/mo, mostly free" headline.</dd>
+        <dt>Why it blocks</dt><dd>Not a blocker for the build itself, but the "near-zero fixed cost" thesis is one of the project's pillars, and it's optimistic for a reliable build.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> re-derive the cost model per-SKU under the post-March-2025 rules and present two tiers — "bare hobby (free, with reliability caveats)" and "reliable production (~$45/mo + photos)."</dd>
+        <dt>Update</dt><dd>Business Plan + Architecture.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ FINDINGS C ============ -->
+  <section id="findings-c">
+    <div class="dim-head"><span class="tag">C</span><h3>UI/UX &amp; Design</h3></div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">C1</span><div class="find-title">Screen-state completeness — the prototype shows happy paths only</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Across every surface, the following states are undefined: loading/skeleton, error, empty, offline, permission-denied, no-results, long-content overflow, very-long titles, and missing-image (beyond the single placeholder gradient).</dd>
+        <dt>Why it blocks</dt><dd>These states are most of real usage; the build guide needs them designed or the builder improvises and the polish that makes this product special evaporates at the edges.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> produce a surface × state matrix with designed copy and behavior for each cell (merge with A4's empty-state work).</dd>
+        <dt>Update</dt><dd>Wireframe + Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">C2</span><div class="find-title">Accessibility is asserted but unverified — for an explicitly older audience <span class="grounded">Grounded</span></div></div><span class="sev sev-blocker">🔴 Blocker</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Accessibility is claimed via "big tap targets," but: there's no WCAG contrast audit (Gold <span class="mono">#E0A82E</span> and Sage on the Plaster backgrounds are likely AA failures for normal text); the emoji icon-buttons (the hearts) have no <span class="mono">aria-label</span>; there are no visible focus states, no keyboard navigation, and no <span class="mono">prefers-reduced-motion</span> handling for the many animations (sun pulse, heart pop, urgency pulse); touch targets are asserted, not measured; and the <strong>drum-roll time picker is notoriously inaccessible</strong> to screen-reader and motor-impaired users.</dd>
+        <dt>Why it blocks</dt><dd>The product deliberately targets an older, simplicity-seeking demographic, which makes accessibility core to the value proposition, not polish — and a public consumer product carries ADA exposure. Building the picker without an accessible fallback bakes in an exclusion of part of the target audience.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> commit to WCAG 2.2 AA as the floor; run a real contrast audit and adjust the palette where it fails; add aria-labels, focus states, keyboard nav, and reduced-motion to the quality floor; and provide an accessible time-input fallback alongside the drum-roll.</dd>
+        <dt>Update</dt><dd>Wireframe + a new Accessibility spec.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">C3</span><div class="find-title">Responsive behavior undefined beyond "mobile-first"</div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Tablet, landscape, large phones, the consumer app on desktop, and the admin cockpit's stated "desktop + mobile" all need defined breakpoints and treatments.</dd>
+        <dt>Why it blocks</dt><dd>The cockpit explicitly must work on desktop, and the consumer app will be opened on non-phone devices; undefined breakpoints mean inconsistent layouts.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> define breakpoints and the desktop treatment for both the app and the cockpit.</dd>
+        <dt>Update</dt><dd>Design system.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">C4</span><div class="find-title">Map-at-scale and drum-roll physics are real, unscoped build tasks</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>With ~150 places, the map needs clustering, pin-overlap handling, the pins-plus-live-overlay interaction, and a performance plan — none defined. The drum-roll picker needs momentum/snap/inertia physics plus the accessible fallback from C2.</dd>
+        <dt>Why it blocks</dt><dd>Both are deceptively hard interactions that the prototype fakes (static coords; a basic wheel); a build guide that treats them as trivial will under-budget them.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> scope both explicitly — map library + clustering strategy, and the picker implementation approach — as named build tasks.</dd>
+        <dt>Update</dt><dd>Architecture + Product Bible.</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">C5</span><div class="find-title">No consolidated design-token handoff</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>The palette, type, and motion live only inside the wireframe's CSS. There's no consolidated token source of truth (a Tailwind config or CSS-variable file), no spacing scale, no documented component variants (button / card / sheet), and no motion spec (durations / easings).</dd>
+        <dt>Why it blocks</dt><dd>The wireframe CSS is the de-facto spec but it's implicit; a build in Cursor needs an explicit token + component source or every screen drifts.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> extract a single token source of truth plus a short component and motion spec as a required build input (this can be an expansion of context §17).</dd>
+        <dt>Update</dt><dd>A new Design System doc, or an expanded §17.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ FINDINGS D ============ -->
+  <section id="findings-d">
+    <div class="dim-head"><span class="tag">D</span><h3>Cross-Cutting: Consistency &amp; Legal</h3></div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">D1</span><div class="find-title">Documentation and prototype have drifted</div></div><span class="sev sev-med">🟡 Medium</span></div>
+      <dl>
+        <dt>The gap</dt><dd>Inconsistencies across the set: "Plan My Night" vs. "My Plan"; "Document X of 3" vs. "of 4" in footers; the My Plan gap-filler shown in the Product Bible but absent from wireframe logic; <span class="mono">computeTravel</span>/<span class="mono">buildICS</span>/<span class="mono">buildShareCard</span> presented in architecture pseudocode but stubbed in the prototype; "no users table" vs. stored digest emails; "Everything" vs. "Any Vibe" persona labels.</dd>
+        <dt>Why it blocks</dt><dd>Drift forces the builder to guess which document wins, and small inconsistencies compound into wrong implementations.</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> see the full log in §8 and declare a canonical source per concern — Wireframe v7 for UI, the Context doc for strategy, and reconcile the architecture pseudocode as "intended, not yet implemented."</dd>
+        <dt>Update</dt><dd>All docs (version sync).</dd>
+      </dl>
+    </div>
+
+    <div class="find">
+      <div class="find-top"><div><span class="find-id">D2</span><div class="find-title">Legal and compliance artifacts are undrafted</div></div><span class="sev sev-high">🟠 High</span></div>
+      <dl>
+        <dt>The gap</dt><dd>There's no privacy policy, no terms of service, no cookie/analytics-consent posture, and no ADA/WCAG compliance statement; the IP/scraping review is "recommended," not done. A public product with PII (emails), third-party submissions (others' content + submitter data), and an older audience raises the stakes on all of these.</dd>
+        <dt>Why it blocks</dt><dd>These aren't optional for a public launch, and several (consent, the scraping ToS review) gate technical decisions made elsewhere (A1, B3).</dd>
+        <dt>Recommendation</dt><dd class="rec"><span class="rec-flag">Recommend:</span> treat a privacy policy, terms of service, the per-source scraping ToS review (B3), and an accessibility-compliance pass (C2) as launch prerequisites; cookie-consent need depends on the analytics choice (A1).</dd>
+        <dt>Update</dt><dd>Business Plan + a new Legal &amp; Compliance checklist.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ 5. DRIFT LOG ============ -->
+  <section id="drift">
+    <div class="sec-num">05 — Reconcile the record</div>
+    <h2>Doc-drift &amp; consistency log</h2>
+    <p class="sub">Every inconsistency found across the five documents and the prototype, with a recommended single source of truth.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Inconsistency</th><th>Where</th><th>Recommended canonical source</th></tr></thead>
+      <tbody>
+        <tr><td>"Plan My Night" vs. "My Plan"</td><td>Older naming vs. current</td><td><strong>"My Plan"</strong> (Wireframe v7 + Context).</td></tr>
+        <tr><td>"Document X of 3" vs. "Document X of 4"</td><td>Footers across the HTML docs</td><td>Standardize to the actual count (this audit makes it <strong>4</strong>, or 5 with the context file).</td></tr>
+        <tr><td>My Plan gap-filler ("you've got 90 minutes…")</td><td>Shown in Product Bible mockup; absent from wireframe logic</td><td>Wireframe is canonical → mark gap-fill as <strong>intended, not yet implemented</strong> (resolve via B5).</td></tr>
+        <tr><td><span class="mono">computeTravel</span> / <span class="mono">buildICS</span> / <span class="mono">buildShareCard</span></td><td>Architecture pseudocode vs. stubbed toasts in prototype</td><td>Reconcile architecture to <strong>"illustrative intent"</strong>; these are unbuilt.</td></tr>
+        <tr><td>"No users table" vs. stored digest emails</td><td>Architecture/Context vs. the MVP digest feature</td><td>Reframe as <strong>"no end-user account table"</strong>; add a <span class="mono">subscribers</span> table (A6).</td></tr>
+        <tr><td>Persona label "Everything" vs. "Any Vibe"</td><td>Wireframe data vs. UI copy</td><td>Wireframe v7 UI copy (<strong>"Any Vibe"</strong>) is canonical.</td></tr>
+        <tr><td>Saves in <span class="mono">localStorage</span> vs. in-memory <span class="mono">Set</span></td><td>Architecture spec vs. prototype implementation</td><td>Architecture intent (<strong>localStorage</strong>) is canonical; prototype is a demo (resolve durability via B8).</td></tr>
+        <tr><td>Google "$7/1k after 1k free" framing</td><td>Business Plan / Architecture</td><td>Unit cost is <strong>still correct</strong>; the surrounding $200-credit framing is <strong>outdated</strong> (B12).</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 6. DECISIONS ============ -->
+  <section id="decisions">
+    <div class="sec-num">06 — Your move</div>
+    <h2>Open decisions before the build guide</h2>
+    <p class="sub">The concrete, decision-shaped list. Making these turns the next step into a clear specification pass rather than more analysis. Most are choices, not research.</p>
+
+    <ol class="dlist">
+      <li><span class="q">Hosting tier:</span> bare-hobby (free, with the pausing/backups/cron caveats) or reliable-production (Vercel Pro + Supabase Pro ≈ $45/mo)? <em>(Drives B2, B9, B11, B12.)</em></li>
+      <li><span class="q">Pipeline orchestration:</span> Pro precise cron, a single daily orchestrator cron, or an external scheduler? <em>(B2.)</em></li>
+      <li><span class="q">Sourcing per channel:</span> which sources via official API / RSS / iCal / partner permission vs. scraping vs. submission-only — gated by a per-source ToS review? <em>(B3, D2.)</em></li>
+      <li><span class="q">PWA or responsive web app?</span> <em>(B7, B8.)</em></li>
+      <li><span class="q">Edition-ready nudge:</span> web push (requires installing the PWA) or email? <em>(B7.)</em></li>
+      <li><span class="q">My Plan pick list:</span> deterministic client logic or AI-backed? And do gap-fill, travel time, ICS export, and the share card ship in MVP or as a labeled fast-follow? <em>(B5.)</em></li>
+      <li><span class="q">Save durability on iOS:</span> accept eviction risk and nudge install, or add an optional export/sync? <em>(B8.)</em></li>
+      <li><span class="q">Analytics:</span> which privacy-preserving tool, and does it trigger a cookie-consent requirement? <em>(A1, D2.)</em></li>
+      <li><span class="q">Monetization fields in the MVP schema:</span> reserve <span class="mono">is_featured</span> / <span class="mono">sponsor_id</span> now, or add later? <em>(A7, B1.)</em></li>
+      <li><span class="q">Minimum launch content counts</span> (the go-live gate): how many places, guides, and happy hours before launch? <em>(A3.)</em></li>
+      <li><span class="q">Google:</span> commit to Places API (New) and confirm the Place Photo SKU + caching terms at billing setup? <em>(B6.)</em></li>
+      <li><span class="q">Accessibility target:</span> commit to WCAG 2.2 AA as the floor (recommended, given the audience)? <em>(C2.)</em></li>
+    </ol>
+  </section>
+
+  <!-- ============ 7. PUNCH LIST ============ -->
+  <section id="punch">
+    <div class="sec-num">07 — In order</div>
+    <h2>"To reach build-ready" punch list</h2>
+    <p class="sub">The path from here, ordered by severity. Clear the red items and the build guide can be both correct and buildable.</p>
+
+    <h3 style="color:var(--blocker);">🔴 Build-blockers — do these first</h3>
+    <ul class="punch">
+      <li><span class="sev sev-blocker">1</span><div class="body"><strong>Harden the data model (B1).</strong> Add the <span class="mono">submissions</span> table, the structured happy-hour window, photo URLs, the neighborhood enum, the jsonb shapes, and the featured/sponsor fields.</div></li>
+      <li><span class="sev sev-blocker">2</span><div class="body"><strong>Resolve the pipeline + hosting architecture (B2).</strong> Decide the tier and the orchestration model so the nightly jobs actually deploy and sequence correctly.</div></li>
+      <li><span class="sev sev-blocker">3</span><div class="body"><strong>Settle sourcing + the per-source ToS posture (B3).</strong> The top combined technical-and-legal risk — prefer official feeds and permission over scraping the commercial sites.</div></li>
+      <li><span class="sev sev-blocker">4</span><div class="body"><strong>Define success metrics, analytics, and "WAU" (A1), and acceptance criteria (A2).</strong> Give the build a measurable target and a definition of done.</div></li>
+      <li><span class="sev sev-blocker">5</span><div class="body"><strong>Commit the accessibility floor (C2).</strong> Contrast audit, WCAG 2.2 AA, and an accessible alternative to the drum-roll picker.</div></li>
+    </ul>
+
+    <h3 style="color:var(--high);">🟠 High — resolve before the relevant feature is built</h3>
+    <p style="font-size:14.5px;color:var(--ink2);">Cold-start/seeding plan (A3) · empty &amp; error states (A4, C1) · the digest + PII table (A6) · AI contracts (B4) · the My Plan AI-vs-deterministic decision (B5) · the image-resolver path (B6) · performance budget + PWA decision + push/email (B7) · iOS save durability (B8) · form &amp; admin security hardening (B10) · map-at-scale + picker scope (C4) · the design-token handoff (C5) · legal/compliance artifacts (D2) · re-derive the cost model (B12).</p>
+
+    <h3 style="color:var(--med);">🟡 Medium — specify, but not gating</h3>
+    <p style="font-size:14.5px;color:var(--ink2);">Onboarding re-show policy (A5) · monetization schema fields (A7) · the dependency-failure matrix (B9) · build operability baseline (B11) · responsive breakpoints (C3) · the doc-drift reconciliation (D1).</p>
+
+    <div class="callout good" style="margin-top:26px;">
+      <div class="k">The honest read</div>
+      <p style="margin:0;">This is a strong, unusually well-thought-through product with a real strategic wedge and a beautiful prototype. Nothing in this audit questions the <em>vision</em> — the gaps are almost entirely in the layer between "designed" and "specified enough to build without inventing decisions." That's a normal and healthy place to be before a build, and it's a short list of decisions away from ready.</p>
+    </div>
+  </section>
+
+  <!-- ============ 8. EVIDENCE ============ -->
+  <section id="evidence">
+    <div class="sec-num">08 — Show the work</div>
+    <h2>Evidence &amp; sources</h2>
+    <p class="sub">The external claims above were verified against current (2025–2026) sources rather than asserted. Where a docs assumption was outdated or constrained, it's noted here.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Claim verified</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr><td>Google Place Photo cost</td><td><strong>Confirmed:</strong> "Places Photo" is an Enterprise SKU at <span class="mono">$7 / 1,000</span> after 1,000 free events — the docs' figure holds.</td></tr>
+        <tr><td>Google $200 monthly credit</td><td><strong>Outdated:</strong> the umbrella $200 credit <strong>ended Feb 28, 2025</strong>, replaced by per-SKU free caps; classic Places API is now "Legacy."</td></tr>
+        <tr><td>Vercel Hobby cron</td><td><strong>Constrained:</strong> Hobby = once-per-day cadence, imprecise within-the-hour timing; function <span class="mono">maxDuration</span> caps at 60s on the standard model.</td></tr>
+        <tr><td>iOS web push</td><td><strong>Constrained:</strong> works only for PWAs installed to the Home Screen (iOS 16.4+), triggered by a user gesture.</td></tr>
+        <tr><td>iOS storage durability</td><td><strong>Risk:</strong> Safari can evict <span class="mono">localStorage</span>/IndexedDB for non-installed sites after ~7 days of inactivity.</td></tr>
+        <tr><td>Supabase free tier</td><td><strong>Risk:</strong> free projects pause after 7 days of inactivity and keep zero backups; production reliability points to Pro (~$25/mo).</td></tr>
+        <tr><td>Scraping legality (hiQ v. LinkedIn)</td><td><strong>Cautionary:</strong> CFAA doesn't bar scraping public data, but ToS is enforceable as breach of contract + trespass — hiQ took a $500K judgment and shut down.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Source links</h3>
+    <ul class="src">
+      <li>Google Maps Platform — March 2025 pricing changes &amp; legacy SKU pricing (Place Photo $7/1k): <a href="https://developers.google.com/maps/billing-and-pricing/march-2025">developers.google.com/maps/billing-and-pricing/march-2025</a> · <a href="https://developers.google.com/maps/billing-and-pricing/legacy-sku-pricing">legacy-sku-pricing</a></li>
+      <li>Vercel — cron job limits (Hobby once/day) &amp; function duration limits: <a href="https://vercel.com/docs/cron-jobs/usage-and-pricing">vercel.com/docs/cron-jobs/usage-and-pricing</a> · <a href="https://vercel.com/docs/functions/limitations">functions/limitations</a></li>
+      <li>iOS PWA web push (Home-Screen requirement, iOS 16.4+): <a href="https://www.magicbell.com/blog/pwa-ios-limitations-safari-support-complete-guide">magicbell.com — PWA iOS limitations</a> · <a href="https://pushpad.xyz/blog/ios-special-requirements-for-web-push-notifications">pushpad.xyz</a></li>
+      <li>Supabase free-tier pause + zero backups: <a href="https://supabase.com/pricing">supabase.com/pricing</a> · <a href="https://simplebackups.com/blog/supabase-free-tier-paused">simplebackups.com</a></li>
+      <li>hiQ Labs v. LinkedIn final outcome (breach of contract, $500K judgment): <a href="https://natlawreview.com/article/linkedin-s-data-scraping-battle-hiq-labs-ends-proposed-judgment">natlawreview.com</a> · <a href="https://legalclarity.org/the-final-ruling-in-the-linkedin-scraping-case/">legalclarity.org</a></li>
+    </ul>
+    <p style="font-size:13px;color:var(--sage);margin-top:18px;">Pricing, free-tier limits, and platform capabilities change frequently — re-verify the load-bearing ones (Google SKUs, Vercel tiers, Supabase limits) at build/billing setup. Legal points are general information, not legal advice; the per-source ToS review (B3) should be done by counsel.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 4 · Pre-Build Audit (Gate Review)</span>
+    <span>Findings are an independent assessment for planning. Verdict: not yet build-ready — a short decision pass away.</span>
+  </div>
+</footer>
+
+</body>
+</html>

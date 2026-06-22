@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Pre-Build Decisions (annotated)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;
+    --blocker:#B23A2E;--high:#C77D1E;--med:#9A8A3E;--low:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#C0532E,#E0A82E 130%);color:var(--paper);padding:62px 0 54px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(252,250,245,.45),rgba(252,250,245,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(36,28,22,.7);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(40px,7vw,64px);line-height:.98;margin:0 0 16px;letter-spacing:-.01em;color:#241C16;}
+  .cover .lede{font-size:18px;max-width:660px;color:rgba(36,28,22,.86);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(36,28,22,.12);border:1px solid rgba(36,28,22,.2);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:#241C16;}
+  section{padding:44px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);font-weight:600;letter-spacing:.04em;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(25px,4vw,35px);line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 22px;max-width:760px;}
+  p{margin:0 0 14px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  .stage-head{display:flex;align-items:center;gap:12px;margin:30px 0 6px;}
+  .stage-head .ico{font-size:22px;}
+  .stage-head h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0;}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:11px 13px;font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:11px 13px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .id{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--terra);white-space:nowrap;font-size:13px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:20px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .pkg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0;}
+  .pkg .item{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px 16px;box-shadow:var(--shadow);}
+  .pkg .item .t{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:2px;}
+  .pkg .item .d{font-size:13px;color:var(--ink2);}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:32px 0;margin-top:48px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.pkg{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Gate Review · Resolution Record</div>
+    <h1>Pre-Build Decisions</h1>
+    <p class="lede">Every one of the 26 audit gaps, resolved. This is the decision log the build guide will be written against — the bridge from "design-complete" to "build-ready."</p>
+    <div class="badges">
+      <span class="badge">📄 Document 5 — Decisions</span>
+      <span class="badge">✅ 26 / 26 gaps resolved</span>
+      <span class="badge">🌅 Status: v9 canon · build-ready</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="callout" style="margin-top:30px;border-left-color:var(--tile,#C0532E);background:#FBF0EA;">
+    <div class="k">v9 — the three-section cut (current; governs everything below)</div>
+    <p style="margin:0 0 8px;">SB Daymaker is now <strong>three sections: Explore · Saved · Discover SB.</strong> The <strong>Map screen and the My Plan itinerary builder are removed.</strong> In their place: <strong>Near Me</strong> is an in-view <strong>sort</strong> (geolocation → neighborhood anchor) on Explore and Saved; <strong>sharing</strong> is a view-only <strong>saved-list link</strong> (Option A — <span class="mono">shared_states.kind='shared_list'</span>; one item or a multi-select batch; the opener saves their own copy; no recipient PII); <strong>One Perfect SB Day</strong> is an Explore card that seeds the saved list; <strong>Discover SB</strong> holds neighborhood + theme guides that surface live happenings. <strong>Mapbox leaves the V1 stack</strong> (full map → Phase 2); the data contract is <span class="mono">sbdaymaker_schema.sql</span>. Where v9 conflicts with any decision recorded below, <strong>v9 governs</strong>. <strong>Status: v9 canon · 2026-06-21.</strong></p>
+  </div>
+
+  <div class="callout" style="margin-top:18px;border-left-color:var(--gold);background:#FBF6EA;">
+    <div class="k">Earlier layer — revised by the UX decisions</div>
+    <p style="margin:0 0 8px;">These 26 decisions remain the build-ready resolution of the audit. A subsequent <strong>UX-decision layer (16 Locked Decisions + 7 follow-ons; rationale in Document 6)</strong> revised several of them, and v9 (above) revised several again. Where they conflict, <strong>v9 first, then the UX decisions</strong> govern; this record is preserved as written. Key revisions:</p>
+    <p style="margin:0 0 6px;"><strong>• B5 (My Plan) → retired in v9.</strong> The live app stays fully deterministic, but the My Plan builder, the optional timeline, the <span class="mono">.ics</span> export, and the drum-roll picker are all removed. The surviving social artifact is the <strong>view-only saved-list share-link (Option A)</strong>.</p>
+    <p style="margin:0 0 6px;"><strong>• B8 (on-device save durability) → magic-link save-restore added.</strong> A passwordless email link (the <span class="mono">shared_states</span> token store) restores saves on any device, beyond the PWA-install hedge.</p>
+    <p style="margin:0 0 6px;"><strong>• A6 (email) → promoted to first-class, 2×/week</strong> (midweek + weekend), covering what's new and what's coming up. Web push for installed users is a committed Phase-2 fast-follow.</p>
+    <p style="margin:0 0 6px;"><strong>• Spine, tags, scope.</strong> Place-first → a three-tier happenings cascade (<span class="mono">happening_tier</span> + <span class="mono">recurring_schedules</span>); six personas → ten occasion tags (<span class="mono">thing_tags</span>); <strong>Near Me is an in-view sort (no Map screen)</strong> and Happy Hour is a "last confirmed" list (full map + live countdowns → Phase 2).</p>
+    <p style="margin:0;"><strong>• Data contract.</strong> The schema is <span class="mono">sbdaymaker_schema.sql</span>, carrying these changes (incl. the Discover SB guide <span class="mono">kind</span>/<span class="mono">zone</span> and the <span class="mono">shared_list</span> share). The cost model (B12), sourcing posture (B3), pipeline (B2), and accessibility floor are carried forward unchanged.</p>
+  </div>
+
+  <section>
+    <div class="sec-num">01 — What this is</div>
+    <h2>From audit to answers</h2>
+    <p class="sub">The Pre-Build Audit (Document 4) found 26 gaps between a beautifully-designed product and a spec complete enough to build. This document records the decision made for each one. Nothing here is a new feature — it's the set of settled choices a build guide needs so the builder never has to invent one.</p>
+    <div class="callout">
+      <div class="k">The build-ready package</div>
+      <div class="pkg">
+        <div class="item"><div class="t">Document 4 · Pre-Build Audit</div><div class="d">The 26 findings, scored and ranked.</div></div>
+        <div class="item"><div class="t">sbdaymaker_schema.sql</div><div class="d">The hardened, runnable data contract (Gap B1): happening-tier + occasion-tag + shared_states + Discover SB guide kinds.</div></div>
+        <div class="item"><div class="t">Document 5 · Decisions (this)</div><div class="d">Every gap resolved + matrices + cost model.</div></div>
+        <div class="item"><div class="t">sbdaymaker_tokens.css</div><div class="d">The design-token source of truth (Gap C5).</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDATION -->
+  <section>
+    <div class="sec-num">02 — The decision log</div>
+    <h2>Every gap, resolved</h2>
+    <p class="sub">Grouped by the three stages of the quest. The "decision" column is now settled fact for the build.</p>
+
+    <div class="stage-head"><span class="ico">🌑</span><h3>Foundation — the build-blockers</h3></div>
+    <table class="tbl">
+      <thead><tr><th>Gap</th><th>The gap</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="id">B1</td><td>Schema illustrative / incomplete</td><td><strong>Hardened &amp; specified</strong> — full SQL delivered: <span class="mono">submissions</span>, <span class="mono">happy_hour_windows</span>, photo URLs, <span class="mono">thing_personas</span> junction, neighborhood + nearby-zone enums, <span class="mono">guide_stops</span>, <span class="mono">edition_picks</span>, sponsor/featured fields, RLS.</td></tr>
+        <tr><td class="id">B2</td><td>Pipeline can't run on Hobby cron</td><td><strong>Vercel Pro + single orchestrator function</strong> running steps in sequence (race-free); the weekend digest is its own weekly cron; Fluid Compute on for duration headroom.</td></tr>
+        <tr><td class="id">B3</td><td>Sourcing + ToS posture</td><td><strong>Scrape facts, with guardrails:</strong> per-source <span class="mono">robots.txt</span>/ToS check, no-account scraping, feeds-first where available, good-citizen rate limits, facts-only, defensive adapters with a submission fallback, pre-launch attorney review.</td></tr>
+        <tr><td class="id">A1</td><td>No metrics / WAU undefined</td><td><strong>Vercel Web Analytics</strong> (cookieless). WAU = unique device-days / rolling 7d. Events: <span class="mono">app_open, lens_select, save, plan_complete, ticket_handoff, guide_open, digest_signup, submit</span>. KPIs: WAU, returning-user rate, save rate, plan-completion.</td></tr>
+        <tr><td class="id">A2</td><td>No acceptance criteria</td><td><strong>Folded into the build guide</strong> — every feature ends with a Given/When/Then "done when…" checklist.</td></tr>
+        <tr><td class="id">C2</td><td>Accessibility unverified</td><td><strong>WCAG 2.2 AA as the floor.</strong> Palette usage rule: small text only Ink/Ink2/Pacific; accents large/UI only; Gold &amp; Tile never text on light. aria-labels, focus, keyboard, reduced-motion in the floor.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="stage-head"><span class="ico">🌄</span><h3>Frame — the high-priority gaps</h3></div>
+    <table class="tbl">
+      <thead><tr><th>Gap</th><th>The gap</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="id">A3</td><td>Cold-start unplanned</td><td><strong>Launch gate:</strong> ≥75 places (≥10/zone, ≥8/persona), all 5 guides, ≥4 First Looks, ≥8 happy hours, pipeline clean 7 days. ~15–25 hrs seeding; 150 places is the 90-day target.</td></tr>
+        <tr><td class="id">A4</td><td>Empty states undefined</td><td><strong>Copy written in-voice</strong> for Saved, Happy Hours, First Looks, location-denied, offline, and no-match — invitations, never dead ends.</td></tr>
+        <tr><td class="id">C1</td><td>Loading / error states undefined</td><td><strong>Skeletons not spinners; in-voice retry errors; clamp/truncation rules; branded placeholder + lazy-load.</strong> State matrix complete.</td></tr>
+        <tr><td class="id">A6</td><td>Digest flow + PII</td><td><strong>Double opt-in, one-click unsubscribe + List-Unsubscribe, SPF/DKIM/DMARC, template assembly, auto-send with veto.</strong> "No users table" → "no end-user account table."</td></tr>
+        <tr><td class="id">B4</td><td>AI contracts undefined</td><td><strong>Per-job output/validation/model contracts; negative-rule layer as code; model pinning; timeout+retry+fallback.</strong> Tiered models: Haiku for blurbs/tagging/parse, Sonnet for ranking.</td></tr>
+        <tr><td class="id">B5</td><td>My Plan AI vs deterministic</td><td><strong>Resolved deterministic — then retired in v9.</strong> The My Plan builder (4-tier sort, Surprise Me, haversine travel, gap-fill, ICS export, share card) is removed. The live app stays fully deterministic ("batch AI only" holds); the surviving social artifact is the <strong>view-only saved-list share-link (Option A)</strong>.</td></tr>
+        <tr><td class="id">B6</td><td>Image resolver path</td><td><strong>Referrer-restricted client key</strong> (no proxy). Resolver order owned→Pexels(curated)→Wikimedia→Google→placeholder; branded placeholder + lazy-load; Wikimedia attribution; build on Places API (New).</td></tr>
+        <tr><td class="id">B7</td><td>Perf / PWA / nudge</td><td><strong>Installable PWA</strong> (offline shell + manifest); CWV budget; ISR for the SEO guides; <strong>email</strong> for the edition nudge (web push deferred); gentle install nudge.</td></tr>
+        <tr><td class="id">B8</td><td>iOS save durability</td><td><strong>Accept eviction + nudge home-screen install</strong> (durability + push) <strong>+ one-tap "back up my saves" export/import</strong> hedge. Accounts stay deferred.</td></tr>
+        <tr><td class="id">B10</td><td>Form / admin security</td><td><strong>Input sanitization + output encoding; captcha + rate-limit on public forms; captions treated as untrusted data (prompt-injection mitigation); admin 2FA + login rate-limit; CSRF posture for server actions.</strong></td></tr>
+        <tr><td class="id">C4</td><td>Map-at-scale + picker</td><td><strong>Map → Phase 2.</strong> V1 has no map: <strong>Near Me is an in-view sort</strong> (geolocation → SB-center default + one-tap neighborhood picker), reading the stored <span class="mono">nearby_zone</span>. The full Mapbox map (clustering, pin-overlap, live overlay) is deferred — no map SDK or token at launch.</td></tr>
+        <tr><td class="id">C5</td><td>Design-token handoff</td><td><strong>Token file delivered</strong> (<span class="mono">sbdaymaker_tokens.css</span>) — palette + AA-safe variants, type scale, 4px space scale, radius/shadow, motion, breakpoints, component-variant contract.</td></tr>
+        <tr><td class="id">D2</td><td>Legal artifacts undrafted</td><td><strong>Prerequisites before public launch:</strong> privacy policy, ToS, consent posture (cookieless analytics keeps it minimal), per-source scraping ToS review, accessibility statement — counsel-reviewed.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="stage-head"><span class="ico">🌅</span><h3>Polish — the medium gaps</h3></div>
+    <table class="tbl">
+      <thead><tr><th>Gap</th><th>The gap</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="id">A5</td><td>Onboarding re-show policy</td><td><strong>Banner shows once per device</strong>; re-entry via a "set your vibe" control; never nags; accepts re-onboarding on cleared storage.</td></tr>
+        <tr><td class="id">A7</td><td>Monetization placement</td><td>Data layer done (<span class="mono">is_featured</span>/<span class="mono">sponsor_id</span>/<span class="mono">sponsors</span>). <strong>One clearly-labeled placement slot; the ranker NEVER reads sponsor status</strong> (trust rule). Full placement logic deferred to Phase 2.</td></tr>
+        <tr><td class="id">B9</td><td>Dependency-failure matrix</td><td><strong>Produced</strong> — see §03. Limit / behavior-at-cap / fallback for every external service.</td></tr>
+        <tr><td class="id">B11</td><td>Build operability baseline</td><td><strong>Supabase migrations tracked in repo; seed scripts; backups (Supabase Pro by launch); e2e smoke tests on the core loop; staging via the Supabase dev project.</strong></td></tr>
+        <tr><td class="id">B12</td><td>Cost model outdated</td><td><strong>Re-derived</strong> — see §04. Two tiers; the dead $200 Google credit removed; reliable production ≈ $45/mo platform + per-SKU photo cost.</td></tr>
+        <tr><td class="id">C3</td><td>Responsive breakpoints</td><td><strong>Mobile-first base; tablet 600–1023; desktop ≥1024; wide ≥1280; defined desktop treatment for the admin cockpit.</strong></td></tr>
+        <tr><td class="id">D1</td><td>Doc / prototype drift</td><td><strong>Canonical sources declared:</strong> the Wireframe (v9, three sections) = UI; Context = strategy; architecture pseudocode = "intended, not implemented." Standardize "Near Me", "Any Vibe", "no account table"; fix doc-count footers.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- DEPENDENCY MATRIX -->
+  <section>
+    <div class="sec-num">03 — Resolving B9</div>
+    <h2>External-dependency matrix</h2>
+    <p class="sub">Every third party: its limit, what happens at the cap, and the graceful fallback. Verify the starred figures at setup — free tiers drift.</p>
+    <table class="tbl">
+      <thead><tr><th>Service</th><th>Limit / free tier</th><th>At the cap</th><th>Fallback</th></tr></thead>
+      <tbody>
+        <tr><td>Vercel (Pro)</td><td>Pro compute; Fluid functions</td><td>504 on timeout</td><td>Orchestrator chunking; alert</td></tr>
+        <tr><td>Supabase (Pro by launch)</td><td>8GB DB, daily backups</td><td>usage billing</td><td>Dev project staging; backups</td></tr>
+        <tr><td>Ticketmaster Discovery</td><td>~5,000 calls/day, 5/s *</td><td>429 rate-limit</td><td>Cache facts; backoff; skip cycle</td></tr>
+        <tr><td>Google Places Photo (New)</td><td>1,000 free/mo, then $7/1k</td><td>billing cap ~$50 + alert</td><td>Branded placeholder</td></tr>
+        <tr><td>Google Geocoding</td><td>10k free/mo, then $5/1k</td><td>cap + alert</td><td>Cache lat/lng — never re-geocode</td></tr>
+        <tr><td>Mapbox <span class="mono">(Phase 2)</span></td><td>~50k map loads/mo free *</td><td>overage billed</td><td>Not in V1 — the full map is deferred; Near Me uses free browser geolocation</td></tr>
+        <tr><td>OpenWeather</td><td>~1k calls/day free *</td><td>429</td><td>Cache last reading; ambient-only</td></tr>
+        <tr><td>Anthropic (Claude)</td><td>pay-as-you-go</td><td>rate-limit</td><td>Retry + skip-and-flag; hero → evergreen</td></tr>
+        <tr><td>Resend</td><td>~3k emails/mo, 100/day free *</td><td>queue / upgrade</td><td>Hold digest; alert</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- COST MODEL -->
+  <section>
+    <div class="sec-num">04 — Resolving B12</div>
+    <h2>The re-derived cost model</h2>
+    <p class="sub">The old "$0–40/mo, mostly free" headline assumed free tiers plus the Google $200 umbrella credit — which ended Feb 28, 2025. Here's the honest picture. The confirmed Place Photo SKU ($7/1k after 1k free) means the variable photo curve still holds; the change is the fixed platform floor for a <em>reliable</em> build.</p>
+    <table class="tbl">
+      <thead><tr><th>Tier</th><th>Fixed platform</th><th>Variable (photos + AI)</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Early dev</strong></td><td>Vercel Pro ~$20</td><td>~$0</td><td>Supabase still free; minimal traffic</td></tr>
+        <tr><td><strong>Launch</strong> (pre-traffic)</td><td>~$45 (Vercel + Supabase Pro)</td><td>~$1–10</td><td>Supabase Pro on → backups + no pausing</td></tr>
+        <tr><td><strong>~100 weekly</strong></td><td>~$45</td><td>~$43 photos + ~$5 AI</td><td>≈ $93/mo all-in</td></tr>
+        <tr><td><strong>~500 weekly</strong></td><td>~$45</td><td>~$245 photos + ~$10</td><td>≈ $300/mo all-in</td></tr>
+        <tr><td><strong>~1,000 weekly</strong></td><td>~$45</td><td>~$497 photos + ~$15</td><td>≈ $557/mo — before the operator-photo program bends photos down</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:14px;color:var(--ink2);">Still remarkably cheap, and still one-person-operable — just not literally "$0." The thesis survives; the framing is now accurate. Geocoding, weather, and email all sit inside free tiers at these scales; browser geolocation (the V1 Near Me anchor) is free, and Mapbox is a Phase-2 line item, not a launch cost.</p>
+  </section>
+
+  <!-- DESIGN SYSTEM -->
+  <section>
+    <div class="sec-num">05 — Resolving C5</div>
+    <h2>Design system, consolidated</h2>
+    <p class="sub">The tokens now live in one file — <span class="mono">sbdaymaker_tokens.css</span> — instead of being implicit in the wireframe CSS. It carries the palette with AA-safe text variants, the type and 4px spacing scales, radius/shadow, the motion spec (with a reduced-motion override), breakpoints, and a component-variant contract for buttons, cards, sheets, the save-heart, and badges. Build against the <em>semantic</em> tokens (<span class="mono">--text</span>, <span class="mono">--surface</span>, <span class="mono">--accent</span>) so the contrast rules from C2 stay enforced automatically.</p>
+  </section>
+
+  <section>
+    <div class="sec-num">06 — What's next</div>
+    <h2>Build-ready</h2>
+    <div class="callout">
+      <div class="k">Status</div>
+      <p style="margin:0;"><strong>All 26 gaps resolved. The spec is now complete enough to generate a production-grade build guide.</strong> Every decision a builder would otherwise have had to invent is settled and recorded. The recommended next step is to generate the build guide itself — sequenced by build phase, with the Given/When/Then acceptance criteria (A2) attached to each feature, written against this decision log, the hardened schema, and the design tokens.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 5 · Pre-Build Decisions</span>
+    <span>26 / 26 resolved · The road to golden hour, complete.</span>
+  </div>
+</footer>
+
+</body>
+</html>

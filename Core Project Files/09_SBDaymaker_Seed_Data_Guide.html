@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Seed Data Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;
+    --blocker:#B23A2E;--high:#C77D1E;--med:#9A8A3E;--low:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#16586A,#7E8B6B 135%);color:var(--paper);padding:62px 0 54px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(252,250,245,.4),rgba(252,250,245,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(252,250,245,.85);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(38px,6.4vw,60px);line-height:1.0;margin:0 0 16px;letter-spacing:-.01em;color:var(--paper);}
+  .cover .lede{font-size:18px;max-width:700px;color:rgba(252,250,245,.92);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(252,250,245,.16);border:1px solid rgba(252,250,245,.3);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:var(--paper);}
+  section{padding:44px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);font-weight:600;letter-spacing:.04em;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(25px,4vw,35px);line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 22px;max-width:780px;}
+  p{margin:0 0 14px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:26px 0 8px;}
+  h4{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin:18px 0 6px;}
+  ul,ol{margin:0 0 14px;padding-left:22px;}
+  li{margin:0 0 7px;}
+  .tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:10px 12px;font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:10px 12px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .src{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;white-space:nowrap;}
+  .s-you{background:#E7F0E9;color:var(--forest);}
+  .s-claude{background:#E4EEF2;color:var(--pacific);}
+  .s-never{background:#F6DEDA;color:var(--blocker);}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:20px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .rule{background:#FBEEEA;border:1px solid #E7C3B7;border-left:4px solid var(--terra);border-radius:12px;padding:20px 24px;margin:22px 0;box-shadow:var(--shadow);}
+  .rule .k{color:var(--terra);}
+  .stage{background:linear-gradient(150deg,#0E3C49,#16586A);color:var(--paper);border-radius:14px;padding:24px 26px;margin:26px 0 6px;box-shadow:var(--shadow);}
+  .stage .tag{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
+  .stage h2{color:var(--paper);margin:6px 0 8px;}
+  .stage p{color:rgba(252,250,245,.92);margin:0;}
+  .step{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:18px 22px;margin:16px 0;box-shadow:var(--shadow);}
+  .step .n{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--terra);color:var(--paper);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;margin-right:8px;vertical-align:middle;}
+  .step h4{display:inline;font-size:18px;vertical-align:middle;margin:0;}
+  .prompt{background:#241C16;color:#F1E9DC;border-radius:11px;padding:16px 18px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;overflow-x:auto;}
+  .prompt .lbl{display:block;color:var(--gold);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .check{list-style:none;padding-left:0;margin:12px 0 4px;}
+  .check li{position:relative;padding-left:30px;margin-bottom:9px;font-size:14.5px;}
+  .check li::before{content:"☐";position:absolute;left:0;top:-1px;font-size:18px;color:var(--forest);font-weight:700;}
+  .checkwrap{background:#F0F4EC;border:1px solid #CBDBC0;border-radius:12px;padding:16px 20px 8px;margin:16px 0;}
+  .checkwrap .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--forest);margin-bottom:4px;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:32px 0;margin-top:48px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Companion Guide · Content &amp; Seed Data</div>
+    <h1>Filling the app with<br>real Santa Barbara</h1>
+    <p class="lede">How to use Claude to build SB Daymaker's content — the right way. The headline rule, stated once: Claude <em>enriches</em> real facts; it never <em>invents</em> them. Two stages, step by step, with a check-it-worked list at the end of each step.</p>
+    <div class="badges">
+      <span class="badge">📄 Document 9 — Seed Data Guide</span>
+      <span class="badge">🪜 Two stages: fixtures → launch content</span>
+      <span class="badge">🌅 Status: v9 canon</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="rule" style="margin-top:30px;">
+    <div class="k">The one rule that matters most</div>
+    <p style="margin:0 0 8px;"><strong>Claude writes the voice. You (and your sources) supply the facts.</strong> If you ask Claude to "generate 150 Santa Barbara restaurants," it will hand you a beautiful list full of <em>plausible, confident, wrong</em> places — closed spots, invented addresses, made-up happy-hour times. You won't notice until a user drives to a restaurant that doesn't exist.</p>
+    <p style="margin:0;">For a product whose entire moat is trust and a knowing-local voice, hallucinated facts are poison. So everywhere in this guide, Claude's job is to <strong>transform real facts you give it</strong> — write the blurb, pick the occasion tags, classify the happening tier, draft the local's-secret note — and never to be the <em>source</em> of a name, address, date, time, or price.</p>
+  </div>
+
+  <!-- 00 -->
+  <section id="s0">
+    <div class="sec-num">00 — Orientation</div>
+    <h2>What "seed data" means, and the two stages</h2>
+    <p class="sub">"Seed data" is the starting content that makes the app real — the places, events, happy hours, and guides that fill the three sections (Explore · Saved · Discover SB). You'll build it in two very different stages with two very different quality bars.</p>
+    <table class="tbl">
+      <thead><tr><th>Stage</th><th>When</th><th>What it is</th><th>Can Claude make it up?</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · Dev fixtures</strong></td><td>Now — for build Phase 1</td><td>~20–30 throwaway rows so every screen has something to show while you build.</td><td><span class="src s-you">Yes — it's scaffolding</span> Nobody sees it; invented content is fine here.</td></tr>
+        <tr><td><strong>2 · Launch content</strong></td><td>Before launch, then forever</td><td>The real ~100–150 things, sourced and verified, then Claude-enriched and approved by you.</td><td><span class="src s-never">No — real users see this</span> Facts must be real and checked.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <div class="k">Why this guide is standalone</div>
+      <p style="margin:0;">You'll run Stage 2 <em>every time you add content</em> — not once. So it lives in its own guide, not buried in the one-time build plan. The build plan (Document 8) just points here at Phase 1 ("load the dev fixtures") and again near launch ("run the launch-content workflow").</p>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section id="s1">
+    <div class="sec-num">01 — The field-source map</div>
+    <h2>Where every fact is allowed to come from</h2>
+    <p class="sub">This is the most important table in the guide. For each kind of field, it says who the <em>source of truth</em> is. Tape it to the wall. Green = you or a real source. Blue = Claude proposes, you confirm. Red = Claude must never originate it.</p>
+    <table class="tbl">
+      <thead><tr><th>Field on a "thing"</th><th>Source of truth</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Name, address, lat/long, phone, website, hours, photos</td><td><span class="src s-never">never Claude</span></td><td>Google Places, the venue's own site, or your own verification. These are the facts a user acts on.</td></tr>
+        <tr><td>Event dates &amp; times; happy-hour windows; recurring schedules</td><td><span class="src s-never">never Claude</span></td><td>The official listing or the venue. A wrong time sends someone to a locked door — the worst failure mode.</td></tr>
+        <tr><td>Type (place / event / happy hour); neighborhood; <span class="mono">nearby_zone</span></td><td><span class="src s-claude">Claude proposes → you confirm</span></td><td>Derivable from the real address. Claude can suggest; you sanity-check the zone.</td></tr>
+        <tr><td><span class="mono">happening_tier</span> &amp; <span class="mono">happening_category</span></td><td><span class="src s-claude">rule + Claude proposes</span></td><td>Tier is derived by rule (has-date → 1, recurring → 2, else → 3). Claude proposes the category from the real facts.</td></tr>
+        <tr><td>Blurb · <span class="mono">reason_to_go</span> · the local's-secret note · occasion tags</td><td><span class="src s-claude">Claude drafts → you approve</span></td><td>This is the voice work — exactly what Claude is <em>for</em>. Always from facts you supplied, never invented detail.</td></tr>
+      </tbody>
+    </table>
+    <p>Read the table as one sentence: <strong>the closer a field is to something a user physically acts on, the further Claude stays from originating it.</strong></p>
+  </section>
+
+  <!-- STAGE 1 -->
+  <div class="stage">
+    <div class="tag">Stage 1 · do this now</div>
+    <h2>Dev fixtures — make the screens light up</h2>
+    <p>Goal: ~20–30 rows of throwaway content so that when you build a screen in Phase 1, it has something to render. This is the one place you can let Claude generate freely — it's scaffolding, not shown to anyone. You'll delete it before launch.</p>
+  </div>
+
+  <section id="s2" style="border-top:none;padding-top:18px;">
+    <div class="step">
+      <p><span class="n">1</span><h4>Gather a few real anchors (5 minutes)</h4></p>
+      <p>From memory, jot down 6–10 Santa Barbara places you personally know are real — a couple in each zone (Funk Zone, Downtown/State, Waterfront, Montecito, Mesa). Just names. These keep the fixture data feeling like SB instead of generic filler, and they give you something recognizable to eyeball on screen.</p>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>You have at least 6 real place names written down.</li>
+          <li>At least 3 different neighborhoods are represented.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">2</span><h4>Ask Claude for fixture rows in the right shape</h4></p>
+      <p>Open a normal Claude chat. Attach (or paste) <span class="mono">sbdaymaker_schema.sql</span> so Claude matches your real columns and enum values, then paste the prompt below. The goal is <em>coverage of variety</em> — at least one of every type, every zone, a few events dated relative to today, a couple of happy hours, and a guide or two — so every screen and empty-state has something to test.</p>
+      <div class="prompt"><span class="lbl">Copy-paste prompt — fixture generation</span>I've attached sbdaymaker_schema.sql, the database schema for my Santa Barbara discovery app.
+
+Generate ~25 fixture rows as valid PostgreSQL INSERT statements that match this schema exactly (correct table names, columns, and enum values).
+
+This is THROWAWAY dev data to make my screens render — it does not need to be real, but it must be realistic and varied. Cover:
+- every `type` value (place, event, happy hour, first look)
+- all neighborhood / nearby_zone values, including goleta
+- 4–5 events with dates spread across the next 2 weeks (use dates relative to today: 2026-06-21)
+- 2–3 happy_hour_windows and 1–2 recurring_schedules
+- 2 guides: one neighborhood guide (with a zone) and one theme guide (with a tag)
+- a short blurb and a reason_to_go for each place, in a warm, knowing-local voice
+
+Use these REAL anchor places where they fit, and clearly make the rest obviously-placeholder names (e.g. "Test Cafe — Funk Zone"):
+[paste your 6–10 real names here]
+
+Return only the SQL, ready to run. Add a comment at the top: "-- DEV FIXTURES — delete before launch".</div>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>The output is pure SQL with the "delete before launch" comment at the top.</li>
+          <li>You can see at least one row per <span class="mono">type</span>, and a <span class="mono">goleta</span> row.</li>
+          <li>Event dates are in the future, not the past.</li>
+          <li>The two guides include one with a <span class="mono">zone</span> and one with a <span class="mono">tag</span> (the v9 guide kinds).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">3</span><h4>Load it into your local database</h4></p>
+      <p>Save Claude's output as <span class="mono">seed_fixtures.sql</span>. In your project (with Supabase running locally), run it against your database — your build tool (Claude Code) can do this for you: just ask it to "run seed_fixtures.sql against the local Supabase database." If anything errors, paste the exact error back to Claude and ask it to fix the SQL — usually it's a mismatched enum value.</p>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>The script runs with <strong>zero errors</strong>.</li>
+          <li>Querying the <span class="mono">things</span> table returns ~25 rows.</li>
+          <li>No red error text mentioning an invalid enum or missing column.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">4</span><h4>Eyeball it in the app</h4></p>
+      <p>Once Phase 1 screens exist, open the app and walk the three sections. The fixtures exist to prove the <em>plumbing</em> works — that data flows from the database to the screen — not to look perfect.</p>
+      <div class="checkwrap"><div class="k">✓ Stage 1 is done when</div>
+        <ul class="check">
+          <li><strong>Explore</strong> shows a hero + a feed of cards.</li>
+          <li><strong>Saved</strong> shows items after you tap save (and the "been" flip works).</li>
+          <li><strong>Discover SB</strong> shows your two guides, and opening one shows its scoped happenings.</li>
+          <li><strong>Near Me</strong> re-sorts the list when toggled.</li>
+          <li>Empty states appear where you'd expect (e.g. Saved before you save anything).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAGE 2 -->
+  <div class="stage">
+    <div class="tag">Stage 2 · before launch, then ongoing</div>
+    <h2>Launch content — the real Santa Barbara</h2>
+    <p>Goal: the real ~100–150 things users will actually trust. This is four passes — <strong>source → enrich → approve → load</strong>. Doing it by hand here is not busywork: it <em>is</em> the exact workflow your nightly automated pipeline (build Phase 8) will later run for you. So this stage doubles as that pipeline's blueprint.</p>
+  </div>
+
+  <section id="s3" style="border-top:none;padding-top:18px;">
+    <div class="step">
+      <p><span class="n">A</span><h4>Source the facts — real, by hand (the slow, important part)</h4></p>
+      <p>Build a working spreadsheet of the things you want to launch with. One row per place/event. Fill the <span class="src s-never">never-Claude</span> columns from real sources: <strong>Google Places / Google Maps</strong> (name, address, lat/long, hours, phone, website, photo reference), the venue's own site or the official event listing (event dates, happy-hour times), and your own SB knowledge for the obvious zone. This pass is you + real sources only. Leave the voice columns (blurb, tags, note) blank — that's Claude's job next.</p>
+      <div class="callout"><div class="k">Tip</div><p style="margin:0;">Aim for a quality bar, not a quantity bar: ~30 genuinely good, verified things beat 150 shaky ones. The evergreen Tier-3 floor (Document 7, moat 3) means the app won't feel empty at 30.</p></div>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>Every row has a real, complete address you could navigate to.</li>
+          <li>Every event/happy-hour row has a date/time copied from an official source.</li>
+          <li>The voice columns are intentionally blank.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">B</span><h4>Let Claude enrich — in batches, with the guardrail baked in</h4></p>
+      <p>Now hand Claude the real rows and ask only for the voice + classification. Work in batches of ~10–15 so you can review carefully. The prompt below contains the anti-hallucination instruction <em>every batch must include</em> — it tells Claude to use only your facts and to flag anything it can't fill rather than invent it.</p>
+      <div class="prompt"><span class="lbl">Copy-paste prompt — enrichment batch</span>Below is a batch of REAL Santa Barbara places/events I have already verified. Each row's facts (name, address, hours, dates, times) are correct and fixed.
+
+Your job is ONLY to add the editorial fields for each row:
+- blurb: 1–2 sentences, warm "knowing local friend" voice
+- reason_to_go: one short phrase — why today
+- happening_category: choose from the schema's allowed values
+- occasion_tags: pick 1–3 from {Date Night, Family Day, Nightlife, Catch a Show, Arts & Culture, Outdoors & Active, Wine & Food, Free in SB, Hosting Visitors, Solo}
+- local_note: one optional insider line, ONLY if you genuinely know something true about this specific place; otherwise leave blank
+
+CRITICAL RULES:
+- Use ONLY the facts I provide. Do NOT add, infer, or invent any place, address, date, time, price, or factual claim.
+- If you are not sure about a detail, leave that field blank and add it to a "FLAGGED" list at the end. Never guess.
+- Do not write anything that asserts a fact I didn't give you.
+
+Return a table with my original rows plus the new columns, then the FLAGGED list.
+
+ROWS:
+[paste your 10–15 verified rows here]</div>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>Claude added only voice/classification columns — it did not change any address, date, or time.</li>
+          <li>You read the <strong>FLAGGED</strong> list and resolved each item yourself.</li>
+          <li>No <span class="mono">local_note</span> asserts something you can't personally verify.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">C</span><h4>You approve — the human gate</h4></p>
+      <p>Read every blurb. This is the curation moat (Document 7) in action — your voice, your standards. Fix anything that sounds generic or "AI." Then do the fact spot-check: this is the step that protects users.</p>
+      <div class="checkwrap"><div class="k">✓ Check before moving on</div>
+        <ul class="check">
+          <li>You re-read every blurb and it sounds like <em>you</em>, not a template.</li>
+          <li><strong>Address spot-check:</strong> pick 5 rows at random and confirm each address in Google Maps.</li>
+          <li><strong>Time spot-check:</strong> pick 3 happy-hour/event rows and confirm the times against the official source.</li>
+          <li>Zero past dates. Zero "permanently closed" places (re-check anything you're unsure of).</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <p><span class="n">D</span><h4>Format, load, and validate</h4></p>
+      <p>Ask Claude to turn your approved spreadsheet into INSERT statements against <span class="mono">sbdaymaker_schema.sql</span> (same as the fixture step, but now with your real, approved data). Load it, then run the final validation. Keep your spreadsheet — it's your content master and the input your Phase-8 pipeline will eventually read automatically.</p>
+      <div class="checkwrap"><div class="k">✓ Stage 2 batch is done when</div>
+        <ul class="check">
+          <li>The INSERTs load with zero errors.</li>
+          <li>The real rows render across Explore / Saved / Discover SB.</li>
+          <li><strong>Trust test:</strong> a sponsored item and a non-sponsored item appear in ranked order with no special treatment — the ranker never reads sponsor status (canon rule).</li>
+          <li>You've deleted the Stage-1 dev fixtures so they don't mix with real content.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="s4">
+    <div class="sec-num">02 — The guardrail, in five lines</div>
+    <h2>Pin this above your desk</h2>
+    <ol>
+      <li><strong>Facts never come from Claude</strong> — names, addresses, hours, dates, times, prices, phone numbers.</li>
+      <li><strong>Claude only writes voice and classification</strong> — blurb, reason-to-go, tags, tier/category, local note.</li>
+      <li><strong>Every enrichment prompt says:</strong> "Use only the facts I provide; do not invent; flag what you can't fill."</li>
+      <li><strong>You spot-check every batch</strong> — 5 addresses, 3 times, in the real source.</li>
+      <li><strong>When in doubt, leave it blank.</strong> An empty field is fine; a confident wrong fact is not.</li>
+    </ol>
+  </section>
+
+  <!-- 05 -->
+  <section id="s5">
+    <div class="sec-num">03 — Cost &amp; the pipeline tie-in</div>
+    <h2>What this costs, and where it goes next</h2>
+    <p class="sub">The enrichment is cheap, and the hand-run workflow becomes the automation.</p>
+    <ul>
+      <li><strong>Cost.</strong> Enrichment runs through the Claude API on the cheapest tier (Haiku) in batch mode — fractions of a cent per row. It sits comfortably inside the ~$45/mo platform floor. The metered cost to watch is <em>photos</em> (Google Places), not text — which is why operator-supplied photos are the long-term cost lever (canon).</li>
+      <li><strong>The pipeline tie-in.</strong> Stage 2's four passes — source → enrich → approve → load — are exactly what the nightly automated pipeline (build Phase 8) will do on its own: pull facts from sources, batch-enrich with Claude, surface for your one-tap approval in the cockpit, then publish. Running it by hand now means that when you build Phase 8, you're automating a process you already understand and trust.</li>
+    </ul>
+    <div class="callout">
+      <div class="k">The mindset to keep</div>
+      <p style="margin:0;">You are not asking Claude to <em>know</em> Santa Barbara. You're asking it to <em>describe</em> a Santa Barbara you've already verified. Keep that line clean and your content stays trustworthy — which is the whole product.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 9 · Seed Data Guide</span>
+    <span>Claude enriches facts · it never invents them · v9 canon</span>
+  </div>
+</footer>
+
+</body>
+</html>

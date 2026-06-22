@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Critical UX Assessment (with dispositions)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;
+    --gold-text:#7A5E13;--sage-text:#566049;--terra-text:#9E3F20;
+    --blocker:#B23A2E;--high:#C77D1E;--med:#9A8A3E;--low:#3E7C5A;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#0E3C49,#16586A 70%,#3E7C5A 135%);color:var(--paper);padding:64px 0 56px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(224,168,46,.38),rgba(224,168,46,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(252,250,245,.78);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(40px,7vw,64px);line-height:.98;margin:0 0 16px;letter-spacing:-.01em;color:#FCFAF5;}
+  .cover .lede{font-size:18px;max-width:680px;color:rgba(252,250,245,.92);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(252,250,245,.14);border:1px solid rgba(252,250,245,.28);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:#FCFAF5;}
+  section{padding:46px 0 8px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  .sec-num{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--terra);font-weight:600;letter-spacing:.04em;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(25px,4vw,35px);line-height:1.05;margin:6px 0 6px;letter-spacing:-.01em;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:30px 0 4px;}
+  h4{font-family:'Inter',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;margin:22px 0 6px;color:var(--pacific-d);}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 22px;max-width:780px;}
+  p{margin:0 0 14px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  ul{margin:0 0 16px;padding-left:20px;}
+  li{margin:0 0 8px;}
+  sup a{font-family:'JetBrains Mono',monospace;font-size:10px;text-decoration:none;color:var(--pacific);font-weight:600;}
+  .tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;background:var(--paper);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tbl th{background:var(--pacific-d);color:var(--paper);text-align:left;padding:11px 13px;font-weight:600;font-size:11.5px;letter-spacing:.03em;text-transform:uppercase;}
+  .tbl td{padding:11px 13px;border-top:1px solid var(--plaster2);vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#FBF7EE;}
+  .tbl .nm{font-weight:600;white-space:nowrap;}
+  .num{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--terra);white-space:nowrap;font-size:12.5px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:22px 0;box-shadow:var(--shadow);}
+  .callout.teal{border-left-color:var(--pacific);}
+  .callout.terra{border-left-color:var(--terra);}
+  .callout.forest{border-left-color:var(--forest);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .callout p:last-child{margin-bottom:0;}
+  /* verdict pills */
+  .v{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:30px;white-space:nowrap;}
+  .v-keep{background:rgba(62,124,90,.15);color:#2c5a40;border:1px solid rgba(62,124,90,.4);}
+  .v-sharpen{background:rgba(224,168,46,.16);color:var(--gold-text);border:1px solid rgba(224,168,46,.45);}
+  .v-cut{background:rgba(178,58,46,.13);color:var(--blocker);border:1px solid rgba(178,58,46,.4);}
+  .v-q{background:rgba(156,107,158,.15);color:#71487a;border:1px solid rgba(156,107,158,.4);}
+  /* compatibility tags */
+  .tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:30px;white-space:nowrap;}
+  .t-ok{background:rgba(62,124,90,.14);color:#2c5a40;}
+  .t-adapt{background:rgba(224,168,46,.16);color:var(--gold-text);}
+  .t-viol{background:rgba(178,58,46,.12);color:var(--blocker);}
+  /* matrix 2x2 */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0;}
+  .quad{border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--line);background:var(--paper);}
+  .quad .qh{font-family:'Inter',sans-serif;font-weight:700;font-size:13px;letter-spacing:.02em;margin-bottom:4px;}
+  .quad .qs{font-size:12px;color:var(--ink2);margin-bottom:12px;}
+  .quad ul{margin:0;padding-left:18px;font-size:13.5px;}
+  .quad li{margin-bottom:6px;}
+  .q-do{border-top:4px solid var(--forest);}
+  .q-seq{border-top:4px solid var(--pacific);}
+  .q-nice{border-top:4px solid var(--gold);}
+  .q-avoid{border-top:4px solid var(--blocker);}
+  .seg{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:12px 0;box-shadow:var(--shadow);}
+  .seg .st{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin-bottom:2px;}
+  .seg .sm{font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--terra);font-weight:600;margin-bottom:8px;}
+  .seg .row{font-size:13.5px;margin-bottom:5px;}
+  .seg .row b{color:var(--pacific-d);}
+  .served{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:30px;margin-top:4px;}
+  .sv-well{background:rgba(62,124,90,.15);color:#2c5a40;}
+  .sv-part{background:rgba(224,168,46,.16);color:var(--gold-text);}
+  .sv-poor{background:rgba(178,58,46,.12);color:var(--blocker);}
+  .rank{counter-reset:r;list-style:none;padding-left:0;}
+  .rank li{counter-increment:r;position:relative;padding-left:42px;margin-bottom:14px;}
+  .rank li::before{content:counter(r);position:absolute;left:0;top:-2px;width:28px;height:28px;background:var(--pacific);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;}
+  .big5{counter-reset:b;list-style:none;padding-left:0;margin:8px 0;}
+  .big5 li{counter-increment:b;position:relative;padding:16px 18px 16px 58px;margin-bottom:12px;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;box-shadow:var(--shadow);}
+  .big5 li::before{content:counter(b);position:absolute;left:16px;top:14px;width:30px;height:30px;background:var(--terra);color:var(--paper);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:700;font-size:16px;}
+  .big5 .t{font-weight:700;font-size:15px;margin-bottom:3px;}
+  .big5 .d{font-size:13.5px;color:var(--ink2);}
+  .big5 .tags{margin-top:7px;}
+  .footnote{font-size:13px;color:var(--ink2);}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:34px 0;margin-top:50px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .src{font-size:12.5px;color:var(--ink2);}
+  .src li{margin-bottom:7px;word-break:break-word;}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr;}.tbl{font-size:13px;}}
+</style>
+</head>
+<body>
+<div style="background:#C0532E;color:#FCFAF5;font:600 13px/1.45 system-ui,-apple-system,sans-serif;padding:10px 16px;text-align:center;">Status: v9 rename · This document predates the v9 three-section cut (Explore · Saved · Discover SB). Some screen-level detail (the old 5 tabs, Map, My Plan) is superseded — <strong>CLAUDE.md and the wireframe are authoritative for current UI.</strong></div>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Independent Product Review · UX & Product Stress-Test</div>
+    <h1>Critical UX Assessment</h1>
+    <p class="lede">A world-class, evidence-grounded teardown of SB Daymaker's user-facing product — what's strong, what's unnecessary, what's missing, and the highest-leverage changes to win recurring visitorship without adding complexity.</p>
+    <div class="badges">
+      <span class="badge">📄 Document 6 — Assessment</span>
+      <span class="badge">🔬 5-phase methodology</span>
+      <span class="badge">🌐 Researched + cited</span>
+      <span class="badge">🪶 Honest over optimistic</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ===================== EXECUTIVE SUMMARY ===================== -->
+  <section>
+    <div class="sec-num">00 — Executive summary</div>
+    <h2>The honest read</h2>
+    <p class="sub">SB Daymaker is one of the most thoroughly designed solo products I've reviewed — the place-first "never empty" bet, the trust rule, the cost discipline, and accessibility-as-floor are all genuinely smart and rare. The risks aren't in what's been built; they're in three assumptions that the evidence doesn't fully support, and in a retention engine that's been scoped as an afterthought.</p>
+
+    <div class="callout terra">
+      <div class="k">The single biggest finding</div>
+      <p><strong>The proven retention engine in local discovery is the owned email edition — and SB Daymaker has scoped it as an optional, weekly, secondary feature.</strong> The most successful hyper-local players run a <em>daily</em> email as the core ritual: 6AM City reaches ~1M+ subscribers across its markets at a 45–50% open rate<sup><a href="#s2">[2]</a></sup>; DoStuff's whole network is email-led, with a 1.7M+ permissioned list and preference-matched ticket emails driving attendance<sup><a href="#s1">[1]</a></sup>. SB Daymaker is betting recurring use on a notification-free, account-free app that users must remember to re-open — yet its strongest available re-engagement channel is parked in the corner. <strong>Promoting email to a first-class, higher-cadence edition is the highest-impact, lowest-complexity move on this list.</strong></p>
+    </div>
+
+    <div class="callout teal">
+      <div class="k">The single biggest risk</div>
+      <p>The "open it like you check the weather" daily-habit promise is <strong>weaker for residents than the plan assumes.</strong> A weather app earns a daily open because the data genuinely changes and the need is daily; "what's worth doing in SB" changes far less day-to-day for a local. With notifications and accounts off by default, there is <strong>no reliable mechanism to bring a non-installed, non-subscribed resident back.</strong> Without elevating email (and turning on push for installed users), WAU is likely to plateau early.</p>
+    </div>
+
+    <h4>THREE ASSUMPTIONS THE DATA CHALLENGES</h4>
+    <ul>
+      <li><strong>"The audience skews older and simplicity-seeking."</strong> The city's median age is ~40 — essentially the U.S. median — with seniors (65+) at ~21%, a large 25–44 cohort (~28%), ~36% Hispanic residents, and ~26,000 UCSB students next door.<sup><a href="#s5">[5]</a></sup><sup><a href="#s6">[6]</a></sup> The "older/simple" core is real but it's roughly a fifth of the city, not the whole of it. Designing <em>only</em> for it leaves the largest cohorts under-served.</li>
+      <li><strong>"The persona Lens is the headline differentiator."</strong> It's a strong supporting feature, but best-in-class place-first products (The Infatuation) personalize with far more granular, occasion-based tags — "Date Night, Dinner With The Parents, Eating At The Bar, Dining Solo, Impressing Out Of Towners, Big Groups"<sup><a href="#s3">[3]</a></sup> — not six broad identities. SB Daymaker's true edge is curation + daily ritual + place-first depth + the personal layer. The Lens is over-weighted in the narrative.</li>
+      <li><strong>"My Plan should be a 4-phase wizard."</strong> For planning a night out in a small, walkable city, this is over-engineered. The category leader in save-and-plan (Wanderlog) defaults to a <em>lightweight</em> list and reserves detailed time-blocking for those who opt in<sup><a href="#s4">[4]</a></sup>. SB Daymaker jumps straight to a drum-roll picker → 4-tier sort → duration sheets → chained timeline. Expect drop-off.</li>
+    </ul>
+
+    <h4>WHAT TO CUT / SIMPLIFY · WHAT TO ADD</h4>
+    <p>In one breath: <strong>cut</strong> depth from My Plan, the Map, and (knowingly) the operational burden of live Happy Hour at launch; <strong>add</strong> a first-class email cadence, occasion tags (Nightlife, Hosting Visitors, Wine &amp; Food, Solo), web push for installed users, and a passwordless save-restore. The net is a <em>simpler</em> app with a <em>stronger</em> habit loop — exactly the brief.</p>
+
+    <div class="callout forest">
+      <div class="k">Disposition — what was decided (added after the review)</div>
+      <p style="margin:0 0 10px;">This assessment was adopted as the rationale for the <strong>16 Locked UX Decisions + 7 follow-on decisions</strong>, since propagated into the v2 schema, v4 context, and the v3 product/architecture/business docs. <strong>Every recommendation here was acted on.</strong> Status of each:</p>
+      <p style="margin:0 0 5px;"><strong>ACCEPTED as proposed:</strong> email → first-class &amp; higher cadence (locked at <strong>2×/week</strong>, Wed + Fri); My Plan → light-by-default (saved → ordered → share/calendar, timeline optional); the drum-roll picker → standard native time input; This Month kept minimal; the four new occasion tags (Nightlife, Hosting Visitors, Wine &amp; Food, Solo); "New this week in SB" surface; First Looks elevated; a named "One Perfect SB Day" path; the trust posture marketed publicly; two-state saves (want-to-go / been); the Lens demoted to a supporting feature.</p>
+      <p style="margin:0 0 5px;"><strong>ACCEPTED &amp; sequenced to Phase 2 (as recommended):</strong> web push for installed users (fast-follow); full Mapbox map (V1 ships a Nearby list); live Happy Hour countdowns (V1 ships a "last confirmed" list); the full Spanish-language layer.</p>
+      <p style="margin:0 0 5px;"><strong>MODIFIED:</strong> the magic-link save-restore <em>and</em> the plan-share link were pulled <strong>into V1</strong> (the review had them in Phase 2) — they share one <span class="mono">shared_states</span> token store, so the marginal cost was low and both attack the retention cap directly. Occasion tags were expanded to <strong>ten</strong> and <strong>"Catch a Show" was kept as its own tag</strong> (a founder call: live music is iconic enough to SB to earn a slot, despite the orthogonality argument for folding it into Nightlife).</p>
+      <p style="margin:0;"><strong>CONFIRMED AVOID/DEFER:</strong> no full account system (the magic-link replaces it); no full real-time collaborative itinerary builder (the plan view-link is the low-cost middle); no over-built launch Map; no heavy live Happy Hour at launch. The "One Perfect SB Day" was confirmed as an <em>entry point</em>, not an eleventh tag. All settled constraints (no accounts, batch-AI-only, never-transact, solo-operable, ~$45/mo, WCAG 2.2 AA) held; "place-first" evolved into the happenings-first cascade with the evergreen tier as its floor.</p>
+    </div>
+  </section>
+
+  <!-- ===================== METHOD ===================== -->
+  <section>
+    <div class="sec-num">01 — Method</div>
+    <h2>How this was done</h2>
+    <p class="sub">Five phases, worked in order: (1) a researched teardown of best-in-class discovery/save/plan platforms; (2) a researched, segmented profile of who actually lives in and visits Santa Barbara; (3) a surface-by-surface critique producing the two requested lists; (4) a recurring-visitorship stress test; (5) prioritized, complexity-aware recommendations. Every researched claim is sourced in §08. Where I'm offering judgment rather than a researched fact, I say so. The settled constraints in the brief (no accounts, batch-AI-only, place-first, never-transact, solo-operable, ~$45/mo, WCAG 2.2 AA) are honored by default; where I recommend revisiting one, the tradeoff is named and priced.</p>
+  </section>
+
+  <!-- ===================== PHASE 1 ===================== -->
+  <section>
+    <div class="sec-num">02 — Phase 1 · Best-in-class teardown</div>
+    <h2>What world-class looks like</h2>
+    <p class="sub">The full job SB Daymaker serves — <em>discover what's worth doing nearby → save it → plan to do it → come back</em> — is split across several mature categories. Here's how the most instructive players solve each part, and what their recurring-visit engines actually are.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Platform</th><th>Personalization</th><th>Save / plan</th><th>Recurring-visit engine</th><th>The sticky thing</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">DoStuff (Do512, DoLA)<sup><a href="#s1">[1]</a></sup></td><td>Human-curated; now <em>also</em> preference-matched ticket emails (Spotify, fav venues)</td><td>Add event to personal calendar; share to friends</td><td><strong>Email-led</strong> newsletter + "tickets still available" reminders</td><td>"What are we doing tonight?" answered by real locals, not an algorithm</td></tr>
+        <tr><td class="nm">6AM City<sup><a href="#s2">[2]</a></sup></td><td>City-level, light</td><td>—</td><td><strong>The daily email IS the product</strong> (45–50% open)</td><td>A 5-minute positive local ritual in the inbox every morning</td></tr>
+        <tr><td class="nm">The Infatuation / Resy<sup><a href="#s3">[3]</a></sup></td><td>Granular <em>occasion</em> tags ("Perfect For…")</td><td>Saved "hit list"; (account-gated)</td><td>Constant freshness ("add one, cut one"); new-openings guides</td><td>Trusted, incorruptible curation + situational tags that match real intent</td></tr>
+        <tr><td class="nm">Wanderlog<sup><a href="#s4">[4]</a></sup></td><td>Itinerary-based suggestions</td><td><strong>Lightweight lists OR detailed time-blocks</strong>; drag-reorder; offline</td><td>Trip-bound (low recurrence) + post-trip shareable guide</td><td>Real-time <strong>collaboration</strong> with travel companions</td></tr>
+        <tr><td class="nm">Time Out</td><td>City + category</td><td>Save articles/lists</td><td>Editorial cadence + "best new" lists</td><td>Authoritative "best of the city" voice</td></tr>
+        <tr><td class="nm">Eventbrite / Fever</td><td>Algorithmic feed</td><td>Tickets in-app</td><td>Purchase + reminder emails</td><td>Transaction convenience (and incentive conflict — see anti-patterns)</td></tr>
+        <tr><td class="nm">Google Maps Lists</td><td>None (manual)</td><td>The <em>default</em> "save a place" behavior worldwide</td><td>Already-open utility; "Things to do" surfacing</td><td>Universal muscle memory + it's where saves already live</td></tr>
+        <tr><td class="nm">Partiful / Luma</td><td>Event-based</td><td>RSVP</td><td><strong>Reminder notifications</strong> tied to a dated item</td><td>Frictionless RSVP + timely nudges</td></tr>
+        <tr><td class="nm">Wordle / weather apps</td><td>None / location</td><td>—</td><td><strong>Fixed daily reason-to-open</strong> (+ streak)</td><td>A genuinely daily need that visibly changes each day</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Patterns worth stealing</h3>
+    <p class="sub">Each tagged for fit with SB Daymaker's constraints: <span class="tag t-ok">compatible</span> <span class="tag t-adapt">needs adaptation</span> <span class="tag t-viol">violates a constraint</span></p>
+    <table class="tbl">
+      <thead><tr><th>Pattern</th><th>Evidence</th><th>Fit</th></tr></thead>
+      <tbody>
+        <tr><td><strong>The daily email is the ritual</strong> — not a weekly afterthought</td><td>6AM 45–50% open; DoStuff email-led<sup><a href="#s1">[1]</a></sup><sup><a href="#s2">[2]</a></sup></td><td><span class="tag t-ok">compatible</span> — email infra already in scope</td></tr>
+        <tr><td><strong>Occasion tags beat broad identities</strong> (Date Night, Solo, Hosting Out-of-Towners, Big Groups, Eating at the Bar)</td><td>Infatuation "Perfect For"<sup><a href="#s3">[3]</a></sup></td><td><span class="tag t-ok">compatible</span> — content tagging, no per-request AI</td></tr>
+        <tr><td><strong>Lightweight list path as default</strong>; deep itinerary optional</td><td>Wanderlog dual mode<sup><a href="#s4">[4]</a></sup></td><td><span class="tag t-ok">compatible</span> — removes steps</td></tr>
+        <tr><td><strong>Visible freshness</strong> ("new this week / add one, cut one")</td><td>Infatuation; First Looks instinct<sup><a href="#s3">[3]</a></sup></td><td><span class="tag t-ok">compatible</span></td></tr>
+        <tr><td><strong>Tag-and-feature growth loop</strong> (feature a business → they reshare)</td><td>Local-newsletter playbook<sup><a href="#s2">[2]</a></sup></td><td><span class="tag t-ok">compatible</span> — already implied by First Looks/submissions</td></tr>
+        <tr><td><strong>Reminder nudge on a saved dated item</strong></td><td>Partiful/Luma; DoStuff reminders<sup><a href="#s1">[1]</a></sup></td><td><span class="tag t-adapt">adapt</span> — via email or installed-PWA push, not default push</td></tr>
+        <tr><td><strong>Plan with your companions</strong></td><td>Wanderlog collaboration<sup><a href="#s4">[4]</a></sup></td><td><span class="tag t-adapt">adapt</span> — full sync needs accounts; a shared view-link is the low-cost middle</td></tr>
+        <tr><td><strong>Incorruptible-curation as marketing</strong> ("we pay our own way / cover all events")</td><td>Infatuation; DoStuff<sup><a href="#s1">[1]</a></sup><sup><a href="#s3">[3]</a></sup></td><td><span class="tag t-ok">compatible</span> — SB Daymaker's trust rule is already this; <em>say it louder</em></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Anti-patterns to avoid (mostly already avoided — keep avoiding)</h3>
+    <ul>
+      <li><strong>Algorithmic infinite feeds</strong> that surface "too many crappy events" — the category leader's own stated reason for staying curated.<sup><a href="#s1">[1]</a></sup> SB Daymaker's curation is right.</li>
+      <li><strong>Transacting tickets</strong> creates an incentive to push your own inventory over the genuinely-best pick (Eventbrite's structural conflict). The hand-off is cleaner — keep it.</li>
+      <li><strong>Login walls before value.</strong> The no-wall stance is correct and differentiating.</li>
+      <li><strong>Heavy onboarding.</strong> Wanderlog's per-feature tutorials slow first use<sup><a href="#s4">[4]</a></sup>; SB Daymaker's dismissible overlay is better — keep it minimal.</li>
+      <li><strong>Multi-city dilution.</strong> One-city depth is the edge. Right call.</li>
+    </ul>
+
+    <div class="callout">
+      <div class="k">Phase 1 takeaway · how the best create recurrence</div>
+      <p>In <em>local</em> discovery specifically, the dominant, proven recurrence engine is the <strong>owned email channel</strong>, supplemented by visible freshness and (for dated items) reminders. Pure app-habit plays (Wordle, weather) work only because the underlying need is genuinely daily and visibly changes. SB Daymaker's resident need is more weekly than daily — which makes a <strong>scheduled email edition the natural heartbeat of the product</strong>, not an optional extra.</p>
+    </div>
+  </section>
+
+  <!-- ===================== PHASE 2 ===================== -->
+  <section>
+    <div class="sec-num">03 — Phase 2 · Who Santa Barbara actually is</div>
+    <h2>The real audience, segmented</h2>
+    <p class="sub">The plan's one-line "older and simplicity-seeking" is partly true and mostly incomplete. Here's the evidence, then six grounded segments with their jobs-to-be-done.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Signal</th><th>Figure</th><th>So what</th></tr></thead>
+      <tbody>
+        <tr><td>City population / County</td><td class="num">~88k / ~440k</td><td>Small, dense city inside a larger county base</td></tr>
+        <tr><td>Median age (city)</td><td class="num">~39.7</td><td><strong>≈ U.S. median — not "old."</strong> Challenges the core design premise<sup><a href="#s5">[5]</a></sup></td></tr>
+        <tr><td>Seniors 65+ (city)</td><td class="num">~21%</td><td>Above U.S. (~17%) and real — but ~1/5 of residents, not the whole<sup><a href="#s5">[5]</a></sup></td></tr>
+        <tr><td>Adults 25–44</td><td class="num">~28%</td><td>The single largest cohort — families &amp; established professionals<sup><a href="#s5">[5]</a></sup></td></tr>
+        <tr><td>Hispanic / Latino (city)</td><td class="num">~36%</td><td>An English-only voice under-serves a large minority<sup><a href="#s5">[5]</a></sup></td></tr>
+        <tr><td>Median household income (city)</td><td class="num">~$106k</td><td>Affluent (U.S. ~$81k) — but ~14–15% below poverty; real diversity<sup><a href="#s5">[5]</a></sup></td></tr>
+        <tr><td>UCSB enrollment (adjacent)</td><td class="num">~26,100</td><td>A huge young, budget, nightlife-oriented cohort with no persona<sup><a href="#s6">[6]</a></sup></td></tr>
+        <tr><td>Annual South Coast visitors</td><td class="num">~6.5M</td><td>$2.24B spend; a constantly replenishing audience<sup><a href="#s7">[7]</a></sup></td></tr>
+        <tr><td>Overnight share / will return</td><td class="num">36% / 80%</td><td>Mostly Californian drive market; <strong>80% return</strong> makes a visitor email list unusually valuable<sup><a href="#s7">[7]</a></sup></td></tr>
+        <tr><td>Day-trippers</td><td class="num">~64%</td><td>A massive segment with a clean "one perfect day" need<sup><a href="#s7">[7]</a></sup></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout terra">
+      <div class="k">Myth-bust</div>
+      <p>The audience is a <strong>barbell, not a demographic</strong>: affluent retirees and Montecito second-home owners at one end; UCSB students, young locals, and a ~36% Latino community at the other; time-poor 25–54 professionals and families in the fat middle; and ~6.5M mostly-Californian visitors layered on top. Accessibility-as-floor remains exactly right (it serves everyone, including seniors). But "design only for the older simplicity-seeker" would optimize for ~20% of residents while the largest, most return-prone cohorts go under-served.</p>
+    </div>
+
+    <h3>Six segments &amp; their jobs-to-be-done</h3>
+
+    <div class="seg">
+      <div class="st">1 · Affluent empty-nesters &amp; retirees</div>
+      <div class="sm">~20% of residents · the current design target</div>
+      <div class="row"><b>JTBD:</b> "Tell me a lovely thing to do today/this week, effortlessly."</div>
+      <div class="row"><b>Comes back for:</b> dependable curation, the daily/weekly ritual, large type, zero friction.</div>
+      <span class="served sv-well">Served well today</span>
+    </div>
+
+    <div class="seg">
+      <div class="st">2 · Established professionals &amp; families (25–54)</div>
+      <div class="sm">the largest resident cohort</div>
+      <div class="row"><b>JTBD:</b> "What's on this weekend — date night, or something with the kids?"</div>
+      <div class="row"><b>Comes back for:</b> This-Week planning, First Looks, family + date-night content. Plans in short bursts.</div>
+      <span class="served sv-part">Served — but My Plan is too heavy for them</span>
+    </div>
+
+    <div class="seg">
+      <div class="st">3 · UCSB students &amp; young locals</div>
+      <div class="sm">~26k students + young alumni/professionals<sup><a href="#s6">[6]</a></sup></div>
+      <div class="row"><b>JTBD:</b> "What's free/cheap and fun tonight? Live music, beach, nightlife, with friends."</div>
+      <div class="row"><b>Comes back for:</b> events + free + nightlife + social sharing. Mobile-native, group-oriented.</div>
+      <span class="served sv-poor">Under-served — no nightlife persona; events demoted; no social layer</span>
+    </div>
+
+    <div class="seg">
+      <div class="st">4 · The Latino / Hispanic community</div>
+      <div class="sm">~36% of the city<sup><a href="#s5">[5]</a></sup></div>
+      <div class="row"><b>JTBD:</b> cultural events, family outings, free/affordable, ideally bilingual.</div>
+      <div class="row"><b>Comes back for:</b> relevant cultural programming + Spanish-language access.</div>
+      <span class="served sv-poor">Under-served — English-only; cultural-events layer is thin</span>
+    </div>
+
+    <div class="seg">
+      <div class="st">5 · Overnight visitors</div>
+      <div class="sm">36% of 6.5M; mostly Californian; <strong>80% return</strong><sup><a href="#s7">[7]</a></sup></div>
+      <div class="row"><b>JTBD:</b> "Live SB like a local for 1–3 days; plan an evening; remember it for next time."</div>
+      <div class="row"><b>Comes back for:</b> the <em>next visit</em> + word-of-mouth now. Retention here = re-acquisition + sharing.</div>
+      <span class="served sv-well">Served well — but single-device save is real friction for a traveler</span>
+    </div>
+
+    <div class="seg">
+      <div class="st">6 · Day-trippers</div>
+      <div class="sm">~64% of 6.5M visitors<sup><a href="#s7">[7]</a></sup></div>
+      <div class="row"><b>JTBD:</b> "One perfect SB day — where to park, eat, walk, catch sunset."</div>
+      <div class="row"><b>Comes back for:</b> occasional but high-volume; SEO- and share-driven discovery.</div>
+      <span class="served sv-part">Partially served — guides help; a named "one perfect day" path would nail it</span>
+    </div>
+  </section>
+
+  <!-- ===================== PHASE 3 ===================== -->
+  <section>
+    <div class="sec-num">04 — Phase 3 · Surface-by-surface teardown</div>
+    <h2>Every surface, judged</h2>
+    <p class="sub">Verdicts: <span class="v v-keep">keep</span> earns its place · <span class="v v-sharpen">sharpen</span> keep but change · <span class="v v-cut">trim/defer</span> cut complexity · <span class="v v-q">question</span> re-examine the cost. Judged against the Phase-1 patterns and the Phase-2 audience.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Surface</th><th>Verdict</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">Living golden-hour hero</td><td><span class="v v-keep">keep</span></td><td>The signature and the daily reason-to-open. Genuinely distinctive. Watch: it must feel worth opening even when the pick repeats.</td></tr>
+        <tr><td class="nm">Today / Week / Month</td><td><span class="v v-sharpen">sharpen</span></td><td>Today + Week pull weight. <strong>This Month</strong> is the weakest for <em>recurrence</em> (screenshot-once, aspirational) — keep it lightweight; it mainly helps visitors decide <em>when</em> to come.</td></tr>
+        <tr><td class="nm">Persona Lens (6 identities)</td><td><span class="v v-sharpen">sharpen</span></td><td>Reframe toward <em>occasion</em> tags (Infatuation model<sup><a href="#s3">[3]</a></sup>); add the missing intents. Demote from "headline differentiator" to "strong supporting feature."</td></tr>
+        <tr><td class="nm">First-run overlay</td><td><span class="v v-keep">keep</span></td><td>Gentle, dismissible, app usable behind it. Best-practice onboarding for this audience.</td></tr>
+        <tr><td class="nm">Filter (demoted)</td><td><span class="v v-keep">keep</span></td><td>Complexity correctly hidden in a sheet. Right call.</td></tr>
+        <tr><td class="nm">First Looks rail</td><td><span class="v v-keep">keep</span> + elevate</td><td>Emotional engine + freshness + the growth flywheel, all at once. Low complexity, high value — arguably under-exploited.</td></tr>
+        <tr><td class="nm">Evergreen places</td><td><span class="v v-keep">keep</span></td><td>The soul and the anti-empty engine. Core to the whole bet.</td></tr>
+        <tr><td class="nm">Detail screens</td><td><span class="v v-keep">keep</span></td><td>Clean. Sharpen: save organization (Infatuation users explicitly want "been / want-to-try"<sup><a href="#s3">[3]</a></sup>); an insider "good to know" line.</td></tr>
+        <tr><td class="nm">Happy Hour Now (live)</td><td><span class="v v-q">question</span></td><td>Genuinely useful, but the <strong>most operationally expensive feature for a solo operator</strong> — staleness re-confirmation is a daily chore and "wrong data is worse than no data." Consider shipping it lighter, or as a fast-follow, with eyes open about the upkeep cost.</td></tr>
+        <tr><td class="nm">Map (2 sub-tabs, clustering)</td><td><span class="v v-cut">trim</span></td><td>Two sub-tabs + clustering + filter-sync is real build cost. For an older audience a simple "near me" list may suffice at launch; enrich later. Don't over-build v1.</td></tr>
+        <tr><td class="nm">City guides (5)</td><td><span class="v v-keep">keep</span></td><td>SEO soul, visitor magnet, and the natural home for a "one perfect day" path. High leverage.</td></tr>
+        <tr><td class="nm">Save (on-device)</td><td><span class="v v-keep">keep</span> · cap risk</td><td>Right friction call — but single-device is the biggest structural retention cap (see Phase 4). Mitigate, don't ignore.</td></tr>
+        <tr><td class="nm">My Plan (4-phase wizard)</td><td><span class="v v-sharpen">sharpen</span></td><td><strong>Over-engineered as the default.</strong> Make the lightweight "saved → ordered → share/calendar" the default; keep the full timeline as an optional "make it a timeline" step<sup><a href="#s4">[4]</a></sup>. Cuts drop-off <em>and</em> build surface.</td></tr>
+        <tr><td class="nm">Weather-reactivity</td><td><span class="v v-keep">keep</span></td><td>A real delighter at near-zero ongoing cost. Keep.</td></tr>
+        <tr><td class="nm">Weekend digest email</td><td><span class="v v-sharpen">elevate</span></td><td><strong>The #1 change.</strong> Currently optional/weekly/secondary. The evidence says this is <em>the</em> retention engine. Make it first-class and more frequent.<sup><a href="#s1">[1]</a></sup><sup><a href="#s2">[2]</a></sup></td></tr>
+        <tr><td class="nm">Submission forms</td><td><span class="v v-keep">keep</span></td><td>Sourcing + the growth flywheel in one. Core. (The IG-caption parse is a nice, defensible edge.)</td></tr>
+        <tr><td class="nm">PWA install nudge</td><td><span class="v v-keep">keep</span></td><td>Durability + the one available push channel. Keep — and actually <em>use</em> the push it unlocks (Phase 4).</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Interrogating the load-bearing bets</h3>
+    <div class="callout teal">
+      <div class="k">Bet 1 · No accounts / single-device save</div>
+      <p>Right call <em>for launch friction</em> — and wrong to treat as permanent. It is the single biggest structural cap on recurring use, and it bites the visitor segment hardest (they switch devices and contexts). The sanctioned middle path: a <strong>passwordless "save my saves to an email link" (magic-link restore)</strong> — sync without a password or a login wall. Moderate complexity; directly attacks the #1 cap. Keep accounts-as-walls off the table; add this instead.</p>
+    </div>
+    <div class="callout teal">
+      <div class="k">Bet 2 · Six personas as the headline differentiator</div>
+      <p>Over-weighted. The genuine differentiators are curation, the daily ritual, place-first depth, and the personal layer. Reframe the Lens as <strong>occasion tags</strong> and add the intents the data demands: <strong>Nightlife/After Dark</strong> (students/young), <strong>Hosting Visitors / Out-of-Towners</strong> (residents playing local host — a huge SB use case), <strong>Wine &amp; Food</strong> as a first-class identity (it's the region's signature, currently demoted to a filter), and <strong>Solo</strong>. Pure content tagging — no per-request AI, no constraint broken.</p>
+    </div>
+    <div class="callout teal">
+      <div class="k">Bet 3 · Place-first balance</div>
+      <p>Correct as the spine, and the anti-empty logic is smart. But the <em>deliberately thin</em> event layer may under-deliver the "what's happening tonight" discovery that students, young locals, and visitors expect — it's literally DoStuff's entire draw<sup><a href="#s1">[1]</a></sup>. Let events surface more assertively <em>within</em> the "Tonight" context and for the Live Music / Nightlife intents, without dethroning places as the foundation.</p>
+    </div>
+  </section>
+
+  <!-- ===================== THE TWO LISTS ===================== -->
+  <section>
+    <div class="sec-num">05 — The two lists</div>
+    <h2>Unnecessary &amp; missing</h2>
+    <p class="sub">The two deliverables the brief asked for, ranked by confidence. "Unnecessary" means it adds build/operate/cognitive cost without proportional value <em>for this audience</em> — not that it's bad.</p>
+
+    <h3>① Unnecessary — cut, simplify, or defer</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Item</th><th>Why it's not earning its place</th><th>Move</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td><strong>My Plan's full 4-phase depth as the default</strong></td><td>Drum-roll picker → 4-tier sort → duration sheets → chained timeline is a lot of taps to plan a night in a walkable town; best-in-class defaults to a list<sup><a href="#s4">[4]</a></sup></td><td>Simplify to a lightweight default; timeline becomes optional</td></tr>
+        <tr><td class="num">2</td><td><strong>Map: two sub-tabs + clustering + full filter-sync at launch</strong></td><td>Significant build cost; an older audience is well-served by a simple "near me" list first</td><td>Trim v1; enrich in Phase 2</td></tr>
+        <tr><td class="num">3</td><td><strong>Live Happy Hour countdowns at launch</strong></td><td>Highest <em>operational</em> burden for a solo operator (constant re-confirmation); "wrong data worse than none"</td><td>Defer or ship lighter — knowingly</td></tr>
+        <tr><td class="num">4</td><td><strong>Three full horizon treatments (esp. This Month)</strong></td><td>This Month is screenshot-once, low-recurrence; doesn't merit a distinct heavy treatment</td><td>Keep lightweight; don't over-invest</td></tr>
+        <tr><td class="num">5</td><td><strong>Six <em>identity</em> personas as a headline system</strong></td><td>Coarser than the occasion-tag model that works; over-weighted in the narrative</td><td>Reframe as occasion tags (see Missing #2)</td></tr>
+        <tr><td class="num">6</td><td><strong>Drum-roll time picker as a built delighter</strong></td><td>Cute but adds friction + an accessibility-fallback burden for a low-frequency action</td><td>A standard time input is fine; spend the delight budget elsewhere</td></tr>
+      </tbody>
+    </table>
+    <p class="footnote">Note: none of these are "delete and never revisit." Items 2–4 are mostly <em>sequencing</em> calls — ship a simpler v1 so the launch surface (and your solo build/maintenance load) stays small.</p>
+
+    <h3>② Missing — gaps to fill</h3>
+    <table class="tbl">
+      <thead><tr><th>#</th><th>Gap</th><th>Who it serves</th><th>Precedent</th><th>Added complexity</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td><strong>A first-class, higher-cadence email edition</strong></td><td>All residents (esp. retirees, professionals)</td><td>6AM, DoStuff<sup><a href="#s1">[1]</a></sup><sup><a href="#s2">[2]</a></sup></td><td><strong>Low</strong> — infra already planned</td></tr>
+        <tr><td class="num">2</td><td><strong>Occasion tags incl. Nightlife, Hosting Visitors, Wine &amp; Food, Solo</strong></td><td>Students, young locals, hosts, foodies, solo</td><td>Infatuation "Perfect For"<sup><a href="#s3">[3]</a></sup></td><td><strong>Low</strong> — content tagging</td></tr>
+        <tr><td class="num">3</td><td><strong>Re-engagement nudge</strong> (push for installed users; email reminder on a saved dated event)</td><td>The install + subscribe cohorts</td><td>Partiful/Luma; DoStuff reminders<sup><a href="#s1">[1]</a></sup></td><td><strong>Low–Med</strong> — push currently deferred; reconsider for installed users</td></tr>
+        <tr><td class="num">4</td><td><strong>Passwordless save-restore (magic link)</strong> — sync without accounts</td><td>Visitors + anyone on a new device</td><td>Magic-link auth norms</td><td><strong>Med</strong> — attacks the #1 retention cap</td></tr>
+        <tr><td class="num">5</td><td><strong>A named "One Perfect SB Day" path</strong></td><td>Day-trippers (~64% of 6.5M)<sup><a href="#s7">[7]</a></sup></td><td>Guides + Wanderlog day-plans<sup><a href="#s4">[4]</a></sup></td><td><strong>Low</strong> — mostly content; reuses guides + My Plan</td></tr>
+        <tr><td class="num">6</td><td><strong>Spanish-language layer</strong></td><td>~36% Latino residents<sup><a href="#s5">[5]</a></sup></td><td>Standard bilingual local media</td><td><strong>Med</strong> — content + i18n; high inclusion value</td></tr>
+        <tr><td class="num">7</td><td><strong>Lightweight plan-sharing link</strong> others can view/co-edit</td><td>Groups, families, couples, visitors</td><td>Wanderlog collaboration<sup><a href="#s4">[4]</a></sup></td><td><strong>Med</strong> — a viewable link is far cheaper than full sync</td></tr>
+        <tr><td class="num">8</td><td><strong>Save organization</strong> ("want to go" vs "been")</td><td>Heavy savers, returning visitors</td><td>Infatuation top user request<sup><a href="#s3">[3]</a></sup></td><td><strong>Low</strong></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ===================== PHASE 4 ===================== -->
+  <section>
+    <div class="sec-num">06 — Phase 4 · Recurring-visitorship stress test</div>
+    <h2>Does the habit loop actually hold?</h2>
+    <p class="sub">The heart of the brief. Here's the current re-engagement loop, link by link, then where it breaks and how to fix it inside the constraints.</p>
+
+    <table class="tbl">
+      <thead><tr><th>Loop link</th><th>Strength</th><th>Read</th></tr></thead>
+      <tbody>
+        <tr><td class="nm">Daily hero ritual (user re-opens)</td><td><span class="v v-sharpen">medium</span></td><td>Strong concept, but with no notifications it relies entirely on user-initiated habit. The resident "what's worth doing" need is more <em>weekly</em> than daily, so it's a weaker pull than a weather app's.</td></tr>
+        <tr><td class="nm">First Looks freshness (weekly novelty)</td><td><span class="v v-keep">strong</span></td><td>Novelty is a real weekly reason to return. Elevate it.</td></tr>
+        <tr><td class="nm">Weekend digest email (opt-in)</td><td><span class="v v-q">under-scoped</span></td><td>Potentially the <em>strongest</em> link — but it's opt-in, weekend-only, and presented as secondary. The evidence says this should be the heartbeat.<sup><a href="#s1">[1]</a></sup><sup><a href="#s2">[2]</a></sup></td></tr>
+        <tr><td class="nm">PWA install + push</td><td><span class="v v-cut">weak (unused)</span></td><td>Push is deferred; the install nudge is gentle. Yet push (for installed users) is the <em>only</em> true re-engagement channel available — and it's barely used.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout terra">
+      <div class="k">Where it breaks</div>
+      <p>There is <strong>no reliable mechanism to bring a non-installed, non-subscribed resident back.</strong> The plan leans on user-initiated habit plus an optional weekly email. For an audience where not everyone will install or subscribe, the re-engagement surface is dangerously thin. The fix isn't to abandon the constraints — it's to <em>fully use the two channels you already have:</em> email (already in scope) and installed-PWA push (already half-built via the install nudge).</p>
+    </div>
+
+    <h4>RESIDENT LOOP vs VISITOR LOOP — they're different problems</h4>
+    <ul>
+      <li><strong>Residents</strong> need a recurring reason <em>delivered to them</em> (an email cadence) plus a daily-changing hook (weather-reactivity + First Looks + optionally a tiny daily element). Don't rely on them remembering to open a no-notification app.</li>
+      <li><strong>Visitors</strong> use it intensely for 1–3 days, go dormant, then <strong>80% return on a future trip</strong><sup><a href="#s7">[7]</a></sup>. Their "retention" is really <em>re-acquisition next visit</em> + <em>word-of-mouth now</em>. Levers: the share card (already planned — good), SEO guides (already — good), and an in-trip email capture so you can reach them before the next visit ("planning a return to SB? here's what's new"). The 80%-return figure makes a visitor email list unusually valuable.</li>
+    </ul>
+
+    <h3>Interventions, ranked by impact-per-complexity</h3>
+    <ol class="rank">
+      <li><strong>Promote email to first-class + raise cadence (daily or 3×/week, not only weekend).</strong> The proven local-discovery retention engine. Complexity <strong>LOW</strong> (Resend + cron + approved content already scoped). This is a scope expansion, not a new dependency.</li>
+      <li><strong>Turn on web push for installed PWA users.</strong> Your only real re-engagement channel — and you already nudge install partly <em>for</em> it. Complexity <strong>LOW–MED</strong>. Reconsider the "notifications deferred" line for the installed cohort only.</li>
+      <li><strong>Lighten My Plan to reduce abandonment.</strong> Directly improves the plan-completion KPI. Complexity <strong>LOW</strong> (removing steps).</li>
+      <li><strong>Add occasion tags (Nightlife, Hosting Visitors, Wine &amp; Food, Solo).</strong> More reasons to return for different moments; serves the under-served segments. Complexity <strong>LOW</strong>.</li>
+      <li><strong>Make "new this week in SB" a visible surface</strong> feeding both app and email. Freshness as the weekly reason-to-return. Complexity <strong>LOW</strong>.</li>
+      <li><strong>Passwordless save-restore (magic link).</strong> Sync without an account wall; addresses the #1 structural cap. Complexity <strong>MED</strong> — sequence into Phase 2.</li>
+    </ol>
+
+    <div class="grid2">
+      <div class="callout forest" style="margin:0;">
+        <div class="k">🥇 Highest-leverage move</div>
+        <p>Promote the email edition from optional/weekly to <strong>first-class and higher-cadence.</strong> Lowest complexity, highest proven impact on recurrence.</p>
+      </div>
+      <div class="callout terra" style="margin:0;">
+        <div class="k">⚠️ Biggest risk</div>
+        <p>The "open it like the weather" daily-habit assumption is weaker for residents than assumed; with push + accounts off, <strong>there's no fallback channel</strong> — so WAU plateaus unless email/push are elevated.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== PHASE 5 ===================== -->
+  <section>
+    <div class="sec-num">07 — Phase 5 · Recommendations</div>
+    <h2>What to do, prioritized</h2>
+    <p class="sub">Scored on impact (recurring visitorship + experience quality) against complexity (build + operate + cognitive load). The headline: the best version of SB Daymaker is <em>simpler to build</em> and <em>stickier</em> than the current plan — you spend the complexity you save on My Plan/Map/Happy Hour on the email + push retention loop.</p>
+
+    <div class="grid2">
+      <div class="quad q-do">
+        <div class="qh">DO NOW · High impact, low complexity</div>
+        <div class="qs">The quick wins — ship with v1</div>
+        <ul>
+          <li>Email edition → first-class + higher cadence</li>
+          <li>Lighten My Plan to a list-first default</li>
+          <li>Occasion tags: Nightlife · Hosting Visitors · Wine &amp; Food · Solo</li>
+          <li>"New this week in SB" surface</li>
+          <li>Elevate First Looks</li>
+          <li>Name a "One Perfect SB Day" path (reuse guides)</li>
+          <li>Market the trust posture loudly</li>
+        </ul>
+      </div>
+      <div class="quad q-seq">
+        <div class="qh">SEQUENCE · High impact, higher complexity</div>
+        <div class="qs">Phase 2, once traction exists</div>
+        <ul>
+          <li>Web push for installed users</li>
+          <li>Passwordless magic-link save-restore (sync)</li>
+          <li>Lightweight plan-share link (collab-lite)</li>
+          <li>Spanish-language layer</li>
+        </ul>
+      </div>
+      <div class="quad q-nice">
+        <div class="qh">NICE-TO-HAVE · Low impact, low complexity</div>
+        <div class="qs">If there's spare budget</div>
+        <ul>
+          <li>Tiny daily element / streak hook</li>
+          <li>Save organization (want-to-go vs been)</li>
+          <li>Insider "good to know" line on detail screens</li>
+        </ul>
+      </div>
+      <div class="quad q-avoid">
+        <div class="qh">AVOID / DEFER · Low impact-per-cost</div>
+        <div class="qs">Resist the temptation</div>
+        <ul>
+          <li>Full account system (use magic-link instead)</li>
+          <li>Full collaborative multi-day itinerary builder</li>
+          <li>Over-built Map at launch (simplify v1)</li>
+          <li>Heavy live Happy Hour at launch (knowingly defer)</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Grouped plan of action</h3>
+    <h4>A · CUT / DEFER NOW</h4>
+    <ul>
+      <li>Trim the Map to a simple near-me list for v1.</li>
+      <li>Ship live Happy Hour lighter or as a fast-follow — accept the upkeep cost only with eyes open.</li>
+      <li>Make the lightweight list the My Plan default; timeline optional.</li>
+      <li>Keep This Month minimal; swap the drum-roll picker for a standard time input.</li>
+    </ul>
+    <h4>B · ADD / CHANGE NOW</h4>
+    <ul>
+      <li>Email edition first-class + higher cadence (still no wall).</li>
+      <li>Occasion tags incl. the four missing intents.</li>
+      <li>"New this week" surface + elevated First Looks.</li>
+      <li>A named "One Perfect SB Day" flow for day-trippers.</li>
+    </ul>
+    <h4>C · PHASE 2 / LATER</h4>
+    <ul>
+      <li>Web push (installed users) · magic-link save-restore · plan-share link · Spanish layer.</li>
+    </ul>
+    <h4>D · RECONSIDER A SETTLED CONSTRAINT (tradeoff priced)</h4>
+    <ul>
+      <li><strong>"Email is secondary/weekly" → make it primary + more frequent.</strong> Not a hard constraint; the easiest high-impact win. Cost: a few more cron runs + ~15 min/day editorial, which the cockpit already supports.</li>
+      <li><strong>"Notifications out of scope" → allow push for installed users.</strong> You already nudge install for this. Cost: low–med build; the only true re-engagement channel.</li>
+      <li><strong>"No accounts" → keep, but add passwordless magic-link save-restore.</strong> Sync without a wall. Cost: med; directly attacks the biggest retention cap.</li>
+      <li><strong>"Six identity personas = headline differentiator" → reframe as occasion tags; demote the Lens to a strong supporting feature.</strong> Cost: ~zero; it's a tagging + narrative change.</li>
+    </ul>
+
+    <h3>If you only do five things</h3>
+    <ol class="big5">
+      <li>
+        <div class="t">Make the email edition first-class and more frequent.</div>
+        <div class="d">It's the proven retention engine in local discovery; you've already scoped the infrastructure.</div>
+        <div class="tags"><span class="tag t-ok">LOW complexity</span> <span class="tag t-adapt">HIGH impact</span></div>
+      </li>
+      <li>
+        <div class="t">Lighten My Plan to a one-screen "saved → ordered → share/calendar" default.</div>
+        <div class="d">Keep the timeline as an optional step. Less drop-off, less to build.</div>
+        <div class="tags"><span class="tag t-ok">LOW complexity</span> <span class="tag t-adapt">HIGH impact</span></div>
+      </li>
+      <li>
+        <div class="t">Replace the six identities with occasion tags — adding Nightlife, Hosting Visitors, Wine &amp; Food, Solo.</div>
+        <div class="d">Serves the largest under-served cohorts (students, hosts, foodies). Pure content tagging.</div>
+        <div class="tags"><span class="tag t-ok">LOW complexity</span> <span class="tag t-adapt">MED–HIGH impact</span></div>
+      </li>
+      <li>
+        <div class="t">Turn on web push for installed PWA users.</div>
+        <div class="d">Your only real re-engagement channel — and you already nudge install to unlock it.</div>
+        <div class="tags"><span class="tag t-adapt">MED complexity</span> <span class="tag t-adapt">HIGH impact</span></div>
+      </li>
+      <li>
+        <div class="t">Add passwordless "back up &amp; restore my saves via email link."</div>
+        <div class="d">Saves survive a new device — sync without becoming an account wall. Directly attacks the biggest structural retention cap.</div>
+        <div class="tags"><span class="tag t-adapt">MED complexity</span> <span class="tag t-adapt">HIGH impact</span></div>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <div class="k">The through-line</div>
+      <p>Every recommendation here either <strong>removes</strong> complexity (My Plan, Map, Happy Hour, the picker) or <strong>adds it only where it buys recurrence</strong> (email, push, sync, occasion tags). All of it preserves solo-operability, the ~$45/mo posture, the no-transaction stance, WCAG 2.2 AA, and the place-first soul. The result is the brief, delivered: a calmer app that people come back to.</p>
+    </div>
+  </section>
+
+  <!-- ===================== SOURCES ===================== -->
+  <section>
+    <div class="sec-num">08 — Sources</div>
+    <h2>Evidence &amp; references</h2>
+    <p class="sub">Researched claims above are paraphrased and attributed here. Figures are drawn from the sources as accessed June 2026; where studies span years, the most recent figure is used.</p>
+    <ol class="src">
+      <li id="s1"><strong>[1] DoStuff Media / Do512 / DoLA.</strong> dostuffmedia.com (network of 22+ city event guides; "what are we doing tonight?"; covers all events, not just paid; 1.7M+ subscriber list; DoMORE preference-matched ticket emails; reminder nudges); TechCrunch, "Explore Awesome Events Handpicked By Local Extroverts In DoStuff's New App" (2015, the curation-over-algorithm thesis); DoNYC app FAQ (add-to-calendar, share-with-friends, "Me" tab); A2IM member spotlight (~5M people/day across the network).</li>
+      <li id="s2"><strong>[2] 6AM City.</strong> Press Gazette, "6AM City… 450,000 subscribers" (2022); The Rebooting, "6am's playbook for sustainable local news" (2025, ~1M subscribers, ~50% open rate, market-selection by income/education); Marigold/Sailthru case study (up to 48% open in mature markets); company materials (daily edition as the core ritual; "tag and feature" growth loop).</li>
+      <li id="s3"><strong>[3] The Infatuation / Resy.</strong> The Infatuation iOS App Store listing ("Perfect Fors" e.g. Girls' Night Out / Late Night Eats; "My Infatuation" saved lists; account-gated saves; top user request for "been / want-to-try" folders); Infatuation city guides (occasion tags incl. Dinner With The Parents, Dining Solo, Impressing Out Of Towners, Big Groups, Eating At The Bar; "add one, cut one" freshness; pay-our-own-way trust posture).</li>
+      <li id="s4"><strong>[4] Wanderlog.</strong> wanderlog.com and iOS/Android store listings (lightweight "Things to do" lists OR detailed time-blocked itineraries; drag-and-drop reorder; route/time estimates; offline; real-time group collaboration via shared link; post-trip shareable guide); WhistleOut review (onboarding/time-to-first-plan).</li>
+      <li id="s5"><strong>[5] Santa Barbara demographics.</strong> Point2Homes (median age ~40; 20.6% 65+; 27.9% aged 25–44; income by age); World Population Review (median age 39.7; median HH income ~$106k); California-Demographics/Cubit (Hispanic ~36.4%); Census Reporter / U.S. Census QuickFacts (city profile, poverty rate, foreign-born share).</li>
+      <li id="s6"><strong>[6] UCSB enrollment.</strong> CollegeTuitionCompare / UnivStats (2024–25 total enrollment 26,133; 23,181 undergraduate; 6,652 Hispanic students; large under-25 majority); UC systemwide fall enrollment table (CA State Auditor).</li>
+      <li id="s7"><strong>[7] Santa Barbara tourism.</strong> Visit Santa Barbara economic-impact study via edhat and Pacific Coast Business Times (2023: ~6.5M South Coast visitors, $2.24B spend, 36% overnight, 80% will return, 96% satisfied, ~64% day-trippers); SB Independent (≥80% of overnight guests are Californian; out-of-state stay ~30% longer; 2026 summit); earlier 2016–17 Destination Analysts study (~$430/day visitor spend).</li>
+    </ol>
+    <p class="footnote">Free-tier and visitor-study figures drift between annual reports; verify against the latest Visit Santa Barbara and Census releases before using any number externally. Platform mechanics reflect public product pages and reviews as accessed and may change.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker · Document 6 · Critical UX Assessment</span>
+    <span>Independent stress-test · Honest over optimistic · Researched &amp; cited</span>
+  </div>
+</footer>
+
+</body>
+</html>

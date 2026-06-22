@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Interactive Wireframe v9</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:radial-gradient(1200px 700px at 50% -10%,#2c6b78 0%,#16586A 35%,#0E3C49 100%);display:flex;flex-direction:column;align-items:center;min-height:100vh;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+
+  /* PROTO TOOLBAR */
+  .proto{width:100%;max-width:880px;padding:16px 18px 6px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+  .proto .title{display:flex;align-items:center;gap:10px;}
+  .proto .title .m{width:30px;height:30px;border-radius:8px;background:#fff;color:var(--pacific);display:grid;place-items:center;font-weight:900;font-family:'Fraunces',serif;font-size:17px;}
+  .proto .title .nm{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1;}
+  .proto .title .sub{font-size:10px;opacity:.7;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-top:2px;}
+  .proto .ctrls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .seg{display:flex;gap:2px;background:rgba(255,255,255,.14);border-radius:9px;padding:3px;}
+  .seg button{border:none;background:transparent;color:rgba(255,255,255,.7);font-size:11px;font-weight:700;padding:6px 10px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .seg button.on{background:#fff;color:var(--pacific);}
+  .seg .lbl{font-size:9px;color:rgba(255,255,255,.5);align-self:center;padding:0 4px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .restart{border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer;}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;padding:14px 12px 30px;width:100%;}
+
+  /* DEVICE */
+  .device{width:400px;max-width:100%;background:#15110d;border-radius:42px;padding:12px;box-shadow:0 40px 90px -30px rgba(0,0,0,.7),0 0 0 2px rgba(255,255,255,.06);position:relative;}
+  .device-screen{background:var(--plaster);border-radius:32px;overflow:hidden;position:relative;height:740px;max-height:78vh;}
+  .notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:130px;height:28px;background:#15110d;border-radius:0 0 16px 16px;z-index:200;}
+  @media(max-width:460px){
+    .device{border-radius:0;padding:0;width:100%;box-shadow:none;}
+    .device-screen{border-radius:0;height:calc(100vh - 96px);max-height:none;}
+    .notch{display:none;}
+    body{background:var(--plaster);}
+  }
+  #app{position:absolute;inset:0 0 56px 0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+  #app::-webkit-scrollbar{width:0;}
+  #nav{position:absolute;bottom:0;left:0;right:0;height:56px;display:flex;border-top:1px solid var(--line);background:rgba(246,241,231,.96);backdrop-filter:blur(10px);z-index:60;}
+  #overlay{position:absolute;inset:0;z-index:120;pointer-events:none;}
+  #overlay.active{pointer-events:auto;}
+  #lensOverlay{position:absolute;inset:0;z-index:160;pointer-events:none;}
+  #lensOverlay.active{pointer-events:auto;}
+
+  /* NAV — 3 tabs (Explore · Saved · Discover SB) */
+  .nav-btn{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9a8f80;cursor:pointer;position:relative;padding-top:7px;}
+  .nav-btn.on{color:var(--pacific);}
+  .nav-btn .i{font-size:17px;line-height:1;}
+  .nav-btn .l{font-size:8.5px;font-weight:600;}
+  .nav-badge{position:absolute;top:5px;right:calc(50% - 16px);background:var(--tile);color:#fff;font-size:8px;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:grid;place-items:center;padding:0 4px;}
+
+  /* HEADER */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:32px 18px 12px;background:var(--plaster);position:sticky;top:0;z-index:40;}
+  .hdr .lg{display:flex;align-items:center;gap:9px;}
+  .hdr .lg .m{width:28px;height:28px;border-radius:7px;background:var(--pacific);color:var(--gold);display:grid;place-items:center;font-weight:900;font-family:'Fraunces',serif;font-size:15px;}
+  .hdr .lg .nm{font-family:'Fraunces',serif;font-weight:600;font-size:15px;line-height:1;}
+  .hdr .lg .tg{font-size:8px;color:var(--sage);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+  .icon-btn{background:none;border:none;font-size:17px;cursor:pointer;color:var(--ink);padding:5px;}
+
+  /* HERO — Option A: Living editorial card */
+  @keyframes sunPulse{0%,100%{box-shadow:0 0 50px 16px rgba(224,168,46,.5);}50%{box-shadow:0 0 70px 24px rgba(224,168,46,.35);}}
+  @keyframes sunEntry{from{opacity:0;transform:scale(.7);}to{opacity:1;transform:scale(1);}}
+  @keyframes heroCardIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .hero{position:relative;overflow:hidden;padding:14px 18px 0;min-height:200px;}
+  .hero.morning{background:linear-gradient(180deg,#3d8aa0,#7cc0cf 55%,#f0e3c4);}
+  .hero.afternoon{background:linear-gradient(180deg,#2f7fa0,#67b4cb 50%,#cfe0d4);}
+  .hero.evening{background:linear-gradient(180deg,#1b4a5a,#2c6b78 35%,#d98a4a 80%,#e0a82e);}
+  .hero.gray{background:linear-gradient(180deg,#4a5560,#6b7480 55%,#9aa3ad);}
+  .hero .sun{position:absolute;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle,#FFF3D0,var(--gold) 60%,rgba(224,168,46,0) 72%);box-shadow:0 0 50px 16px rgba(224,168,46,.5);transition:all 1.2s cubic-bezier(.4,0,.2,1);animation:sunEntry .8s ease-out,sunPulse 3s ease-in-out 1s infinite;}
+  .hero .cloud{position:absolute;right:26px;top:20px;width:70px;height:24px;background:rgba(255,255,255,.45);border-radius:24px;filter:blur(3px);}
+  .hero .cloud:before{content:"";position:absolute;left:14px;top:-10px;width:34px;height:34px;background:inherit;border-radius:50%;}
+  .hero-range{position:absolute;bottom:0;left:0;width:100%;height:66px;opacity:.9;}
+  /* Sky ambient strip — date + conditions only, no greeting */
+  .hero-sky{position:relative;z-index:2;color:#fff;padding-bottom:24px;}
+  .hero .date{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;opacity:.92;text-shadow:0 1px 6px rgba(0,0,0,.3);}
+  .hero .cond{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .hero .cond span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);padding:4px 9px;border-radius:14px;font-size:9.5px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.3);backdrop-filter:blur(3px);}
+  /* Option C — minimal side-by-side hero pick card */
+  .hero-pick-card{position:relative;z-index:3;background:rgba(246,241,231,.98);border-radius:16px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.24);cursor:pointer;animation:heroCardIn .5s cubic-bezier(.2,.8,.2,1);display:flex;align-items:stretch;}
+  .hero-pick-img{width:96px;flex-shrink:0;position:relative;}
+  .hero-pick-body{padding:11px 13px 12px;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+  .hero-eyebrow{font-size:8.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--tile);}
+  .hero-pick-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;line-height:1.1;letter-spacing:-.3px;color:var(--ink);}
+  .hero-pick-meta{font-size:10px;font-weight:600;color:var(--pacific);}
+  .hero-pick-cta{font-size:10px;font-weight:700;color:var(--tile);margin-top:1px;}
+  /* image: only 2 badges — tag top-left, heart top-right */
+  .hero-pick-tag{position:absolute;top:8px;left:8px;background:var(--gold);color:var(--ink);font-size:7.5px;font-weight:800;padding:3px 7px;border-radius:9px;letter-spacing:.3px;}
+  .hero-pick-heart{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;background:rgba(20,30,35,.4);display:grid;place-items:center;color:#fff;font-size:13px;backdrop-filter:blur(4px);border:none;cursor:pointer;}
+
+  /* CONTROLS — compact single-row design */
+  .controls{background:var(--plaster);padding-top:12px;padding-bottom:10px;position:sticky;top:60px;z-index:35;transition:padding .3s;}
+  .hseg{display:flex;gap:3px;background:var(--plaster2);border-radius:11px;padding:3px;margin:0 18px;}
+  .hseg button{flex:1;padding:8px 0;border-radius:8px;border:none;font-size:12px;font-weight:700;background:transparent;color:#8a7f70;cursor:pointer;font-family:'Inter',sans-serif;}
+  .hseg button.on{background:#fff;color:var(--pacific);box-shadow:0 1px 6px rgba(20,40,50,.1);}
+
+  /* New compact dual-button row — replaces tall lens-pill + filter chip row */
+  .ctrl-row{display:flex;gap:8px;margin:9px 18px 0;}
+  .ctrl-lens{flex:1;display:flex;align-items:center;gap:7px;padding:9px 13px;border-radius:22px;border:1.5px solid var(--line);background:#fff;cursor:pointer;min-width:0;font-family:'Inter',sans-serif;transition:border-color .15s;}
+  .ctrl-lens:active,.ctrl-lens.has-sel{border-color:var(--pacific);}
+  .ctrl-lens .cl-icon{font-size:15px;flex-shrink:0;line-height:1;}
+  .ctrl-lens .cl-text{flex:1;min-width:0;text-align:left;}
+  .ctrl-lens .cl-label{font-size:10.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+  .ctrl-lens .cl-chevron{font-size:10px;color:var(--pacific);font-weight:700;flex-shrink:0;}
+  .ctrl-filter{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:22px;border:1.5px solid var(--line);background:#fff;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;transition:border-color .15s,background .15s;}
+  .ctrl-filter.active{background:var(--pacific);border-color:var(--pacific);}
+  .ctrl-filter .cf-icon{font-size:13px;line-height:1;}
+  .ctrl-filter .cf-text{font-size:10.5px;font-weight:700;color:var(--ink2);}
+  .ctrl-filter.active .cf-text{color:#fff;}
+  .ctrl-filter.active .cf-icon{filter:brightness(10);}
+
+  /* SECTION HEAD */
+  .sh{margin:18px 18px 10px;}
+  .sh .k{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tile);}
+  .sh .t{font-family:'Fraunces',serif;font-size:18px;font-weight:600;letter-spacing:-.3px;line-height:1.1;margin-top:2px;}
+
+  /* FIRST LOOKS RAIL */
+  @keyframes newPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.6;transform:scale(1.4);}}
+  .rail-h{display:flex;align-items:center;gap:6px;margin:18px 18px 9px;}
+  .rail-h .dot{width:7px;height:7px;border-radius:50%;background:var(--tile);animation:newPulse 1.8s ease-in-out infinite;}
+  .rail-h .l{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tile);}
+  .rail{display:flex;gap:10px;overflow-x:auto;padding:0 18px 4px;}
+  .rail::-webkit-scrollbar{height:0;}
+  .rcard{flex-shrink:0;width:140px;border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--line);cursor:pointer;}
+  .rcard .img{height:80px;position:relative;}
+  .rcard .flag{position:absolute;top:8px;left:8px;background:var(--gold);color:var(--ink);font-size:8px;font-weight:800;padding:3px 7px;border-radius:10px;letter-spacing:.3px;}
+  .rcard .rheart{position:absolute;bottom:7px;right:7px;width:26px;height:26px;border-radius:50%;background:rgba(20,30,35,.45);display:grid;place-items:center;border:none;color:#fff;font-size:12px;cursor:pointer;backdrop-filter:blur(4px);}
+  .rcard .meta{padding:9px 10px;}
+  .rcard .nm{font-family:'Fraunces',serif;font-size:13px;font-weight:600;line-height:1.1;}
+  .rcard .sub{font-size:9.5px;color:var(--pacific);font-weight:600;margin-top:2px;}
+
+  /* PICK CARD */
+  .pick{margin:14px 18px 0;background:#fff;border-radius:18px;overflow:hidden;border:1px solid var(--line);box-shadow:0 14px 34px -20px rgba(20,40,50,.45);cursor:pointer;}
+  .pick .img{height:120px;position:relative;}
+  .pick .tag{position:absolute;top:11px;left:11px;display:inline-flex;align-items:center;gap:4px;background:var(--gold);color:var(--ink);font-size:9.5px;font-weight:800;padding:5px 10px;border-radius:16px;}
+  .heart{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:50%;background:rgba(20,30,35,.4);display:grid;place-items:center;backdrop-filter:blur(4px);cursor:pointer;border:none;color:#fff;font-size:17px;transition:transform .15s;}
+  .heart:active{transform:scale(1.35);}
+  .pick .place{position:absolute;bottom:10px;left:11px;display:inline-flex;align-items:center;gap:4px;background:rgba(20,30,35,.6);color:#fff;font-size:9.5px;font-weight:600;padding:5px 9px;border-radius:14px;backdrop-filter:blur(4px);}
+  .pick .body{padding:14px 16px 16px;}
+  .pick .ttl{font-family:'Fraunces',serif;font-size:19px;font-weight:600;line-height:1.08;letter-spacing:-.4px;}
+  .pick .blurb{font-size:12px;line-height:1.5;color:#4a4038;margin:8px 0 13px;}
+  .pick .foot{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .pick .facts{display:flex;gap:11px;font-size:11px;font-weight:600;color:var(--pacific);}
+  .btn-buy{display:inline-flex;align-items:center;gap:5px;background:var(--tile);color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+
+  /* LIST CARD */
+  .lc{display:flex;margin:11px 18px 0;background:#fff;border-radius:15px;overflow:hidden;border:1px solid var(--line);cursor:pointer;align-items:center;}
+  .lc .thumb{width:84px;flex-shrink:0;align-self:stretch;}
+  .lc .b{padding:11px 13px;flex:1;min-width:0;}
+  .lc .tag{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 7px;border-radius:12px;display:inline-block;color:#fff;margin-bottom:5px;}
+  .lc .nm{font-family:'Fraunces',serif;font-size:15px;font-weight:600;line-height:1.12;letter-spacing:-.2px;}
+  .lc .bl{font-size:10.5px;line-height:1.4;color:#6a5f54;margin:4px 0 6px;}
+  .lc .m{font-size:10px;color:var(--pacific);font-weight:600;}
+  @keyframes heartPop{0%{transform:scale(1);}40%{transform:scale(1.5);}70%{transform:scale(.9);}100%{transform:scale(1);}}
+  .inline-heart{background:none;border:none;font-size:20px;cursor:pointer;padding:10px 12px;flex-shrink:0;transition:transform .15s;line-height:1;}
+  .inline-heart:active{transform:scale(1.4);}
+  .heart-pop{animation:heartPop .35s cubic-bezier(.36,.07,.19,.97);}
+
+  /* HAPPY HOUR */
+  @keyframes livePulse{0%,100%{opacity:1;box-shadow:0 0 8px #7CE0A8;}50%{opacity:.5;box-shadow:0 0 4px #7CE0A8;}}
+  @keyframes urgentPulse{0%,100%{opacity:1;}50%{opacity:.65;}}
+  .hh{margin:16px 18px 0;background:linear-gradient(135deg,var(--pacific),var(--pacificDk));border-radius:18px;padding:16px 16px 8px;color:#fff;position:relative;overflow:hidden;cursor:pointer;}
+  .hh .live{display:flex;align-items:center;gap:6px;}
+  .hh .live .p{width:7px;height:7px;border-radius:50%;background:#7CE0A8;animation:livePulse 1.8s ease-in-out infinite;}
+  .hh .live .l{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+  .hh .t{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:5px 0 11px;letter-spacing:-.3px;}
+  .hh .row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(255,255,255,.14);}
+  .hh .row:first-of-type{border-top:none;}
+  .hh .rn{font-weight:700;font-size:12px;}
+  .hh .rd{font-size:10px;color:rgba(255,255,255,.82);margin-top:1px;}
+  .hh .rt{font-size:9px;font-weight:700;padding:4px 8px;border-radius:14px;white-space:nowrap;}
+  .hh .rt.soon{background:rgba(224,82,46,.95);animation:urgentPulse 1.4s ease-in-out infinite;}
+  .hh .rt.ok{background:rgba(255,255,255,.16);}
+
+  /* WEEK / MONTH */
+  .day{display:flex;gap:13px;margin:0 18px 16px;}
+  .day .dd{flex-shrink:0;width:44px;text-align:center;}
+  .day .dd .w{font-size:9.5px;font-weight:700;color:var(--tile);letter-spacing:1px;}
+  .day .dd .n{font-family:'Fraunces',serif;font-size:23px;font-weight:600;line-height:1;}
+  .day .items{flex:1;display:flex;flex-direction:column;gap:7px;}
+  .day .it{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .day .it .nm{font-family:'Fraunces',serif;font-size:13.5px;font-weight:600;line-height:1.1;}
+  .day .it .m{font-size:10px;color:var(--pacific);font-weight:600;margin-top:1px;}
+  .rock{margin:0 18px 13px;border-radius:18px;overflow:hidden;position:relative;min-height:130px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 12px 28px -16px rgba(20,40,50,.4);cursor:pointer;}
+  .rock .ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.64));}
+  .rock .c{position:relative;padding:14px 16px;color:#fff;}
+  .rock .when{display:inline-block;background:var(--gold);color:var(--ink);font-size:9.5px;font-weight:800;padding:4px 9px;border-radius:13px;margin-bottom:7px;}
+  .rock .ttl{font-family:'Fraunces',serif;font-size:19px;font-weight:600;line-height:1.1;}
+  .rock .vn{font-size:10.5px;opacity:.9;margin-top:2px;}
+  .rock .nt{font-size:11px;margin-top:5px;font-weight:500;}
+
+  /* PLAN BANNER */
+  .plan-banner{margin:12px 18px 0;background:linear-gradient(135deg,rgba(224,168,46,.18),rgba(224,168,46,.06));border:1.5px solid var(--gold);border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:12px;}
+  .plan-banner .pb-icon{font-size:22px;flex-shrink:0;}
+  .plan-banner .pb-body{flex:1;}
+  .plan-banner .pb-t{font-size:13px;font-weight:700;color:#7a5410;}
+  .plan-banner .pb-s{font-size:11px;color:#9a7a50;margin-top:2px;}
+  .plan-banner .pb-btn{background:var(--pacific);color:#fff;border:none;border-radius:9px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Inter',sans-serif;}
+
+  /* EMPTY */
+  .empty{margin:20px 18px;padding:26px 20px;text-align:center;border:1.5px dashed var(--line);border-radius:16px;color:#6a5f54;font-size:13px;}
+  .empty b{color:var(--ink);}
+
+  /* DETAIL */
+  .detail{position:absolute;inset:0;background:var(--plaster);overflow-y:auto;z-index:130;}
+  .detail::-webkit-scrollbar{width:0;}
+  .detail .img{height:200px;position:relative;}
+  .d-back{position:absolute;top:40px;left:16px;width:34px;height:34px;border-radius:50%;background:rgba(20,30,35,.45);display:grid;place-items:center;color:#fff;backdrop-filter:blur(5px);border:none;font-size:20px;cursor:pointer;z-index:5;}
+  .d-acts{position:absolute;top:40px;right:16px;display:flex;gap:8px;z-index:5;}
+  .d-acts button{width:34px;height:34px;border-radius:50%;background:rgba(20,30,35,.45);display:grid;place-items:center;color:#fff;backdrop-filter:blur(5px);border:none;font-size:15px;cursor:pointer;}
+  .d-pick{position:absolute;bottom:12px;left:16px;display:inline-flex;align-items:center;gap:4px;background:var(--gold);color:var(--ink);font-size:9.5px;font-weight:800;padding:5px 10px;border-radius:14px;}
+  .d-body{padding:18px;}
+  .d-ttl{font-family:'Fraunces',serif;font-size:23px;font-weight:600;line-height:1.08;letter-spacing:-.4px;}
+  .d-tags{display:flex;gap:6px;flex-wrap:wrap;margin:11px 0;align-items:center;}
+  .d-tags .gf{font-size:10px;color:#6a5f54;font-weight:600;}
+  .ptag{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:4px 9px;border-radius:14px;background:#fff;}
+  .d-blurb{font-size:13px;line-height:1.6;color:#4a4038;margin:14px 0;}
+  .facts-block{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4px 0;margin:16px 0;}
+  .fact{display:flex;align-items:center;gap:11px;padding:11px 0;}
+  .fact .fi{width:34px;height:34px;border-radius:9px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--pacific);flex-shrink:0;font-size:15px;}
+  .fact .fk{font-size:8.5px;color:var(--sage);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+  .fact .fv{font-size:13px;font-weight:600;color:var(--ink);margin-top:1px;}
+  .fact .fd{font-size:10px;color:var(--tile);font-weight:700;margin-left:auto;}
+  .bigbuy{width:100%;background:var(--tile);color:#fff;border:none;padding:14px;border-radius:12px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-family:'Inter',sans-serif;}
+  .buynote{text-align:center;font-size:9.5px;color:var(--sage);font-weight:600;margin:8px 0 0;}
+  .secondary{width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);padding:12px;border-radius:12px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-top:10px;font-family:'Inter',sans-serif;}
+
+  /* SHEETS */
+  .scrim{position:absolute;inset:0;background:rgba(20,28,22,.5);z-index:120;animation:fade .2s;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--plaster);border-radius:22px 22px 0 0;padding:10px 18px 22px;z-index:121;max-height:86%;overflow-y:auto;animation:slideUp .3s cubic-bezier(.2,.8,.2,1);}
+  .sheet::-webkit-scrollbar{width:0;}
+  .grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:6px auto 12px;}
+  .sheet .sk{font-size:9.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tile);}
+  .sheet .st{font-family:'Fraunces',serif;font-size:19px;font-weight:600;letter-spacing:-.3px;margin-bottom:12px;}
+  .persona{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;border:2px solid var(--line);background:#fff;margin-bottom:8px;cursor:pointer;}
+  .persona.sel{border-color:var(--pacific);}
+  .persona .pic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;color:#fff;font-size:18px;}
+  .persona .pn{font-size:14px;font-weight:700;line-height:1.15;display:block;}
+  .persona .pd{font-size:10.5px;color:#6a5f54;}
+  .persona .ck{margin-left:auto;color:var(--pacific);font-weight:700;}
+
+  /* MAP */
+  .map{position:absolute;inset:0 0 56px 0;background:linear-gradient(160deg,#bfe0e4,#a9d4cf 45%,#e8dcc0);overflow:hidden;}
+  .map-toggle{position:absolute;top:42px;left:50%;transform:translateX(-50%);display:flex;gap:3px;background:rgba(255,255,255,.92);border-radius:12px;padding:3px;z-index:10;box-shadow:0 6px 16px -6px rgba(20,40,50,.4);}
+  .map-toggle button{padding:8px 15px;border-radius:9px;border:none;font-size:11px;font-weight:700;background:transparent;color:#6a5f54;cursor:pointer;}
+  .map-toggle button.on-e{background:var(--tile);color:#fff;}
+  .map-toggle button.on-h{background:var(--pacific);color:#fff;}
+  .pin{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:5;}
+  .pin .l{color:#fff;padding:5px 10px;border-radius:16px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 5px 12px -4px rgba(20,40,50,.5);display:flex;align-items:center;gap:4px;max-width:130px;overflow:hidden;}
+  .pin .s{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;margin-top:-1px;}
+  .pin.e .l{background:var(--tile);}.pin.e .s{border-top:6px solid var(--tile);}
+  .pin.h .l{background:var(--pacific);}.pin.h .s{border-top:6px solid var(--pacific);}
+  .nearme{position:absolute;bottom:18px;right:16px;background:#fff;border:none;border-radius:14px;padding:10px 13px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--pacific);box-shadow:0 8px 18px -7px rgba(20,40,50,.45);z-index:10;cursor:pointer;}
+  .mapcount{position:absolute;bottom:18px;left:16px;background:rgba(36,28,22,.86);color:#fff;border-radius:14px;padding:9px 13px;font-size:11px;font-weight:600;backdrop-filter:blur(5px);z-index:10;}
+  .map-lens-note{position:absolute;top:90px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.88);border-radius:10px;padding:5px 12px;font-size:10px;font-weight:600;color:var(--ink2);z-index:9;white-space:nowrap;backdrop-filter:blur(4px);}
+
+  /* GUIDES */
+  .guide-card{margin:0 18px 14px;border-radius:18px;overflow:hidden;position:relative;min-height:140px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 12px 28px -16px rgba(20,40,50,.4);cursor:pointer;}
+  .guide-card.featured{min-height:200px;}
+  .guide-card .ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.1) 20%,rgba(0,0,0,.66));}
+  .guide-card .c{position:relative;padding:16px;color:#fff;}
+  .guide-card .k{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;opacity:.85;}
+  .guide-card .t{font-family:'Fraunces',serif;font-size:21px;font-weight:600;line-height:1.05;margin-top:3px;}
+  .guide-card .d{font-size:11px;opacity:.9;margin-top:5px;}
+  .guide-card .feat-badge{display:inline-block;background:var(--gold);color:var(--ink);font-size:8.5px;font-weight:800;padding:3px 8px;border-radius:10px;margin-bottom:8px;letter-spacing:.3px;}
+  .stop{display:flex;gap:12px;margin:0 18px 14px;}
+  .stop .num{flex-shrink:0;width:26px;height:26px;border-radius:8px;background:var(--tile);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;margin-top:2px;}
+  .stop .sc{flex:1;}
+  .stop .sn{font-family:'Fraunces',serif;font-size:15px;font-weight:600;}
+  .stop .sd{font-size:11.5px;color:#6a5f54;line-height:1.45;margin-top:3px;}
+
+  /* LENS OVERLAY BANNER */
+  .scrim-soft{position:absolute;inset:0;background:rgba(20,28,22,.22);z-index:159;}
+  @keyframes bannerUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .lens-banner{position:absolute;left:12px;right:12px;bottom:66px;background:var(--plaster);border-radius:20px;padding:16px 18px 18px;box-shadow:0 -8px 40px rgba(20,40,50,.22);border:1px solid var(--line);animation:bannerUp .4s cubic-bezier(.2,.8,.2,1);}
+  .lens-banner .lb-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:18px;color:var(--sage);cursor:pointer;padding:4px;}
+  .lens-banner .lb-k{font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tile);}
+  .lens-banner .lb-t{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:3px 0 11px;letter-spacing:-.3px;}
+  .lens-banner .lb-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+  .lens-banner .lb-p{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;background:rgba(255,255,255,.9);border:1.5px solid var(--line);cursor:pointer;}
+  .lens-banner .lb-p .pic{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex-shrink:0;font-size:16px;}
+  .lens-banner .lb-p .pn{font-size:12px;font-weight:700;color:var(--ink);}
+  .lens-banner .lb-skip{text-align:center;color:var(--sage);font-size:11.5px;font-weight:600;margin-top:10px;cursor:pointer;}
+
+
+  /* SAVED SCREEN GROUPS */
+  .sv-group-hdr{display:flex;align-items:center;gap:8px;padding:14px 18px 6px;font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink2);}
+  .sv-group-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+
+  .toast{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:12px;font-weight:600;padding:10px 16px;border-radius:22px;z-index:150;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);animation:fade .2s;white-space:nowrap;}
+  .scroll-pad{height:20px;}
+</style>
+</head>
+<body>
+<!-- Status: v9 canon · 2026-06-21 · canonical UI (three sections: Explore · Saved · Discover SB) -->
+
+<div class="proto">
+  <div class="title">
+    <div class="m">S</div>
+    <div><div class="nm serif">SB Daymaker</div><div class="sub">Interactive Wireframe · Doc 2b · v9 · 3 sections — <b>Find it. Save it. Share it.</b></div></div>
+  </div>
+  <div class="ctrls">
+    <div class="seg" id="todSeg">
+      <span class="lbl">Time</span>
+      <button data-tod="morning">AM</button>
+      <button data-tod="afternoon">Noon</button>
+      <button data-tod="evening" class="on">PM</button>
+    </div>
+    <div class="seg" id="wxSeg">
+      <span class="lbl">Sky</span>
+      <button data-wx="clear" class="on">Clear</button>
+      <button data-wx="gray">Gray</button>
+    </div>
+    <button class="restart" onclick="APP.restart()">↻ Restart tour</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="device">
+    <div class="notch"></div>
+    <div class="device-screen">
+      <div id="app"></div>
+      <div id="nav"></div>
+      <div id="overlay"></div>
+      <div id="lensOverlay"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Occasion tags ("what are you up to?") — the ten, plus Everything. (Decision 10)
+// NB: internal ids are the wireframe's working keys; the schema enum (occasion_tag)
+// is the data contract — the prototype demonstrates the UI/flow, not the SQL names.
+const PERSONAS=[
+  {id:'all',name:'Everything',desc:'The full picture',icon:'✨',color:'#241C16'},
+  {id:'date',name:'Date Night',desc:'Evenings worth dressing up for',icon:'🍷',color:'#C0532E'},
+  {id:'family',name:'Family Day',desc:'Kid-friendly & daytime, stroller-OK',icon:'👨‍👩‍👧',color:'#7E8B6B'},
+  {id:'nightlife',name:'Nightlife / After Dark',desc:'Going out — bars, clubs, late',icon:'🌃',color:'#241C16'},
+  {id:'music',name:'Catch a Show',desc:'The Bowl, SOhO, Lobero & clubs',icon:'🎵',color:'#16586A'},
+  {id:'arts',name:'Arts & Culture',desc:'Galleries, museums, First Thursday',icon:'🎨',color:'#9C6B9E'},
+  {id:'outdoors',name:'Outdoors & Active',desc:'Trails, tide pools, beach & markets',icon:'⛰️',color:'#3E7C5A'},
+  {id:'wine_food',name:'Wine & Food',desc:'Tastings, dinners, the Funk Zone',icon:'🍇',color:'#8a3d6b'},
+  {id:'free',name:'Free in SB',desc:'Great days that cost nothing',icon:'🏷️',color:'#E0A82E'},
+  {id:'hosting',name:'Hosting Visitors',desc:"Showing someone the city's best",icon:'🧑‍🤝‍🧑',color:'#2d7d8f'},
+  {id:'solo',name:'Solo',desc:'Out on your own, at your pace',icon:'🚶',color:'#4a4038'},
+];
+const G={
+  bowl:'linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%)',
+  funk:'linear-gradient(135deg,#7E8B6B,#16586A 130%)',
+  lobero:'linear-gradient(135deg,#C0532E,#E0A82E 130%)',
+  terra:'linear-gradient(135deg,#C0532E,#E0A82E)',
+  sage:'linear-gradient(135deg,#7E8B6B,#16586A)',
+  pac:'linear-gradient(135deg,#16586A,#3d8aa0)',
+  dark:'linear-gradient(135deg,#241C16,#16586A)',
+  purple:'linear-gradient(135deg,#9C6B9E,#C0532E)',
+  forest:'linear-gradient(135deg,#3E7C5A,#16586A)',
+};
+const THINGS=[
+  {id:'e1',type:'event',horizon:'today',tier:'marquee',title:'Trombone Shorty & Orleans Avenue',venue:'Santa Barbara Bowl',area:'Bowl',price:'$59–95',free:false,indoor:false,personas:['music','date'],img:G.bowl,buy:'AXS',time:'6:30 PM',addr:'1122 N Milpas St',cat:'music',
+   blurb:"The Bowl's stone amphitheater under open sky is the only way to hear NOLA brass the way it's meant to carry.",
+   long:"The Bowl's stone amphitheater under open sky is the only way to hear NOLA brass the way it's meant to carry. Seats fill fast once the sun drops behind the Mesa, so locals arrive with a blanket and a bottle from the Funk Zone. Parking's tight — leave the car downtown and walk up Milpas."},
+  {id:'e2',type:'event',horizon:'today',tier:'free',title:'First Thursday — Funk Zone Art Walk',venue:'Funk Zone',area:'Funk Zone',price:'Free',free:true,indoor:false,personas:['free','arts','date'],img:G.funk,buy:'Details',time:'5:00 PM',addr:'Funk Zone',cat:'arts',
+   blurb:"Galleries throw open their doors, tasting rooms pour late, and the whole neighborhood turns into a slow wander.",
+   long:"Galleries throw open their doors, tasting rooms pour late, and the whole neighborhood turns into a slow wander. No ticket, no plan needed — just follow the crowd from door to door. Park on Anacapa; the Funk Zone lots are a trap."},
+  {id:'e3',type:'event',horizon:'today',tier:'date',title:'Sunset Jazz at the Lobero',venue:'Lobero Theatre',area:'Downtown',price:'$45',free:false,indoor:true,personas:['music','date'],img:G.lobero,buy:'Tickets',time:'8:00 PM',addr:'33 W Canon Perdido St',cat:'music',
+   blurb:"California's oldest theater, 140 years of velvet and good acoustics.",
+   long:"California's oldest theater, 140 years of velvet and good acoustics. Pair it with a Funk Zone pour beforehand and you've built the night."},
+  {id:'p1',type:'place',title:'The Lark',venue:'Funk Zone',area:'Funk Zone',price:'$$$',free:false,indoor:true,personas:['date','arts','wine_food','nightlife'],img:G.lobero,buy:'Visit',time:'Dinner',addr:'131 Anacapa St',tod:'evening',cat:'food',
+   blurb:"The Funk Zone's anchor — shared plates, a buzzing room, and the patio everyone wants.",
+   long:"The Funk Zone's anchor — shared plates, a buzzing room, and the patio everyone wants. Go for the gildas, stay for the wood-grilled everything. Reservations essential on weekends."},
+  {id:'p2',type:'place',title:'Butterfly Beach',venue:'Montecito',area:'Montecito',price:'Free',free:true,indoor:false,personas:['outdoors','free','family','date'],img:G.pac,buy:'Directions',time:'Golden hour',addr:'Channel Dr, Montecito',tod:'afternoon',cat:'outdoors',
+   blurb:"The sunset beach. Low tide, the Biltmore behind you, dolphins if you're lucky.",
+   long:"The sunset beach. Low tide, the Biltmore behind you, dolphins if you're lucky. Come an hour before sunset and bring a bottle — half of Montecito has the same idea, and that's part of the charm."},
+  {id:'p3',type:'place',title:'SB Museum of Art',venue:'Downtown',area:'Downtown',price:'$',free:false,indoor:true,personas:['arts','family','solo','hosting'],img:G.purple,buy:'Visit',time:'Open till 5',addr:'1130 State St',tod:'afternoon',cat:'arts',
+   blurb:"Compact, world-class, and right on State — the perfect rainy-day hour.",
+   long:"Compact, world-class, and right on State — the perfect rainy-day hour. The Asian art collection punches well above the museum's size, and it's free on Thursday evenings."},
+  {id:'p4',type:'place',title:'Mesa Lane Steps',venue:'The Mesa',area:'Mesa',price:'Free',free:true,indoor:false,personas:['outdoors','free','solo'],img:G.sage,buy:'Directions',time:'Morning best',addr:'Mesa Ln',tod:'morning',cat:'outdoors',
+   blurb:"229 steps down to the quietest stretch of sand in the city.",
+   long:"229 steps down to the quietest stretch of sand in the city. Locals' beach — go at low tide and walk toward the bluffs. Your legs will remember the climb back up."},
+  {id:'p5',type:'place',title:'Old Mission Santa Barbara',venue:'Mission Canyon',area:'Mission',price:'$',free:false,indoor:false,personas:['family','arts','free','hosting'],img:G.terra,buy:'Visit',time:'Open till 4',addr:'2201 Laguna St',tod:'afternoon',cat:'arts',
+   blurb:"The 'Queen of the Missions' — pink stone, rose garden, two centuries of history.",
+   long:"The 'Queen of the Missions' — pink stone, rose garden, two centuries of history. The self-guided tour takes 45 minutes; the lawn out front is a perfect picnic spot with the kids."},
+  {id:'p6',type:'place',title:'MOXI Museum',venue:'Lower State',area:'Downtown',price:'$$',free:false,indoor:true,personas:['family'],img:G.pac,buy:'Visit',time:'Open till 5',addr:'125 State St',tod:'afternoon',cat:'arts',
+   blurb:"Three floors of hands-on science the kids will not want to leave.",
+   long:"Three floors of hands-on science the kids will not want to leave. The rooftop sky-garden has harbor views; the interactive music floor is the secret favorite. The best rainy-day move with little ones."},
+  {id:'f1',type:'firstlook',flag:'JUST OPENED',title:'Bettina',venue:'Montecito',area:'Montecito',price:'$$',free:false,indoor:true,personas:['date','family','wine_food'],img:G.terra,buy:'Visit',time:'Now open',addr:'Montecito',cat:'food',
+   blurb:"Wood-fired Neapolitan pizza in the upper village — the natural-wine list is the surprise.",
+   long:"Wood-fired Neapolitan pizza in the upper village — the natural-wine list is the surprise. Go before the State Street crowd finds it; the margherita is the move."},
+  {id:'f2',type:'firstlook',flag:'OPENING SOON',title:'The Mill',venue:'Funk Zone',area:'Funk Zone',price:'$',free:false,indoor:true,personas:['arts','free'],img:G.sage,buy:'Details',time:'Opens next month',addr:'Funk Zone',cat:'food',
+   blurb:"A café-roastery coming to the Funk Zone — coffee, pastry, and a maker's space.",
+   long:"A café-roastery coming to the Funk Zone — coffee, pastry, and a maker's space upstairs. One to watch; we'll have a first look the week it opens."},
+  {id:'f3',type:'firstlook',flag:'JUST OPENED',title:'Lighthouse Wine Bar',venue:'The Mesa',area:'Mesa',price:'$$',free:false,indoor:true,personas:['date','arts','wine_food','nightlife'],img:G.pac,buy:'Visit',time:'Now open',addr:'Mesa',cat:'happyhour',
+   blurb:"A tiny Mesa wine bar with a sea view and a very short, very good list.",
+   long:"A tiny Mesa wine bar with a sea view and a very short, very good list. Twelve seats, no reservations — come early or come patient."},
+  {id:'w1',type:'event',horizon:'week',day:'FRI',date:'20',title:"SB Symphony: Beethoven's 7th",venue:'The Granada',area:'Downtown',price:'$35+',free:false,indoor:true,personas:['music','date'],img:G.dark,buy:'Tickets',time:'Fri 7:30 PM',addr:'1214 State St',cat:'music',blurb:"A full orchestra in the Granada's gilded hall.",long:"A full orchestra in the Granada's gilded hall — one of the great rooms on the Central Coast."},
+  {id:'w2',type:'event',horizon:'week',day:'SAT',date:'21',title:'Saturday Farmers Market',venue:'Santa Barbara & Cota',area:'Downtown',price:'Free',free:true,indoor:false,personas:['free','outdoors','family'],img:G.sage,buy:'Details',time:'Sat 8:30 AM',addr:'Santa Barbara & Cota',cat:'outdoors',blurb:'The big one — strawberries, flowers, and the whole town.',long:'The big one — strawberries, flowers, and the whole town out walking. Come hungry; leave with too much.'},
+  {id:'w3',type:'event',horizon:'week',day:'SAT',date:'21',title:'Tide Pool Walk',venue:'Coal Oil Point',area:'Goleta',price:'Free',free:true,indoor:false,personas:['free','outdoors','family'],img:G.pac,buy:'Details',time:'Sat 10:00 AM',addr:'Coal Oil Point',cat:'outdoors',blurb:'Low-tide creatures with a naturalist guide.',long:'Low-tide creatures with a naturalist guide — anemones, hermit crabs, the occasional octopus. Great with kids.'},
+  {id:'w4',type:'event',horizon:'week',day:'FRI',date:'20',title:'Flamenco Fridays',venue:'Cádiz',area:'Downtown',price:'$15',free:false,indoor:true,personas:['music','date','arts','nightlife'],img:G.terra,buy:'Tickets',time:'Fri 8:00 PM',addr:'State St',cat:'music',blurb:'Live flamenco and a glass of Rioja downtown.',long:'Live flamenco and a glass of Rioja downtown — intimate, loud in the best way.'},
+  {id:'m1',type:'event',horizon:'month',when:'Jun 21',title:'Summer Solstice Celebration',venue:'Downtown · Alameda Park',area:'Downtown',price:'Free',free:true,indoor:false,personas:['free','family','arts'],img:G.terra,buy:'Details',time:'Jun 21',addr:'Alameda Park',note:"The parade. 50,000 people. SB's signature day.",cat:'arts',blurb:"The parade. 50,000 people. SB's signature day.",long:"The parade. 50,000 people. SB's signature day — handmade floats, no motors, pure spectacle. Stake out State Street early."},
+  {id:'m2',type:'event',horizon:'month',when:'Jul 17–18',title:'California Wine Festival',venue:'Chase Palm Park',area:'Waterfront',price:'$$',free:false,indoor:false,personas:['date','free','wine_food','hosting'],img:G.sage,buy:'Tickets',time:'Jul 17–18',addr:'Chase Palm Park',note:'Coastal tasting, 200+ wines on the lawn.',cat:'happyhour',blurb:'Coastal tasting, 200+ wines on the lawn.',long:'Coastal tasting, 200+ wines on the lawn by the water. The sunset rare-&-reserve session is worth the upgrade.'},
+  {id:'m3',type:'event',horizon:'month',when:'Jul 29',title:'Nick Cave at the Bowl',venue:'Santa Barbara Bowl',area:'Bowl',price:'$75+',free:false,indoor:false,personas:['music','date'],img:G.dark,buy:'AXS',time:'Jul 29',addr:'1122 N Milpas St',note:'On sale now — these go fast.',cat:'music',blurb:'On sale now — these go fast.',long:'On sale now — these go fast. A rare Bowl night you build the whole month around.'},
+  // Additional items for richer pick list
+  {id:'x1',type:'place',title:'Loquita',venue:'Downtown',area:'Downtown',price:'$$',free:false,indoor:true,personas:['date','arts','wine_food','nightlife'],img:G.terra,buy:'Visit',time:'Happy hour 3–6 PM',addr:'202 State St',cat:'happyhour',blurb:'Spanish small plates and a killer vermouth list on State Street.',long:'Spanish small plates and a killer vermouth list on State Street. The best pre-show dinner in Downtown.'},
+  {id:'x2',type:'place',title:'Stearns Wharf',venue:'Waterfront',area:'Waterfront',price:'Free',free:true,indoor:false,personas:['family','outdoors','free','hosting','solo'],img:G.pac,buy:'Directions',time:'Always open',addr:'Stearns Wharf',cat:'outdoors',blurb:'Walk the historic wharf out over the harbor — sea lions included.',long:'Walk the historic wharf out over the harbor — sea lions included. Free to explore; grab a cup of chowder at the stand.'},
+  {id:'x3',type:'place',title:'Brophy Bros',venue:'The Harbor',area:'Waterfront',price:'$$',free:false,indoor:false,personas:['date','family','outdoors','wine_food'],img:G.pac,buy:'Visit',time:'Happy hour 3–6 PM',addr:'119 Harbor Way',cat:'happyhour',blurb:'Clam chowder and cold beers with a front-row harbor view.',long:'Clam chowder and cold beers with a front-row harbor view. The wait is always worth it. Go early or go late.'},
+  {id:'x4',type:'place',title:'State Street Stroll',venue:'Downtown',area:'Downtown',price:'Free',free:true,indoor:false,personas:['all','hosting','solo'],img:G.funk,buy:'Directions',time:'Any time',addr:'State St',cat:'outdoors',blurb:'The spine of downtown — shops, cafes, and people watching.',long:'The spine of downtown — shops, cafes, and people watching. Window-shop your way from Ortega to Victoria.'},
+];
+const HAPPY=[
+  {id:'h1',name:'The Lark',deal:'$1 oysters + $9 spritzes',ends:47,dist:'0.3 mi',conf:'4 days ago',x:56,y:62},
+  {id:'h2',name:'Loquita',deal:'Half-price gildas, $7 vermouth',ends:92,dist:'0.4 mi',conf:'2 days ago',x:50,y:66},
+  {id:'h3',name:'Brophy Bros',deal:'$2 off all drafts, harbor view',ends:18,dist:'1.1 mi',conf:'6 days ago',x:44,y:78},
+];
+const GUIDES=[
+  // ── NEIGHBORHOOD GUIDES (v9) — each scoped to an area; pulls live happenings ──
+  {id:'n1',kind:'neighborhood',title:'The Funk Zone',kicker:'Neighborhood',areas:['Funk Zone'],desc:'Tasting rooms, galleries, and the best patios in town',img:G.lobero,
+   intro:"A few walkable blocks between the freeway and the sea — urban wineries, street art, and SB's best dinner. Park once and wander.",
+   stops:[['Coffee to walk with','Start with a flat white and no plan.'],['Gallery hop','Most open studios are free to duck into.'],['Tasting flight','A pour at one of the urban wineries.'],['Dinner at the Lark','The anchor. Book ahead.']]},
+  {id:'n2',kind:'neighborhood',title:'Downtown & State St.',kicker:'Neighborhood',areas:['Downtown','Lower State','Santa Barbara & Cota','Mission','Bowl'],desc:'The spine of the city — theaters, museums, the market',img:G.terra,
+   intro:"State Street is the city's living room: red-tile arcades, the Granada and Lobero, museums, and the Saturday market. Easy to walk end to end.",
+   stops:[['The Courthouse tower','Free, and the best view in town.'],['SB Museum of Art','A perfect indoor hour on State.'],['Saturday Farmers Market','Strawberries, flowers, the whole town.'],['A show at the Granada or Lobero','End the night with the lights up.']]},
+  {id:'n3',kind:'neighborhood',title:'The Waterfront',kicker:'Neighborhood',areas:['Waterfront','The Harbor'],desc:'Stearns Wharf, the harbor, and chowder with a view',img:G.pac,
+   intro:"Where the city meets the Pacific — the wharf, the harbor, the bike path, and sea lions barking under the pier.",
+   stops:[['Stearns Wharf','Walk out over the water.'],['The harbor & breakwater','Boats, pelicans, and the long view back to the mountains.'],['Chowder at Brophy Bros','Harbor-view classic. Go early or late.'],['Sunset on the sand','East Beach into golden hour.']]},
+  {id:'n4',kind:'neighborhood',title:'Montecito',kicker:'Neighborhood',areas:['Montecito'],desc:'Butterfly Beach, the upper village, golden hour',img:G.sage,
+   intro:"Just down the coast — eucalyptus-lined lanes, the upper village, and the sunset beach the whole town quietly shares.",
+   stops:[['Butterfly Beach','The golden-hour ritual, Biltmore behind you.'],['Upper Village stroll','Coffee, shops, and people-watching.'],['Dinner at Bettina','Wood-fired pizza, a surprise wine list.']]},
+  {id:'n5',kind:'neighborhood',title:'The Mesa',kicker:'Neighborhood',areas:['Mesa'],desc:'The locals\' bluffs, hidden steps, and a sea-view pour',img:G.dark,
+   intro:"A residential bluff with the city's quietest beaches and a handful of locals-only spots — earn the view down the steps.",
+   stops:[['Mesa Lane Steps','229 steps to the quiet sand.'],['Bluff-top walk','Big sky, bigger sunsets.'],['A pour at Lighthouse','Twelve seats, a sea view, a short good list.']]},
+  // ── THEME GUIDES — the evergreen editorial soul ──────────────────────────────
+  {id:'g1',kind:'theme',title:'A Perfect Funk Zone Afternoon',kicker:'The wander',desc:'Tasting rooms, galleries, the Lark, sunset at the harbor',img:G.lobero,persona:'date',
+   intro:"The Funk Zone rewards aimlessness. Park once and walk — here's the loop locals actually do.",
+   stops:[['Start with coffee','Lighthouse, or a flat white to walk with.'],['Gallery hop','Duck into the open studios — most are free.'],['Tasting flight','A pour at one of the urban wineries.'],['Dinner at the Lark','The anchor. Book ahead.'],['Sunset at the harbor','Walk it off toward Brophy Bros.']]},
+  {id:'g2',kind:'theme',title:'Free Santa Barbara',kicker:'Costs nothing',desc:'The best of the city that costs nothing',img:G.sage,persona:'free',
+   intro:"You don't need a wallet to have a perfect SB day. Here's proof.",
+   stops:[['The Mesa Lane Steps','229 steps to the quiet beach.'],['The Courthouse tower','Free, and the best view in town.'],['Butterfly Beach sunset','The golden-hour ritual.'],['Saturday Farmers Market','Free to wander, hard to leave empty-handed.']]},
+  {id:'g3',kind:'theme',title:"First-Timer's Santa Barbara",kicker:'The essentials',desc:'The one-day spine for visitors',img:G.terra,persona:'all',
+   intro:"One day in SB? Here's the spine that hits the essentials without feeling rushed.",
+   stops:[['Stearns Wharf','Start at the water.'],['State Street stroll','Up through the heart of downtown.'],['The Old Mission','The postcard.'],['Funk Zone evening','End where the locals are.']]},
+  {id:'g4',kind:'theme',title:'Santa Barbara with Kids',kicker:'Family Day',desc:'Zoo, beach, MOXI, butterfly grove',img:G.pac,persona:'family',
+   intro:"The little-ones itinerary — shade, snacks, and somewhere to run.",
+   stops:[['MOXI Museum','Three floors of hands-on science.'],['The SB Zoo','Small, walkable, giraffes with an ocean view.'],['East Beach playground','Run-around time by the sand.'],['Ice cream on State','The reward.']]},
+  {id:'g5',kind:'theme',title:'Rainy Day in Santa Barbara',kicker:'When the marine layer wins',desc:'What to do when the gray sets in',img:G.dark,persona:'arts',
+   intro:"Marine layer won't burn off? Lean in. The indoor SB is just as good.",
+   stops:[['SB Museum of Art','A perfect indoor hour on State.'],['MOXI','Kids will not notice the weather.'],['A Funk Zone tasting room','Cozy, dim, and pouring.'],['The Lark for dinner','End warm.']]},
+];
+// Live happenings scoped to an open guide (v9): neighborhood → by area, theme → by tag
+function guideMatches(g){
+  if(g.kind==='neighborhood'){
+    const set=new Set(g.areas);
+    return THINGS.filter(t=>set.has(t.area));
+  }
+  // theme: match the guide's persona/tag (all → everything)
+  return THINGS.filter(t=>g.persona==='all'||(t.personas&&t.personas.includes(g.persona)));
+}
+
+const LENS_CHIPS={
+  all:['Free','Walkable','Indoor','Tonight'],
+  date:['Indoor','Under $50','Tonight','Walkable'],
+  family:['Free','Indoor','Walkable'],
+  nightlife:['Tonight','Walkable','Under $50'],
+  music:['Tonight','Under $50','Indoor'],
+  arts:['Free','Tonight','Indoor'],
+  outdoors:['Free','Walkable'],
+  wine_food:['Walkable','Indoor','Tonight'],
+  free:['Walkable','Tonight'],
+  hosting:['Walkable','Free','Tonight'],
+  solo:['Walkable','Indoor','Free'],
+};
+
+let S={
+  screen:'home',horizon:'today',lens:'all',filters:new Set(),saved:new Set(),savedState:{},
+  detail:null,sheet:null,guide:null,tod:'evening',weather:'clear',firstRun:true,toast:null,
+  nearMe:false,nearbyAnchor:'Downtown / State St.',
+  // Saved screen state
+  sv:{
+    typeFilter:'all',  // 'all'|'events'|'places'|'happyhour'
+    stateFilter:'want', // 'want'|'been' (Decision 7)
+    selectMode:false,   // v9: multi-select to share
+    selected:new Set(), // ids chosen for sharing
+  },
+};
+
+const $app=document.getElementById('app');
+const $nav=document.getElementById('nav');
+const $ov=document.getElementById('overlay');
+const $lo=document.getElementById('lensOverlay');
+const persona=id=>PERSONAS.find(p=>p.id===id);
+const matchLens=t=>S.lens==='all'||(t.personas&&t.personas.includes(S.lens));
+const matchFilter=t=>{
+  for(const f of S.filters){
+    if(f==='Free'&&!t.free) return false;
+    if(f==='Walkable'&&!['Funk Zone','Downtown'].includes(t.area)) return false;
+    if(f==='Indoor'&&!t.indoor) return false;
+    if(f==='Tonight'&&t.horizon&&t.horizon!=='today') return false;
+    if(f==='Under $50'&&!(t.free||t.price==='$'||t.price==='$$')) return false;
+  }
+  return true;
+};
+const pass=t=>matchLens(t)&&matchFilter(t);
+
+// ---- TIME HELPERS ----
+function to24h(label){
+  // "6:00 PM" -> "18:00" for <input type=time>
+  const m=(label||'').match(/(\d+):(\d+)\s*([AP]M)/i);
+  if(!m) return '18:00';
+  let h=parseInt(m[1],10); const min=m[2]; const ap=m[3].toUpperCase();
+  if(ap==='PM'&&h!==12) h+=12; if(ap==='AM'&&h===12) h=0;
+  return `${String(h).padStart(2,'0')}:${min}`;
+}
+function from24h(v){
+  // "18:30" -> "6:30 PM"
+  const [H,M]=(v||'18:00').split(':').map(Number);
+  const ap=H<12?'AM':'PM'; const h12=H===0?12:H>12?H-12:H;
+  return `${h12}:${String(M).padStart(2,'0')} ${ap}`;
+}
+function parseTime(str){
+  // '6:00 PM' -> minutes from midnight
+  const [time,ampm]=str.split(' ');
+  let [h,m]=time.split(':').map(Number);
+  if(ampm==='PM'&&h!==12) h+=12;
+  if(ampm==='AM'&&h===12) h=0;
+  return h*60+m;
+}
+function fmtTime(mins){
+  // minutes from midnight -> '6:00 PM'
+  let h=Math.floor(mins/60)%24;
+  const m=mins%60;
+  const ampm=h>=12?'PM':'AM';
+  if(h>12) h-=12;
+  if(h===0) h=12;
+  return `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
+}
+
+// ── NEAR ME helper ───────────────────────────────────────────────────────────
+const AREA_TO_HOOD={
+  'Funk Zone':'funk','Downtown':'downtown','Lower State':'downtown',
+  'Waterfront':'waterfront','The Harbor':'waterfront','Santa Barbara & Cota':'downtown',
+  'Montecito':'montecito','The Mesa':'mesa','Mesa':'mesa',
+  'Bowl':'downtown','Mission':'downtown','Goleta':'goleta',
+};
+function itemHood(item){return AREA_TO_HOOD[item.area]||null;}
+function isNearby(item,hood){if(!hood) return false; return itemHood(item)===hood;}
+// Map the chosen Near-Me anchor label to a neighborhood key
+const ANCHOR_TO_HOOD={
+  'Your location':'downtown','Funk Zone':'funk','Downtown / State St.':'downtown',
+  'The Waterfront':'waterfront','Montecito':'montecito','The Mesa':'mesa','Goleta':'goleta',
+};
+function anchorHood(){return ANCHOR_TO_HOOD[S.nearbyAnchor]||'downtown';}
+// Stable "Near Me" sort: things in the anchored neighborhood bubble to the top
+function nearMeSort(list){
+  if(!S.nearMe) return list;
+  const h=anchorHood();
+  return list.map((t,i)=>[t,i]).sort((a,b)=>{
+    const na=itemHood(a[0])===h?0:1, nb=itemHood(b[0])===h?0:1;
+    return na-nb || a[1]-b[1];
+  }).map(x=>x[0]);
+}
+// Near-Me control pill (shared by Explorer + Saved)
+function nearMeBtnHTML(){
+  if(S.nearMe){
+    return `<button class="ctrl-filter active" onclick="APP.openSheet('anchor')" style="white-space:nowrap;">
+      <span class="cf-icon">📍</span><span class="cf-text">Near ${S.nearbyAnchor==='Your location'?'you':S.nearbyAnchor.replace(' / State St.','')}</span>
+      <span onclick="event.stopPropagation();APP.clearNearMe()" style="margin-left:2px;font-weight:800;">✕</span>
+    </button>`;
+  }
+  return `<button class="ctrl-filter" onclick="APP.toggleNearMe()" style="white-space:nowrap;">
+    <span class="cf-icon">📍</span><span class="cf-text">Near Me</span>
+  </button>`;
+}
+
+// Shuffle helper for Surprise Me
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ---- HERO — Option A: Living editorial card ----
+function heroClass(){return S.weather==='gray'?'gray':S.tod;}
+function sunPos(){
+  if(S.weather==='gray') return {hide:true};
+  const map={morning:{x:'14%',y:'28%'},afternoon:{x:'46%',y:'10%'},evening:{x:'78%',y:'22%'}};
+  return map[S.tod];
+}
+function conds(){
+  if(S.weather==='gray') return ['☁️ 61° overcast','🌫️ Marine layer','🌅 Sunset 8:04'];
+  const byTod={morning:['☀️ 63° clear','🌅 Sunrise 6:02','🌊 Surf 1–2 ft'],afternoon:['☀️ 71° clear','🌊 Surf 2–3 ft','🌅 Sunset 8:04'],evening:['☀️ 71° clear','🌊 Surf 2–3 ft','🌅 Sunset 8:04']};
+  return byTod[S.tod]||byTod.evening;
+}
+// Context-aware eyebrow label for the pick card
+function heroPickTag(item){
+  if(S.weather==='gray') return '☁️ Gray day move';
+  const tags={morning:"This morning's move",afternoon:"This afternoon's pick",evening:"Tonight's pick"};
+  return '✨ '+(tags[S.tod]||"Today's pick");
+}
+// heroBlurb removed — Option C uses title+meta only
+function heroHTML(marqueeItem){
+  const sp=sunPos();
+  const sun=sp.hide?'<div class="cloud"></div>':`<div class="sun" style="left:${sp.x};top:${sp.y};"></div>`;
+  const condPills=conds().map(c=>`<span>${c}</span>`).join('');
+  const isSaved=marqueeItem&&S.saved.has(marqueeItem.id);
+  const isPlace=marqueeItem&&(marqueeItem.type==='place'||marqueeItem.type==='firstlook');
+  const ctaLabel=marqueeItem?(marqueeItem.buy==='AXS'||marqueeItem.buy==='Tickets'?'Get tickets ↗':isPlace?'View details ↗':'See details ↗'):'';
+  return `<div class="hero ${heroClass()}">${sun}
+    <svg class="hero-range" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path d="M0,120 L0,70 Q120,30 260,55 T520,40 Q660,18 820,52 T1080,38 L1200,60 L1200,120 Z" fill="#0E3C49" opacity="0.55"/>
+      <path d="M0,120 L0,92 Q160,62 340,80 T700,70 Q900,52 1040,82 L1200,74 L1200,120 Z" fill="#0E3C49" opacity="0.8"/>
+    </svg>
+    <div class="hero-sky">
+      <div class="date">Thursday, June 19</div>
+      <div class="cond">${condPills}</div>
+    </div>
+    ${marqueeItem?`
+    <div class="hero-pick-card" onclick="APP.openDetail('${marqueeItem.id}')">
+      <div class="hero-pick-img" style="background:${marqueeItem.img};">
+        <div class="hero-pick-tag">${heroPickTag(marqueeItem)}</div>
+        <button class="hero-pick-heart" id="hb_${marqueeItem.id}" onclick="event.stopPropagation();APP.toggleSave('${marqueeItem.id}')">${isSaved?'❤️':'🤍'}</button>
+      </div>
+      <div class="hero-pick-body">
+        <div class="hero-eyebrow">${marqueeItem.type==='place'?'Place to be':marqueeItem.free?'Free · Today':marqueeItem.cat==='happyhour'?'Happy Hour':marqueeItem.cat==='music'?'Catch a Show':marqueeItem.cat==='arts'?'Arts & Culture':'Event'}</div>
+        <div class="hero-pick-title">${marqueeItem.title}</div>
+        <div class="hero-pick-meta">📍 ${marqueeItem.venue}${marqueeItem.time?' · '+marqueeItem.time:''}</div>
+        <div class="hero-pick-cta">${ctaLabel}</div>
+      </div>
+    </div>`:`<div style="height:12px;"></div>`}
+  </div>`;
+}
+
+// ---- CONTROLS ----
+function controlsHTML(){
+  const L=persona(S.lens);
+  const horizons=[['today','Today'],['week','This Week'],['month','This Month']];
+  const hasLens = S.lens!=='all';
+  const hasFilters = S.filters.size>0;
+  // Lens button: icon+name when selected, ✦ Any Vibe when not
+  const lensIcon = hasLens ? L.icon : '✦';
+  const lensLabel = hasLens ? L.name : 'Any Vibe';
+  // Filter button: count badge when active
+  const filterLabel = hasFilters ? `⚙ Refine · ${S.filters.size}` : '⚙ Refine';
+  return `<div class="controls" id="controls">
+    <div class="hseg">${horizons.map(([k,l])=>`<button class="${S.horizon===k?'on':''}" onclick="APP.setHorizon('${k}')">${l}</button>`).join('')}</div>
+    <div class="ctrl-row">
+      <button class="ctrl-lens ${hasLens?'has-sel':''}" onclick="APP.openSheet('lens')">
+        <span class="cl-icon">${lensIcon}</span>
+        <span class="cl-text"><span class="cl-label">${lensLabel}</span></span>
+        <span class="cl-chevron">▾</span>
+      </button>
+      ${nearMeBtnHTML()}
+      <button class="ctrl-filter ${hasFilters?'active':''}" onclick="APP.openSheet('filter')">
+        <span class="cf-text">${filterLabel} ▾</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+// ---- HEARTS ----
+function heartBtn(id,overlayStyle){
+  const on=S.saved.has(id);
+  if(overlayStyle) return `<button class="heart" id="hb_${id}" onclick="event.stopPropagation();APP.toggleSave('${id}')">${on?'❤️':'🤍'}</button>`;
+  return `<button class="inline-heart" id="hb_${id}" onclick="event.stopPropagation();APP.toggleSave('${id}')">${on?'❤️':'🤍'}</button>`;
+}
+
+// ---- CARD RENDERERS ----
+function railHTML(){
+  const looks=THINGS.filter(t=>t.type==='firstlook');
+  return `<div class="rail-h"><span class="dot"></span><span class="l">Just Opened &amp; Coming Soon</span></div>
+  <div class="rail">${looks.map(t=>`
+    <div class="rcard" onclick="APP.openDetail('${t.id}')">
+      <div class="img" style="background:${t.img};">
+        <div class="flag">${t.flag}</div>
+        <button class="rheart" id="hb_${t.id}" onclick="event.stopPropagation();APP.toggleSave('${t.id}')">${S.saved.has(t.id)?'❤️':'🤍'}</button>
+      </div>
+      <div class="meta"><div class="nm">${t.title}</div><div class="sub">${t.venue}</div></div>
+    </div>`).join('')}</div>`;
+}
+function pickHTML(t){
+  return `<div class="pick" onclick="APP.openDetail('${t.id}')">
+    <div class="img" style="background:${t.img};">
+      <div class="tag">✨ Today's pick</div>
+      ${heartBtn(t.id,true)}
+      <div class="place">📍 ${t.venue}</div>
+    </div>
+    <div class="body">
+      <div class="ttl">${t.title}</div>
+      <div class="blurb">${t.blurb}</div>
+      <div class="foot">
+        <div class="facts"><span>🕕 ${t.time||'—'}</span><span>🎟 ${t.price}</span></div>
+        <button class="btn-buy" onclick="event.stopPropagation();APP.openDetail('${t.id}')">${t.type==='place'?'View':'Get tickets'} ↗</button>
+      </div>
+    </div>
+  </div>`;
+}
+function lcHTML(t){
+  const c=t.free?'#7E8B6B':t.type==='place'?'#16586A':'#C0532E';
+  const label=t.type==='place'?'Place':t.free?'Free':t.personas[0];
+  return `<div class="lc" onclick="APP.openDetail('${t.id}')">
+    <div class="thumb" style="background:${t.img};"></div>
+    <div class="b">
+      <span class="tag" style="background:${c};">${label}</span>
+      <div class="nm">${t.title}</div>
+      <div class="bl">${t.blurb}</div>
+      <div class="m">${t.venue} · ${t.price}</div>
+    </div>
+    ${heartBtn(t.id,false)}
+  </div>`;
+}
+function newThisWeekHTML(){
+  const looks=THINGS.filter(t=>t.type==='firstlook');
+  if(!looks.length) return '';
+  return `<div class="sh"><div class="k">🆕 New this week in SB</div><div class="t">Just opened &amp; newly added</div></div>
+  <div style="padding:0 18px;">${looks.map(t=>`<div class="lc" onclick="APP.openDetail('${t.id}')" style="margin-bottom:9px;">
+    <div class="thumb" style="background:${t.img};"></div>
+    <div class="b"><span class="tag" style="background:var(--gold);color:var(--ink);">${t.flag}</span><div class="nm">${t.title}</div><div class="bl">${t.venue}</div></div>
+    ${heartBtn(t.id,false)}
+  </div>`).join('')}</div>`;
+}
+function emailSignupHTML(){
+  return `<div style="margin:16px 18px 0;background:linear-gradient(135deg,rgba(22,88,106,.07),rgba(22,88,106,.02));border:1px solid rgba(22,88,106,.2);border-radius:16px;padding:16px 18px;">
+    <div class="serif" style="font-size:16px;font-weight:600;color:var(--pacificDk);">Get SB Daymaker in your inbox</div>
+    <div style="font-size:12px;color:var(--ink2);margin-top:3px;">Two emails a week — a midweek <b>What's On</b> and a Friday <b>Local's Weekend</b>. What's new + what's coming up. No wall, unsubscribe anytime.</div>
+    <div style="display:flex;gap:8px;margin-top:11px;">
+      <input type="email" placeholder="you@email.com" style="flex:1;padding:10px 12px;border:1.5px solid var(--line);border-radius:11px;font-size:13px;font-family:'Inter',sans-serif;" />
+      <button onclick="APP.toastMsg('📧 Almost there — check your inbox to confirm (double opt-in).')" style="background:var(--pacific);color:#fff;border:none;border-radius:11px;padding:0 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Subscribe</button>
+    </div>
+  </div>`;
+}
+function trustNoteHTML(){
+  return `<div style="margin:14px 18px 0;text-align:center;font-size:11px;color:var(--sage);line-height:1.5;">
+    <span style="font-weight:700;color:var(--ink2);">Our picks are never paid for.</span> The day's pick is chosen on merit — sponsors can never buy their way into it.
+  </div>`;
+}
+function hhTeaser(){
+  return `<div class="hh">
+    <div class="live"><span class="l">🍷 Happy hours around town</span></div>
+    <div class="t">Where to find a deal</div>
+    ${HAPPY.map(h=>`<div class="row"><div><div class="rn">${h.name} <span style="font-weight:500;font-size:9.5px;color:rgba(255,255,255,.6);">· ${h.dist}</span></div><div class="rd">${h.deal}</div></div><div class="rt ok" style="font-size:8.5px;">✓ ${h.conf}</div></div>`).join('')}
+    <div style="text-align:center;padding:10px 0 4px;font-size:9.5px;font-weight:600;opacity:.7;">Confirmed dates, not live timers — live countdowns arrive in Phase 2.</div>
+  </div>`;
+}
+function submitBtnHTML(){
+  return `<div style="margin:18px 18px 0;text-align:center;">
+    <button onclick="APP.go('submit')" style="background:none;border:1.5px solid var(--line);border-radius:22px;padding:10px 20px;font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;font-family:'Inter',sans-serif;">＋ Submit an event or business</button>
+  </div>`;
+}
+function planBannerHTML(){
+  const n=S.saved.size;
+  if(n===0) return '';
+  return `<div class="plan-banner">
+    <div class="pb-icon">🔗</div>
+    <div class="pb-body">
+      <div class="pb-t">${n} thing${n>1?'s':''} saved — share your list?</div>
+      <div class="pb-s">Send your picks to friends, or save them for later.</div>
+    </div>
+    <button class="pb-btn" onclick="APP.go('saved')">Open list →</button>
+  </div>`;
+}
+// One Perfect SB Day — special card on Activity Explorer (v9: replaces the My Plan entry point)
+function perfectDayCardHTML(){
+  return `<div onclick="APP.perfectDay()" style="margin:14px 18px 0;cursor:pointer;border-radius:16px;overflow:hidden;position:relative;min-height:104px;background:linear-gradient(135deg,#C0532E,#E0A82E);display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 12px 28px -16px rgba(20,40,50,.4);">
+    <div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 25%,rgba(0,0,0,.55));"></div>
+    <div style="position:relative;padding:13px 15px;color:#fff;">
+      <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;opacity:.9;">Here for the day?</div>
+      <div class="serif" style="font-size:19px;font-weight:600;line-height:1.05;">One Perfect SB Day →</div>
+      <div style="font-size:10.5px;opacity:.92;margin-top:2px;">A ready-made morning-to-sunset lineup, dropped into your saved list to tweak &amp; share.</div>
+    </div>
+  </div>`;
+}
+
+// ---- HOME ----
+function renderHome(){
+  let body='';
+  // Resolve the hero marquee item upfront — always defined before heroHTML() is called
+  const todayPool=THINGS.filter(t=>(t.type==='event'&&t.horizon==='today')||t.type==='place').filter(pass);
+  let heroMarquee=todayPool.find(t=>t.tier==='marquee');
+  if(S.weather==='gray') heroMarquee=todayPool.find(t=>t.indoor)||heroMarquee;
+  if(!heroMarquee) heroMarquee=todayPool[0]||null;
+
+  if(S.horizon==='today'){
+    let rest=S.weather==='gray'
+      ? todayPool.filter(t=>t!==heroMarquee&&t.indoor)
+      : todayPool.filter(t=>t!==heroMarquee);
+    rest=nearMeSort(rest).slice(0,6);
+    const restHdr=S.nearMe
+      ? `<div class="sh"><div class="k">📍 Near ${S.nearbyAnchor==='Your location'?'you':S.nearbyAnchor}</div><div class="t">Closest first</div></div>`
+      : `<div class="sh"><div class="k">${S.weather==='gray'?'Also worth it · indoors':'Also happening'}</div><div class="t">More ways to spend the day</div></div>`;
+    body=perfectDayCardHTML()
+      +railHTML()
+      +(rest.length?restHdr+rest.map(lcHTML).join(''):'')
+      +newThisWeekHTML()
+      +hhTeaser()
+      +planBannerHTML()
+      +emailSignupHTML()
+      +trustNoteHTML()
+      +submitBtnHTML()+'<div class="scroll-pad"></div>';
+  } else if(S.horizon==='week'){
+    const evs=THINGS.filter(t=>t.horizon==='week').filter(pass);
+    const days=[...new Set(evs.map(e=>e.day))];
+    body=`<div class="sh"><div class="k">Next 7 days</div><div class="t">What's on this week in Santa Barbara</div></div>`;
+    if(!evs.length) body+=`<div class="empty">Nothing for <b>${persona(S.lens).name}</b> this week. Try another tag.</div>`;
+    days.forEach(d=>{
+      const items=nearMeSort(evs.filter(e=>e.day===d));
+      body+=`<div class="day"><div class="dd"><div class="w">${d}</div><div class="n">${items[0].date}</div></div><div class="items">${items.map(it=>`<div class="it" onclick="APP.openDetail('${it.id}')"><div><div class="nm">${it.title}</div><div class="m">${it.venue} · ${it.price}</div></div>${heartBtn(it.id,false)}</div>`).join('')}</div></div>`;
+    });
+    body+=planBannerHTML()+'<div class="scroll-pad"></div>';
+  } else {
+    const rocks=nearMeSort(THINGS.filter(t=>t.horizon==='month').filter(pass));
+    body=`<div class="sh"><div class="k">The big rocks</div><div class="t">Worth circling on your calendar</div></div>`;
+    if(!rocks.length) body+=`<div class="empty">Nothing for <b>${persona(S.lens).name}</b> this month. Try another tag.</div>`;
+    rocks.forEach(r=>{
+      body+=`<div class="rock" style="background:${r.img};" onclick="APP.openDetail('${r.id}')"><div class="ov"></div>${heartBtn(r.id,true)}<div class="c"><div class="when">${r.when}</div><div class="ttl">${r.title}</div><div class="vn">${r.venue}</div><div class="nt">${r.note}</div></div></div>`;
+    });
+    body+=planBannerHTML()+'<div class="scroll-pad"></div>';
+  }
+  // heroMarquee is always defined above — safe to pass in all horizon states
+  return headerHTML('Explore','Santa Barbara, daily')+heroHTML(heroMarquee)+controlsHTML()+body;
+}
+
+function headerHTML(nm,tg,back){
+  const left=back
+    ?`<button class="icon-btn" onclick="APP.go('${back}')" style="font-size:20px;">‹</button><div><div class="nm">${nm}</div>${tg?`<div class="tg">${tg}</div>`:''}</div>`
+    :`<div class="m">S</div><div><div class="nm">${nm}</div>${tg?`<div class="tg">${tg}</div>`:''}</div>`;
+  return `<div class="hdr"><div class="lg">${left}</div></div>`;
+}
+
+// ---- SAVED ----
+function savedTypeLabel(t){
+  if(t.cat==='happyhour') return 'happyhour';
+  if(t.type==='place'||t.type==='firstlook') return 'places';
+  if(t.type==='event') return 'events';
+  return 'all';
+}
+function svCardHTML(t){
+  const st=S.savedState[t.id]||'want';
+  const flipLabel=st==='been'?'↩ Want to go':'✓ Mark as been';
+  // SELECT MODE — tap to pick for sharing (one or many)
+  if(S.sv.selectMode){
+    const sel=S.sv.selected.has(t.id);
+    return `<div class="lc" onclick="APP.toggleShareSelect('${t.id}')" style="${sel?'border-color:var(--pacific);box-shadow:0 0 0 1.5px var(--pacific);':''}">
+      <div style="display:grid;place-items:center;width:44px;flex-shrink:0;align-self:stretch;">
+        <span style="width:24px;height:24px;border-radius:50%;border:2px solid ${sel?'var(--pacific)':'var(--line)'};background:${sel?'var(--pacific)':'#fff'};color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;">${sel?'✓':''}</span>
+      </div>
+      <div class="thumb" style="background:${t.img};"></div>
+      <div class="b"><div class="nm">${t.title}</div><div class="m">${t.venue} · ${t.price}</div></div>
+    </div>`;
+  }
+  // NORMAL MODE — open detail; share-this + want/been flip
+  return `<div style="position:relative;">${lcHTML(t)}
+    <button onclick="event.stopPropagation();APP.shareSingle('${t.id}')" title="Share this" style="position:absolute;right:14px;top:10px;background:#fff;color:var(--pacific);border:1.5px solid var(--line);border-radius:50%;width:28px;height:28px;display:grid;place-items:center;font-size:13px;cursor:pointer;z-index:2;">↗</button>
+    <button onclick="event.stopPropagation();APP.flipSaveState('${t.id}')" style="position:absolute;right:14px;bottom:10px;background:${st==='been'?'var(--sage)':'#fff'};color:${st==='been'?'#fff':'var(--sage)'};border:1.5px solid var(--sage);border-radius:14px;padding:3px 9px;font-size:9.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;z-index:2;">${flipLabel}</button>
+  </div>`;
+}
+function renderSaved(){
+  const allSaved=THINGS.filter(t=>S.saved.has(t.id));
+  const tf=S.sv.typeFilter;
+  const inSelect=S.sv.selectMode;
+
+  let body=`<div class="hdr" style="padding-bottom:8px;">
+    <div class="lg"><div class="m">S</div><div><div class="nm">Saved</div><div class="tg">On your phone, no account</div></div></div>
+    ${allSaved.length?(inSelect
+      ?`<button class="icon-btn" onclick="APP.exitShareSelect()" style="font-size:13px;font-weight:700;color:var(--pacific);padding:5px 8px;">Done</button>`
+      :`<button class="icon-btn" onclick="APP.enterShareSelect()" style="font-size:13px;font-weight:700;color:var(--pacific);padding:5px 8px;">↗ Share</button>`):''}
+  </div>`;
+
+  if(!allSaved.length){
+    body+=`<div class="empty" style="margin-top:20px;">
+      <div style="font-size:28px;">🤍</div>
+      <div class="serif" style="font-size:17px;font-weight:600;color:#241C16;margin-top:10px;">Nothing saved yet</div>
+      <div style="margin-top:5px;">Tap the heart on anything to save it here — no account needed.</div>
+      <button class="bigbuy" style="margin-top:16px;" onclick="APP.go('home')">→ See today's picks</button>
+      <div style="margin-top:14px;font-size:11.5px;color:var(--sage);">Saved on another device? <button onclick="APP.emailRestore()" style="background:none;border:none;color:var(--pacific);font-weight:700;cursor:pointer;font-size:11.5px;text-decoration:underline;">Email me a link to restore →</button></div>
+    </div>`;
+    return body+'<div class="scroll-pad"></div>';
+  }
+
+  // ── SELECT MODE — choose items, then share (individually or several) ──────────
+  if(inSelect){
+    body+=`<div style="padding:0 18px 8px;font-size:12px;color:var(--sage);font-weight:600;">Tap to choose what to send — one or many.</div>`;
+    const list=nearMeSort(allSaved);
+    body+=list.map(svCardHTML).join('');
+    const n=S.sv.selected.size;
+    const allSel=n===allSaved.length;
+    body+=`<div style="position:sticky;bottom:0;background:linear-gradient(180deg,rgba(246,241,231,0),var(--plaster) 36%);padding:16px 18px 8px;display:grid;gap:8px;">
+      <button class="bigbuy" ${n?'':'disabled style="opacity:.5;cursor:default;"'} onclick="${n?'APP.shareSelected()':''}">🔗 Share ${n||''} ${n===1?'item':'items'} →</button>
+      <button class="secondary" onclick="APP.selectAllSaved()">${allSel?'Clear selection':'Select all'}</button>
+      <div style="text-align:center;font-size:10.5px;color:var(--sage);">Friends open a link, see your list, and can save their own copy. Sent via your share sheet — no account.</div>
+    </div>`;
+    return body+'<div class="scroll-pad"></div>';
+  }
+
+  // Want-to-go / Been state filter (Decision 7)
+  const wantCount=allSaved.filter(t=>(S.savedState[t.id]||'want')==='want').length;
+  const beenCount=allSaved.filter(t=>S.savedState[t.id]==='been').length;
+  const sf=S.sv.stateFilter||'want';
+  body+=`<div style="display:flex;gap:8px;padding:0 18px 10px;">
+    <button onclick="APP.setSavedState('want')" style="flex:1;padding:9px 0;border-radius:11px;border:1.5px solid ${sf==='want'?'var(--pacific)':'var(--line)'};background:${sf==='want'?'var(--pacific)':'#fff'};color:${sf==='want'?'#fff':'var(--ink2)'};font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Want to go${wantCount?' · '+wantCount:''}</button>
+    <button onclick="APP.setSavedState('been')" style="flex:1;padding:9px 0;border-radius:11px;border:1.5px solid ${sf==='been'?'var(--pacific)':'var(--line)'};background:${sf==='been'?'var(--pacific)':'#fff'};color:${sf==='been'?'#fff':'var(--ink2)'};font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Been${beenCount?' · '+beenCount:''}</button>
+  </div>`;
+  // Type filter chips + Near Me sort
+  const typeOpts=[
+    {id:'all',label:'All'},
+    {id:'events',label:'Events'},
+    {id:'places',label:'Places'},
+    {id:'happyhour',label:'Happy Hours'},
+  ];
+  body+=`<div style="display:flex;gap:7px;padding:0 18px 10px;overflow-x:auto;">
+    ${typeOpts.map(o=>`<button style="flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid ${tf===o.id?'var(--pacific)':'var(--line)'};background:${tf===o.id?'var(--pacific)':'#fff'};color:${tf===o.id?'#fff':'var(--ink2)'};font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;" onclick="APP.setSavedFilter('${o.id}')">${o.label}</button>`).join('')}
+  </div>`;
+  body+=`<div style="display:flex;gap:7px;padding:0 18px 12px;">${nearMeBtnHTML()}</div>`;
+
+  // Apply state filter (want/been) then type filter
+  const stateF = S.sv.stateFilter||'want';
+  const stateSaved = allSaved.filter(t=>(S.savedState[t.id]||'want')===stateF);
+  const filtered = tf==='all' ? stateSaved : stateSaved.filter(t=>savedTypeLabel(t)===tf);
+
+  if(!filtered.length){
+    const sLabel=(S.sv.stateFilter||'want')==='been'?'marked "been"':'in "want to go"';
+    body+=`<div class="empty">Nothing ${sLabel}${tf!=='all'?' under '+tf:''} yet.<br><br><button onclick="APP.setSavedFilter('all')" style="background:none;border:none;color:var(--pacific);font-weight:700;cursor:pointer;font-size:13px;">Show all →</button></div>`;
+    return body+'<div class="scroll-pad"></div>';
+  }
+
+  if(tf!=='all'||S.nearMe){
+    // Flat list (Near Me sort collapses the groups into one distance-ordered list)
+    if(S.nearMe) body+=`<div class="sv-group-hdr"><span class="sv-group-dot" style="background:var(--pacific);"></span>📍 Near ${S.nearbyAnchor==='Your location'?'you':S.nearbyAnchor} · closest first</div>`;
+    body+=nearMeSort(filtered).map(svCardHTML).join('');
+  } else {
+    // Auto-group by time relevance + type
+    const tonight=filtered.filter(t=>t.horizon==='today'&&t.type==='event');
+    const thisWeek=filtered.filter(t=>t.horizon==='week');
+    const hh=filtered.filter(t=>t.cat==='happyhour'&&t.horizon!=='today'&&t.horizon!=='week');
+    const places=filtered.filter(t=>
+      !tonight.includes(t)&&!thisWeek.includes(t)&&!hh.includes(t)
+    );
+
+    if(tonight.length){
+      body+=`<div class="sv-group-hdr"><span class="sv-group-dot" style="background:var(--tile);"></span>Tonight</div>`;
+      body+=tonight.map(svCardHTML).join('');
+    }
+    if(thisWeek.length){
+      body+=`<div class="sv-group-hdr"><span class="sv-group-dot" style="background:var(--gold);"></span>This Week</div>`;
+      body+=thisWeek.map(svCardHTML).join('');
+    }
+    if(hh.length){
+      body+=`<div class="sv-group-hdr"><span class="sv-group-dot" style="background:var(--pacific);"></span>Happy Hours</div>`;
+      body+=hh.map(svCardHTML).join('');
+    }
+    if(places.length){
+      body+=`<div class="sv-group-hdr"><span class="sv-group-dot" style="background:var(--sage);"></span>Places &amp; Experiences</div>`;
+      body+=places.map(svCardHTML).join('');
+    }
+  }
+
+  body+=`<div style="padding:16px 18px 0;display:grid;gap:10px;">
+    <button class="bigbuy" style="background:var(--pacific);" onclick="APP.enterShareSelect()">↗ Share my list →</button>
+    <div style="text-align:center;font-size:10.5px;color:var(--sage);margin-top:-3px;">Pick one or several — friends open the link &amp; can save their own copy. No account.</div>
+    <button class="secondary" onclick="APP.emailRestore()" style="font-size:12px;">📧 Back up my saves to an email link</button>
+    <div style="text-align:center;font-size:10.5px;color:var(--sage);margin-top:-3px;">The backup link restores your saves on any device.</div>
+  </div>`;
+  return body+'<div class="scroll-pad"></div>';
+}
+
+// ---- DISCOVER SB (v9: neighborhood + theme guides, each with live happenings) ----
+function guideHappeningCardHTML(t){
+  const label=t.type==='firstlook'?(t.flag||'New'):t.type==='event'?(t.time||'Event'):t.free?'Free':'Place';
+  const col=t.type==='firstlook'?'var(--gold)':t.type==='event'?'var(--tile)':t.free?'var(--sage)':'var(--pacific)';
+  const txt=(t.type==='firstlook')?'var(--ink)':'#fff';
+  return `<div class="lc" onclick="APP.openDetail('${t.id}')" style="margin:0 18px 9px;">
+    <div class="thumb" style="background:${t.img};"></div>
+    <div class="b">
+      <span class="tag" style="background:${col};color:${txt};">${label}</span>
+      <div class="nm">${t.title}</div>
+      <div class="bl">${t.blurb||t.venue}</div>
+      <div class="m">${t.venue}${t.price?' · '+t.price:''}</div>
+    </div>
+    ${heartBtn(t.id,false)}
+  </div>`;
+}
+function renderGuides(){
+  if(S.guide){
+    const g=GUIDES.find(x=>x.id===S.guide);
+    const happenings=guideMatches(g);
+    const eyebrow=g.kind==='neighborhood'?'Happening in '+g.title:'Happening · '+g.kicker;
+    return `<div class="hdr"><div class="lg"><button class="icon-btn" onclick="APP.closeGuide()" style="font-size:20px;">‹</button><div><div class="nm">Discover SB</div><div class="tg">${g.kind==='neighborhood'?'Neighborhood guide':'Theme guide'}</div></div></div></div>
+    <div class="guide-card" style="background:${g.img};margin:6px 18px 16px;min-height:160px;"><div class="ov"></div><div class="c"><div class="k">${g.kicker}</div><div class="t">${g.title}</div></div></div>
+    <p style="margin:0 18px 16px;font-size:14px;line-height:1.6;color:#4a4038;font-style:italic;">${g.intro}</p>
+    ${happenings.length?`<div class="sh" style="margin:4px 18px 8px;"><div class="k">📅 ${eyebrow}</div><div class="t">What's on right now</div></div>${nearMeSort(happenings).slice(0,6).map(guideHappeningCardHTML).join('')}`:`<div class="empty" style="margin:4px 18px 14px;">Nothing scheduled here just now — check the evergreen picks below.</div>`}
+    <div class="sh" style="margin:16px 18px 8px;"><div class="k">The local's loop</div><div class="t">How to do it</div></div>
+    ${g.stops.map((s,i)=>`<div class="stop"><div class="num">${i+1}</div><div class="sc"><div class="sn">${s[0]}</div><div class="sd">${s[1]}</div></div></div>`).join('')}
+    <div class="scroll-pad"></div>`;
+  }
+  const lensPersona=S.lens;
+  const hoods=GUIDES.filter(g=>g.kind==='neighborhood');
+  const themes=GUIDES.filter(g=>g.kind==='theme');
+  const card=(g,featured)=>`<div class="guide-card${featured?' featured':''}" style="background:${g.img};" onclick="APP.openGuide('${g.id}')">
+      <div class="ov"></div>
+      <div class="c">
+        ${featured?'<div class="feat-badge">✦ For you</div>':''}
+        <div class="k">${g.kicker}</div>
+        <div class="t">${g.title}</div>
+        <div class="d">${g.desc}</div>
+      </div>
+    </div>`;
+  return headerHTML('Discover SB','Curated by a local')
+    +`<div class="sh"><div class="k">By neighborhood</div><div class="t">Know the city block by block</div></div>`
+    +hoods.map(g=>card(g,false)).join('')
+    +`<div class="sh"><div class="k">By theme</div><div class="t">Ways to spend a day</div></div>`
+    +themes.map(g=>card(g,g.persona===lensPersona||(lensPersona==='all'&&g.id==='g3'))).join('')
+    +`<div style="margin:14px 18px 0;text-align:center;">
+        <button onclick="APP.go('submit')" style="background:none;border:1.5px solid var(--line);border-radius:22px;padding:10px 20px;font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;font-family:'Inter',sans-serif;">Something missing? Submit it →</button>
+      </div>`
+    +'<div class="scroll-pad"></div>';
+}
+
+// ---- SUBMIT ----
+function renderSubmit(){
+  return `<div class="hdr"><div class="lg"><button class="icon-btn" onclick="APP.go('home')" style="font-size:20px;">‹</button><div><div class="nm">Submit an event</div></div></div></div>
+  <div style="padding:6px 18px 0;">
+    <div class="sh" style="margin:6px 0 4px;"><div class="k">Got something happening?</div><div class="t">Tell us — we'll feature the best ones</div></div>
+    <p style="font-size:12.5px;color:#6a5f54;line-height:1.5;margin:8px 0 16px;">Hosting a pop-up, market, show, or community event? Add it here. The best submissions get featured in the weekend digest. Paste an Instagram caption and we'll pull out the details.</p>
+    ${['Event name','Where (venue or address)','When (date & time)','Price (or "Free")'].map(l=>`<div style="margin-bottom:11px;"><div style="font-size:10px;font-weight:700;color:#7E8B6B;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">${l}</div><div style="background:#fff;border:1.5px solid #D8CDB8;border-radius:11px;padding:11px 13px;font-size:12px;color:#9a8f80;">Tap to type…</div></div>`).join('')}
+    <button class="bigbuy" style="margin-top:8px;" onclick="APP.toastMsg('Submitted — thank you! We\\'ll review it ✓')">Submit event</button>
+    <div style="text-align:center;font-size:10px;color:#7E8B6B;font-weight:600;margin-top:9px;">Reviewed by a real local before it goes live</div>
+    <div class="scroll-pad"></div>
+  </div>`;
+}
+
+// ---- DETAIL ----
+function detailHTML(){
+  const t=THINGS.find(x=>x.id===S.detail); if(!t) return '';
+  const tags=(t.personas||[]).map(pid=>{const p=persona(pid);return `<span class="ptag" style="border:1.5px solid ${p.color};color:${p.color};">${p.icon} ${p.name}</span>`;}).join('');
+  const isPlace=t.type==='place'||t.type==='firstlook';
+  const isSaved=S.saved.has(t.id);
+  const buyLabel=t.buy==='AXS'?'Get tickets on AXS':t.buy==='Tickets'?'Get tickets':t.buy==='Visit'?'View on map':t.buy==='Directions'?'Get directions':'See details';
+  const handoffNote=(t.buy==='AXS'||t.buy==='Tickets')?`<div class="buynote">You'll finish on ${t.buy==='AXS'?'AXS':'the ticketing site'} — SB Daymaker never handles payment</div>`:'';
+  return `<div class="detail">
+    <div class="img" style="background:${t.img};">
+      <button class="d-back" onclick="APP.closeDetail()">‹</button>
+      <div class="d-acts">
+        <button id="hb_${t.id}" onclick="event.stopPropagation();APP.toggleSave('${t.id}')" style="font-size:18px;">${isSaved?'❤️':'🤍'}</button>
+        <button onclick="APP.toastMsg('Link copied ✓')">↗</button>
+      </div>
+      <div class="d-pick">✨ SB Daymaker pick</div>
+    </div>
+    <div class="d-body">
+      <div class="d-ttl">${t.title}</div>
+      <div class="d-tags"><span class="gf">Great for:</span>${tags||'<span class="gf">everyone</span>'}</div>
+      <div class="d-blurb">${t.long||t.blurb}</div>
+      <div class="facts-block">
+        <div class="fact"><div class="fi">📅</div><div><div class="fk">${isPlace?'Hours':'When'}</div><div class="fv">${t.time||'—'}</div></div></div>
+        <div class="fact"><div class="fi">📍</div><div style="flex:1;"><div class="fk">Where</div><div class="fv">${t.addr||t.venue}</div></div><span class="fd">Directions</span></div>
+        <div class="fact"><div class="fi">${isPlace?'💲':'🎟'}</div><div><div class="fk">${isPlace?'Price':'Tickets'}</div><div class="fv">${t.price}</div></div></div>
+      </div>
+      <button class="bigbuy" onclick="APP.toastMsg('Opening ${t.buy}…')">${buyLabel} ↗</button>
+      ${handoffNote}
+      <button class="secondary" id="saveBtn_${t.id}" onclick="APP.toggleSave('${t.id}');this.textContent=S.saved.has('${t.id}')?'✓ On your want-to-go list':'♡ Want to go';">${isSaved?'✓ On your want-to-go list':'♡ Want to go'}</button>
+    </div>
+  </div>`;
+}
+
+// ---- SHEETS (lens / filter / nearby anchor) ----
+function sheetHTML(){
+  if(S.sheet==='lens'){
+    return `<div class="scrim" onclick="APP.closeSheet()"></div><div class="sheet">
+      <div class="grab"></div><div class="sk">What are you up to?</div><div class="st">Pick an occasion</div>
+      ${PERSONAS.map(p=>`<div class="persona ${S.lens===p.id?'sel':''}" onclick="APP.setLens('${p.id}')"><div class="pic" style="background:${p.color};">${p.icon}</div><div><span class="pn">${p.name}</span><span class="pd">${p.desc}</span></div>${S.lens===p.id?'<span class="ck">✓</span>':''}</div>`).join('')}
+    </div>`;
+  }
+  if(S.sheet==='filter'){
+    const chips=LENS_CHIPS[S.lens]||LENS_CHIPS.all;
+    return `<div class="scrim" onclick="APP.closeSheet()"></div><div class="sheet">
+      <div class="grab"></div><div class="sk">Refine</div><div class="st">Filter the vibe</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">${chips.map(c=>`<button class="fchip ${S.filters.has(c)?'on':''}" style="font-size:13px;padding:9px 15px;" onclick="APP.toggleFilter('${c}')">${c}</button>`).join('')}</div>
+      <button class="bigbuy" style="margin-top:18px;background:#16586A;" onclick="APP.closeSheet()">Show results</button>
+    </div>`;
+  }
+  if(S.sheet==='anchor'){
+    const hoods=['Use my location 🧭','Funk Zone','Downtown / State St.','The Waterfront','Montecito','The Mesa','Goleta'];
+    return `<div class="scrim" onclick="APP.closeSheet()"></div><div class="sheet">
+      <div class="grab"></div><div class="sk">Where are you?</div><div class="st">Set your Nearby starting point</div>
+      ${hoods.map(h=>`<div class="persona ${ (S.nearbyAnchor||'Downtown / State St.')===h ?'sel':''}" onclick="APP.setNearbyAnchor('${h}')"><div class="pic" style="background:var(--pacific);">📍</div><div><span class="pn">${h}</span></div></div>`).join('')}
+    </div>`;
+  }
+  return '';
+}
+
+// ---- LENS BANNER ----
+function lensBannerHTML(){
+  const personasToShow=PERSONAS.filter(p=>p.id!=='all');
+  return `<div class="scrim-soft" onclick="APP.dismissLens()"></div>
+    <div class="lens-banner">
+      <button class="lb-close" onclick="APP.dismissLens()">✕</button>
+      <div class="lb-k">Welcome to SB Daymaker</div>
+      <div class="lb-t">What vibe are you looking for?</div>
+      <div class="lb-grid">
+        ${personasToShow.map(p=>`<div class="lb-p" onclick="APP.pickFirstRun('${p.id}')"><div class="pic" style="background:${p.color};">${p.icon}</div><div class="pn">${p.name}</div></div>`).join('')}
+      </div>
+      <div class="lb-skip" onclick="APP.dismissLens()">Just show me everything →</div>
+    </div>`;
+}
+
+// ---- NAV — 3 tabs (v9: Activity Explorer · Saved List · Discover SB) ----
+function navHTML(){
+  const items=[
+    ['home','🌅','Explore'],
+    ['saved','❤️','Saved'],
+    ['guides','🧭','Discover SB'],
+  ];
+  return items.map(([k,i,l])=>{
+    const on=(k===S.screen)||(k==='home'&&['submit'].includes(S.screen));
+    const badge=k==='saved'&&S.saved.size?`<span class="nav-badge">${S.saved.size}</span>`:'';
+    return `<button class="nav-btn ${on?'on':''}" onclick="APP.go('${k}')"><span class="i">${i}</span><span class="l">${l}</span>${badge}</button>`;
+  }).join('');
+}
+
+// ---- OVERLAY + RENDER ----
+function renderOverlay(){
+  let html='';
+  if(S.detail){html=detailHTML();$ov.classList.add('active');}
+  else if(S.sheet){html=sheetHTML();$ov.classList.add('active');}
+  else{$ov.classList.remove('active');}
+  if(S.toast) html+=`<div class="toast">${S.toast}</div>`;
+  $ov.innerHTML=html;
+  if(S.firstRun&&S.screen==='home'){
+    $lo.innerHTML=lensBannerHTML();$lo.style.pointerEvents='auto';
+  } else {
+    $lo.innerHTML='';$lo.style.pointerEvents='none';
+  }
+}
+
+function render(){
+  let main='';
+  if(S.screen==='home') main=renderHome();
+  else if(S.screen==='saved') main=renderSaved();
+  else if(S.screen==='guides') main=renderGuides();
+  else if(S.screen==='submit') main=renderSubmit();
+
+  $app.style.overflow='auto';
+  $app.innerHTML=main;
+  $app.scrollTop=0;
+  $nav.innerHTML=navHTML();
+  renderOverlay();
+
+  // Controls are always compact
+  $app.onscroll=null;
+}
+
+// ---- APP CONTROLLER ----
+const APP={
+  go(s){
+    S.screen=s;
+    if(s!=='guides') S.guide=null;
+    if(s!=='saved'){ S.sv.selectMode=false; S.sv.selected=new Set(); }
+    render();
+  },
+  setHorizon(h){S.horizon=h;render();},
+  setLens(id){S.lens=id;S.sheet=null;S.filters=new Set();render();},
+  openSheet(s){S.sheet=s;render();},
+  // ---- NEAR ME (v9: in-view sort for Explorer + Saved) ----
+  toggleNearMe(){ S.nearMe=true; S.sheet='anchor'; render(); },
+  clearNearMe(){ S.nearMe=false; render(); },
+  setNearbyAnchor(h){ S.nearbyAnchor = h==='Use my location 🧭' ? 'Your location' : h; S.nearMe=true; S.sheet=null; render(); },
+  closeSheet(){ S.sheet=null; render(); },
+  toggleFilter(f){if(S.filters.has(f))S.filters.delete(f);else S.filters.add(f);render();},
+  toggleSave(id){
+    const wasSaved=S.saved.has(id);
+    if(wasSaved){ S.saved.delete(id); delete S.savedState[id]; S.sv.selected.delete(id); }
+    else { S.saved.add(id); S.savedState[id]='want'; }
+    const btn=document.getElementById('hb_'+id);
+    if(btn){
+      btn.textContent=S.saved.has(id)?'❤️':'🤍';
+      btn.classList.remove('heart-pop');
+      void btn.offsetWidth;
+      if(!wasSaved) btn.classList.add('heart-pop');
+    }
+    if(!wasSaved){
+      const t=THINGS.find(x=>x.id===id);
+      this.toastMsg(S.saved.size===1?`❤️ Added to "want to go" — share your list anytime.`:`❤️ ${t?t.title:'Saved'} — want to go!`);
+    }
+    $nav.innerHTML=navHTML();
+    const pb=document.querySelector('.plan-banner');
+    if(pb) pb.outerHTML=planBannerHTML();
+    const saveBtn=document.getElementById('saveBtn_'+id);
+    if(saveBtn) saveBtn.textContent=S.saved.has(id)?'✓ On your want-to-go list':'♡ Want to go';
+  },
+  flipSaveState(id){
+    if(!S.saved.has(id)) return;
+    S.savedState[id]=S.savedState[id]==='been'?'want':'been';
+    render();
+  },
+  emailRestore(){ this.toastMsg('📧 Check your inbox — a link to restore your saves on any device.'); },
+  openDetail(id){S.detail=id;render();},
+  closeDetail(){S.detail=null;render();},
+  openGuide(id){S.guide=id;render();},
+  closeGuide(){S.guide=null;render();},
+  pickFirstRun(id){S.lens=id;S.firstRun=false;render();},
+  dismissLens(){S.firstRun=false;render();},
+  restart(){
+    S.firstRun=true;S.lens='all';S.screen='home';S.horizon='today';
+    S.saved=new Set();S.savedState={};S.filters=new Set();
+    S.nearMe=false;S.nearbyAnchor='Downtown / State St.';
+    S.sv={typeFilter:'all',stateFilter:'want',selectMode:false,selected:new Set()};
+    render();
+  },
+  setTod(t){S.tod=t;render();},
+  setWeather(w){S.weather=w;render();},
+  toastMsg(m){
+    S.toast=m;renderOverlay();
+    clearTimeout(this._t);
+    this._t=setTimeout(()=>{S.toast=null;renderOverlay();},2400);
+  },
+  // ---- SAVED LIST ACTIONS ----
+  setSavedFilter(f){S.sv.typeFilter=f;render();},
+  setSavedState(st){S.sv.stateFilter=st;render();},
+  // ---- ONE PERFECT SB DAY (v9: seeds saved list, then opens Saved to tweak & share) ----
+  perfectDay(){
+    const ids=['x2','p3','p1','p2'].filter(id=>THINGS.find(t=>t.id===id));
+    ids.forEach(id=>{S.saved.add(id); if(!S.savedState[id])S.savedState[id]='want';});
+    S.screen='saved';
+    this.toastMsg('🌅 One Perfect SB Day added to your saved list — tweak it, then share.');
+    render();
+  },
+  // ---- SHARE THE SAVED LIST (individually or several) ----
+  enterShareSelect(){ S.sv.selectMode=true; S.sv.selected=new Set(); S.screen='saved'; render(); },
+  exitShareSelect(){ S.sv.selectMode=false; S.sv.selected=new Set(); render(); },
+  toggleShareSelect(id){ if(S.sv.selected.has(id)) S.sv.selected.delete(id); else S.sv.selected.add(id); render(); },
+  selectAllSaved(){
+    const all=THINGS.filter(t=>S.saved.has(t.id)).map(t=>t.id);
+    if(S.sv.selected.size===all.length) S.sv.selected=new Set();
+    else S.sv.selected=new Set(all);
+    render();
+  },
+  shareSelected(){
+    const n=S.sv.selected.size; if(!n) return;
+    S.sv.selectMode=false; S.sv.selected=new Set();
+    render();
+    this.toastMsg(`🔗 List link ready (${n} ${n===1?'spot':'spots'}) — pick how to send it (Messages, WhatsApp, email…).`);
+  },
+  shareSingle(id){
+    const t=THINGS.find(x=>x.id===id);
+    this.toastMsg(`🔗 Link to "${t?t.title:'this spot'}" ready — pick how to send it.`);
+  },
+};
+
+document.querySelectorAll('#todSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#todSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');APP.setTod(b.dataset.tod);
+});
+document.querySelectorAll('#wxSeg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#wxSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');APP.setWeather(b.dataset.wx);
+});
+
+render();
+</script>
+</body>
+</html>

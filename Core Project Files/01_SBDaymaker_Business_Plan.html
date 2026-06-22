@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Business Plan (v3)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tileLt:#E08A5B;
+    --gold:#E0A82E; --sage:#7E8B6B; --line:#D8CDB8; --paper:#FCFAF5;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--plaster); color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif; line-height:1.6; font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Fraunces',Georgia,serif;}
+
+  /* ---- Cover ---- */
+  .cover{
+    position:relative; overflow:hidden;
+    background:linear-gradient(165deg,#1b4a5a 0%,#2c6b78 42%,#d98a4a 88%,#e0a82e 110%);
+    color:#fff; padding:90px 56px 70px;
+  }
+  .cover .sun{position:absolute; top:60px; right:80px; width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle,#FFF3D0 0%,var(--gold) 60%,rgba(224,168,46,0) 72%);
+    box-shadow:0 0 100px 36px rgba(224,168,46,.55);}
+  .cover svg.range{position:absolute; bottom:0; left:0; width:100%; height:130px; opacity:.9;}
+  .cover .eyebrow{position:relative; z-index:2; font-size:12px; font-weight:700; letter-spacing:3px; text-transform:uppercase; opacity:.92;}
+  .cover h1{position:relative; z-index:2; font-size:64px; font-weight:900; line-height:.98; letter-spacing:-1.5px; margin:14px 0 0; text-shadow:0 3px 24px rgba(0,0,0,.3);}
+  .cover .sub{position:relative; z-index:2; font-size:19px; font-weight:500; margin-top:18px; max-width:560px; opacity:.95;}
+  .cover .meta{position:relative; z-index:2; margin-top:34px; display:flex; gap:28px; font-size:13px; font-weight:600; flex-wrap:wrap;}
+  .cover .meta span{display:flex; align-items:center; gap:7px; background:rgba(255,255,255,.16); padding:8px 14px; border-radius:22px; backdrop-filter:blur(6px);}
+
+  /* ---- Layout ---- */
+  .wrap{max-width:980px; margin:0 auto; padding:0 32px;}
+  section{padding:54px 0; border-bottom:1px solid var(--line);}
+  section:last-child{border-bottom:none;}
+  .kicker{font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:var(--tile); margin-bottom:10px;}
+  h2.sec{font-family:'Fraunces',serif; font-size:38px; font-weight:600; letter-spacing:-.8px; line-height:1.05; margin:0 0 8px;}
+  h3{font-family:'Fraunces',serif; font-size:23px; font-weight:600; letter-spacing:-.3px; margin:34px 0 12px; color:var(--pacificDk);}
+  h4{font-size:15px; font-weight:700; margin:22px 0 8px; color:var(--ink);}
+  p{margin:0 0 14px; color:var(--ink2);}
+  .lead{font-size:18.5px; color:var(--ink); line-height:1.6;}
+  a{color:var(--pacific);}
+  strong{color:var(--ink); font-weight:700;}
+
+  /* ---- TOC ---- */
+  .toc{background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:26px 30px; margin-top:8px;}
+  .toc ol{margin:0; padding-left:0; counter-reset:toc; list-style:none;}
+  .toc li{counter-increment:toc; padding:9px 0; border-bottom:1px dashed var(--line); display:flex; align-items:baseline; gap:14px;}
+  .toc li:last-child{border-bottom:none;}
+  .toc li::before{content:counter(toc,decimal-leading-zero); font-family:'Fraunces',serif; font-weight:600; color:var(--tile); font-size:15px; min-width:26px;}
+  .toc a{text-decoration:none; font-weight:600; color:var(--ink);}
+  .toc .desc{color:var(--sage); font-weight:500; font-size:13.5px; margin-left:auto; text-align:right;}
+
+  /* ---- Cards ---- */
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:24px 26px; margin:16px 0;}
+  .card.tealtint{background:linear-gradient(135deg,rgba(22,88,106,.06),rgba(22,88,106,.02)); border-color:rgba(22,88,106,.2);}
+  .card.goldtint{background:linear-gradient(135deg,rgba(224,168,46,.1),rgba(224,168,46,.03)); border-color:rgba(224,168,46,.35);}
+  .card.tiletint{background:linear-gradient(135deg,rgba(192,83,46,.07),rgba(192,83,46,.02)); border-color:rgba(192,83,46,.25);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr;} .cover{padding:60px 28px 50px;} .cover h1{font-size:44px;} .wrap{padding:0 20px;}}
+
+  /* ---- Stat tiles ---- */
+  .stat{background:var(--pacific); color:#fff; border-radius:16px; padding:22px 22px; position:relative; overflow:hidden;}
+  .stat .big{font-family:'Fraunces',serif; font-size:42px; font-weight:600; line-height:1; letter-spacing:-1px;}
+  .stat .lbl{font-size:12.5px; font-weight:600; opacity:.85; margin-top:6px; text-transform:uppercase; letter-spacing:.5px;}
+  .stat.gold{background:var(--gold); color:var(--ink);}
+  .stat.tile{background:var(--tile);}
+  .stat.dark{background:var(--pacificDk);}
+
+  /* ---- Tables ---- */
+  table{width:100%; border-collapse:collapse; margin:16px 0; font-size:14.5px; background:var(--paper); border-radius:12px; overflow:hidden; border:1px solid var(--line);}
+  th{background:var(--pacificDk); color:#fff; text-align:left; padding:12px 14px; font-weight:600; font-size:12.5px; text-transform:uppercase; letter-spacing:.5px;}
+  td{padding:11px 14px; border-top:1px solid var(--line); color:var(--ink2);}
+  tr:nth-child(even) td{background:rgba(216,205,184,.14);}
+  td strong{color:var(--ink);}
+  .num{font-variant-numeric:tabular-nums; text-align:right;}
+
+  /* ---- Pills / tags ---- */
+  .mono{font-family:'JetBrains Mono','SF Mono',ui-monospace,monospace; font-size:12.5px; background:var(--plaster2); padding:1px 6px; border-radius:5px;}
+  .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:5px 11px; border-radius:20px; background:var(--plaster2); color:var(--ink2); margin:2px;}
+  .pill.green{background:rgba(126,139,107,.2); color:#4a5a3a;}
+  .pill.gold{background:rgba(224,168,46,.22); color:#8a6310;}
+  .pill.tile{background:rgba(192,83,46,.16); color:#9a3a1e;}
+
+  /* ---- Callout ---- */
+  .callout{border-left:4px solid var(--gold); background:var(--plaster2); padding:16px 20px; border-radius:0 12px 12px 0; margin:18px 0;}
+  .callout.tile{border-left-color:var(--tile);}
+  .callout.pac{border-left-color:var(--pacific);}
+  .callout .ctitle{font-weight:700; color:var(--ink); margin-bottom:4px; font-size:14px;}
+
+  ul.clean,ol.clean{margin:10px 0 16px; padding-left:0; list-style:none;}
+  ul.clean li,ol.clean li{position:relative; padding:6px 0 6px 28px; color:var(--ink2);}
+  ul.clean li::before{content:""; position:absolute; left:6px; top:14px; width:7px; height:7px; border-radius:2px; background:var(--tile); transform:rotate(45deg);}
+  ol.clean{counter-reset:c;}
+  ol.clean li{counter-increment:c;}
+  ol.clean li::before{content:counter(c); position:absolute; left:0; top:6px; width:20px; height:20px; background:var(--pacific); color:#fff; border-radius:6px; font-size:11px; font-weight:700; display:grid; place-items:center; transform:none;}
+
+  .phase-label{display:inline-block; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:6px; margin-bottom:8px;}
+
+  /* chart helpers */
+  .chartwrap{background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:24px; margin:18px 0;}
+  .chartwrap .ctitle{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .chartwrap .csub{font-size:12.5px; color:var(--sage); margin-bottom:16px;}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; font-size:12.5px; font-weight:600;}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .dot{width:11px; height:11px; border-radius:3px;}
+
+  .footer{padding:40px 32px 60px; text-align:center; color:var(--sage); font-size:13px;}
+  .disc{font-style:italic; font-size:13px; color:var(--sage); margin-top:8px;}
+</style>
+</head>
+<body>
+<div style="background:#C0532E;color:#FCFAF5;font:600 13px/1.45 system-ui,-apple-system,sans-serif;padding:10px 16px;text-align:center;">Status: v9 canon · 2026-06-21 · Reconciled to the v9 three-section cut (Explore · Saved · Discover SB): the personal layer is now save + share (the My Plan builder retired), and Near Me is an in-view sort (full Mapbox map → Phase 2). <strong>The wireframe (02b) is authoritative for current UI.</strong></div>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div class="sun"></div>
+  <svg class="range" viewBox="0 0 1200 130" preserveAspectRatio="none">
+    <path d="M0,130 L0,72 Q120,32 260,56 T520,42 Q660,18 820,54 T1080,40 L1200,62 L1200,130 Z" fill="#0E3C49" opacity="0.5"/>
+    <path d="M0,130 L0,94 Q160,64 340,82 T700,72 Q900,54 1040,84 L1200,76 L1200,130 Z" fill="#0E3C49" opacity="0.8"/>
+  </svg>
+  <div class="eyebrow">Business Plan &middot; Confidential Working Document</div>
+  <h1 class="serif">SB&nbsp;Daymaker</h1>
+  <div class="sub">A daily companion for living well in Santa Barbara — the happenings-first guide to what's worth doing, today and every day.</div>
+  <div class="meta">
+    <span>📍 Santa Barbara, CA</span>
+    <span>📄 Document 1 — Business Plan v3</span>
+    <span>🗓️ Happenings-first</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ================= TOC ================= -->
+<section id="toc">
+  <div class="kicker">Contents</div>
+  <h2 class="sec">What's in this plan</h2>
+  <div class="toc">
+    <ol>
+      <li><a href="#exec">Executive summary</a><span class="desc">The one-page thesis</span></li>
+      <li><a href="#product">Product overview</a><span class="desc">What SB Daymaker is</span></li>
+      <li><a href="#value">Value proposition</a><span class="desc">Why it wins</span></li>
+      <li><a href="#market">Market &amp; competition</a><span class="desc">The whitespace</span></li>
+      <li><a href="#gtm">Go-to-market strategy</a><span class="desc">How the world finds it</span></li>
+      <li><a href="#growth">User growth plan</a><span class="desc">The adoption curve</span></li>
+      <li><a href="#cost">Cost over time</a><span class="desc">What it takes to run</span></li>
+      <li><a href="#money">Monetization paths</a><span class="desc">How it earns</span></li>
+      <li><a href="#projection">Revenue projections</a><span class="desc">The money model</span></li>
+      <li><a href="#risks">Risks &amp; considerations</a><span class="desc">Eyes open</span></li>
+      <li><a href="#roadmap">Phased roadmap</a><span class="desc">Sequence of play</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= EXEC SUMMARY ================= -->
+<section id="exec">
+  <div class="kicker">01 — Executive Summary</div>
+  <h2 class="sec">The thesis on one page</h2>
+  <p class="lead">SB Daymaker is a mobile-first daily companion for Santa Barbara. It answers a single human question — <em>"what's worth doing in Santa Barbara today?"</em> — and it answers it with the warmth and judgment of a knowing local friend rather than the cold completeness of a calendar.</p>
+
+  <div class="grid2" style="margin-top:24px;">
+    <div class="card tealtint">
+      <h4 style="margin-top:0;">The gap it fills</h4>
+      <p style="margin-bottom:0;">Every existing Santa Barbara resource is either a <strong>static calendar</strong> (Visit SB, DowntownSB, the city) or a <strong>weekly publication</strong> (the Independent, Edible SB). None is a daily-ritual app with personalization, a personal save layer, and a curated point of view. The national product that proves this model — DoStuff — <strong>deliberately avoids personalization and isn't in Santa Barbara.</strong></p>
+    </div>
+    <div class="card goldtint">
+      <h4 style="margin-top:0;">The wedge</h4>
+      <p style="margin-bottom:0;">A <strong>happenings-first</strong> guide whose spine is <em>what's actually happening</em> around town — ranked in a three-tier cascade (discrete dated → recurring rhythms → evergreen reasons-to-go). It can't out-list Yelp/Google on "what exists," so it wins the lane they can't: <strong>compiling what's on.</strong> The Tier-3 evergreen floor solves the "empty on a quiet Tuesday" risk — <strong>SB is always there, even when the calendar is thin.</strong></p>
+    </div>
+  </div>
+
+  <h3>Who it's for</h3>
+  <p>Both <strong>residents</strong> settling into the rhythm of the city and <strong>visitors</strong> trying to live it like a local — served by one unified experience. The audience is a barbell: affluent retirees, the large 25–54 professional/family middle, ~26k UCSB students next door, a ~36% Latino community, and ~6.5M mostly-Californian visitors (~64% day-trippers). Occasion tags let each person tune the app to what they're up to.</p>
+
+  <h3>The shape of the business</h3>
+  <div class="grid3">
+    <div class="stat"><div class="big">~$45</div><div class="lbl">Monthly platform cost (before photos)</div></div>
+    <div class="stat gold"><div class="big">Solo</div><div class="lbl">Founder-operable with AI leverage</div></div>
+    <div class="stat tile"><div class="big">2-sided</div><div class="lbl">Consumer app + admin cockpit</div></div>
+  </div>
+  <p style="margin-top:18px;">SB Daymaker is designed to be <strong>run by one person</strong>. An AI editorial engine drafts content (event blurbs, daily picks, persona tags) and the founder approves it through a private admin cockpit in ~15 minutes a day. The business can sustain as a beloved hobby at near-zero cost, or scale into local-sponsorship revenue — the architecture supports both without a rebuild.</p>
+
+  <div class="callout pac">
+    <div class="ctitle">The single most important strategic insight</div>
+    The defensible lane in local discovery isn't out-listing the directories — it's <em>compiling what's actually happening</em> with editorial judgment, then turning it into the user's day. DoStuff proves the curated-not-algorithmic model (and the email-led retention engine) across its markets; it isn't in SB. SB Daymaker owns that vacant territory with a happenings-first cascade plus the personal save/plan layer no calendar offers. Curated personalization (occasion tags) is how you tune it — a strong supporting feature, not the headline.
+  </div>
+</section>
+
+<!-- ================= PRODUCT OVERVIEW ================= -->
+<section id="product">
+  <div class="kicker">02 — Product Overview</div>
+  <h2 class="sec">What SB Daymaker actually is</h2>
+  <p class="lead">A daily-ritual mobile web app you open like you check the weather — it tells you what Santa Barbara is about today, tuned to who you are and what the day holds.</p>
+
+  <h3>The core experience</h3>
+  <div class="grid2">
+    <div class="card">
+      <span class="pill tile">The ritual</span>
+      <h4>SB Daymaker — the hero</h4>
+      <p style="margin-bottom:0;">A living golden-hour hero in two layers: a <strong>sky strip</strong> showing the date and live conditions (weather, surf, sunset) with the sun tracking the real time of day, and a <strong>living editorial pick card</strong> that surfaces from the mountain silhouette — title, venue, time, and a direct CTA. Context-aware copy ("✨ Tonight's pick," "☁️ Gray day move") reacts to time and weather. Auto-drafted each morning, founder-approved. Never blank.</p>
+    </div>
+    <div class="card">
+      <span class="pill gold">Supporting feature</span>
+      <h4>Occasion tags (the Lens)</h4>
+      <p style="margin-bottom:0;">A friendly "what are you up to?" control that filters the app across ten occasion tags: Date Night, Family Day, Nightlife/After Dark, Catch a Show, Arts &amp; Culture, Outdoors &amp; Active, Wine &amp; Food, Free in SB, Hosting Visitors, Solo. The tag sets <em>what</em>; the cascade sets <em>order</em>.</p>
+    </div>
+    <div class="card">
+      <span class="pill green">The horizons</span>
+      <h4>Today / This Week / This Month</h4>
+      <p style="margin-bottom:0;">Three time horizons, each with its own treatment: today's singular ritual, the week's planning rail, the month's big-rocks view for aspirational planning.</p>
+    </div>
+    <div class="card">
+      <span class="pill">The moat</span>
+      <h4>The personal layer</h4>
+      <p style="margin-bottom:0;">Save anything (on-device, two-state "want to go"/"been," no account), then <strong>share</strong> — pick one item or a multi-select batch and SB Daymaker generates a <strong>real view-only link</strong> anyone can open and copy to their own saved list. A passwordless magic-link restores saves on a new device. The Saved list carries a <strong>Near Me</strong> sort, and <strong>One Perfect SB Day</strong> seeds it with a ready-made day.</p>
+    </div>
+  </div>
+
+  <h3>The content pillars</h3>
+  <p>Everything is a "thing" classified by a <strong>happening tier</strong> that drives the cascade:</p>
+  <ul class="clean">
+    <li><strong>Tier 1 — discrete dated happenings</strong> (this show, festival, gathering). The lead; owns the hero. Sourced from Ticketmaster + venue/civic feeds; ticketing hands off to AXS/TM (SB Daymaker never transacts).</li>
+    <li><strong>Tier 2 — recurring rhythms</strong> (Wednesday wine night, First Thursday art walk, the standing market). Predictable reasons to come back, including happy hours.</li>
+    <li><strong>Tier 3 — evergreen, activity-framed reasons-to-go</strong> (dog beach, sunset hike, the bakery crawl). The anti-empty floor — the city is never empty; <em>no bare listings</em>, every place serves a reason to go.</li>
+    <li><strong>First Looks + New This Week</strong> — new openings and a visible-freshness surface that also feeds the 2×/week email; the weekly-check habit.</li>
+    <li><strong>Curated city guides (Discover SB)</strong> — two groups: <em>neighborhood</em> guides (Funk Zone, Downtown &amp; State St., the Waterfront, Montecito, the Mesa) and <em>theme</em> guides (A Perfect Funk Zone Afternoon, Free Santa Barbara, First-Timer's SB, SB with Kids, Rainy Day in SB) — each surfacing the live happenings scoped to it.</li>
+  </ul>
+
+  <h3>The two sides of the product</h3>
+  <div class="card tealtint">
+    <p style="margin-bottom:0;">SB Daymaker is a <strong>two-sided build</strong>. The <strong>consumer app</strong> is what the public sees. The <strong>admin cockpit</strong> is the founder's private dashboard — six surfaces (Daily Approval, Content Review, Staleness board, First Looks composer, Evergreen place manager, Guides editor) that make the whole thing maintainable in minutes a day. The app cannot run without the cockpit; they are co-equal MVP deliverables.</p>
+  </div>
+</section>
+
+<!-- ================= VALUE PROP ================= -->
+<section id="value">
+  <div class="kicker">03 — Value Proposition</div>
+  <h2 class="sec">Why it wins</h2>
+
+  <h3>For the user</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4 style="margin-top:0;">A knowing friend, not a database</h4>
+      <p style="margin-bottom:0;">Existing tools make you scan and decide. SB Daymaker decides <em>with</em> you — curated, opinionated, warm. It removes the work of figuring out what's good.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">Made for this moment</h4>
+      <p style="margin-bottom:0;">Occasion tags + weather-reactivity + time horizons mean the app feels tuned to <em>you, today</em> — a rainy Tuesday with the kids surfaces something completely different from a clear Friday date night.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">From discovery to done</h4>
+      <p style="margin-bottom:0;">Save → share. The Saved list makes it effortless to keep your picks and hand them off: a <em>real view-only link</em> companions can open and copy to their own list. No other SB tool closes the loop from "what's happening" to "it's saved and shared."</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">Zero friction</h4>
+      <p style="margin-bottom:0;">No account, no email wall, no login. On-device save, with a passwordless magic-link to restore on a new device — sync without becoming a sign-up gate. Designed for an audience that won't tolerate friction, accessible by default (WCAG 2.2 AA).</p>
+    </div>
+  </div>
+
+  <h3>The defensibility — why this is hard to copy</h3>
+  <table>
+    <tr><th>Moat</th><th>Why it holds</th></tr>
+    <tr><td><strong>The happenings compilation</strong></td><td>Surfacing <em>what's actually happening</em> (the three-tier cascade) is the lane the directories structurally don't occupy — Yelp/Google list what exists; SB Daymaker compiles what's on. This is the spine.</td></tr>
+    <tr><td><strong>Editorial voice + curation</strong></td><td>A consistent, local, knowing point of view applied at scale via the AI-drafts-you-approve engine. Incumbents are institutions with no editorial layer.</td></tr>
+    <tr><td><strong>The evergreen floor</strong></td><td>A hand-curated Tier-3 core keeps the app full even when the calendar is thin — the founder's taste, not a scrape. Insurance for the spine, not a competing moat.</td></tr>
+    <tr><td><strong>The personal layer</strong></td><td>On-device two-state save + a view-only saved-list share link is unique in SB and structurally absent from every local incumbent — the half no calendar offers.</td></tr>
+    <tr><td><strong>Local focus</strong></td><td>A mile deep in one city. National players (DoStuff) are a mile wide and would not bother entering a market SB's size.</td></tr>
+  </table>
+  <p style="font-size:13.5px;color:var(--ink2);">Supporting advantages: the submission engine (organizers post <em>to</em> SB Daymaker), the public trust promise (the ranker never reads sponsor status — now said out loud), and curated personalization via occasion tags (a supporting feature, not the headline).</p>
+</section>
+
+<!-- ================= MARKET ================= -->
+<section id="market">
+  <div class="kicker">04 — Market &amp; Competition</div>
+  <h2 class="sec">The landscape and the gap</h2>
+  <p class="lead">The competitive map has a clean pattern: <strong>the directories (Yelp, Google, TripAdvisor) list what exists but compile nothing; the local calendars list events but aren't curated daily-ritual apps; the products with real voice aren't in SB as an app.</strong> Nobody compiles <em>what's happening</em> in SB with judgment, a personal layer, and a daily ritual. That's the square.</p>
+
+  <h3>Direct local comparables</h3>
+  <table>
+    <tr><th>Player</th><th>What it is</th><th>What it lacks</th></tr>
+    <tr><td><strong>SB Independent</strong></td><td>The closest local competitor — extensive event calendar, real editorial authority, reaches 100k+ readers weekly</td><td>A newspaper site, not a daily app; no personal layer, no Lens, no live data</td></tr>
+    <tr><td><strong>Edible SB / SB Sentinel</strong></td><td>Weekly curated "this week in SB" newsletters with warmth</td><td>Email-only, food/wine-skewed, no app, no personalization, no map</td></tr>
+    <tr><td><strong>Visit SB / DowntownSB</strong></td><td>Official tourism + district calendars, comprehensive listings</td><td>Zero curation, zero personalization — databases with a calendar</td></tr>
+    <tr><td><strong>Patch SB</strong></td><td>Daily-briefing model, structurally close to daily-ritual</td><td>Civic-news-first, national-chain templated, events an afterthought</td></tr>
+  </table>
+
+  <h3>National conceptual comparables</h3>
+  <table>
+    <tr><th>Player</th><th>What it validates</th><th>The gap it leaves</th></tr>
+    <tr><td><strong>DoStuff (Do512, DoLA…)</strong></td><td>The whole model — human-curated ranked daily stack, <strong>email-led retention</strong>, cards→detail→buy, map, in 20+ cities</td><td>Not in SB; no on-device personal layer; deliberately no personalization. Validates email as the retention engine (which SB Daymaker now makes first-class)</td></tr>
+    <tr><td><strong>Bucket Listers</strong></td><td>Curated local experiences, pop-ups, 20M+ social reach</td><td>Big-metro, commerce/booking-driven; transacts tickets (we don't)</td></tr>
+    <tr><td><strong>What's Hot</strong></td><td>Editorial discovery + "First Looks" of new restaurants; day/weekend/month framing</td><td>India-only; validates our horizons + First Looks instincts</td></tr>
+  </table>
+
+  <div class="callout tile">
+    <div class="ctitle">Strategic read</div>
+    DoStuff is the real benchmark <em>and</em> the real (distant) risk — but it would not enter a market SB's size, and its email-led playbook is one SB Daymaker now adopts. The Independent is the most likely local competitor-or-partner: long term, either who we compete with for the "what's happening" habit, or who we license/partner with.
+  </div>
+</section>
+
+<!-- ================= GTM ================= -->
+<section id="gtm">
+  <div class="kicker">05 — Go-to-Market Strategy</div>
+  <h2 class="sec">How the world finds SB Daymaker</h2>
+  <p class="lead">A daily-ritual local product grows through <strong>habit and word-of-mouth</strong>, not paid acquisition. The strategy is to be so genuinely useful and shareable that locals do the marketing.</p>
+
+  <h3>The growth engine, in order of leverage</h3>
+  <div class="card">
+    <h4 style="margin-top:0;">1 &middot; The email edition (the proven retention engine)</h4>
+    <p style="margin-bottom:0;">In local discovery, the owned email edition is the single biggest driver of recurring use (6AM City: ~1M+ subscribers, ~45–50% open; DoStuff is email-led). SB Daymaker makes it <strong>first-class, sending 2×/week</strong> — a midweek "what's on / tonight" edition + a weekend digest, covering both what's new and what's coming up — assembled from already-approved content, founder auto-sends with veto. Never a wall. This is the heartbeat that brings residents back.</p>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0;">2 &middot; Shareable artifacts (the organic core)</h4>
+    <p style="margin-bottom:0;">The daily hero is screenshot-and-send beautiful, and <strong>First Looks</strong> — "did you know [new spot] just opened?" — is inherently shareable local news. The biggest new lever: finishing a plan produces a <strong>real plan view-link</strong> anyone can open to see the plan and save their own copy to tweak — delivered via the native share sheet. Trip planning is social (couples, families, residents hosting visitors), so every shared plan is both a trusted impression <em>and</em> a growth channel.</p>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0;">3 &middot; SEO via evergreen guides</h4>
+    <p style="margin-bottom:0;">The five flagship city guides ("Free Santa Barbara," "First-Timer's SB") target high-intent search queries visitors and locals actually type. Evergreen content compounds — write once, rank for years. This is the inbound discovery channel.</p>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0;">4 &middot; Local seeding &amp; community presence</h4>
+    <p style="margin-bottom:0;">Seed the app in the places SB locals already gather: neighborhood groups, the farmers market, local subreddits and Facebook groups, library and community boards. A genuinely useful local tool spreads through local networks if introduced authentically.</p>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0;">5 &middot; Business relationships (compounding flywheel)</h4>
+    <p style="margin-bottom:0;">As First Looks features new openings, businesses notice. Featured businesses share their feature to <em>their</em> audiences — extending reach — and become the foundation of the future operator-photo and sponsorship programs. The content <em>is</em> the business development.</p>
+  </div>
+  <div class="card">
+    <h4 style="margin-top:0;">6 &middot; The submission engine (sourcing &amp; growth in one)</h4>
+    <p style="margin-bottom:0;">Public "submit your event" and "claim your business" forms turn organizers and venues into both the sourcing engine <em>and</em> a growth channel — every organizer who submits has an incentive to share their listing to their own audience. It flips content from "chased" to "comes to you," captures the grassroots/social-first events that have no API, and seeds the operator relationships that later power photos and sponsorship. The official SB tourism site already proves locals will use a submission form.</p>
+  </div>
+
+  <h3>Positioning &amp; voice</h3>
+  <p>The positioning line: <strong>"Find what's worth doing in Santa Barbara today — find it, save it, share it."</strong> It names the happenings (what's worth doing), foregrounds the personal layer (save it, share it — the half no competitor offers), and keeps the daily ritual ("today"). The brand voice is the knowing local friend: warm, specific, never breathless, never corporate. The "we can't be bought" trust promise is stated publicly.</p>
+
+  <h3>What we deliberately don't do</h3>
+  <ul class="clean">
+    <li><strong>No paid ads at launch</strong> — wrong economics for a hobby-scale daily app; word-of-mouth is the channel.</li>
+    <li><strong>No multi-city expansion</strong> — depth in one place is the entire edge.</li>
+    <li><strong>No email-list building gate</strong> — email is first-class and 2×/week, but always a single opt-in field, never a wall.</li>
+  </ul>
+</section>
+
+<!-- ================= GROWTH ================= -->
+<section id="growth">
+  <div class="kicker">06 — User Growth Plan</div>
+  <h2 class="sec">The adoption curve</h2>
+  <p class="lead">Modeled as a patient, organic climb — realistic for a solo-run, word-of-mouth local product. These are planning illustrations, not forecasts.</p>
+
+  <div class="chartwrap">
+    <div class="ctitle">Weekly active users — illustrative trajectory</div>
+    <div class="csub">A conservative organic curve across the first ~30 months, in three phases</div>
+    <svg viewBox="0 0 720 300" width="100%" preserveAspectRatio="xMidYMid meet" font-family="Inter,sans-serif">
+      <!-- axes -->
+      <line x1="56" y1="250" x2="700" y2="250" stroke="#D8CDB8" stroke-width="1.5"/>
+      <line x1="56" y1="40" x2="56" y2="250" stroke="#D8CDB8" stroke-width="1.5"/>
+      <!-- y labels -->
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="48" y="254" text-anchor="end">0</text>
+        <text x="48" y="200" text-anchor="end">250</text>
+        <text x="48" y="148" text-anchor="end">500</text>
+        <text x="48" y="96" text-anchor="end">750</text>
+        <text x="48" y="50" text-anchor="end">1,000</text>
+      </g>
+      <!-- gridlines -->
+      <g stroke="#EFE7D8" stroke-width="1">
+        <line x1="56" y1="200" x2="700" y2="200"/>
+        <line x1="56" y1="148" x2="700" y2="148"/>
+        <line x1="56" y1="96" x2="700" y2="96"/>
+      </g>
+      <!-- phase shading -->
+      <rect x="56" y="40" width="180" height="210" fill="rgba(126,139,107,.07)"/>
+      <rect x="236" y="40" width="234" height="210" fill="rgba(224,168,46,.08)"/>
+      <rect x="470" y="40" width="230" height="210" fill="rgba(192,83,46,.07)"/>
+      <!-- curve: months 0..30 -> approx users -->
+      <polyline fill="none" stroke="#16586A" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
+        points="56,248 100,244 144,238 192,228 236,214 290,192 340,168 390,142 440,116 470,102 530,86 590,72 650,60 700,52"/>
+      <!-- area under -->
+      <polyline fill="rgba(22,88,106,.08)" stroke="none"
+        points="56,248 100,244 144,238 192,228 236,214 290,192 340,168 390,142 440,116 470,102 530,86 590,72 650,60 700,52 700,250 56,250"/>
+      <!-- milestone dots -->
+      <circle cx="236" cy="214" r="5" fill="#7E8B6B"/><text x="236" y="234" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~100</text>
+      <circle cx="470" cy="102" r="5" fill="#E0A82E"/><text x="470" y="92" text-anchor="middle" font-size="10.5" font-weight="700" fill="#8a6310">~500</text>
+      <circle cx="700" cy="52" r="5" fill="#C0532E"/><text x="690" y="42" text-anchor="end" font-size="10.5" font-weight="700" fill="#9a3a1e">~1,000</text>
+      <!-- x labels -->
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="56" y="270" text-anchor="middle">Launch</text>
+        <text x="236" y="270" text-anchor="middle">~Mo 6</text>
+        <text x="470" y="270" text-anchor="middle">~Mo 16</text>
+        <text x="700" y="270" text-anchor="middle">~Mo 30</text>
+      </g>
+    </svg>
+    <div class="legend">
+      <span><span class="dot" style="background:#7E8B6B;"></span> Phase 1 · Seed &amp; prove (0–100)</span>
+      <span><span class="dot" style="background:#E0A82E;"></span> Phase 2 · Habit &amp; word-of-mouth (100–500)</span>
+      <span><span class="dot" style="background:#C0532E;"></span> Phase 3 · Local institution (500–1,000+)</span>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <span class="phase-label" style="background:rgba(126,139,107,.2); color:#4a5a3a;">Phase 1 · Seed</span>
+      <h4 style="margin-top:4px;">0 → 100 weekly</h4>
+      <p style="font-size:14px; margin-bottom:0;">Launch with the curated core + 5 guides. Seed in local communities. Prove the daily-ritual loop and refine the Lens. Cost ≈ $45/mo platform + metered photos.</p>
+    </div>
+    <div class="card">
+      <span class="phase-label" style="background:rgba(224,168,46,.22); color:#8a6310;">Phase 2 · Habit</span>
+      <h4 style="margin-top:4px;">100 → 500 weekly</h4>
+      <p style="font-size:14px; margin-bottom:0;">Shareable artifacts + SEO compound. First Looks drives weekly returns. Begin business relationships. First sponsorship conversations.</p>
+    </div>
+    <div class="card">
+      <span class="phase-label" style="background:rgba(192,83,46,.16); color:#9a3a1e;">Phase 3 · Institution</span>
+      <h4 style="margin-top:4px;">500 → 1,000+ weekly</h4>
+      <p style="font-size:14px; margin-bottom:0;">SB Daymaker becomes a known local fixture. Operator-photo program activates. Sponsorship + featured-listing revenue scales.</p>
+    </div>
+  </div>
+  <p class="disc">Illustrative planning trajectory based on organic, solo-operated growth assumptions. Actual adoption depends on execution, seeding effectiveness, and word-of-mouth velocity. Not a forecast or guarantee.</p>
+</section>
+
+<!-- ================= COST ================= -->
+<section id="cost">
+  <div class="kicker">07 — Cost Over Time</div>
+  <h2 class="sec">What it takes to run</h2>
+  <p class="lead">The defining financial feature of SB Daymaker: <strong>it is remarkably cheap to operate</strong> — on the order of <strong>~$45/mo</strong> in fixed platform cost, plus a metered, controllable photo cost. The dominant variable cost is Google Places photos, controlled by engineering safeguards already in the build.</p>
+
+  <h3>The cost components</h3>
+  <table>
+    <tr><th>Cost</th><th>Nature</th><th>At hobby scale</th><th>At ~1,000 weekly</th></tr>
+    <tr><td><strong>Platform (Vercel Pro + Supabase Pro)</strong></td><td>Fixed; Supabase Pro by launch</td><td class="num">~$20–45</td><td class="num">~$45</td></tr>
+    <tr><td><strong>Google Places photos</strong></td><td>Metered, $7/1k after 1k free</td><td class="num">$0–40</td><td class="num">~$500*</td></tr>
+    <tr><td><strong>AI (Claude API for drafts)</strong></td><td>Low — batched nightly</td><td class="num">$1–10</td><td class="num">$10–30</td></tr>
+    <tr><td><strong>Pexels images</strong></td><td>Free</td><td class="num">$0</td><td class="num">$0</td></tr>
+    <tr><td><strong>Domain</strong></td><td>Annual</td><td class="num">~$1/mo</td><td class="num">~$1/mo</td></tr>
+    <tr><td><strong>Maps (Mapbox)</strong></td><td>Phase 2 only — not in V1 (Near Me is a sort)</td><td class="num">$0</td><td class="num">$0</td></tr>
+  </table>
+  <p class="disc">*Worst-case, 100% Google business photos with lazy-loading. The operator-photo program (Phase 2+) is designed to bend this curve down precisely when it starts to matter. Note: Google’s $200/mo umbrella credit ended Feb 28 2025 — costs are now per-SKU (the confirmed Place Photo SKU is $7 per 1,000 after 1,000 free/mo). The ~$45/mo platform line is the fixed floor for a reliable production build (Vercel Pro + Supabase Pro).</p>
+
+  <div class="chartwrap">
+    <div class="ctitle">Estimated monthly photo cost vs. weekly users</div>
+    <div class="csub">The dominant variable cost. Add the ~$45/mo fixed platform floor (Vercel Pro + Supabase Pro) for the all-in total. Assumes lazy-loading + billing cap.</div>
+    <svg viewBox="0 0 720 290" width="100%" preserveAspectRatio="xMidYMid meet" font-family="Inter,sans-serif">
+      <line x1="56" y1="240" x2="700" y2="240" stroke="#D8CDB8" stroke-width="1.5"/>
+      <line x1="56" y1="30" x2="56" y2="240" stroke="#D8CDB8" stroke-width="1.5"/>
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="48" y="244" text-anchor="end">$0</text>
+        <text x="48" y="187" text-anchor="end">$150</text>
+        <text x="48" y="134" text-anchor="end">$300</text>
+        <text x="48" y="81" text-anchor="end">$450</text>
+        <text x="48" y="40" text-anchor="end">$550</text>
+      </g>
+      <g stroke="#EFE7D8" stroke-width="1">
+        <line x1="56" y1="187" x2="700" y2="187"/>
+        <line x1="56" y1="134" x2="700" y2="134"/>
+        <line x1="56" y1="81" x2="700" y2="81"/>
+      </g>
+      <!-- bars: 50,100,250,500,1000 -->
+      <!-- x positions -->
+      <g>
+        <!-- 50 -> ~$18 -->
+        <rect x="110" y="234" width="58" height="6" rx="3" fill="#16586A"/>
+        <text x="139" y="228" text-anchor="middle" font-size="11" font-weight="700" fill="#16586A">$18</text>
+        <text x="139" y="256" text-anchor="middle" font-size="11" fill="#7E8B6B" font-weight="600">50</text>
+        <!-- 100 -> ~$43 -->
+        <rect x="230" y="225" width="58" height="15" rx="3" fill="#16586A"/>
+        <text x="259" y="219" text-anchor="middle" font-size="11" font-weight="700" fill="#16586A">$43</text>
+        <text x="259" y="256" text-anchor="middle" font-size="11" fill="#7E8B6B" font-weight="600">100</text>
+        <!-- 250 -> ~$119 -->
+        <rect x="350" y="198" width="58" height="42" rx="3" fill="#E0A82E"/>
+        <text x="379" y="192" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6310">$119</text>
+        <text x="379" y="256" text-anchor="middle" font-size="11" fill="#7E8B6B" font-weight="600">250</text>
+        <!-- 500 -> ~$245 -->
+        <rect x="470" y="153" width="58" height="87" rx="3" fill="#E0A82E"/>
+        <text x="499" y="147" text-anchor="middle" font-size="11" font-weight="700" fill="#8a6310">$245</text>
+        <text x="499" y="256" text-anchor="middle" font-size="11" fill="#7E8B6B" font-weight="600">500</text>
+        <!-- 1000 -> ~$497 -->
+        <rect x="590" y="65" width="58" height="175" rx="3" fill="#C0532E"/>
+        <text x="619" y="59" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3a1e">$497</text>
+        <text x="619" y="256" text-anchor="middle" font-size="11" fill="#7E8B6B" font-weight="600">1,000</text>
+      </g>
+      <text x="378" y="282" text-anchor="middle" font-size="11.5" fill="#4a4038" font-weight="600">Weekly active users</text>
+    </svg>
+  </div>
+
+  <h3>The three cost safeguards (in the build)</h3>
+  <ol class="clean">
+    <li><strong>Lazy-load every image</strong> — Google photo requests fire only when an image scrolls into view. This is the single biggest lever; without it, costs run 4–5× higher.</li>
+    <li><strong>Hard billing cap + alert</strong> — a Google Cloud spend ceiling (start ~$50/mo) that emails before anything runs away. Eliminates tail risk.</li>
+    <li><strong>Photo resolution order</strong> — ambient → Pexels (free); business → Google. Pre-built to insert owned/operator photos ahead of Google later with no rearchitecting.</li>
+  </ol>
+
+  <div class="callout pac">
+    <div class="ctitle">The bootstrap logic</div>
+    Start 100% on Google because it costs <em>zero founder time</em> today. It's effectively free while small. The operator-photo migration activates exactly when it should — when cost becomes worth addressing <em>and</em> traffic gives leverage with businesses. Google carries the proving phase for free; operator photos take over when scale makes cost matter.
+  </div>
+</section>
+
+<!-- ================= MONETIZATION ================= -->
+<section id="money">
+  <div class="kicker">08 — Monetization Paths</div>
+  <h2 class="sec">How it earns (when you want it to)</h2>
+  <p class="lead">SB Daymaker can remain a free hobby indefinitely. But the architecture supports several local-first revenue paths that align with — rather than corrupt — the curated experience.</p>
+
+  <div class="grid2">
+    <div class="card goldtint">
+      <span class="pill gold">Path A · Highest fit</span>
+      <h4>Featured listings &amp; sponsored placements</h4>
+      <p style="margin-bottom:0;">Businesses pay for premium placement or a "featured" badge — clearly labeled, never deceptive. Natural fit with First Looks and the place directory. Aligns incentives: the businesses you cover want visibility.</p>
+    </div>
+    <div class="card tealtint">
+      <span class="pill green">Path B · Natural extension</span>
+      <h4>Local sponsorship of the daily/weekend digest</h4>
+      <p style="margin-bottom:0;">"This weekend, brought to you by [local business]." The shareable artifacts become sponsorship inventory once they have reach. Tasteful, single-sponsor, local-only.</p>
+    </div>
+    <div class="card tiletint">
+      <span class="pill tile">Path C · Relationship-based</span>
+      <h4>Business profiles / enhanced pages</h4>
+      <p style="margin-bottom:0;">A modest recurring fee for businesses to maintain an enhanced profile (their photos, their happy hour, their events). Pairs perfectly with the future operator-photo program.</p>
+    </div>
+    <div class="card">
+      <span class="pill">Path D · Later / optional</span>
+      <h4>Affiliate &amp; events giveaways</h4>
+      <p style="margin-bottom:0;">Ticketing affiliate revenue on the AXS/TM hand-off (where programs allow), and sponsored ticket giveaways — both deferred, both requiring partner relationships.</p>
+    </div>
+  </div>
+
+  <div class="callout tile">
+    <div class="ctitle">The guardrail</div>
+    Monetization must never make the Lens surface a worse pick. Sponsored content is always labeled, always quality-gated, and never displaces the genuinely-best recommendation. The trust <em>is</em> the product; protect it ruthlessly.
+  </div>
+
+  <h3>What we explicitly rule out</h3>
+  <ul class="clean">
+    <li><strong>In-app ticketing / payment</strong> — we hand off to AXS/TM by design (legal, scope, trust).</li>
+    <li><strong>Display-ad networks</strong> — cheapens the editorial feel, wrong for the brand.</li>
+    <li><strong>Selling user data</strong> — there's barely any (on-device, no accounts), and it would betray the trust model.</li>
+  </ul>
+</section>
+
+<!-- ================= PROJECTIONS ================= -->
+<section id="projection">
+  <div class="kicker">09 — Revenue Projections</div>
+  <h2 class="sec">The money model — illustrative</h2>
+  <p class="lead">A deliberately conservative, local-sponsorship-based model. The point is not precision — it's to show the <em>shape</em>: modest but real, and comfortably ahead of costs once traffic exists.</p>
+
+  <table>
+    <tr><th>Stage</th><th>Weekly users</th><th>Revenue model</th><th>Est. monthly revenue</th><th>Est. monthly cost</th><th>Net</th></tr>
+    <tr><td><strong>Phase 1</strong> · Seed</td><td class="num">0–100</td><td>None (free hobby)</td><td class="num">$0</td><td class="num">~$45–90</td><td class="num" style="color:#9a3a1e;">–$45–90</td></tr>
+    <tr><td><strong>Phase 2a</strong></td><td class="num">~250</td><td>1–2 featured listings + 1 digest sponsor</td><td class="num">$300–600</td><td class="num">~$170</td><td class="num" style="color:#4a5a3a;">+$130–430</td></tr>
+    <tr><td><strong>Phase 2b</strong></td><td class="num">~500</td><td>3–5 featured + weekly digest sponsor</td><td class="num">$800–1,500</td><td class="num">~$300</td><td class="num" style="color:#4a5a3a;">+$500–1,200</td></tr>
+    <tr><td><strong>Phase 3</strong> · Institution</td><td class="num">1,000+</td><td>Featured + sponsorship + enhanced profiles</td><td class="num">$2,000–4,000</td><td class="num">~$350 (op-photos bend Google down)</td><td class="num" style="color:#4a5a3a;">+$1,650–3,650</td></tr>
+  </table>
+
+  <div class="chartwrap">
+    <div class="ctitle">Illustrative monthly revenue vs. cost across phases</div>
+    <div class="csub">The gap between the lines is the point — costs stay low and flat; revenue, once it starts, outpaces them.</div>
+    <svg viewBox="0 0 720 300" width="100%" preserveAspectRatio="xMidYMid meet" font-family="Inter,sans-serif">
+      <line x1="60" y1="250" x2="700" y2="250" stroke="#D8CDB8" stroke-width="1.5"/>
+      <line x1="60" y1="30" x2="60" y2="250" stroke="#D8CDB8" stroke-width="1.5"/>
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="52" y="254" text-anchor="end">$0</text>
+        <text x="52" y="195" text-anchor="end">$1k</text>
+        <text x="52" y="140" text-anchor="end">$2k</text>
+        <text x="52" y="85" text-anchor="end">$3k</text>
+        <text x="52" y="44" text-anchor="end">$4k</text>
+      </g>
+      <g stroke="#EFE7D8" stroke-width="1">
+        <line x1="60" y1="195" x2="700" y2="195"/>
+        <line x1="60" y1="140" x2="700" y2="140"/>
+        <line x1="60" y1="85" x2="700" y2="85"/>
+      </g>
+      <!-- x phase labels -->
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="130" y="270" text-anchor="middle">Phase 1</text>
+        <text x="320" y="270" text-anchor="middle">Phase 2a</text>
+        <text x="510" y="270" text-anchor="middle">Phase 2b</text>
+        <text x="670" y="270" text-anchor="middle">Phase 3</text>
+      </g>
+      <!-- revenue band (use midpoints): P1 0, P2a 450, P2b 1150, P3 3000 -->
+      <polyline fill="rgba(126,139,107,.12)" stroke="none"
+        points="130,250 320,225 510,187 670,85 670,250 130,250"/>
+      <polyline fill="none" stroke="#7E8B6B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
+        points="130,250 320,225 510,187 670,85"/>
+      <!-- revenue dots -->
+      <circle cx="130" cy="250" r="5" fill="#7E8B6B"/>
+      <circle cx="320" cy="225" r="5" fill="#7E8B6B"/><text x="320" y="216" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~$450</text>
+      <circle cx="510" cy="187" r="5" fill="#7E8B6B"/><text x="510" y="178" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~$1.15k</text>
+      <circle cx="670" cy="85" r="5" fill="#7E8B6B"/><text x="660" y="76" text-anchor="end" font-size="10.5" font-weight="700" fill="#4a5a3a">~$3k</text>
+      <!-- cost line: P1 20, P2a 120, P2b 245, P3 300 -->
+      <polyline fill="none" stroke="#C0532E" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" stroke-linejoin="round"
+        points="130,247 320,241 510,234 670,231"/>
+      <circle cx="670" cy="231" r="4.5" fill="#C0532E"/><text x="660" y="225" text-anchor="end" font-size="10.5" font-weight="700" fill="#9a3a1e">~$350</text>
+      <text x="130" y="243" font-size="10.5" fill="#9a3a1e" font-weight="700">cost ≈ flat</text>
+    </svg>
+    <div class="legend">
+      <span><span class="dot" style="background:#7E8B6B;"></span> Estimated monthly revenue</span>
+      <span><span class="dot" style="background:#C0532E;"></span> Estimated monthly cost</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="ctitle">How to read this</div>
+    These are <em>planning illustrations</em> to pressure-test the model's shape, not financial forecasts. The takeaway is structural: SB Daymaker has a low, predictable fixed cost (~$45/mo), a controllable variable cost, and revenue paths that — once even modest local traction exists — comfortably exceed cost. It is built to be sustainable as a hobby and capable of becoming a small, real business.
+  </div>
+  <p class="disc">All revenue and cost figures are illustrative estimates for planning purposes only, based on stated assumptions about local sponsorship rates and organic growth. They are not forecasts, projections of actual results, or any form of financial guarantee. Local advertising rates, adoption, and costs will vary.</p>
+
+  <h3>Can Santa Barbara support more than 1,000 weekly users?</h3>
+  <p>Yes — comfortably, and by a wide margin. The market data makes higher tiers reasonable rather than speculative:</p>
+  <div class="grid3">
+    <div class="stat dark"><div class="big">443k</div><div class="lbl">SB County residents</div></div>
+    <div class="stat"><div class="big">6.5M</div><div class="lbl">Annual South Coast visitors</div></div>
+    <div class="stat gold"><div class="big">~2.3M</div><div class="lbl">Overnight visitors/yr (36%)</div></div>
+  </div>
+  <p style="margin-top:16px;">Santa Barbara County is home to <strong>roughly 443,000 residents</strong>, and the South Coast draws <strong>about 6.5 million visitors a year</strong> — of whom 36% stay overnight (~2.3M) and 80% say they'll return. Against a combined local-plus-visitor base of that size, even <strong>10,000 weekly active users is low-single-digit penetration</strong> of the genuinely addressable audience. The higher tiers below are therefore framed conservatively — they represent a modest, believable share of the market, not saturation.</p>
+
+  <div class="callout pac">
+    <div class="ctitle">Why the visitor base matters so much here</div>
+    A daily "what's worth doing today" app is <em>exactly</em> what an overnight visitor wants — and SB refreshes ~2.3M overnight visitors a year, each needing 1–3 days of recommendations. This is a constantly-replenishing audience on top of the resident base, which is unusual and favorable for a local-discovery product. It also means visitor-driven usage is seasonal and spiky, which the tiers treat as average weekly figures.
+  </div>
+
+  <h3>Extended tiers — conservative estimates at scale</h3>
+  <p>Carrying the same conservative assumptions (lazy-loaded Google photos, local-sponsorship revenue), here is the picture above 1,000 weekly users. Revenue assumptions stay deliberately mid-range: more inventory (featured listings, digest sponsorship, enhanced profiles) sold at realistic small-market local rates, <em>not</em> aggressive national CPMs.</p>
+  <table>
+    <tr><th>Weekly users</th><th>Est. monthly cost*</th><th>Revenue model at this scale</th><th>Est. monthly revenue</th><th>Est. net / mo</th></tr>
+    <tr><td class="num"><strong>1,000</strong></td><td class="num">~$350</td><td>Featured + sponsorship + profiles</td><td class="num">$2,000–4,000</td><td class="num" style="color:#4a5a3a;">+$1.7k–3.7k</td></tr>
+    <tr><td class="num"><strong>2,500</strong></td><td class="num">~$500</td><td>Expanded featured roster + multi-sponsor digest</td><td class="num">$4,500–8,000</td><td class="num" style="color:#4a5a3a;">+$4k–7.5k</td></tr>
+    <tr><td class="num"><strong>5,000</strong></td><td class="num">~$700</td><td>Mature local ad product + tiered profiles</td><td class="num">$8,000–14,000</td><td class="num" style="color:#4a5a3a;">+$7.3k–13.3k</td></tr>
+    <tr><td class="num"><strong>10,000</strong></td><td class="num">~$950</td><td>Established local-media revenue base</td><td class="num">$15,000–26,000</td><td class="num" style="color:#4a5a3a;">+$14k–25k</td></tr>
+  </table>
+  <p class="disc">*Cost assumes the operator-photo program is active at these scales, materially bending the Google Places photo curve down from the worst-case 100%-Google line — which is why cost grows sublinearly while users grow 10×. Without the operator-photo program, the 10,000-user photo cost alone could run several thousand/month, reinforcing why that program is the key Phase 2–3 cost lever.</p>
+
+  <div class="chartwrap">
+    <div class="ctitle">Extended view — monthly revenue vs. cost, 1k → 10k weekly users</div>
+    <div class="csub">Conservative mid-range revenue band against a sublinear cost line (operator-photo program assumed active). Log-spaced x-axis.</div>
+    <svg viewBox="0 0 720 310" width="100%" preserveAspectRatio="xMidYMid meet" font-family="Inter,sans-serif">
+      <line x1="64" y1="255" x2="700" y2="255" stroke="#D8CDB8" stroke-width="1.5"/>
+      <line x1="64" y1="30" x2="64" y2="255" stroke="#D8CDB8" stroke-width="1.5"/>
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="56" y="259" text-anchor="end">$0</text>
+        <text x="56" y="200" text-anchor="end">$7k</text>
+        <text x="56" y="143" text-anchor="end">$14k</text>
+        <text x="56" y="86" text-anchor="end">$21k</text>
+        <text x="56" y="45" text-anchor="end">$26k</text>
+      </g>
+      <g stroke="#EFE7D8" stroke-width="1">
+        <line x1="64" y1="200" x2="700" y2="200"/>
+        <line x1="64" y1="143" x2="700" y2="143"/>
+        <line x1="64" y1="86" x2="700" y2="86"/>
+      </g>
+      <!-- x positions log-spaced: 1k=130, 2.5k=300, 5k=470, 10k=660 -->
+      <g font-size="11" fill="#7E8B6B" font-weight="600">
+        <text x="130" y="275" text-anchor="middle">1,000</text>
+        <text x="300" y="275" text-anchor="middle">2,500</text>
+        <text x="470" y="275" text-anchor="middle">5,000</text>
+        <text x="660" y="275" text-anchor="middle">10,000</text>
+      </g>
+      <text x="382" y="298" text-anchor="middle" font-size="11.5" fill="#4a4038" font-weight="600">Weekly active users (log-spaced)</text>
+      <!-- revenue band: use conservative-mid midpoints scaled: y = 255 - (val/26000)*210 -->
+      <!-- 1k mid 3000 -> 255-24=231 ; 2.5k mid 6250 -> 255-50=205 ; 5k mid 11000 -> 255-89=166 ; 10k mid 20500 -> 255-166=89 -->
+      <polyline fill="rgba(126,139,107,.13)" stroke="none"
+        points="130,231 300,205 470,166 660,89 660,255 130,255"/>
+      <polyline fill="none" stroke="#7E8B6B" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
+        points="130,231 300,205 470,166 660,89"/>
+      <circle cx="130" cy="231" r="5" fill="#7E8B6B"/><text x="130" y="222" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~$3k</text>
+      <circle cx="300" cy="205" r="5" fill="#7E8B6B"/><text x="300" y="196" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~$6.3k</text>
+      <circle cx="470" cy="166" r="5" fill="#7E8B6B"/><text x="470" y="157" text-anchor="middle" font-size="10.5" font-weight="700" fill="#4a5a3a">~$11k</text>
+      <circle cx="660" cy="89" r="5" fill="#7E8B6B"/><text x="650" y="80" text-anchor="end" font-size="10.5" font-weight="700" fill="#4a5a3a">~$20.5k</text>
+      <!-- cost line: 1k 300->252 ; 2.5k 450->251 ; 5k 650->250 ; 10k 900->248 -->
+      <polyline fill="none" stroke="#C0532E" stroke-width="3" stroke-dasharray="6 5" stroke-linecap="round" stroke-linejoin="round"
+        points="130,252 300,251 470,249 660,248"/>
+      <circle cx="660" cy="248" r="4.5" fill="#C0532E"/><text x="650" y="242" text-anchor="end" font-size="10.5" font-weight="700" fill="#9a3a1e">~$950</text>
+      <text x="135" y="246" font-size="10.5" fill="#9a3a1e" font-weight="700">cost stays low (op-photos)</text>
+    </svg>
+    <div class="legend">
+      <span><span class="dot" style="background:#7E8B6B;"></span> Est. monthly revenue (conservative mid-range)</span>
+      <span><span class="dot" style="background:#C0532E;"></span> Est. monthly cost</span>
+    </div>
+  </div>
+
+  <div class="callout">
+    <div class="ctitle">The honest read on scale</div>
+    At a sustained <strong>5,000–10,000 weekly users</strong> — still a small share of SB's resident + visitor base — SB Daymaker would be a <strong>real small business generating roughly $7,000–25,000/month net</strong>, run largely by one person with AI leverage and a light operator/content workflow. That is the realistic ceiling worth planning toward; it does not assume market dominance, viral growth, or national-scale ad rates. Reaching it would take years of consistent execution, and the figures remain illustrative — but the market is unambiguously large enough that the constraint is execution and time, not addressable audience.
+  </div>
+  <p class="disc">Extended-tier figures are conservative illustrative estimates for long-range planning only, grounded in published SB County population (~443k) and South Coast visitor volume (~6.5M/yr) data, and assume realistic small-market local sponsorship rates. They are not forecasts or guarantees of revenue, and assume successful execution, retention, and the operator-photo cost program being active at scale.</p>
+</section>
+
+
+<!-- ================= RISKS ================= -->
+<section id="risks">
+  <div class="kicker">10 — Risks &amp; Considerations</div>
+  <h2 class="sec">Eyes open</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Content volume on quiet days</h4>
+      <p style="margin-bottom:0;"><strong>Mitigated by design.</strong> The happenings-first cascade keeps a Tier-3 evergreen floor — SB Daymaker is never empty because the city itself (dog beach, the market, a sunset hike) is always a reason to go. Evergreen places + guides carry the quiet Tuesdays; the wide definition of "happening" + lead-and-blend keep the screen full.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Control overload / complexity</h4>
+      <p style="margin-bottom:0;"><strong>Mitigated.</strong> A single compact dual-button row (Lens + Refine) replaces the old tall pill + chip stack — all filter complexity lives inside bottom sheets, invisible until needed. First-run is a gentle overlay banner asking "What vibe are you looking for?" — the app is usable behind it immediately, no blocking gate. Designed for an older, simplicity-seeking audience.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Founder time / sustainability</h4>
+      <p style="margin-bottom:0;"><strong>Mitigated.</strong> AI-drafts-you-approve + auto-publish-with-veto means the app runs even on busy days; the admin cockpit keeps daily upkeep to ~15 minutes.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Data freshness &amp; trust</h4>
+      <p style="margin-bottom:0;"><strong>Mitigated.</strong> Happy-hour "last confirmed" staleness model + persona-tag confidence threshold + negative-rule safety (e.g. a 21+ venue can never be tagged Family Day).</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Legal / data sourcing</h4>
+      <p style="margin-bottom:0;"><strong>Addressed.</strong> Licensed APIs (Ticketmaster, Google Places), venue-site facts not AXS scraping, operator-submitted happy hours, original AI-written copy (no reproduced descriptions). A pre-revenue IP/tech attorney review is recommended insurance.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0;">⚠️ Cost scaling with users</h4>
+      <p style="margin-bottom:0;"><strong>Mitigated.</strong> Lazy-loading + billing cap keep Google photo costs bounded; the operator-photo program bends the curve down exactly when scale makes it matter.</p>
+    </div>
+  </div>
+
+  <h3>The honest watch-items</h3>
+  <ul class="clean">
+    <li><strong>DoStuff entering SB</strong> — unlikely (market too small) but the one competitor who could replicate the model. Watch.</li>
+    <li><strong>The Independent</strong> — most likely local competitor-or-partner; has the calendar, audience, and brand. Keep in view as both.</li>
+    <li><strong>Single-device save (no sync)</strong> — an accepted launch tradeoff; the eventual reason to add accounts.</li>
+    <li><strong>Google API terms drift</strong> — pricing/caps changed in 2025; verify current terms at billing setup and monitor.</li>
+  </ul>
+</section>
+
+<!-- ================= ROADMAP ================= -->
+<section id="roadmap">
+  <div class="kicker">11 — Phased Roadmap</div>
+  <h2 class="sec">The sequence of play</h2>
+
+  <div class="card tealtint">
+    <span class="phase-label" style="background:var(--pacific); color:#fff;">MVP · Build</span>
+    <h4 style="margin-top:6px;">Launch the two-sided product</h4>
+    <p style="margin-bottom:0;">Consumer app: living editorial hero (sky strip + pick card), the <strong>happenings cascade</strong> feed (Tier-1 leads, lead-and-blend), occasion tags, horizons (light This Month), evergreen places (Tier-3 floor), First Looks + <strong>New This Week</strong>, Guides (Discover SB: neighborhood + theme), a <strong>Near Me</strong> in-view sort (full Mapbox map → P2), a <strong>light Happy Hour list</strong> (live → P2), events, save (two-state) → <strong>share</strong> a view-only saved-list link (one item or a batch) + <strong>magic-link save-restore</strong>, <strong>2×/week email</strong> (Wed + Fri), <strong>One Perfect SB Day</strong>, weather-reactivity + the full six-surface admin cockpit. Seed the curated core. Google business photos with lazy-loading, billing cap, resolver pre-built for operator photos.</p>
+  </div>
+
+  <div class="card goldtint">
+    <span class="phase-label" style="background:var(--gold); color:var(--ink);">Phase 2 · Grow &amp; earn</span>
+    <h4 style="margin-top:6px;">Habit, reach, first revenue</h4>
+    <p style="margin-bottom:0;">Committed, sequenced after launch: <strong>web push for installed users</strong> (the second re-engagement channel, once installs grow), the <strong>full Mapbox map</strong> (clustering, sub-tabs, filter-sync), <strong>live Happy Hour countdowns</strong> with venue-assisted freshness, and a <strong>full Spanish-language layer</strong> (~36% of SB is Latino — AI drafts in-voice, founder spot-checks). Plus: lean into the email + share-link growth loops + SEO, begin business relationships via First Looks, first featured listings + digest sponsor, and <strong>activate the operator-photo program</strong> when traffic gives leverage — bending the cost curve as revenue begins.</p>
+  </div>
+
+  <div class="card tiletint">
+    <span class="phase-label" style="background:var(--tile); color:#fff;">Phase 3 · Institution</span>
+    <h4 style="margin-top:6px;">Become a local fixture</h4>
+    <p style="margin-bottom:0;">Scale sponsorship + enhanced business profiles, and account-based cross-device sync if demand warrants. Consider remaining deferred items: follow-graphs, ticket giveaways, anonymous social proof, natural-language search, the full real-time collaborative itinerary builder, live crowding/parking data.</p>
+  </div>
+
+  <h3>Deferred features (parked deliberately)</h3>
+  <p style="margin-bottom:6px;"><strong>Phase 2 (committed):</strong> web push (installed users) · full Mapbox map · live Happy Hour countdowns · full Spanish-language layer · operator-submitted photos · account-based cross-device sync.</p>
+  <p style="margin-bottom:6px;"><strong>Never / out of scope:</strong></p>
+  <div>
+    <span class="pill">In-app ticketing / payment</span>
+    <span class="pill">Reviews / ratings</span>
+    <span class="pill">Full account system</span>
+    <span class="pill">AI-written digest synthesis</span>
+    <span class="pill">Follow-graphs</span>
+    <span class="pill">Ticket giveaways</span>
+    <span class="pill">Natural-language search</span>
+    <span class="pill">Anonymous social proof</span>
+    <span class="pill">Real-time collaborative itinerary builder</span>
+    <span class="pill">Live crowding / parking data</span>
+  </div>
+</section>
+
+</div>
+
+<div class="footer">
+  <div class="serif" style="font-size:20px; color:var(--ink); margin-bottom:6px;">SB Daymaker</div>
+  Business Plan &middot; Document 1 &middot; v3 — happenings-first<br>
+  <span class="disc">This is an internal working document. Figures are illustrative planning estimates, not forecasts or financial advice.</span>
+</div>
+
+<script>
+  // Robust TOC navigation — works even inside sandboxed iframe previews
+  // where native anchor jumps can be captured or blocked.
+  document.querySelectorAll('.toc a[href^="#"]').forEach(function(link){
+    link.addEventListener('click', function(e){
+      e.preventDefault();
+      var id = link.getAttribute('href').slice(1);
+      var target = document.getElementById(id);
+      if (target){
+        target.scrollIntoView({behavior:'smooth', block:'start'});
+        if (history && history.replaceState) history.replaceState(null,'','#'+id);
+      }
+    });
+  });
+</script>
+</body>
+</html>
