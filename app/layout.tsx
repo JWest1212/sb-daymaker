@@ -29,7 +29,10 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SB Daymaker — coming soon",
+  title: {
+    default: "SB Daymaker",
+    template: "%s",
+  },
   description:
     "Find what's worth doing in Santa Barbara today — find it, save it, share it.",
 };
