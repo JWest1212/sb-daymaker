@@ -1,14 +1,25 @@
-import { EmptyState } from "@/components/ui";
+import { getPublishedThings } from "@/lib/things";
+import { pickPerfectDay } from "@/lib/explore";
+import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
+import { ExploreClient } from "@/components/explore/ExploreClient";
 
-// Explore — the front door (built out in Phase 4).
-export default function ExplorePage() {
+// Read fresh each request (DB-backed). All ranking/filtering is deterministic.
+export const dynamic = "force-dynamic";
+
+export default async function ExplorePage() {
+  const [things, weather] = await Promise.all([
+    getPublishedThings(),
+    getWeather(),
+  ]);
+
   return (
-    <div style={{ paddingTop: "var(--space-6)" }}>
-      <EmptyState
-        icon="🌅"
-        title="What's worth doing today"
-        message="Explore is warming up. Soon this is where Santa Barbara's best lands each day — the golden-hour hero and everything worth getting out for."
-      />
-    </div>
+    <ExploreClient
+      things={things}
+      tod={getTimeOfDay()}
+      dateLabel={getDateLabel()}
+      weather={weather}
+      perfectDayIds={pickPerfectDay(things)}
+      nowMs={Date.now()}
+    />
   );
 }
