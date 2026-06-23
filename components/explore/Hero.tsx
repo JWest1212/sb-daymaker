@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
 import { SaveHeart } from "@/components/ui";
@@ -72,7 +73,11 @@ export function Hero({
           </div>
           <div className="sbd-hero__pick-body">
             <div className="sbd-hero__pick-eyebrow">Today&rsquo;s pick</div>
-            <div className="sbd-hero__pick-title">{pick.title}</div>
+            <div className="sbd-hero__pick-title">
+              <Link href={`/thing/${pick.id}`} className="sbd-stretch">
+                {pick.title}
+              </Link>
+            </div>
             <div className="sbd-hero__pick-meta">
               📍 {cardPlace(pick) || "Santa Barbara"}
             </div>

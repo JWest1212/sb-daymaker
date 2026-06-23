@@ -1,7 +1,31 @@
+import Link from "next/link";
 import { Tag, type TagColor } from "./Chip";
 import { SaveHeart } from "./SaveHeart";
 
 type MediaTone = "gold" | "sage" | "pacific";
+
+/** Title that optionally becomes a stretched link covering the whole card. */
+function CardTitle({
+  href,
+  className,
+  children,
+}: {
+  href?: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <h3 className={className}>
+      {href ? (
+        <Link href={href} className="sbd-stretch">
+          {children}
+        </Link>
+      ) : (
+        children
+      )}
+    </h3>
+  );
+}
 
 /**
  * PickCard — the editorial hero card from the wireframe: a media banner with a
@@ -17,6 +41,7 @@ export function PickCard({
   saved,
   onToggleSave,
   tone = "gold",
+  href,
 }: {
   title: string;
   blurb: string;
@@ -26,6 +51,7 @@ export function PickCard({
   saved: boolean;
   onToggleSave: () => void;
   tone?: MediaTone;
+  href?: string;
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
@@ -41,7 +67,9 @@ export function PickCard({
         {place ? <span className="sbd-pick__place">📍 {place}</span> : null}
       </div>
       <div className="sbd-pick__body">
-        <h3 className="sbd-pick__title">{title}</h3>
+        <CardTitle href={href} className="sbd-pick__title">
+          {title}
+        </CardTitle>
         <p className="sbd-pick__blurb">{blurb}</p>
         {facts.length > 0 ? (
           <div className="sbd-pick__facts">
@@ -68,6 +96,7 @@ export function ListCard({
   tone = "sage",
   saved,
   onToggleSave,
+  href,
 }: {
   title: string;
   blurb: string;
@@ -77,6 +106,7 @@ export function ListCard({
   tone?: MediaTone;
   saved?: boolean;
   onToggleSave?: () => void;
+  href?: string;
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
@@ -87,7 +117,9 @@ export function ListCard({
             {tag}
           </Tag>
         ) : null}
-        <h3 className="sbd-listcard__title">{title}</h3>
+        <CardTitle href={href} className="sbd-listcard__title">
+          {title}
+        </CardTitle>
         <p className="sbd-listcard__blurb">{blurb}</p>
         {meta ? <div className="sbd-listcard__meta">{meta}</div> : null}
       </div>

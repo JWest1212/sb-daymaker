@@ -36,6 +36,7 @@ export function CascadeFeed({ items }: { items: Thing[] }) {
                 tier === 1 ? (
                   <PickCard
                     key={t.id}
+                    href={`/thing/${t.id}`}
                     tone={cardTone(i)}
                     tag={cardTag(t)}
                     place={cardPlace(t)}
@@ -48,6 +49,7 @@ export function CascadeFeed({ items }: { items: Thing[] }) {
                 ) : (
                   <ListCard
                     key={t.id}
+                    href={`/thing/${t.id}`}
                     tone={cardTone(i)}
                     tag={cardTag(t)}
                     title={t.title}

@@ -1464,6 +1464,274 @@
   margin-top: 2px;
 }
 
+/* ==========================================================================
+   PHASE 7 — detail page, submit form, signup, footer, card links
+   ========================================================================== */
+
+/* Stretched-link cards (title link covers the whole card; heart sits above) */
+.sbd-card {
+  position: relative;
+}
+.sbd-stretch {
+  color: inherit;
+  text-decoration: none;
+}
+.sbd-stretch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.sbd-pick__heart,
+.sbd-hero__pick-heart {
+  z-index: 2;
+}
+.sbd-listcard__heart {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Detail page -------------------------------------------------------- */
+.sbd-detail {
+  padding-top: var(--space-4);
+}
+.sbd-detail__media {
+  height: 180px;
+  border-radius: var(--radius-lg);
+  margin-top: var(--space-2);
+}
+.sbd-detail__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: var(--space-4) 0 0;
+}
+.sbd-detail__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+.sbd-detail__reason {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--text-link);
+  margin: var(--space-3) 0 0;
+}
+.sbd-detail__body {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  margin: var(--space-3) 0;
+}
+.sbd-detail__facts {
+  margin: var(--space-5) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.sbd-detail__fact {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+.sbd-detail__fact:last-child {
+  border-bottom: none;
+}
+.sbd-detail__fact dt {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sage-text);
+}
+.sbd-detail__fact dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  text-align: right;
+}
+.sbd-detail__secret {
+  background: color-mix(in srgb, var(--gold) 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--border));
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-5) 0;
+}
+.sbd-detail__secret-k {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold-text);
+  margin-bottom: var(--space-1);
+}
+.sbd-detail__secret p {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+.sbd-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+/* ---- Submit form ------------------------------------------------------- */
+.sbd-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+.sbd-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sbd-field__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+}
+.sbd-field__input {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+}
+textarea.sbd-field__input {
+  padding-top: var(--space-3);
+  resize: vertical;
+}
+.sbd-field__input:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 1px;
+}
+.sbd-field__check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.sbd-field__error {
+  font-size: var(--text-sm);
+  color: var(--sev-blocker);
+  margin: 0;
+}
+.sbd-form__done {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+}
+.sbd-form__done-icon {
+  font-size: 32px;
+}
+.sbd-form__done-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  margin: var(--space-2) 0;
+}
+.sbd-form__done p {
+  color: var(--text-muted);
+  line-height: var(--leading-body);
+  margin: 0;
+}
+
+/* ---- Email signup ------------------------------------------------------ */
+.sbd-signup {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--pacific) 10%, var(--surface)),
+    var(--surface)
+  );
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+.sbd-signup__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  margin: 0 0 var(--space-1);
+}
+.sbd-signup__desc {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
+}
+.sbd-signup__form {
+  display: flex;
+  gap: var(--space-2);
+}
+.sbd-signup__input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+}
+.sbd-signup__input:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 1px;
+}
+.sbd-signup__ok {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--forest);
+  margin: 0;
+}
+.sbd-signup__err {
+  font-size: var(--text-sm);
+  color: var(--sev-blocker);
+  margin: var(--space-2) 0 0;
+}
+
+/* ---- Explore footer ---------------------------------------------------- */
+.sbd-foot {
+  margin-top: var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+}
+.sbd-foot > .sbd-signup {
+  width: 100%;
+}
+.sbd-foot__submit {
+  color: var(--text-link);
+  font-weight: var(--weight-semi);
+  text-decoration: none;
+  font-size: var(--text-base);
+}
+.sbd-foot__trust {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+  margin: 0;
+}
+
 /* ---- KEYFRAMES ---------------------------------------------------------- */
 @keyframes heartPop {
   0% {

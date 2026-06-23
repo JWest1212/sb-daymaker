@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
 import {
@@ -19,6 +20,7 @@ import { LensSheet } from "./LensSheet";
 import { NearMeSheet } from "./NearMeSheet";
 import { CascadeFeed } from "./CascadeFeed";
 import { OnePerfectDayCard } from "./OnePerfectDayCard";
+import { EmailSignup } from "@/components/signup/EmailSignup";
 
 export function ExploreClient({
   things,
@@ -73,6 +75,16 @@ export function ExploreClient({
         />
         <OnePerfectDayCard ids={perfectDayIds} />
         <CascadeFeed items={feed} />
+
+        <footer className="sbd-foot">
+          <EmailSignup />
+          <Link href="/submit" className="sbd-foot__submit">
+            ＋ Submit an event or business
+          </Link>
+          <p className="sbd-foot__trust">
+            No accounts, no login wall. Saves live on your device.
+          </p>
+        </footer>
       </div>
 
       <LensSheet
