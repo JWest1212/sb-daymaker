@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
+import { SavesProvider } from "@/components/saves/SavesProvider";
 // CSS load order is the cascade order: tokens first, then Tailwind + token-var
 // overrides (globals), then the component layer.
 import "./sbdaymaker_tokens.css";
@@ -51,7 +52,9 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        <SavesProvider>{children}</SavesProvider>
+      </body>
     </html>
   );
 }

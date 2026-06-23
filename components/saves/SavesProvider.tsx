@@ -23,6 +23,8 @@ interface SavesContextValue {
   setState: (id: string, s: SaveState) => void;
   remove: (id: string) => void;
   saveMany: (ids: string[]) => void; // add as "want" (skip already-saved)
+  merge: (incoming: Record<string, SaveState>) => void; // restore (incoming wins)
+  asMap: () => Record<string, SaveState>;
   ids: string[];
   counts: { want: number; been: number; total: number };
 }
@@ -82,6 +84,10 @@ export function SavesProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const merge = useCallback((incoming: Record<string, SaveState>) => {
+    setSaves((prev) => ({ ...prev, ...incoming }));
+  }, []);
+
   const value = useMemo<SavesContextValue>(() => {
     const ids = Object.keys(saves);
     const want = ids.filter((id) => saves[id] === "want").length;
@@ -94,10 +100,12 @@ export function SavesProvider({ children }: { children: ReactNode }) {
       setState,
       remove,
       saveMany,
+      merge,
+      asMap: () => ({ ...saves }),
       ids,
       counts: { want, been, total: ids.length },
     };
-  }, [saves, hydrated, toggle, setState, remove, saveMany]);
+  }, [saves, hydrated, toggle, setState, remove, saveMany, merge]);
 
   return <SavesContext.Provider value={value}>{children}</SavesContext.Provider>;
 }

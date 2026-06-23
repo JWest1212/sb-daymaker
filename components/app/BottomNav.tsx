@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSaves } from "@/components/saves/SavesProvider";
 
 const TABS = [
   { href: "/", label: "Explore", icon: "🌅" },
@@ -12,6 +13,7 @@ const TABS = [
 /** Bottom navigation — exactly three tabs (v9: Explore · Saved · Discover SB). */
 export function BottomNav() {
   const pathname = usePathname();
+  const { counts } = useSaves();
 
   return (
     <nav className="sbd-nav" aria-label="Main">
@@ -27,6 +29,9 @@ export function BottomNav() {
           >
             <span className="sbd-nav__icon" aria-hidden="true">
               {tab.icon}
+              {tab.href === "/saved" && counts.total > 0 ? (
+                <span className="sbd-nav__badge">{counts.total}</span>
+              ) : null}
             </span>
             <span className="sbd-nav__label">{tab.label}</span>
           </Link>
