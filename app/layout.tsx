@@ -30,7 +30,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sb-daymaker.vercel.app";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.sbdaymaker.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
