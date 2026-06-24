@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SavesProvider } from "@/components/saves/SavesProvider";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 // CSS load order is the cascade order: tokens first, then Tailwind + token-var
 // overrides (globals), then the component layer.
 import "./sbdaymaker_tokens.css";
@@ -29,13 +30,33 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sb-daymaker.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "SB Daymaker",
     template: "%s",
   },
   description:
     "Find what's worth doing in Santa Barbara today — find it, save it, share it.",
+  applicationName: "SB Daymaker",
+  appleWebApp: {
+    capable: true,
+    title: "SB Daymaker",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-icon-180.png",
+  },
+  openGraph: {
+    title: "SB Daymaker",
+    description:
+      "Find what's worth doing in Santa Barbara today — find it, save it, share it.",
+    siteName: "SB Daymaker",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {
@@ -54,6 +75,7 @@ export default function RootLayout({
     >
       <body className="min-h-full">
         <SavesProvider>{children}</SavesProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

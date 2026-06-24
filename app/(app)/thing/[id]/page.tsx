@@ -7,7 +7,7 @@ import { DetailSaveButton } from "@/components/detail/DetailSaveButton";
 import { prettify } from "@/components/explore/derive";
 
 export const metadata: Metadata = { title: "Detail — SB Daymaker" };
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR — refresh published content every 10 min
 
 function eventWhen(iso: string): string {
   return new Intl.DateTimeFormat("en-US", {

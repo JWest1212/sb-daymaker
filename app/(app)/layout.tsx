@@ -8,8 +8,13 @@ import { BottomNav } from "@/components/app/BottomNav";
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="sbd-shell">
+      <a href="#main" className="sbd-skip">
+        Skip to content
+      </a>
       <AppHeader />
-      <main className="sbd-shell__main">{children}</main>
+      <main id="main" className="sbd-shell__main">
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

@@ -1830,6 +1830,30 @@ textarea.sbd-field__input {
   width: 100%;
 }
 
+/* ==========================================================================
+   ACCESSIBILITY (Phase 9)
+   ========================================================================== */
+/* Skip-to-content: hidden until focused (keyboard users land on it first). */
+.sbd-skip {
+  position: absolute;
+  left: var(--space-3);
+  top: -48px;
+  z-index: 100;
+  background: var(--pacific);
+  color: var(--paper);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: var(--weight-semi);
+  text-decoration: none;
+  transition: top var(--dur-fast) var(--ease-out);
+}
+.sbd-skip:focus {
+  top: var(--space-3);
+  outline: 2px solid var(--paper);
+  outline-offset: 2px;
+}
+
 /* ---- KEYFRAMES ---------------------------------------------------------- */
 @keyframes heartPop {
   0% {

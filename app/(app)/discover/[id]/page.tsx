@@ -7,7 +7,7 @@ import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
 
 export const metadata: Metadata = { title: "Guide — SB Daymaker" };
-export const dynamic = "force-dynamic";
+export const revalidate = 600; // ISR — refresh published content every 10 min
 
 export default async function GuidePage({
   params,
