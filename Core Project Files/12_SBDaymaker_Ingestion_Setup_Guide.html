@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Ingestion Setup (click-by-click)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;--blocker:#B23A2E;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#0E3C49,#16586A 130%);color:var(--paper);padding:60px 0 50px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-60px;top:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(224,168,46,.4),rgba(224,168,46,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--gold);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(36px,6.4vw,56px);line-height:1.02;margin:0 0 16px;letter-spacing:-.01em;color:var(--paper);}
+  .cover .lede{font-size:18px;max-width:730px;color:rgba(252,250,245,.9);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(252,250,245,.14);border:1px solid rgba(252,250,245,.28);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:var(--paper);}
+  section{padding:38px 0 6px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(23px,4vw,32px);line-height:1.06;margin:4px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 16px;max-width:790px;}
+  p{margin:0 0 13px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:20px;margin:22px 0 6px;}
+  ul,ol{margin:0 0 13px;padding-left:22px;}
+  li{margin:0 0 8px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .money{background:#FBEEEA;border:1px solid #E7C3B7;border-left:4px solid var(--terra);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .money .k{color:var(--terra);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  .tcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:15px 18px;box-shadow:var(--shadow);}
+  .tcard .t{font-family:'Fraunces',serif;font-weight:600;font-size:17px;margin-bottom:4px;}
+  .tcard.bot{border-left:4px solid var(--pacific);}
+  .tcard.you{border-left:4px solid var(--terra);}
+  .phase{background:linear-gradient(150deg,#0E3C49,#16586A);color:var(--paper);border-radius:14px;padding:22px 26px;margin:30px 0 0;box-shadow:var(--shadow);}
+  .phase .pn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);}
+  .phase h2{color:var(--paper);margin:6px 0 8px;}
+  .phase .goal{color:rgba(252,250,245,.93);margin:0;font-size:15.5px;}
+  .pbody{background:var(--paper);border:1px solid var(--line);border-top:none;border-radius:0 0 14px 14px;padding:16px 24px 22px;margin:0 0 6px;box-shadow:var(--shadow);}
+  .track{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;margin:2px 0;}
+  .t-you{background:#F6E0DA;color:var(--terra);}
+  .t-bot{background:#E4EEF2;color:var(--pacific);}
+  .prompt{background:#241C16;color:#F1E9DC;border-radius:11px;padding:15px 18px;margin:10px 0 14px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;}
+  .prompt .lbl{display:block;color:var(--gold);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+  .checkwrap{background:#F0F4EC;border:1px solid #CBDBC0;border-radius:12px;padding:14px 20px 6px;margin:14px 0 4px;}
+  .checkwrap .k{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--forest);margin-bottom:6px;}
+  .check{list-style:none;padding-left:0;margin:6px 0 4px;}
+  .check li{position:relative;padding-left:30px;margin-bottom:8px;font-size:14.5px;}
+  .check li::before{content:"☐";position:absolute;left:0;top:-1px;font-size:18px;color:var(--forest);font-weight:700;}
+  .warn{color:var(--blocker);font-weight:600;}
+  .rhythm{background:#EAF0F2;border:1px solid #BcD3D9;border-radius:13px;padding:6px 24px 12px;margin:16px 0;}
+  .rhythm ol{counter-reset:r;list-style:none;padding-left:0;margin:14px 0 8px;}
+  .rhythm ol li{position:relative;padding-left:42px;margin-bottom:12px;}
+  .rhythm ol li::before{counter-increment:r;content:counter(r);position:absolute;left:0;top:-2px;width:28px;height:28px;border-radius:50%;background:var(--pacific);color:var(--paper);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;}
+  .substep{font-family:'Fraunces',serif;font-weight:600;font-size:16px;color:var(--pacific-d);margin:20px 0 6px;padding-top:6px;border-top:1px dashed var(--line);}
+  .substep:first-of-type{border-top:none;}
+  .gstep{background:#F0F4EC;border:1px solid #CBDBC0;border-radius:12px;padding:10px 20px 14px;margin:12px 0;}
+  .gstep .gk{font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--forest);margin:8px 0 2px;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:30px 0;margin-top:46px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Document 12 · One-Time Setup Runbook</div>
+    <h1>Turn on the<br>nightly engine</h1>
+    <p class="lede">Your app is built and live. This guide adds the machine that <em>refills</em> it every night — finding new events, checking their start times, resolving photos — and the review screen where you approve what goes live. You won't write code. Claude Code writes it; you click, paste, and check. Six phases, in order, each ending with a list that tells you exactly where to click to confirm it worked.</p>
+    <div class="badges">
+      <span class="badge">⚙️ Setup once, runs nightly</span>
+      <span class="badge">🖱️ No experience assumed</span>
+      <span class="badge">📄 Pairs with Document 13 (daily use)</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="money" style="margin-top:28px;">
+    <div class="k">Before you start — what this costs</div>
+    <ol style="margin:6px 0 0;">
+      <li><strong>Everything here fits inside your existing budget.</strong> The nightly engine runs on free tiers (GitHub Actions, the Ticketmaster events feed, your existing Supabase &amp; Vercel). Your only real variable is photos, and that's capped.</li>
+      <li><strong>Phase 13 sets up three photo sources that were never set up in your first build.</strong> Two are free and quick (Pexels, Wikimedia). The third (Google Photos) is the only part of this whole project that uses a credit card — and you'll wire in three independent caps before it can spend a cent. Full click-by-click is in Phase 13.</li>
+      <li><strong>The photo cap holds the line (~$50/month ceiling).</strong> Every card gets a real photo: free sources are tried first, and the paid source fills in automatically only when the free ones come up empty. Past the cap, the rare leftover card uses a placeholder. You'll confirm the exact pricing during Phase 13.</li>
+      <li><strong>You still need your paid Claude plan</strong> for Claude Code (the build tool), same as the first build. Nothing else new to subscribe to.</li>
+    </ol>
+  </div>
+
+  <section style="border-top:none;">
+    <h2>How to read this guide</h2>
+    <div class="twocol">
+      <div class="tcard bot"><div class="t">🤖 Claude builds</div><div>You paste a short instruction into Claude Code and let it work. You never type code.</div></div>
+      <div class="tcard you"><div class="t">🧑 You do</div><div>Things only you can do — make an account, copy a key, click a website button. Spelled out click-by-click.</div></div>
+    </div>
+    <div class="callout">
+      <div class="k">When a screen doesn't match this guide</div>
+      <p style="margin:0;">Websites change their buttons constantly. If something doesn't look exactly like what's written here, <strong>don't panic — ask Claude Code</strong>: e.g. <em>"I'm on the Ticketmaster developer site trying to find my API key — walk me through where to click."</em> It will guide you to the current spot.</p>
+    </div>
+    <div class="callout" style="border-left-color:var(--pacific);">
+      <div class="k">One thing that may look confusing — and isn't</div>
+      <p style="margin:0;">This is <strong>"Phase 9,"</strong> not "Phase 1." Your first build (Document 8) was Phases 1–8. This engine continues the same plan, so its phases are numbered <strong>9 through 14</strong> — they come <em>next</em>, not later. Nothing is missing in between.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The build rhythm</h2>
+    <p class="sub">Read this once — it's the rhythm of every phase below, the same five moves you already know from the first build.</p>
+    <div class="rhythm">
+      <ol>
+        <li><strong>Open your project in VS Code.</strong> Open the VS Code app; it remembers your <span class="mono">sb-daymaker</span> folder from last time.</li>
+        <li><strong>Open the Claude Code panel</strong> and paste the phase's <strong>🤖 prompt</strong> exactly as written.</li>
+        <li><strong>When Claude asks you for something</strong> (a key, a click on a website), do the <strong>🧑 You</strong> step for that phase and paste back what it asked for.</li>
+        <li><strong>Let it finish,</strong> then read the <strong>✅ done when</strong> checklist and click where it says to confirm.</li>
+        <li><strong>Only move to the next phase</strong> once every box is checked. If one fails, tell Claude what you saw — it fixes it.</li>
+      </ol>
+    </div>
+    <div class="callout">
+      <div class="k">The golden rule of this engine</div>
+      <p style="margin:0;">Two promises are wired in and must never break: <strong>(1)</strong> a show with a fuzzy time ("around 8") is <em>dropped, never guessed</em> — a wrong time is a locked door. <strong>(2)</strong> Nothing goes public on its own — every item waits in your review screen until <em>you</em> approve it. Each phase below protects these.</p>
+    </div>
+  </section>
+
+  <!-- PHASE 9 -->
+  <div class="phase">
+    <div class="pn">Phase 9</div>
+    <h2>The quality gate (the rule-keeper)</h2>
+    <p class="goal">The "gate" is built and proven: a piece of code that checks every incoming item and throws out anything missing a real title, address, source, or — for events — an exact start time. It's tested against your 107 hand-built items to prove it keeps the same standard you set by hand.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Read CLAUDE.md, 10_SBDaymaker_Ingestion_Pipeline.md, and 11_SBDaymaker_Ingestion_Build_Guide.md. Start with Phase 9: apply the ingestion database migration (source_runs, ingest_drops, and the recurring_schedules frequency field), build the shared types file, and build the strict gate module exactly as specified. Then build the gate test that runs against my 107 seed rows as fixtures — every seed row must pass, the negative examples must be dropped with the right reason, and the generated IDs must match the seed exactly. Use Plan mode and show me the plan first. I'm non-technical — explain anything you need me to click.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 9 is done when</div>
+      <ul class="check">
+        <li><strong>The test passes.</strong> Claude runs the gate test and shows you a green "all passing" result — it will say something like "107 fixtures passed."</li>
+        <li><strong>Your database has new tables.</strong> In Supabase, click <span class="mono">Table Editor</span> — you now see <span class="mono">source_runs</span> and <span class="mono">ingest_drops</span> in the list.</li>
+        <li>Claude confirms the fuzzy-time examples (like an event that says "8-ish") were <strong>correctly thrown out</strong> with the reason "no start time."</li>
+        <li><span class="warn">⚠️ If any of your 107 items gets thrown out,</span> tell Claude <em>"a real seed row is failing the gate — the gate is too strict, show me which rule and fix it."</em></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 10 -->
+  <div class="phase">
+    <div class="pn">Phase 10</div>
+    <h2>The first two sources (the proof)</h2>
+    <p class="goal">Two live sources flow end-to-end: the Ticketmaster events feed (for big venues like the Bowl) and the SOhO ticketing pages (for club shows). New items land in your database marked "needs review." Nothing is public yet.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-you">🧑 YOU — get a free Ticketmaster key first (paste when Claude asks):</span></p>
+    <ol>
+      <li>Go to <strong>developer.ticketmaster.com</strong> → <strong>Sign In / Register</strong> and make a free account.</li>
+      <li>After signing in, find <strong>My Apps</strong> (usually under your account menu) → it shows you a <strong>Consumer Key</strong>. Click the copy icon. <em>That long string is your key — keep the tab open.</em></li>
+      <li>If you can't find it, ask Claude: <em>"walk me through finding my Ticketmaster Consumer Key on the developer site."</em></li>
+    </ol>
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — then paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Continue with Phase 10 of the Ingestion Build Guide. Build the source-adapter framework and the first two adapters — Ticketmaster and SOhO — exactly as specified, then wire fetch → gate → dedupe → land so they save new items as "needs_review." Set up the GitHub Action with a manual "run now" button (workflow_dispatch). I'll paste my Ticketmaster key when you ask, and walk me click-by-click through adding it as a GitHub secret. Plan mode first. Explain each click.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 10 is done when</div>
+      <ul class="check">
+        <li><strong>You ran it once by hand.</strong> Claude walks you to GitHub's <span class="mono">Actions</span> tab; you click <strong>Run workflow</strong> and watch it turn green.</li>
+        <li><strong>Real items appeared.</strong> In Supabase <span class="mono">Table Editor</span> → <span class="mono">things</span>, filter <span class="mono">status = needs_review</span> — you see new SOhO shows and Bowl concerts that weren't there before.</li>
+        <li><strong>Every event has a real time.</strong> Spot-check a few new rows — each event has an actual date and clock time in <span class="mono">starts_at</span>, never blank.</li>
+        <li><strong>Running it twice doesn't duplicate.</strong> Click Run workflow again; the same shows don't get added a second time.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 11 -->
+  <div class="phase">
+    <div class="pn">Phase 11</div>
+    <h2>The writing pass (house voice + tags)</h2>
+    <p class="goal">Once a night, after the gate, Claude writes a short in-voice blurb and suggests tags for each new item — in one batched pass, never touching the start time. The trust rules (no "family day" tag on 21+ events, no "free" tag on paid ones) are enforced automatically.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Continue with Phase 11. Build the batch enrichment step exactly as specified: one Claude API call over the night's gated items that writes blurb, blurb_long, and proposed tags in the house voice, and never reads or changes a start time. Enforce the negative tag rules after the call. Log every draft to audit_log. If the call fails, land rows with their plain titles instead of blocking the run. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 11 is done when</div>
+      <ul class="check">
+        <li><strong>New items read like SB Daymaker.</strong> In <span class="mono">things</span>, new rows now have warm, concrete blurbs — not empty, not robotic.</li>
+        <li><strong>Tags look sensible</strong> and suggested tags appear in the <span class="mono">thing_tags</span> table marked as AI-sourced.</li>
+        <li><strong>Times are untouched.</strong> Claude confirms a before/after check: every <span class="mono">starts_at</span> is identical to what the gate set. The writing step never edits time.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 12 -->
+  <div class="phase">
+    <div class="pn">Phase 12</div>
+    <h2>The review cockpit (your screen)</h2>
+    <p class="goal">The review screen exists in your app: a queue of cards you approve, edit, or reject by keyboard, with the start-time trust signal and image on each card. This is the screen Document 13 teaches you to use daily.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Continue with Phase 12. Build the review cockpit at /admin/review exactly as specified in the Build Guide and matching cockpit_wireframe.html: a prioritized queue of needs_review cards with the start-time trust chip and its source link, the live resolved image with a source label, keyboard shortcuts (A approve, E edit, R reject, up/down to move, B bulk-approve), the "dropped tonight" panel, and the source-health panel. On Edit, build the image picker that arrows through the pre-fetched alternates and lets me pick one. Approving publishes the row and logs it. Gate it to my admin login. Plan mode first.</div>
+    <div class="callout">
+      <div class="k">Want to see the target first?</div>
+      <p style="margin:0;">Open <span class="mono">cockpit_wireframe.html</span> in your browser before this phase. That clickable mock <em>is</em> what Claude is building toward — try the A / E / R keys and, in Edit, the ◂ ▸ image arrows, so you recognize the real thing when it appears.</p>
+    </div>
+    <div class="checkwrap"><div class="k">✅ Phase 12 is done when</div>
+      <ul class="check">
+        <li><strong>You can open it.</strong> Go to your app address ending in <span class="mono">/admin/review</span> (sign in if asked). You see a stack of review cards.</li>
+        <li><strong>Keyboard works.</strong> Press <span class="mono">A</span> on a card — it publishes and slides away. An <strong>Undo</strong> appears briefly.</li>
+        <li><strong>The image picker works.</strong> Press <span class="mono">E</span> on a card, then the <strong>◂ ▸</strong> arrows on the image — it flips through other photo options instantly. Pick one; it sticks.</li>
+        <li><strong>The trust signal is there.</strong> Each card shows the start time with a green/amber/blue chip and a "view source" link.</li>
+        <li><strong>Nothing public leaked.</strong> Items you haven't approved still don't appear on the live site.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 13 -->
+  <div class="phase">
+    <div class="pn">Phase 13</div>
+    <h2>The rest of the sources + photos + nightly email</h2>
+    <p class="goal">The remaining local sources are added, photos resolve automatically (free sources first, the paid one only when needed and under the cap), permanently-closed places get archived, and a nightly summary email tells you what's new, what was dropped, and whether any source broke. The engine now runs on a schedule.</p>
+  </div>
+  <div class="pbody">
+    <div class="callout teal">
+      <div class="k">Heads up — this phase has the most "you" setup since the very first build</div>
+      <p style="margin:0;">The photo sources were <strong>never set up in your first build</strong> — they belong here. Two are free and quick; the third (Google Photos) is the only place in this whole project you'll enter a credit card, so we wire in <strong>three separate safety caps</strong> before it can spend anything. Take this section slowly; it's all click-by-click.</p>
+    </div>
+
+    <p><span class="track t-you">🧑 YOU — set up the three photo sources (do these before pasting the build prompt):</span></p>
+
+    <div class="substep">A · Reuse your existing email key (nothing new — 30 seconds)</div>
+    <p>The nightly summary email uses <strong>Resend</strong>, which you already set up in your first build (Phase 7). You don't create anything new — just have that same <span class="mono">RESEND_API_KEY</span> handy from your credentials file to paste when Claude asks. <em>If you can't find it: resend.com → sign in → API Keys → copy (or create a fresh one).</em></p>
+
+    <div class="substep">B · Pexels — free photo source (2 minutes, no card)</div>
+    <ol>
+      <li>Go to <strong>pexels.com/api</strong> → <strong>Get Started</strong> and sign up (free).</li>
+      <li>Once in, it shows <strong>Your API Key</strong> — click to reveal, then copy it. Keep it for when Claude asks.</li>
+      <li>That's the whole thing — no billing, no card. Pexels is free for this use.</li>
+    </ol>
+
+    <div class="substep">C · Wikimedia — free photo source (nothing to set up)</div>
+    <p>Wikimedia (the Wikipedia image library) needs <strong>no account and no key</strong> — it's an open source Claude can call directly. There's literally nothing for you to do here; it's listed so you know it's covered.</p>
+
+    <div class="substep">D · Google Photos — the one paid source, from zero (~15 minutes, card required)</div>
+    <div class="money">
+      <div class="k">⚠️ Read this before you start</div>
+      <p style="margin:0 0 8px;">This is the only part of SB Daymaker that uses a credit card. Google requires one to turn on the photo service, <strong>but you control the spending with three independent caps you'll set below.</strong> Most photos come from the free sources above, so the paid one is used sparingly. With the caps in place, a surprise bill is not possible.</p>
+      <p style="margin:0;">Google also gives every account a <strong>monthly free credit</strong> for this service — for a single-city app, a large share of your paid photo calls may fall inside it. You'll confirm the current pricing and free amount during the build (that's the "audit flag B6" check in the prompt).</p>
+    </div>
+
+    <div class="gstep">
+      <div class="gk">D1 — Create your Google Cloud account</div>
+      <ol style="margin:4px 0 6px;">
+        <li>Go to <strong>cloud.google.com</strong> → click <strong>Get started for free</strong> (or <strong>Console</strong> if you're already signed into a Google account).</li>
+        <li>Sign in with any Google account (your Gmail is fine). Accept the terms.</li>
+        <li>It will ask for a <strong>credit card to verify you're not a robot</strong> and set up billing. Enter it. <em>(New accounts typically get a free trial credit on top of the always-free monthly photo amount.)</em></li>
+      </ol>
+      <div class="gk">D2 — Create a project called "sb-daymaker"</div>
+      <ol style="margin:4px 0 6px;">
+        <li>At the top of the Google Cloud Console, click the <strong>project dropdown</strong> (says "Select a project") → <strong>New Project</strong>.</li>
+        <li>Name it <span class="mono">sb-daymaker</span> → <strong>Create</strong>. Wait a few seconds, then make sure that project is selected in the top dropdown.</li>
+      </ol>
+      <div class="gk">D3 — Turn on the photo service (Places API)</div>
+      <ol style="margin:4px 0 6px;">
+        <li>In the search bar at the top, type <strong>Places API (New)</strong> and click it in the results.</li>
+        <li>Click <strong>Enable</strong>. (If it asks you to link a billing account, pick the one from D1.)</li>
+      </ol>
+      <div class="gk">D4 — Create your key</div>
+      <ol style="margin:4px 0 6px;">
+        <li>Search for <strong>Credentials</strong> (under "APIs &amp; Services") → open it.</li>
+        <li>Click <strong>+ Create Credentials</strong> → <strong>API key</strong>. A key string appears — <strong>copy it</strong> and keep it safe (this is your <span class="mono">GOOGLE_PLACES_KEY</span>).</li>
+        <li>Click <strong>Edit API key</strong> (or the pencil). Under <strong>API restrictions</strong>, choose <strong>Restrict key</strong> and tick <strong>Places API (New)</strong> only, then <strong>Save</strong>. <em>(This means even if the key leaked, it could only ever be used for photos — nothing else.)</em></li>
+      </ol>
+    </div>
+
+    <div class="money">
+      <div class="k">⚠️ Set all three spending caps now — don't skip these</div>
+      <p style="margin:0 0 8px;"><strong>Cap 1 — A hard daily limit at Google (the real backstop).</strong> In the Console search bar, go to <strong>APIs &amp; Services → Quotas</strong> (or "Quotas &amp; System Limits"). Filter to <strong>Places API (New)</strong>, find the <strong>Place Photo</strong> request limit, click <strong>Edit Quota</strong>, and set a low <strong>requests-per-day</strong> number (Claude will recommend an exact figure during the build, based on the pricing it looks up). Once that many photos are pulled in a day, Google simply stops — it cannot spend past it.</p>
+      <p style="margin:0 0 8px;"><strong>Cap 2 — A billing budget alert (your early-warning email).</strong> Search <strong>Billing → Budgets &amp; alerts → Create budget</strong>. Set the amount to your monthly photo ceiling (around your overall ~$50 image cap) and turn on email alerts at 50%, 90%, and 100%. <em>This emails you if spending climbs — it's your tripwire.</em></p>
+      <p style="margin:0;"><strong>Cap 3 — The app's own counter (Claude builds this next).</strong> The build prompt below tells Claude to keep its own running monthly count and stop calling Google before the cap — so the app self-limits before Google's limits even come into play. <strong>Three layers, fully independent.</strong></p>
+    </div>
+
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — once A–D are done, paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Continue with Phase 13. First, look up the CURRENT Google Places API (New) Place Photo pricing, the monthly free allowance, and the caching terms, and tell me: (a) a safe requests-per-day number for me to set as a Google quota cap, and (b) the monthly dollar cap to enforce in the app (this is audit flag B6 — confirm with me before building the paid path). Then add the remaining adapters (Visit Santa Barbara, the Independent, the city calendars, LiveNotes, and Google Places with permanent-closure detection). Build the image step exactly as specified so EVERY card lands with a real image: for each card try the free sources first (Pexels, then Wikimedia), and if they all miss, automatically call the paid Google Places Photo during the nightly run — but only while the app's own saved monthly counter is under the cap we agreed. Use the branded placeholder only as a last resort (cap reached, or no photo anywhere). Cache by place so a place is never paid for twice. Also gather the other available images per card as swap-able alternates for the cockpit picker. Build the nightly summary email (reuse my existing Resend key; include how many cards hit the cap). Switch the GitHub Action to run automatically at 2am. I'll paste my Pexels key and Google Places key when you ask, and walk me through adding them as GitHub secrets. Plan mode first.</div>
+    <div class="money">
+      <div class="k">⚠️ Before you let the schedule run</div>
+      <p style="margin:0;">Confirm with Claude that <strong>all three caps line up</strong>: the app counter and the Google quota should stop at roughly the same place, and the budget alert sits just above them. Ask: <em>"show me where the app's photo cap is enforced, what happens when it's hit, and confirm it matches the Google quota I set."</em> The answer should be: it stops calling the paid source and uses a placeholder, well before any meaningful cost.</p>
+    </div>
+    <div class="money">
+      <div class="k">⚠️ Confirm the photo cap before this goes nightly</div>
+      <p style="margin:0;">When Claude shows you the Google Places Photo pricing, make sure the <strong>monthly counter and cap</strong> are wired in and tested <em>before</em> you let the schedule run. Ask: <em>"show me where the cap is enforced and what happens when it's hit."</em> The answer should be: it stops calling the paid source and uses a placeholder instead.</p>
+    </div>
+    <div class="checkwrap"><div class="k">✅ Phase 13 is done when</div>
+      <ul class="check">
+        <li><strong>A full run brings in lots of sources.</strong> Run the workflow; the needs_review queue fills from many sources, not just two.</li>
+        <li><strong>Every card has a real photo.</strong> Open <span class="mono">/admin/review</span> — every card shows an actual image with a small source label ("Pexels," "Wikimedia," or "Google Places"). A plain placeholder should be rare (only when nothing was found or the cap was reached).</li>
+        <li><strong>The email arrived.</strong> Check your inbox for a summary: how many new, how many dropped (and why), and whether any source was down.</li>
+        <li><strong>The cap holds.</strong> Claude shows you the spend counter and confirms the paid source stops at your cap.</li>
+        <li><strong>It's automatic now.</strong> The Action is set to 2am daily — you no longer press Run by hand.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PHASE 14 -->
+  <div class="phase">
+    <div class="pn">Phase 14</div>
+    <h2>Recurring rhythms + the safety reserve</h2>
+    <p class="goal">The weekly/monthly rhythms (happy hours, trivia, art walks, Nite Moves) get a tidy registry that respects "weekly vs. monthly vs. every-other-week." And a one-switch reserve is wired in: if any single source ever starts blocking the engine, you can route just that one through a paid scraper without rebuilding anything.</p>
+  </div>
+  <div class="pbody">
+    <p><span class="track t-bot">🤖 CLAUDE BUILDS — paste this:</span></p>
+    <div class="prompt"><span class="lbl">🤖 Kickoff prompt</span>Finish with Phase 14. Build the recurring-rhythm registry that honors the new frequency field (weekly / biweekly / monthly); rhythms where the day is known but the time isn't should land with a blank start time and a flag, never a guessed time. Then add the per-source "managed scrape" switch described in the guide, so a single blocked source can be routed through Scrapfly or Apify by flipping one flag — leave it off by default. Plan mode first.</div>
+    <div class="checkwrap"><div class="k">✅ Phase 14 is done when</div>
+      <ul class="check">
+        <li><strong>Rhythms read correctly.</strong> The monthly ones (like 1st Thursday) and every-other-week ones (Funk Zone Art Walk) are stored with the right cadence, not as "every week."</li>
+        <li><strong>The reserve exists but is off.</strong> Claude shows you the one-flag switch per source and confirms it's disabled by default — there for emergencies only.</li>
+        <li><strong>The whole engine runs unattended.</strong> Tomorrow morning, without you touching anything, a fresh queue and a summary email are waiting.</li>
+        <li>🎉 <strong>You're done.</strong> From here you live in Document 13 — the daily routine.</li>
+      </ul>
+    </div>
+  </div>
+
+  <section>
+    <h2>What now?</h2>
+    <p class="sub">The engine is on. Every night it fills your review queue and emails you a summary. Your job shrinks to one thing: open the cockpit, approve the good stuff, fix or reject the rest — about 15 minutes.</p>
+    <div class="callout" style="border-left-color:var(--forest);">
+      <div class="k">Next</div>
+      <p style="margin:0;">Open <strong>Document 13 — The Daily Routine</strong>. It teaches the cockpit click-by-click: how to read a card's trust signal, when to pick a different photo, and how to clear a night's queue fast.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker — Ingestion Setup Runbook (Document 12)</span>
+    <span>Pairs with Doc 11 (build spec) &amp; Doc 13 (daily use)</span>
+  </div>
+</footer>
+
+</body>
+</html>

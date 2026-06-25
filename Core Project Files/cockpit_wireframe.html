@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Review Cockpit (wireframe)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+  --ink:#241C16; --ink-2:#4A4038;
+  --pacific:#16586A; --pacific-dark:#0E3C49;
+  --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+  --line:#D8CDB8; --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  --sev-blocker:#B23A2E; --sev-high:#C77D1E; --sev-med:#9A8A3E; --sev-low:#3E7C5A;
+  --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  --tap-min:44px;
+  --ease-out:cubic-bezier(0.16,1,0.3,1); --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--font-body); background:var(--plaster); color:var(--ink);
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--pacific); outline-offset:2px; border-radius:4px}
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky; top:0; z-index:30; background:var(--pacific-dark); color:var(--paper);
+  border-bottom:1px solid rgba(0,0,0,.2);
+}
+.topbar-inner{max-width:1180px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:20px}
+.brand{display:flex; align-items:baseline; gap:10px; font-family:var(--font-display); font-weight:900; font-size:1.25rem; letter-spacing:-.01em}
+.brand .sb{color:var(--gold)}
+.brand .kicker{font-family:var(--font-mono); font-weight:500; font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; opacity:.7; align-self:center}
+.topbar-stats{margin-left:auto; display:flex; gap:22px; align-items:center}
+.tstat{display:flex; flex-direction:column; line-height:1.1}
+.tstat b{font-family:var(--font-mono); font-size:1.05rem; font-weight:600}
+.tstat span{font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; opacity:.65}
+.tstat.dropped b{color:var(--gold)}
+.tstat.broken b{color:var(--tile-light)}
+
+/* ---------- digest banner ---------- */
+.digest{max-width:1180px; margin:16px auto 0; padding:0 24px}
+.digest-card{
+  background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--pacific);
+  border-radius:var(--radius-md); padding:14px 18px; display:flex; align-items:center; gap:14px; box-shadow:var(--shadow-card);
+}
+.digest-card .stamp{font-family:var(--font-mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-2)}
+.digest-card .msg{font-size:.95rem}
+.digest-card .msg b{font-weight:600}
+.digest-card .broken-flag{color:var(--terra-text); font-weight:600}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1180px; margin:18px auto 80px; padding:0 24px; display:grid; grid-template-columns:1fr 300px; gap:24px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- queue controls ---------- */
+.controls{display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap}
+.qtitle{font-family:var(--font-display); font-weight:600; font-size:1.563rem; letter-spacing:-.01em; margin:0}
+.qtitle .count{font-family:var(--font-mono); font-size:1rem; color:var(--ink-2); font-weight:500; margin-left:8px}
+.spacer{flex:1}
+.filterbar{display:flex; gap:6px; background:var(--plaster-2); padding:4px; border-radius:var(--radius-pill)}
+.filt{border:none; background:transparent; padding:7px 14px; border-radius:var(--radius-pill); font-size:.82rem; font-weight:500; color:var(--ink-2); min-height:36px}
+.filt[aria-pressed="true"]{background:var(--paper); color:var(--ink); box-shadow:0 1px 2px rgba(36,28,22,.08)}
+.bulk{
+  background:transparent; border:1.5px solid var(--pacific); color:var(--pacific); font-weight:600;
+  padding:8px 16px; border-radius:var(--radius-pill); font-size:.82rem; min-height:36px; display:inline-flex; align-items:center; gap:7px;
+}
+.bulk:hover{background:rgba(22,88,106,.06)}
+
+/* ---------- card ---------- */
+.card{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md);
+  box-shadow:var(--shadow-card); margin-bottom:16px; overflow:hidden; transition:opacity .24s var(--ease-out), transform .24s var(--ease-out);
+}
+.card.is-active{border-color:var(--pacific); box-shadow:0 0 0 2px rgba(22,88,106,.25),var(--shadow-card)}
+.card.leaving{opacity:0; transform:translateY(-8px) scale(.99)}
+.card-grid{display:grid; grid-template-columns:168px 1fr; gap:0}
+@media(max-width:620px){.card-grid{grid-template-columns:1fr}}
+
+.thumb{position:relative; background:linear-gradient(135deg,var(--plaster-2),var(--line)); min-height:168px; display:flex; align-items:center; justify-content:center}
+.thumb.placeholder::after{content:"placeholder"; font-family:var(--font-mono); font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); opacity:.7}
+.thumb .src-pill{position:absolute; left:8px; bottom:8px; background:rgba(36,28,22,.78); color:var(--paper); font-family:var(--font-mono); font-size:.6rem; letter-spacing:.06em; padding:3px 7px; border-radius:var(--radius-pill)}
+.thumb.tm{background:linear-gradient(135deg,#1e5a6b,#0e3c49)}
+.thumb.soho{background:linear-gradient(135deg,#7a3a23,#c0532e)}
+.thumb.places{background:linear-gradient(135deg,#5a6049,#7e8b6b)}
+/* image picker (active in Edit mode) */
+.imgnav{position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border-radius:50%;
+  border:none; background:rgba(252,250,245,.92); color:var(--ink); font-size:1.2rem; font-weight:700; line-height:1;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,.25); cursor:pointer}
+.imgnav.prev{left:8px} .imgnav.next{right:8px}
+.imgnav:hover{background:var(--paper)}
+.imgcount{position:absolute; top:8px; right:8px; background:rgba(36,28,22,.78); color:var(--paper); font-family:var(--font-mono); font-size:.6rem; padding:3px 7px; border-radius:var(--radius-pill)}
+.card.is-editing{border-color:var(--gold); box-shadow:0 0 0 2px rgba(224,168,46,.3),var(--shadow-card)}
+.card.is-editing .thumb::before{content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 2px var(--gold); pointer-events:none; z-index:1}
+
+.body{padding:16px 18px; display:flex; flex-direction:column; gap:10px}
+.row1{display:flex; align-items:flex-start; gap:10px}
+.tier{font-family:var(--font-mono); font-size:.6rem; font-weight:600; letter-spacing:.08em; padding:3px 7px; border-radius:5px; white-space:nowrap; margin-top:3px}
+.tier.t1{background:rgba(192,83,46,.13); color:var(--terra-text)}
+.tier.t2{background:rgba(224,168,46,.18); color:var(--gold-text)}
+.tier.t3{background:rgba(126,139,107,.18); color:var(--sage-text)}
+.title{font-family:var(--font-display); font-weight:600; font-size:1.25rem; line-height:1.2; letter-spacing:-.01em; margin:0}
+.cat{font-family:var(--font-mono); font-size:.66rem; color:var(--ink-2); letter-spacing:.04em; margin-top:2px}
+.blurb{font-size:.92rem; color:var(--ink-2); line-height:1.5; margin:0}
+
+/* start-time trust chip — THE SIGNATURE ELEMENT */
+.timeblock{display:flex; flex-direction:column; gap:3px; padding:10px 12px; background:var(--plaster); border-radius:var(--radius-sm); border:1px solid var(--line)}
+.timeline{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+.chip{display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:600; padding:4px 10px; border-radius:var(--radius-pill)}
+.chip .dot{width:8px; height:8px; border-radius:50%}
+.chip.green{background:rgba(62,124,90,.15); color:var(--sev-low)}
+.chip.green .dot{background:var(--sev-low)}
+.chip.amber{background:rgba(199,125,30,.16); color:var(--sev-high)}
+.chip.amber .dot{background:var(--sev-high)}
+.chip.evergreen{background:rgba(22,88,106,.1); color:var(--pacific)}
+.chip.evergreen .dot{background:var(--pacific)}
+.whenstr{font-family:var(--font-mono); font-size:.92rem; font-weight:500; color:var(--ink)}
+.prov{font-size:.72rem; color:var(--ink-2)}
+.prov a{color:var(--pacific); text-decoration:none; border-bottom:1px dotted var(--pacific)}
+.prov a:hover{border-bottom-style:solid}
+
+.meta{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.tag{font-size:.72rem; padding:3px 9px; border-radius:var(--radius-pill); background:var(--plaster-2); color:var(--ink-2); font-weight:500}
+.hood{font-size:.72rem; padding:3px 9px; border-radius:var(--radius-pill); background:transparent; border:1px solid var(--line); color:var(--ink-2); font-weight:500}
+.price{font-family:var(--font-mono); font-size:.74rem; color:var(--ink-2)}
+
+/* actions */
+.actions{display:flex; gap:8px; align-items:center; padding-top:4px; border-top:1px dashed var(--line); margin-top:2px}
+.actions .pt{padding-top:12px}
+.btn{display:inline-flex; align-items:center; gap:7px; border:none; border-radius:var(--radius-pill); font-weight:600; font-size:.85rem; padding:9px 16px; min-height:40px}
+.btn .k{font-family:var(--font-mono); font-size:.66rem; opacity:.8; border:1px solid currentColor; border-radius:4px; padding:0 4px; line-height:1.4}
+.btn-approve{background:var(--pacific); color:var(--paper)}
+.btn-approve:hover{background:var(--pacific-dark)}
+.btn-edit{background:transparent; color:var(--pacific); border:1.5px solid var(--pacific)}
+.btn-edit:hover{background:rgba(22,88,106,.06)}
+.btn-reject{background:transparent; color:var(--terra-text); border:1.5px solid var(--tile-light)}
+.btn-reject:hover{background:rgba(192,83,46,.06)}
+.actions .right{margin-left:auto; font-family:var(--font-mono); font-size:.68rem; color:var(--ink-2)}
+
+/* ---------- sidebar ---------- */
+.side{position:sticky; top:96px; align-self:start; display:flex; flex-direction:column; gap:16px}
+.panel{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); box-shadow:var(--shadow-card); overflow:hidden}
+.panel h3{margin:0; font-family:var(--font-display); font-weight:600; font-size:1rem; padding:14px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px}
+.panel h3 .n{font-family:var(--font-mono); font-size:.8rem; color:var(--ink-2); margin-left:auto; font-weight:500}
+.dropwrap{max-height:340px; overflow:auto}
+.drop{padding:11px 16px; border-bottom:1px solid var(--plaster-2); display:flex; flex-direction:column; gap:3px}
+.drop:last-child{border-bottom:none}
+.drop .dt{font-size:.82rem; font-weight:500; color:var(--ink)}
+.drop .dr{font-family:var(--font-mono); font-size:.68rem; color:var(--terra-text)}
+.drop .ds{font-size:.7rem; color:var(--ink-2)}
+.drop .restore{align-self:flex-start; margin-top:2px; background:transparent; border:1px solid var(--line); color:var(--pacific); font-size:.7rem; font-weight:600; padding:3px 9px; border-radius:var(--radius-pill)}
+
+.keys{padding:12px 16px; display:flex; flex-direction:column; gap:8px}
+.keys .kr{display:flex; align-items:center; gap:10px; font-size:.8rem; color:var(--ink-2)}
+.keys .kk{font-family:var(--font-mono); font-size:.7rem; font-weight:600; background:var(--plaster-2); color:var(--ink); border-radius:5px; padding:2px 8px; min-width:26px; text-align:center}
+
+.sources{padding:6px 0}
+.srcrow{display:flex; align-items:center; gap:10px; padding:8px 16px; font-size:.8rem}
+.srcrow .sdot{width:8px; height:8px; border-radius:50%; flex:none}
+.srcrow.ok .sdot{background:var(--sev-low)}
+.srcrow.warn .sdot{background:var(--sev-high)}
+.srcrow.fail .sdot{background:var(--sev-blocker)}
+.srcrow .sname{font-weight:500; color:var(--ink)}
+.srcrow .scount{margin-left:auto; font-family:var(--font-mono); font-size:.7rem; color:var(--ink-2)}
+
+/* ---------- empty / done state ---------- */
+.done{display:none; text-align:center; padding:60px 24px; background:var(--paper); border:1px dashed var(--line); border-radius:var(--radius-lg)}
+.done.show{display:block}
+.done .sun{font-size:2.4rem}
+.done h2{font-family:var(--font-display); font-weight:900; font-size:1.953rem; margin:8px 0 6px; letter-spacing:-.01em}
+.done p{color:var(--ink-2); margin:0}
+
+/* toast */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px); opacity:0;
+  background:var(--ink); color:var(--paper); padding:11px 18px; border-radius:var(--radius-pill);
+  font-size:.85rem; font-weight:500; box-shadow:0 8px 30px rgba(0,0,0,.3); pointer-events:none; z-index:60;
+  transition:opacity .2s var(--ease-out), transform .2s var(--ease-out); display:flex; align-items:center; gap:10px;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+.toast b{color:var(--gold)}
+.toast .undo{color:var(--gold); text-decoration:underline; cursor:pointer; pointer-events:auto}
+
+.note{max-width:1180px; margin:0 auto; padding:8px 24px 0; font-size:.74rem; color:var(--ink-2); font-style:italic}
+@media (prefers-reduced-motion: reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span><span class="sb">SB</span> Daymaker</span><span class="kicker">Review Cockpit</span></div>
+    <div class="topbar-stats">
+      <div class="tstat"><b id="stat-queue">12</b><span>In queue</span></div>
+      <div class="tstat dropped"><b>4</b><span>Dropped</span></div>
+      <div class="tstat broken"><b>1</b><span>Source down</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="digest">
+  <div class="digest-card">
+    <span class="stamp">Tonight · 02:14</span>
+    <span class="msg"><b>12</b> new in queue · <b>4</b> dropped (3 no start-time, 1 duplicate) · <span class="broken-flag">LiveNotes parser returned 0 rows</span></span>
+  </div>
+</div>
+<p class="note">Wireframe — sample data derived from the seed set. Try the keyboard: <b>A</b> approve · <b>E</b> edit (then <b>◂ ▸</b> to pick an image) · <b>R</b> reject · <b>↑/↓</b> move · <b>B</b> bulk-approve green.</p>
+
+<div class="wrap">
+  <!-- QUEUE -->
+  <main>
+    <div class="controls">
+      <h1 class="qtitle">Review queue<span class="count" id="qcount">12 items</span></h1>
+      <span class="spacer"></span>
+      <div class="filterbar" role="group" aria-label="Filter queue">
+        <button class="filt" aria-pressed="true" data-filter="all">All</button>
+        <button class="filt" aria-pressed="false" data-filter="1">Events</button>
+        <button class="filt" aria-pressed="false" data-filter="2">Recurring</button>
+        <button class="filt" aria-pressed="false" data-filter="3">Places</button>
+      </div>
+      <button class="bulk" id="bulkbtn">▣ Bulk-approve green <span style="font-family:var(--font-mono);font-size:.7rem;opacity:.7">(B)</span></button>
+    </div>
+
+    <div id="queue"></div>
+
+    <div class="done" id="done">
+      <div class="sun">☀️</div>
+      <h2>Queue cleared</h2>
+      <p>Nothing left to review. The next batch lands tomorrow at 2 a.m.</p>
+    </div>
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="panel">
+      <h3>Dropped tonight <span class="n">4</span></h3>
+      <div class="dropwrap">
+        <div class="drop">
+          <span class="dt">Open Mic Night @ The Mercury</span>
+          <span class="dr">DROP · no deterministic start</span>
+          <span class="ds">Source said "8-ish" — not a parseable clock time.</span>
+          <button class="restore">Review manually →</button>
+        </div>
+        <div class="drop">
+          <span class="dt">Sunset Yoga at Butterfly Beach</span>
+          <span class="dr">DROP · no deterministic start</span>
+          <span class="ds">"around dusk" — no fixed time published.</span>
+          <button class="restore">Review manually →</button>
+        </div>
+        <div class="drop">
+          <span class="dt">Trivia at Lama Dog</span>
+          <span class="dr">DROP · no deterministic start</span>
+          <span class="ds">Day confirmed (Tue), time not on source.</span>
+          <button class="restore">Review manually →</button>
+        </div>
+        <div class="drop">
+          <span class="dt">Molly Miller Trio</span>
+          <span class="dr">DROP · duplicate</span>
+          <span class="ds">Already in queue from SOhO ticketing (canonical).</span>
+          <button class="restore">Compare →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Source health</h3>
+      <div class="sources">
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">Ticketmaster API</span><span class="scount">5 new</span></div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">SOhO ticketing</span><span class="scount">4 new</span></div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">Visit Santa Barbara</span><span class="scount">2 new</span></div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">The Independent</span><span class="scount">1 new</span></div>
+        <div class="srcrow warn"><span class="sdot"></span><span class="sname">Google Places</span><span class="scount">refresh</span></div>
+        <div class="srcrow fail"><span class="sdot"></span><span class="sname">LiveNotes SB</span><span class="scount">0 — down</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Shortcuts</h3>
+      <div class="keys">
+        <div class="kr"><span class="kk">A</span> Approve &amp; publish</div>
+        <div class="kr"><span class="kk">E</span> Edit inline, then approve</div>
+        <div class="kr"><span class="kk">R</span> Reject (pick reason)</div>
+        <div class="kr"><span class="kk">↑↓</span> Move between cards</div>
+        <div class="kr"><span class="kk">B</span> Bulk-approve green chips</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- sample queue data (derived from the seed set) ----
+// each card carries photoOptions[] (pre-fetched ranked alternates) for the Edit picker
+const DATA = [
+  {id:'a', tier:1, cat:'live_music', title:'Israel Vibration & Roots Radics', blurb:'Foundation roots-reggae royalty backed by the legendary Roots Radics, with Benny Ranks.',
+   when:'Thu Jun 25 · 8:30 PM', chip:'green', src:'tickets.sohosb.com', srcClass:'soho', prov:'Start from SOhO ticketing detail page',
+   hood:'Downtown', price:'price n/a', tags:['catch a show','nightlife'],
+   photoOptions:[{label:'Pexels',cls:'soho'},{label:'Wikimedia',cls:'places'},{label:'placeholder',cls:'placeholder'}], pick:0},
+  {id:'b', tier:1, cat:'live_music', title:'Royel Otis: meet me in the car tour', blurb:'The Australian indie-rock duo brings dreamy, surf-tinged guitar hooks to the Bowl.',
+   when:'Thu Jul 9 · 7:00 PM', chip:'green', src:'Ticketmaster API', srcClass:'tm', prov:'Start from Ticketmaster dateTime field',
+   hood:'Riviera', price:'$$', tags:['catch a show','date night']},
+  {id:'c', tier:1, cat:'sports_outdoors_event', title:'Semana Nautica 5K & 2K Trail Run', blurb:'A scenic Fourth-of-July trail run through Elings Park, with a kids 2K too.',
+   when:'Sat Jul 4 · 8:30 AM', chip:'green', src:'runsignup.com', srcClass:'soho', prov:'Start from RunSignup event page',
+   hood:'Mesa', price:'$$', tags:['outdoors active','family day']},
+  {id:'d', tier:2, cat:'recurring_arts', title:'1st Thursday Art Walk', blurb:'A free, City-sponsored evening of galleries, openings, live music, and wine downtown.',
+   when:'1st Thu/month · 5–8 PM', chip:'amber', src:'calendar.santabarbaraca.gov', srcClass:'soho', prov:'Monthly cadence — confirm date each month',
+   hood:'Downtown', price:'free', tags:['arts & culture','free SB']},
+  {id:'e', tier:1, cat:'live_music', title:'James McMurtry & The Martial Law Review', blurb:'The fiercely literate Texas songwriter tours his new album, with guest BettySoo.',
+   when:'Tue Jul 21 · 8:00 PM', chip:'green', src:'tickets.sohosb.com', srcClass:'soho', prov:'Start from SOhO ticketing detail page',
+   hood:'Downtown', price:'price n/a', tags:['catch a show']},
+  {id:'f', tier:3, cat:'scenic_chill', title:'Stearns Wharf', blurb:'California\u2019s oldest working wooden wharf — 360° views, the Sea Center, an easy sunset walk.',
+   when:'Evergreen · open daily', chip:'evergreen', src:'Google Places', srcClass:'places', prov:'Place record — no start time to verify',
+   hood:'Waterfront', price:'free', tags:['hosting visitors','family day']},
+  {id:'g', tier:1, cat:'sports_outdoors_event', title:'Sunday Polo: Robert Skene Trophy', blurb:'High-goal Sunday polo at the historic Carpinteria club, between the foothills and the sea.',
+   when:'Sun Jul 12 · 3:30 PM', chip:'green', src:'sbpolo.ticketsauce.com', srcClass:'soho', prov:'Start from Polo Club ticketing page',
+   hood:'Carpinteria', price:'price n/a', tags:['outdoors active','hosting visitors']},
+  {id:'h', tier:2, cat:'recurring_outdoors', title:'Nite Moves: Summer Sunset Series', blurb:'A Wednesday-evening 5K, ocean swim, or aquathon at Leadbetter, with a beer garden.',
+   when:'Wed · run 6:35 PM', chip:'green', src:'active.com', srcClass:'soho', prov:'Run start from Active.com listing',
+   hood:'Mesa', price:'$$', tags:['outdoors active','family day']},
+  {id:'i', tier:3, cat:'food_drink_spot', title:'Draughtsmen Aleworks', blurb:'A down-to-earth Goleta brewery with great draft, a heated patio, and food trucks.',
+   when:'Evergreen · open daily', chip:'evergreen', src:'Google Places', srcClass:'places', prov:'Place record — no start time to verify',
+   hood:'Goleta', price:'price n/a', tags:['wine & food','family day']},
+  {id:'j', tier:1, cat:'community_gathering', title:'ME Sabor Presents: Salsa Night (July 4)', blurb:'Two dance floors and a full bar for a Fourth-of-July night of salsa, bachata, and cumbia.',
+   when:'Sat Jul 4 · 9:00 PM', chip:'green', src:'tickets.sohosb.com', srcClass:'soho', prov:'Start from SOhO ticketing detail page',
+   hood:'Downtown', price:'price n/a', tags:['nightlife','date night']},
+  {id:'k', tier:3, cat:'culture_spot', title:'Santa Barbara County Courthouse', blurb:'A 1929 Spanish-Colonial masterpiece — hand-painted ceilings and the best free view in town.',
+   when:'Evergreen · open daily', chip:'evergreen', src:'Google Places', srcClass:'places', prov:'Place record — no start time to verify',
+   hood:'Downtown', price:'free', tags:['arts & culture','free SB']},
+  {id:'l', tier:1, cat:'live_music', title:'Jah Ollin with Koalishon & Heavy Rotation', blurb:'A homegrown reggae bill for a late-night skank at SOhO.',
+   when:'Fri Jul 17 · 9:00 PM', chip:'green', src:'tickets.sohosb.com', srcClass:'soho', prov:'Start from SOhO ticketing detail page',
+   hood:'Downtown', price:'price n/a', tags:['catch a show','nightlife']},
+];
+
+const tierLabel = {1:'TIER 1 · EVENT', 2:'TIER 2 · RECURRING', 3:'TIER 3 · PLACE'};
+
+// backfill photo options for any card that doesn't specify them (3-5 ranked alternates)
+DATA.forEach(c=>{
+  if(!c.photoOptions){
+    c.photoOptions = c.srcClass==='places'
+      ? [{label:'Google Places',cls:'places'},{label:'Wikimedia',cls:'soho'},{label:'placeholder',cls:'placeholder'}]
+      : c.srcClass==='tm'
+      ? [{label:'Pexels',cls:'tm'},{label:'Wikimedia',cls:'places'},{label:'placeholder',cls:'placeholder'}]
+      : [{label:'Pexels',cls:'soho'},{label:'placeholder',cls:'placeholder'}];
+  }
+  if(c.pick==null) c.pick = 0;
+});
+
+let queue = DATA.slice();
+let active = 0;
+
+const q = document.getElementById('queue');
+const toast = document.getElementById('toast');
+let filter = 'all';
+
+function visible(){ return queue.filter(c => filter==='all' || String(c.tier)===filter); }
+
+function render(){
+  const items = visible();
+  q.innerHTML = '';
+  document.getElementById('done').classList.toggle('show', queue.length===0);
+  document.getElementById('qcount').textContent = items.length + ' item' + (items.length===1?'':'s');
+  document.getElementById('stat-queue').textContent = queue.length;
+  if(active >= items.length) active = Math.max(0, items.length-1);
+
+  items.forEach((c, i)=>{
+    const opt = c.photoOptions[c.pick];
+    const editing = c.editing;
+    const el = document.createElement('article');
+    el.className = 'card' + (i===active?' is-active':'') + (editing?' is-editing':'');
+    el.dataset.id = c.id;
+    el.innerHTML = `
+      <div class="card-grid">
+        <div class="thumb ${opt.cls==='placeholder'?'placeholder':''} ${opt.cls}">
+          <span class="src-pill">${editing ? opt.label : c.src}</span>
+          ${editing ? `
+            <button class="imgnav prev" data-imgnav="prev" data-id="${c.id}" aria-label="Previous image option">‹</button>
+            <button class="imgnav next" data-imgnav="next" data-id="${c.id}" aria-label="Next image option">›</button>
+            <span class="imgcount">${c.pick+1}/${c.photoOptions.length}</span>
+          ` : ''}
+        </div>
+        <div class="body">
+          <div class="row1">
+            <span class="tier t${c.tier}">${tierLabel[c.tier]}</span>
+            <div style="flex:1">
+              <h2 class="title">${c.title}</h2>
+              <div class="cat">${c.cat}</div>
+            </div>
+          </div>
+          <p class="blurb">${c.blurb}</p>
+          <div class="timeblock">
+            <div class="timeline">
+              <span class="chip ${c.chip}"><span class="dot"></span>${c.chip==='green'?'Deterministic start':c.chip==='amber'?'Confirm cadence':'Evergreen'}</span>
+              <span class="whenstr">${c.when}</span>
+            </div>
+            <span class="prov">${c.prov} · <a href="#" onclick="return false">view source ↗</a></span>
+          </div>
+          <div class="meta">
+            <span class="hood">${c.hood}</span>
+            ${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+            <span class="price">${c.price}</span>
+          </div>
+          <div class="actions pt">
+            <button class="btn btn-approve" data-act="approve" data-id="${c.id}">Approve &amp; publish <span class="k">A</span></button>
+            <button class="btn btn-edit" data-act="edit" data-id="${c.id}">${editing?'Done editing':'Edit'} <span class="k">E</span></button>
+            <button class="btn btn-reject" data-act="reject" data-id="${c.id}">Reject <span class="k">R</span></button>
+            <span class="right">${editing ? '◂ ▸ cycle images' : (c.chip==='green'?'✓ trusted source':c.chip==='amber'?'⚠ needs a glance':'place')}</span>
+          </div>
+        </div>
+      </div>`;
+    q.appendChild(el);
+  });
+}
+
+function showToast(html, undoFn){
+  toast.innerHTML = html + (undoFn?' <span class="undo" id="undo">Undo</span>':'');
+  toast.classList.add('show');
+  if(undoFn){ document.getElementById('undo').onclick = ()=>{ undoFn(); toast.classList.remove('show'); }; }
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>toast.classList.remove('show'), 2600);
+}
+
+function removeById(id){
+  const idx = queue.findIndex(c=>c.id===id);
+  if(idx<0) return null;
+  const [item] = queue.splice(idx,1);
+  return item;
+}
+
+function act(kind, id){
+  const card = q.querySelector(`.card[data-id="${id}"]`);
+  const item = queue.find(c=>c.id===id);
+  if(!item) return;
+  if(kind==='edit'){
+    item.editing = !item.editing;
+    render();
+    showToast(item.editing ? `Editing <b>${item.title}</b> — use ◂ ▸ to pick an image, then Done` : `Saved <b>${item.title}</b> (image: ${item.photoOptions[item.pick].label})`);
+    return;
+  }
+  if(card){ card.classList.add('leaving'); }
+  setTimeout(()=>{
+    const removed = removeById(id);
+    render();
+    if(kind==='approve') showToast(`Published <b>${item.title}</b>`, ()=>{ queue.push(removed); render(); });
+    if(kind==='reject') showToast(`Rejected <b>${item.title}</b>`, ()=>{ queue.push(removed); render(); });
+  }, 200);
+}
+
+function cycleImage(id, dir){
+  const item = queue.find(c=>c.id===id);
+  if(!item || !item.editing) return;
+  const n = item.photoOptions.length;
+  item.pick = (item.pick + (dir==='next'?1:-1) + n) % n;
+  render();
+}
+
+// click handlers
+q.addEventListener('click', e=>{
+  const nav = e.target.closest('[data-imgnav]');
+  if(nav){ e.stopPropagation(); cycleImage(nav.dataset.id, nav.dataset.imgnav); return; }
+  const b = e.target.closest('[data-act]');
+  if(b){ act(b.dataset.act, b.dataset.id); return; }
+  const card = e.target.closest('.card');
+  if(card){ const items=visible(); active=items.findIndex(c=>c.id===card.dataset.id); render(); }
+});
+
+// filters
+document.querySelectorAll('.filt').forEach(f=>{
+  f.addEventListener('click', ()=>{
+    document.querySelectorAll('.filt').forEach(x=>x.setAttribute('aria-pressed','false'));
+    f.setAttribute('aria-pressed','true');
+    filter = f.dataset.filter; active=0; render();
+  });
+});
+
+// bulk approve green
+document.getElementById('bulkbtn').addEventListener('click', bulkGreen);
+function bulkGreen(){
+  const greens = visible().filter(c=>c.chip==='green');
+  if(!greens.length){ showToast('No green-chip items in this view'); return; }
+  const backup = queue.slice();
+  greens.forEach(g=> removeById(g.id));
+  render();
+  showToast(`Published <b>${greens.length}</b> green-chip items`, ()=>{ queue = backup; render(); });
+}
+
+// keyboard
+document.addEventListener('keydown', e=>{
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  const items = visible();
+  const cur = items[active];
+  const k = e.key.toLowerCase();
+  // when the active card is in edit mode, ←/→ cycle its image options
+  if(cur && cur.editing && (e.key==='ArrowLeft' || e.key==='ArrowRight')){
+    e.preventDefault(); cycleImage(cur.id, e.key==='ArrowRight'?'next':'prev'); return;
+  }
+  if(k==='arrowdown'){ e.preventDefault(); active=Math.min(items.length-1,active+1); render(); scrollActive(); }
+  else if(k==='arrowup'){ e.preventDefault(); active=Math.max(0,active-1); render(); scrollActive(); }
+  else if(k==='a' && cur){ e.preventDefault(); act('approve',cur.id); }
+  else if(k==='e' && cur){ e.preventDefault(); act('edit',cur.id); }
+  else if(k==='r' && cur){ e.preventDefault(); act('reject',cur.id); }
+  else if(k==='b'){ e.preventDefault(); bulkGreen(); }
+});
+function scrollActive(){
+  const el = q.querySelector('.card.is-active');
+  if(el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Your Daily Review Routine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4a4038;--pacific:#16586A;--pacific-d:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --purple:#9C6B9E;--forest:#3E7C5A;--blocker:#B23A2E;
+    --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.62;font-size:16px;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 22px;}
+  .cover{background:linear-gradient(160deg,#C0532E,#E0A82E 130%);color:var(--paper);padding:60px 0 50px;position:relative;overflow:hidden;}
+  .cover::after{content:"";position:absolute;right:-50px;top:-90px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(252,250,245,.45),rgba(252,250,245,0) 65%);}
+  .cover .wrap{position:relative;z-index:2;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:rgba(36,28,22,.7);margin-bottom:14px;}
+  .cover h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(36px,6.4vw,56px);line-height:1.02;margin:0 0 16px;letter-spacing:-.01em;color:#241C16;}
+  .cover .lede{font-size:18px;max-width:720px;color:rgba(36,28,22,.86);margin:0 0 24px;}
+  .badges{display:flex;flex-wrap:wrap;gap:10px;}
+  .badge{background:rgba(36,28,22,.12);border:1px solid rgba(36,28,22,.2);padding:7px 13px;border-radius:30px;font-size:13px;font-weight:600;color:#241C16;}
+  section{padding:38px 0 6px;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;}
+  h2{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(23px,4vw,32px);line-height:1.06;margin:4px 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--ink2);font-size:16px;margin:0 0 16px;max-width:790px;}
+  p{margin:0 0 13px;}
+  a{color:var(--pacific);}
+  strong{font-weight:600;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:20px;margin:22px 0 6px;}
+  ul,ol{margin:0 0 13px;padding-left:22px;}
+  li{margin:0 0 8px;}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:13px;background:var(--plaster2);padding:1px 6px;border-radius:5px;}
+  kbd{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;background:var(--ink);color:var(--paper);border-radius:6px;padding:2px 8px;display:inline-block;min-width:22px;text-align:center;}
+  .callout{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .callout .k{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+  .callout.teal{border-left-color:var(--pacific);}
+  .callout.green{border-left-color:var(--forest);}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  .rhythm{background:#EAF0F2;border:1px solid #BcD3D9;border-radius:13px;padding:6px 24px 16px;margin:16px 0;}
+  .rhythm h3{margin-top:18px;}
+  .rhythm ol{counter-reset:r;list-style:none;padding-left:0;margin:14px 0 8px;}
+  .rhythm ol li{position:relative;padding-left:46px;margin-bottom:16px;}
+  .rhythm ol li::before{counter-increment:r;content:counter(r);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;background:var(--pacific);color:var(--paper);font-family:'JetBrains Mono',monospace;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;}
+  .chiprow{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+  .chipcard{flex:1;min-width:220px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);}
+  .chipcard .dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:7px;vertical-align:baseline;}
+  .chipcard.green{border-left:4px solid var(--forest);} .chipcard.green .dot{background:var(--forest);}
+  .chipcard.amber{border-left:4px solid #C77D1E;} .chipcard.amber .dot{background:#C77D1E;}
+  .chipcard.blue{border-left:4px solid var(--pacific);} .chipcard.blue .dot{background:var(--pacific);}
+  .chipcard .t{font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin-bottom:3px;}
+  .chipcard .d{font-size:14px;color:var(--ink2);}
+  .keytable{width:100%;border-collapse:collapse;margin:14px 0;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .keytable td{padding:11px 16px;border-bottom:1px solid var(--plaster2);font-size:15px;vertical-align:middle;}
+  .keytable tr:last-child td{border-bottom:none;}
+  .keytable td:first-child{width:120px;white-space:nowrap;}
+  .step-block{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:6px 24px 14px;margin:18px 0;box-shadow:var(--shadow);}
+  .step-block h3{color:var(--pacific-d);}
+  .warn{color:var(--blocker);font-weight:600;}
+  .money{background:#FBEEEA;border:1px solid #E7C3B7;border-left:4px solid var(--terra);border-radius:12px;padding:18px 22px;margin:18px 0;box-shadow:var(--shadow);}
+  .money .k{color:var(--terra);font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+  footer{background:var(--ink);color:rgba(252,250,245,.7);padding:30px 0;margin-top:46px;font-size:13px;}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  @media(max-width:640px){.twocol{grid-template-columns:1fr;}.chipcard{min-width:100%;}}
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Document 13 · The Daily Routine</div>
+    <h1>Fifteen minutes,<br>every morning</h1>
+    <p class="lede">The engine runs all night. This is the part that's yours: open the cockpit, glance at what came in, approve the good, fix or skip the rest. No code, no commands — just reading cards and pressing a few keys. This guide is the one you'll keep open until the routine is second nature.</p>
+    <div class="badges">
+      <span class="badge">☕ ~15 minutes a day</span>
+      <span class="badge">⌨️ Keyboard-fast</span>
+      <span class="badge">🔒 Nothing's public until you say so</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section style="border-top:none;">
+    <h2>The whole routine, in one breath</h2>
+    <p class="sub">If you read nothing else, read this. The other sections just explain each step in more depth.</p>
+    <div class="rhythm">
+      <ol>
+        <li><strong>Check the summary email.</strong> Each morning an email tells you how many items are waiting, how many were dropped (and why), and whether any source broke overnight. Skim it. Tap the link to open the cockpit.</li>
+        <li><strong>Clear the easy wins first.</strong> Press <kbd>B</kbd> to bulk-approve every "green" item at once (these came from the most trustworthy sources with confirmed times). A big chunk of the queue vanishes in one keystroke.</li>
+        <li><strong>Walk the rest with the keyboard.</strong> For each remaining card: glance at the title, blurb, time, and photo. <kbd>A</kbd> to approve, <kbd>R</kbd> to reject, or <kbd>E</kbd> to fix something first (including swapping the photo). <kbd>↓</kbd> moves to the next.</li>
+        <li><strong>Peek at what was dropped.</strong> Open the "Dropped tonight" panel. Usually you can ignore it — but if a great event was dropped only for a missing time, you can hunt down the time and add it back.</li>
+        <li><strong>Done.</strong> Close the tab. Whatever you approved is now live on the site; everything else waits or is gone. Tomorrow, repeat.</li>
+      </ol>
+    </div>
+    <div class="callout teal">
+      <div class="k">The one habit that keeps the site trustworthy</div>
+      <p style="margin:0;">You're the last set of eyes before something goes public. The machine already threw out anything with a fuzzy time, but <strong>you</strong> catch the rest: a weird blurb, a wrong-looking photo, an event that doesn't fit. When in doubt, <kbd>R</kbd> (reject) — a missed event costs nothing; a bad one costs trust.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 1 — Open the cockpit</h2>
+    <div class="step-block">
+      <h3>Where it lives</h3>
+      <ul>
+        <li>Your review screen is at your app's address ending in <span class="mono">/admin/review</span> (for example <span class="mono">sbdaymaker.com/admin/review</span>). Bookmark it.</li>
+        <li>If it asks you to sign in, use your founder magic-link login — the same one only you have.</li>
+        <li>The fastest path each day: just tap the link in your morning summary email; it drops you straight here.</li>
+      </ul>
+      <p style="margin:0;"><strong>What you'll see:</strong> a stack of cards (the queue), a summary bar across the top, and on the right two small panels — "Dropped tonight" and "Source health." That's the whole screen.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 2 — Read a card in three seconds</h2>
+    <p class="sub">Every card is the same shape. You're really only checking four things: does the title make sense, does the blurb sound like us, is the time trustworthy, and is the photo right.</p>
+
+    <h3>The trust chip on the time — your most important signal</h3>
+    <p>Next to each event's start time is a small colored chip. It tells you <em>how sure</em> the machine is about that time, so you know how hard to look.</p>
+    <div class="chiprow">
+      <div class="chipcard green">
+        <div class="t"><span class="dot"></span>Green — "Deterministic start"</div>
+        <div class="d">The time came straight from the venue's own ticketing or the official feed. Trust it. These are your bulk-approve material.</div>
+      </div>
+      <div class="chipcard amber">
+        <div class="t"><span class="dot"></span>Amber — "Confirm cadence"</div>
+        <div class="d">A recurring thing (like a monthly art walk). The time's fine; just glance that the "every month / every other week" pattern reads right.</div>
+      </div>
+      <div class="chipcard blue">
+        <div class="t"><span class="dot"></span>Blue — "Evergreen"</div>
+        <div class="d">A place, not a timed event (a beach, a bookstore). There's no start time to check — just confirm it's a place worth listing.</div>
+      </div>
+    </div>
+    <p>Under the time is a small <strong>"view source"</strong> link. If you ever doubt a time, click it — it opens the exact page the time came from, so you can see for yourself.</p>
+
+    <div class="callout">
+      <div class="k">Why you'll never see a "red" time</div>
+      <p style="margin:0;">There's no red chip because the machine already <em>dropped</em> anything with an unreliable time before it ever reached your queue. Everything you see has a time worth trusting — green and amber are just "very sure" vs. "sure." The dropped ones are in the side panel, not the main stack.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 3 — The four keys (this is the whole job)</h2>
+    <p class="sub">Your hands barely leave the keyboard. Here's everything:</p>
+    <table class="keytable">
+      <tr><td><kbd>A</kbd></td><td><strong>Approve &amp; publish.</strong> The card goes live on the site and slides away. (An "Undo" appears for a moment if you change your mind.)</td></tr>
+      <tr><td><kbd>R</kbd></td><td><strong>Reject.</strong> The card is set aside and won't come back. Use this freely — skipping an event is cheap.</td></tr>
+      <tr><td><kbd>E</kbd></td><td><strong>Edit.</strong> Opens the card for small fixes — reword the blurb, change a tag, or swap the photo (next section). Press <kbd>E</kbd> again (or "Done") when finished.</td></tr>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td><strong>Move</strong> between cards without touching the mouse.</td></tr>
+      <tr><td><kbd>B</kbd></td><td><strong>Bulk-approve green.</strong> Publishes every green-chip card currently shown, all at once. Your biggest time-saver.</td></tr>
+    </table>
+    <div class="callout green">
+      <div class="k">The fast path most mornings</div>
+      <p style="margin:0;">Press <kbd>B</kbd> first to clear all the green items. Then <kbd>↓</kbd> through the handful that are left, pressing <kbd>A</kbd> or <kbd>R</kbd> on each. Most days that's the entire routine — well under fifteen minutes.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 4 — Swapping a photo (when the picture's wrong)</h2>
+    <p class="sub">Each card arrives with a real photo already in place — the exact one that will appear on the live site — with a small label telling you where it came from ("Pexels," "Wikimedia," or "Google Places"). Your job here isn't to <em>find</em> an image; it's to <em>swap</em> to a better one if the default isn't quite right. Several alternatives are pre-loaded and ready.</p>
+    <div class="step-block">
+      <h3>How to pick a different photo</h3>
+      <ol>
+        <li>Press <kbd>E</kbd> on the card (or click <strong>Edit</strong>). The image gets a gold outline and small <strong>◂ ▸</strong> arrows.</li>
+        <li>Click the <strong>▸</strong> (or press the <kbd>→</kbd> key) to flip to the next photo option. Keep going to cycle through them — there are usually three to five, already loaded, so it's instant.</li>
+        <li>Stop on the one you want. The little label updates to show its source. That's now the selected photo.</li>
+        <li>Press <kbd>E</kbd> again (or "Done"), then <kbd>A</kbd> to approve — your chosen photo goes live with it.</li>
+      </ol>
+      <p style="margin:0;">The photo options were gathered overnight from free sources, so flipping through them <strong>costs nothing</strong>.</p>
+    </div>
+    <div class="money">
+      <div class="k">The rare card that still shows a placeholder</div>
+      <p style="margin:0;">Because the engine already tries the paid source overnight, almost every card arrives with a real photo. A plain branded placeholder only shows up in two cases: the night's <strong>photo budget was used up</strong>, or <strong>no photo exists anywhere</strong> for that spot. If you really want an image on such a card, the picker offers a <strong>"Try fetching a photo"</strong> button — it attempts one paid pull for that single card. If the monthly budget still has room it'll grab one; if the budget's spent, the button tells you so and the placeholder stays until the budget resets next month. This is the only thing in your daily routine that <em>could</em> cost a few cents, it only happens when you click it, and it's rarely needed.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Step 5 — The "Dropped tonight" panel</h2>
+    <p class="sub">On the right is a list of items the machine threw out overnight, each with a reason. Most days you can ignore it — but it's there so nothing disappears silently, and so you can rescue a gem.</p>
+    <div class="step-block">
+      <h3>What the reasons mean</h3>
+      <ul>
+        <li><strong>"No start time"</strong> — the event looked good but its time was fuzzy ("around 8," "dusk," or a day with no clock time). The machine refuses to guess.</li>
+        <li><strong>"Duplicate"</strong> — the same event already came in from a more trustworthy source, so the copy was dropped. Nothing lost.</li>
+        <li><strong>"No title / no address / no source"</strong> — too incomplete to trust. Safe to ignore.</li>
+      </ul>
+      <h3>When to rescue one</h3>
+      <p style="margin:0;">If you spot a genuinely great event dropped only for <em>"no start time,"</em> and you happen to know or can quickly find the real time, click its <strong>"Review manually"</strong> button. You can add the confirmed time yourself and push it into the queue. Don't go hunting for every one — just the occasional standout. <span class="warn">Never invent a time to make a row pass.</span> If you can't confirm it, leave it dropped.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>When something looks off</h2>
+    <div class="twocol">
+      <div class="callout" style="margin:0;">
+        <div class="k">The morning email says a source is "down"</div>
+        <p style="margin:0;">One source breaking is normal — websites change. The other sources still ran. If the <em>same</em> source is down several days running, open Claude Code and say: <em>"the [source name] adapter has returned zero for several nights — check if the site changed and fix the parser."</em></p>
+      </div>
+      <div class="callout" style="margin:0;">
+        <div class="k">The queue is empty</div>
+        <p style="margin:0;">Some mornings there's genuinely little new — that's fine, especially midweek. The screen shows a friendly "Queue cleared" message. Nothing to do; enjoy the short day.</p>
+      </div>
+      <div class="callout" style="margin:0;">
+        <div class="k">You approved something by mistake</div>
+        <p style="margin:0;">An <strong>Undo</strong> appears for a few seconds right after you approve. Missed it? You can still find the item live on the site and unpublish it — or ask Claude Code to help you set it back to "needs review."</p>
+      </div>
+      <div class="callout" style="margin:0;">
+        <div class="k">A card's blurb is awkward</div>
+        <p style="margin:0;">Press <kbd>E</kbd> and reword it in your own voice, then approve. The machine drafts; you have final say on every word that goes public.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>That's the whole job</h2>
+    <p class="sub">Open the cockpit, press <kbd>B</kbd>, walk the rest with <kbd>A</kbd> / <kbd>R</kbd> / <kbd>E</kbd>, glance at the dropped panel, close the tab. The engine does the finding; you do the judging. Fifteen minutes, and Santa Barbara has a fresh, trustworthy answer to "what's worth doing today."</p>
+    <div class="callout green">
+      <div class="k">Remember</div>
+      <p style="margin:0;">Every promise the site makes to its readers passes through your morning click. The times are already guaranteed; you're guarding taste and trust. When unsure, reject — and keep the bar high.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>SB Daymaker — The Daily Routine (Document 13)</span>
+    <span>Set up the engine in Doc 12 · Full spec in Doc 11</span>
+  </div>
+</footer>
+
+</body>
+</html>
