@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CockpitData } from "@/lib/reviewServer";
-import type { QueueRow } from "@/lib/review";
+import { filterTags, type QueueRow, type ReviewDraft } from "@/lib/review";
 import { ReviewCard } from "./ReviewCard";
 import { DroppedPanel } from "./DroppedPanel";
 import { SourceHealth } from "./SourceHealth";
@@ -17,6 +17,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
   const [active, setActive] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [edits, setEdits] = useState<Record<string, ReviewDraft>>({});
   const [picks, setPicks] = useState<Record<string, number>>({});
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [leavingId, setLeavingId] = useState<string | null>(null);
@@ -92,6 +93,45 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     commitAction(ids, removed, "Published", () => post("/api/review/approve", { ids }));
   }, [visible, queue, showToast, commitAction]);
 
+  const startEdit = useCallback((item: QueueRow) => {
+    setEdits((e) => (e[item.id] ? e : {
+      ...e,
+      [item.id]: {
+        blurb: item.blurb ?? "", blurb_long: item.blurb_long ?? "",
+        neighborhood: item.neighborhood ?? "", tags: [...item.tags],
+      },
+    }));
+    setEditingId(item.id);
+  }, []);
+
+  const saveEdit = useCallback((item: QueueRow) => {
+    setEditingId(null);
+    const d = edits[item.id];
+    if (!d) return;
+    const tags = filterTags(d.tags, { is_21_plus: item.is_21_plus, price_band: item.price_band });
+    setQueue((q) => q.map((c) => (c.id === item.id ? {
+      ...c, blurb: d.blurb.trim() || null, blurb_long: d.blurb_long.trim() || null,
+      neighborhood: d.neighborhood || null, tags,
+    } : c)));
+    post("/api/review/update", {
+      id: item.id, blurb: d.blurb, blurb_long: d.blurb_long, neighborhood: d.neighborhood || null, tags,
+    });
+    showToast(`Saved ${item.title}`);
+  }, [edits, showToast]);
+
+  const updateDraft = useCallback((id: string, patch: Partial<ReviewDraft>) => {
+    setEdits((e) => ({ ...e, [id]: { ...e[id], ...patch } }));
+  }, []);
+
+  const toggleTag = useCallback((id: string, tag: string) => {
+    setEdits((e) => {
+      const d = e[id];
+      if (!d) return e;
+      const tags = d.tags.includes(tag) ? d.tags.filter((t) => t !== tag) : [...d.tags, tag];
+      return { ...e, [id]: { ...d, tags } };
+    });
+  }, []);
+
   const cycle = useCallback((id: string, dir: "prev" | "next") => {
     setPicks((p) => {
       const item = queue.find((c) => c.id === id);
@@ -120,22 +160,27 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (document.activeElement?.tagName ?? "").toUpperCase();
-      if (tag === "INPUT" || tag === "TEXTAREA") return;
-      const cur = visible[active];
-      if (cur && editingId === cur.id && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-        e.preventDefault(); cycle(cur.id, e.key === "ArrowRight" ? "next" : "prev"); return;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      // While a card is being edited, swallow the action shortcuts (so typing-
+      // adjacent keys can't approve/reject); only image cycling + save/close stay.
+      if (editingId) {
+        const ed = queue.find((c) => c.id === editingId);
+        if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); cycle(editingId, e.key === "ArrowRight" ? "next" : "prev"); }
+        else if ((e.key === "Escape" || e.key.toLowerCase() === "e") && ed) { e.preventDefault(); saveEdit(ed); }
+        return;
       }
+      const cur = visible[active];
       const k = e.key.toLowerCase();
       if (k === "arrowdown") { e.preventDefault(); setActive((a) => Math.min(visible.length - 1, a + 1)); }
       else if (k === "arrowup") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
       else if (k === "a" && cur) { e.preventDefault(); approve(cur); }
-      else if (k === "e" && cur) { e.preventDefault(); setEditingId((id) => (id === cur.id ? null : cur.id)); }
+      else if (k === "e" && cur) { e.preventDefault(); startEdit(cur); }
       else if (k === "r" && cur) { e.preventDefault(); reject(cur); }
       else if (k === "b") { e.preventDefault(); bulkGreen(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visible, active, editingId, approve, reject, bulkGreen, cycle]);
+  }, [visible, active, editingId, queue, approve, reject, bulkGreen, cycle, startEdit, saveEdit]);
 
   useEffect(() => { if (active >= visible.length) setActive(Math.max(0, visible.length - 1)); }, [visible.length, active]);
 
@@ -204,13 +249,17 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
                 pickIndex={picks[item.id] ?? 0}
                 fetching={fetchingId === item.id}
                 leaving={leavingId === item.id}
+                draft={edits[item.id] ?? null}
                 onAct={(kind) => {
                   if (kind === "approve") approve(item);
                   else if (kind === "reject") reject(item);
-                  else setEditingId((id) => (id === item.id ? null : item.id));
+                  else if (editingId === item.id) saveEdit(item);
+                  else startEdit(item);
                 }}
                 onCycle={(dir) => cycle(item.id, dir)}
                 onTryFetch={() => tryFetch(item.id)}
+                onDraftChange={(patch) => updateDraft(item.id, patch)}
+                onToggleTag={(t) => toggleTag(item.id, t)}
                 onSelect={() => setActive(i)}
               />
             ))

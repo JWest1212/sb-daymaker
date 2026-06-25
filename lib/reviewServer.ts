@@ -33,8 +33,8 @@ export async function loadCockpitData(): Promise<CockpitData> {
     sb
       .from("things")
       .select(
-        `id, type, title, blurb, happening_category, happening_tier, neighborhood,
-         address, price_band, free, starts_at, source, photo_url, photo_source,
+        `id, type, title, blurb, blurb_long, happening_category, happening_tier, neighborhood,
+         address, price_band, free, is_21_plus, starts_at, source, photo_url, photo_source,
          photo_options, last_confirmed,
          thing_tags ( tag ),
          recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`,
@@ -65,12 +65,14 @@ export async function loadCockpitData(): Promise<CockpitData> {
       type: t.type as string,
       title: t.title as string,
       blurb: t.blurb ?? null,
+      blurb_long: t.blurb_long ?? null,
       happening_category: t.happening_category ?? null,
       happening_tier: tier,
       neighborhood: t.neighborhood ?? null,
       address: t.address ?? null,
       price_band: t.price_band ?? null,
       free: t.free ?? null,
+      is_21_plus: t.is_21_plus ?? null,
       starts_at: (t.starts_at as string) ?? null,
       source: (t.source as string) ?? null,
       photo_url: (t.photo_url as string) ?? null,

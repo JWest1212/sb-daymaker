@@ -113,6 +113,17 @@
 .sbd-cockpit .btn-reject:hover { background: rgba(192,83,46,.06); }
 .sbd-cockpit .actions .right { margin-left: auto; font-family: var(--font-mono); font-size: .68rem; color: var(--ink-2); }
 
+/* inline editor (Edit mode) */
+.sbd-cockpit .editfields, .sbd-cockpit .editmeta { display: flex; flex-direction: column; gap: 8px; }
+.sbd-cockpit .editlabel { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.sbd-cockpit .edit-textarea, .sbd-cockpit .edit-select { font-family: var(--font-body); font-size: .9rem; color: var(--ink); background: var(--plaster); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; width: 100%; resize: vertical; }
+.sbd-cockpit .edit-select { max-width: 240px; }
+.sbd-cockpit .locknote { font-size: .7rem; color: var(--ink-2); font-style: italic; margin-top: 4px; }
+.sbd-cockpit .tagtoggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.sbd-cockpit .tagtoggle { font-size: .72rem; padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--paper); color: var(--ink-2); font-weight: 500; text-transform: capitalize; min-height: 30px; }
+.sbd-cockpit .tagtoggle[aria-pressed="true"] { background: var(--pacific); border-color: var(--pacific); color: var(--paper); }
+.sbd-cockpit .tagtoggle:disabled { opacity: .4; cursor: not-allowed; text-decoration: line-through; }
+
 /* sidebar */
 .sbd-cockpit .side { position: sticky; top: 96px; align-self: start; display: flex; flex-direction: column; gap: 16px; }
 @media (max-width: 900px) { .sbd-cockpit .side { position: static; } }

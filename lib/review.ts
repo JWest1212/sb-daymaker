@@ -6,6 +6,28 @@
 
 export type ChipKind = "green" | "amber" | "evergreen";
 
+/** The valid neighborhood + occasion-tag vocabularies (for the inline editor). */
+export const NEIGHBORHOODS = [
+  "funk_zone", "downtown", "waterfront", "montecito", "mesa",
+  "mission_canyon", "riviera", "upper_state", "goleta", "carpinteria", "other",
+] as const;
+
+export const OCCASION_TAGS = [
+  "date_night", "family_day", "nightlife", "catch_a_show", "arts_culture",
+  "outdoors_active", "wine_food", "free_sb", "hosting_visitors", "solo",
+] as const;
+
+/** Negative-rule filter for founder-edited tags (mirrors enrich.ts / schema B4). */
+export function filterTags(
+  tags: string[],
+  opts: { is_21_plus?: boolean | null; price_band?: string | null },
+): string[] {
+  let out = tags.filter((t) => (OCCASION_TAGS as readonly string[]).includes(t));
+  if (opts.is_21_plus) out = out.filter((t) => t !== "family_day");
+  if (opts.price_band != null && opts.price_band !== "free") out = out.filter((t) => t !== "free_sb");
+  return [...new Set(out)];
+}
+
 export interface PhotoOption {
   url: string;
   source: string; // pexels | wikimedia | google | owned | placeholder
@@ -17,12 +39,14 @@ export interface QueueRow {
   type: string;
   title: string;
   blurb: string | null;
+  blurb_long: string | null;
   happening_category: string | null;
   happening_tier: number;
   neighborhood: string | null;
   address: string | null;
   price_band: string | null;
   free: boolean | null;
+  is_21_plus: boolean | null;
   starts_at: string | null;
   source: string | null; // the source URL (provenance + uuid5 key)
   photo_url: string | null;
@@ -31,6 +55,14 @@ export interface QueueRow {
   tags: string[];
   when: string; // pre-formatted mono string
   chip: ChipKind;
+}
+
+/** The editable draft held while a card is in Edit mode. */
+export interface ReviewDraft {
+  blurb: string;
+  blurb_long: string;
+  neighborhood: string;
+  tags: string[];
 }
 
 export interface DropRow {

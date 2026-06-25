@@ -1,6 +1,9 @@
 "use client";
 
-import { chipLabel, type ChipKind, type QueueRow } from "@/lib/review";
+import {
+  chipLabel, NEIGHBORHOODS, OCCASION_TAGS,
+  type ChipKind, type QueueRow, type ReviewDraft,
+} from "@/lib/review";
 import { ImagePicker } from "./ImagePicker";
 
 const TIER_LABEL: Record<number, string> = {
@@ -28,18 +31,21 @@ function provenance(item: QueueRow): { text: string; href: string | null } {
 const priceLabel = (b: string | null) => (b == null ? "price n/a" : b === "free" ? "free" : b);
 
 export function ReviewCard({
-  item, active, editing, pickIndex, fetching,
-  onAct, onCycle, onTryFetch, onSelect, leaving,
+  item, active, editing, pickIndex, fetching, draft,
+  onAct, onCycle, onTryFetch, onSelect, onDraftChange, onToggleTag, leaving,
 }: {
   item: QueueRow;
   active: boolean;
   editing: boolean;
   pickIndex: number;
   fetching: boolean;
+  draft: ReviewDraft | null;
   onAct: (kind: "approve" | "edit" | "reject") => void;
   onCycle: (dir: "prev" | "next") => void;
   onTryFetch: () => void;
   onSelect: () => void;
+  onDraftChange: (patch: Partial<ReviewDraft>) => void;
+  onToggleTag: (tag: string) => void;
   leaving: boolean;
 }) {
   const prov = provenance(item);
@@ -76,7 +82,20 @@ export function ReviewCard({
             </div>
           </div>
 
-          {item.blurb ? <p className="blurb">{item.blurb}</p> : null}
+          {editing && draft ? (
+            <div className="editfields" onClick={(e) => e.stopPropagation()}>
+              <label className="editlabel">Blurb
+                <textarea className="edit-textarea" rows={2} value={draft.blurb}
+                  onChange={(e) => onDraftChange({ blurb: e.target.value })} />
+              </label>
+              <label className="editlabel">Long blurb
+                <textarea className="edit-textarea" rows={3} value={draft.blurb_long}
+                  onChange={(e) => onDraftChange({ blurb_long: e.target.value })} />
+              </label>
+            </div>
+          ) : item.blurb ? (
+            <p className="blurb">{item.blurb}</p>
+          ) : null}
 
           <div className="timeblock">
             <div className="timeline">
@@ -87,20 +106,49 @@ export function ReviewCard({
               {prov.text}
               {prov.href ? <> · <a href={prov.href} target="_blank" rel="noreferrer">view source ↗</a></> : null}
             </span>
+            {editing ? (
+              <span className="locknote">🔒 Start time is locked — reject &amp; re-ingest to change it.</span>
+            ) : null}
           </div>
 
-          <div className="meta">
-            {item.neighborhood ? <span className="hood">{item.neighborhood.replace(/_/g, " ")}</span> : null}
-            {item.tags.map((t) => <span key={t} className="tag">{t.replace(/_/g, " ")}</span>)}
-            <span className="price">{priceLabel(item.price_band)}</span>
-          </div>
+          {editing && draft ? (
+            <div className="editmeta" onClick={(e) => e.stopPropagation()}>
+              <label className="editlabel">Neighborhood
+                <select className="edit-select" value={draft.neighborhood}
+                  onChange={(e) => onDraftChange({ neighborhood: e.target.value })}>
+                  <option value="">— none —</option>
+                  {NEIGHBORHOODS.map((n) => <option key={n} value={n}>{n.replace(/_/g, " ")}</option>)}
+                </select>
+              </label>
+              <div className="tagtoggles" role="group" aria-label="Occasion tags">
+                {OCCASION_TAGS.map((t) => {
+                  const on = draft.tags.includes(t);
+                  const disabled =
+                    (t === "family_day" && !!item.is_21_plus) ||
+                    (t === "free_sb" && item.price_band != null && item.price_band !== "free");
+                  return (
+                    <button key={t} type="button" className="tagtoggle" aria-pressed={on} disabled={disabled}
+                      onClick={(e) => { e.stopPropagation(); onToggleTag(t); }}>
+                      {t.replace(/_/g, " ")}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="meta">
+              {item.neighborhood ? <span className="hood">{item.neighborhood.replace(/_/g, " ")}</span> : null}
+              {item.tags.map((t) => <span key={t} className="tag">{t.replace(/_/g, " ")}</span>)}
+              <span className="price">{priceLabel(item.price_band)}</span>
+            </div>
+          )}
 
           <div className="actions pt">
             <button className="btn btn-approve" onClick={(e) => { e.stopPropagation(); onAct("approve"); }}>
               Approve &amp; publish <span className="k">A</span>
             </button>
             <button className="btn btn-edit" onClick={(e) => { e.stopPropagation(); onAct("edit"); }}>
-              {editing ? "Done editing" : "Edit"} <span className="k">E</span>
+              {editing ? "Save changes" : "Edit"} <span className="k">E</span>
             </button>
             <button className="btn btn-reject" onClick={(e) => { e.stopPropagation(); onAct("reject"); }}>
               Reject <span className="k">R</span>
