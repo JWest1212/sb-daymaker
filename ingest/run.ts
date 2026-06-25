@@ -11,13 +11,15 @@ import { registry } from './adapters/registry';
 import { gate } from './gate';
 import { dedupe, type DropRecord, type ExistingRow } from './dedupe';
 import {
-  startRun, finishRun, landCandidates, recordDrops, toThingRow, type RunRow,
+  startRun, finishRun, landCandidates, landTags, recordDrops, toThingRow, type RunRow,
 } from './land';
+import { enrich } from './enrich';
 import { getDb } from './db';
-import type { Candidate, RawCandidate } from '../packages/shared/types';
+import type { Candidate, RawCandidate, Tod } from '../packages/shared/types';
 
 const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
+const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -36,7 +38,60 @@ function gateDrop(sourceKey: string, r: RawCandidate, reason: DropRecord['reason
   };
 }
 
+/** One-time / on-demand: enrich existing needs_review rows that have no blurb yet
+ *  (e.g. the rows landed before Phase 11 existed). Updates blurb/blurb_long + tags;
+ *  starts_at is never written. */
+async function backfillEnrich() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed')
+    .eq('status', 'needs_review')
+    .is('blurb', null);
+  if (error) throw new Error(`backfill select: ${error.message}`);
+  const rows = data ?? [];
+  console.log(`\n[enrich-backfill] ${rows.length} needs_review rows with no blurb\n`);
+  if (!rows.length) return;
+
+  const cands: Candidate[] = rows.map((r) => ({
+    id: r.id as string,
+    type: r.type,
+    status: 'needs_review',
+    title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'],
+    happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined,
+    address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null,
+    time_of_day_fit: (r.time_of_day_fit as Tod[]) ?? [],
+    starts_at: null, // deliberately not loaded — enrich must never see it
+    ends_at: null,
+    source_url: (r.source as string) ?? '',
+    reason_to_go: r.reason_to_go ?? undefined,
+    local_note: r.local_note ?? undefined,
+    is_21_plus: (r.is_21_plus as boolean) ?? undefined,
+    last_confirmed: (r.last_confirmed as string)?.slice(0, 10) ?? '',
+    start_strategy: 'none',
+  }));
+
+  const enriched = await enrich(cands, { sb });
+  let updated = 0;
+  for (const c of enriched) {
+    if (!c.blurb) continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ blurb: c.blurb, blurb_long: c.blurb_long ?? null }) // NOT starts_at
+      .eq('id', c.id);
+    if (upErr) throw new Error(`backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+  const tagged = await landTags(sb, enriched);
+  console.log(`\n[enrich-backfill] updated ${updated} blurbs · inserted ${tagged} tags`);
+}
+
 async function main() {
+  if (BACKFILL) return backfillEnrich();
+
   const win = window();
   const sb = DRY ? null : getDb();
 
@@ -83,7 +138,11 @@ async function main() {
       .lte('starts_at', win.toISO);
     existing = (data ?? []) as ExistingRow[];
   }
-  const { keep, drops: dedupeDrops } = dedupe(gated.map((g) => g.cand), existing);
+  const { keep: deduped, drops: dedupeDrops } = dedupe(gated.map((g) => g.cand), existing);
+
+  // ---- ENRICH (one batched Claude call: voice + tags; never touches starts_at) ----
+  const keep = DRY ? deduped : await enrich(deduped, { sb: sb! });
+  if (DRY) console.log('  enrich skipped — dry run (no Claude call)');
 
   // attribute dedupe drops + landed counts back to each source run
   for (const d of dedupeDrops) {
@@ -106,6 +165,7 @@ async function main() {
       for (const [id, ds] of byRun) if (id) await recordDrops(sb, id, ds);
     }
     landed = await landCandidates(sb, keep);
+    await landTags(sb, keep);
     for (const run of runs.values()) await finishRun(sb, run, true);
   }
 

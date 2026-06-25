@@ -62,6 +62,7 @@ export interface RawCandidate {
   neighborhood?: Neighborhood;
   reasonToGo?: string;            // required for Tier-3 at gate time
   localNote?: string;
+  is21Plus?: boolean;             // feeds the family_day negative rule (unset unless a source knows)
   raw?: unknown;                  // original payload, for drop logging / rescue
 }
 
@@ -85,6 +86,7 @@ export interface Candidate {
   place_id?: string;
   reason_to_go?: string;          // required for T3
   local_note?: string;
+  is_21_plus?: boolean;           // carried for the family_day negative rule (enrich.ts)
   last_confirmed: string;         // run date
   start_strategy: StartStrategy;  // carried through for the cockpit trust chip
   // image fields (set by resolveImages, pre-landing — see Doc 11 §7b):

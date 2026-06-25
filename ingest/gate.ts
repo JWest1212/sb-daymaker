@@ -111,6 +111,7 @@ export function gate(c: RawCandidate): GateResult {
     place_id: c.placeId,
     reason_to_go: c.reasonToGo,
     local_note: c.localNote,
+    is_21_plus: c.is21Plus,
     last_confirmed: new Date().toISOString().slice(0, 10),
     start_strategy: c.startStrategy,
   };

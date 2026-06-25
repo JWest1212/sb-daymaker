@@ -22,3 +22,5 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+          # Phase 11: batch enrichment. If unset, the run still lands rows with plain titles.
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

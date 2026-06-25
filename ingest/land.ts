@@ -20,6 +20,8 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     type: c.type,
     status: 'needs_review',
     title: c.title,
+    blurb: c.blurb ?? null,
+    blurb_long: c.blurb_long ?? null,
     happening_tier: c.tier,
     happening_category: c.happening_category,
     reason_to_go: c.reason_to_go ?? null,
@@ -88,6 +90,26 @@ export async function landCandidates(sb: SupabaseClient, cands: Candidate[]): Pr
     .upsert(cands.map(toThingRow), { onConflict: 'id', ignoreDuplicates: true })
     .select('id');
   if (error) throw new Error(`landCandidates: ${error.message}`);
+  return data?.length ?? 0;
+}
+
+/** Insert AI-proposed occasion tags for kept candidates (tag_source='ai'),
+ *  idempotently. The negative rules were already applied in enrich.ts. */
+export async function landTags(sb: SupabaseClient, cands: Candidate[]): Promise<number> {
+  const rows = cands.flatMap((c) =>
+    (c.proposed_tags ?? []).map((t) => ({
+      thing_id: c.id,
+      tag: t.tag,
+      confidence: t.confidence,
+      tag_source: 'ai',
+    })),
+  );
+  if (!rows.length) return 0;
+  const { data, error } = await sb
+    .from('thing_tags')
+    .upsert(rows, { onConflict: 'thing_id,tag', ignoreDuplicates: true })
+    .select('thing_id');
+  if (error) throw new Error(`landTags: ${error.message}`);
   return data?.length ?? 0;
 }
 
