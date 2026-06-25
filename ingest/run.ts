@@ -97,14 +97,16 @@ async function backfillEnrich() {
  *  placeholder (rows landed before Phase 13). Updates photo_url/source/options. */
 async function backfillImages() {
   const sb = getDb();
-  const { data, error } = await sb
+  const force = process.env.IMAGE_FORCE === '1'; // re-resolve every row (skip cache), refresh alternates
+  let q = sb
     .from('things')
     .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
-    .eq('status', 'needs_review')
-    .or('photo_source.is.null,photo_source.eq.placeholder');
+    .eq('status', 'needs_review');
+  if (!force) q = q.or('photo_source.is.null,photo_source.eq.placeholder');
+  const { data, error } = await q;
   if (error) throw new Error(`image-backfill select: ${error.message}`);
   const rows = data ?? [];
-  console.log(`\n[image-backfill] ${rows.length} needs_review rows without a real image\n`);
+  console.log(`\n[image-backfill] ${rows.length} needs_review rows${force ? ' (force refresh)' : ' without a real image'}\n`);
   if (!rows.length) return;
 
   const cands: Candidate[] = rows.map((r) => ({
@@ -116,7 +118,7 @@ async function backfillImages() {
     last_confirmed: '', start_strategy: 'none',
   }));
 
-  const { cands: resolved, stats } = await resolveImages(cands, sb);
+  const { cands: resolved, stats } = await resolveImages(cands, sb, { force });
   let updated = 0;
   for (const c of resolved) {
     if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it

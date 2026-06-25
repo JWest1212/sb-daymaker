@@ -51,17 +51,19 @@ export function rankOptions(found: ImageOption[]): ImageOption[] {
 
 // ---- network sources (isolated; each returns null on miss/error) -----------
 
-async function pexels(query: string): Promise<ImageOption | null> {
-  if (!PEXELS_KEY) return null;
+/** Up to `n` Pexels results — the first is the pick, the rest are swap-able
+ *  alternates for the cockpit picker. */
+async function pexelsMany(query: string, n = 3): Promise<ImageOption[]> {
+  if (!PEXELS_KEY) return [];
   try {
-    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=3&orientation=landscape`;
+    const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${n}&orientation=landscape`;
     const res = await fetch(url, { headers: { Authorization: PEXELS_KEY } });
-    if (!res.ok) return null;
+    if (!res.ok) return [];
     const json: any = await res.json();
-    const p = json?.photos?.[0];
-    if (!p?.src?.large) return null;
-    return { url: p.src.large, source: 'pexels', attribution: `Photo by ${p.photographer} on Pexels` };
-  } catch { return null; }
+    return (json?.photos ?? [])
+      .filter((p: any) => p?.src?.large)
+      .map((p: any) => ({ url: p.src.large, source: 'pexels' as const, attribution: `Photo by ${p.photographer} on Pexels` }));
+  } catch { return []; }
 }
 
 async function wikimedia(query: string): Promise<ImageOption | null> {
@@ -132,6 +134,7 @@ async function saveSpend(sb: SupabaseClient, month: string, google_calls: number
 export async function resolveImages(
   cands: Candidate[],
   sb: SupabaseClient,
+  opts: { force?: boolean } = {},
 ): Promise<{ cands: Candidate[]; stats: ResolveStats }> {
   const stats: ResolveStats = { resolved: 0, free: 0, google: 0, placeholder: 0, overCap: 0 };
   if (!cands.length) return { cands, stats };
@@ -152,18 +155,19 @@ export async function resolveImages(
   for (const c of cands) {
     const key = cacheKey(c);
     const cached = cache.get(key);
-    if (cached && cached.photo_source && cached.photo_source !== 'placeholder') {
+    if (!opts.force && cached && cached.photo_source && cached.photo_source !== 'placeholder') {
       out.push({ ...c, photo_url: cached.photo_url ?? undefined, photo_source: cached.photo_source as PhotoSource,
         photo_options: (cached.photo_options as ImageOption[]) ?? [] });
       stats.resolved++;
       continue;
     }
 
+    // Gather ALL free alternates first (the picker arrows through them).
     const found: ImageOption[] = [];
     const q = imageQuery(c);
-    const px = await pexels(q); if (px) found.push(px);
-    if (!found.length) { const wm = await wikimedia(q); if (wm) found.push(wm); }
-    // Paid fallback — only when free tiers missed.
+    found.push(...await pexelsMany(q, 3));
+    const wm = await wikimedia(q); if (wm) found.push(wm);
+    // Paid fallback — only when every free tier missed.
     if (!found.length && c.place_id && GOOGLE_KEY) {
       if (calls < CAP) {
         const g = await googlePhoto(c.place_id, () => { calls++; });
