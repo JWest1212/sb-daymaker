@@ -16,10 +16,13 @@ function host(url: string | null): string | null {
 }
 
 function provenance(item: QueueRow): { text: string; href: string | null } {
-  const h = host(item.source);
-  if (item.happening_tier === 3) return { text: "Place record — no start time to verify", href: h };
-  if (item.starts_at) return { text: h ? `Start from ${h}` : "Start from source", href: h };
-  return { text: "Recurring — confirm cadence", href: h };
+  const h = host(item.source); // display only
+  // The link target must be the FULL source URL (a bare host is a relative URL
+  // and resolves to /admin/<host>). seed:google_places etc. -> no link.
+  const url = item.source && /^https?:\/\//.test(item.source) ? item.source : null;
+  if (item.happening_tier === 3) return { text: "Place record — no start time to verify", href: url };
+  if (item.starts_at) return { text: h ? `Start from ${h}` : "Start from source", href: url };
+  return { text: "Recurring — confirm cadence", href: url };
 }
 
 const priceLabel = (b: string | null) => (b == null ? "price n/a" : b === "free" ? "free" : b);
