@@ -23,7 +23,7 @@ export function LoginForm() {
       setError(error.message);
       return;
     }
-    router.push("/cockpit");
+    router.push("/admin/review");
     router.refresh();
   };
 

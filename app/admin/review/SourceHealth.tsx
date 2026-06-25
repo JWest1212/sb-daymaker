@@ -1,0 +1,34 @@
+import type { SourceRow } from "@/lib/review";
+
+const LABEL: Record<string, string> = {
+  ticketmaster: "Ticketmaster API",
+  soho: "SOhO ticketing",
+  visitsb: "Visit Santa Barbara",
+  independent: "The Independent",
+  google_places: "Google Places",
+  livenotes: "LiveNotes SB",
+};
+
+/** Source-health panel — latest run per source, green/amber/red (Doc 11 §9). */
+export function SourceHealth({ sources }: { sources: SourceRow[] }) {
+  return (
+    <div className="panel">
+      <h3>Source health</h3>
+      <div className="sources">
+        {sources.length === 0 ? (
+          <div className="srcrow"><span className="sname">No runs yet.</span></div>
+        ) : (
+          sources.map((s) => (
+            <div className={`srcrow ${s.status}`} key={s.source}>
+              <span className="sdot" />
+              <span className="sname">{LABEL[s.source] ?? s.source}</span>
+              <span className="scount">
+                {s.status === "fail" ? "0 — down" : s.status === "warn" ? "refresh" : `${s.landed} new`}
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
