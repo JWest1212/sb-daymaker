@@ -1,8 +1,11 @@
 name: nightly-ingest
 
-# Phase 10: manual "Run workflow" button only. The nightly schedule is added in
-# Phase 13 (per the build guide) once all adapters + the digest are wired.
+# Phase 13: runs automatically every night, plus the manual "Run workflow" button.
 on:
+  schedule:
+    # 09:00 UTC = 02:00 America/Los_Angeles (PDT). Cron is fixed-UTC, so this is
+    # 01:00 local in winter (PST) — fine for a nightly batch.
+    - cron: '0 9 * * *'
   workflow_dispatch: {}
 
 jobs:
@@ -24,3 +27,10 @@ jobs:
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
           # Phase 11: batch enrichment. If unset, the run still lands rows with plain titles.
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Phase 13: images + digest. Each is optional — missing keys degrade gracefully
+          # (free image sources only / placeholders / digest skipped), never a hard failure.
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DIGEST_TO: ${{ secrets.DIGEST_TO }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}

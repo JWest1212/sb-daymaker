@@ -35,7 +35,9 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     ends_at: c.ends_at,
     buy_url: c.buy_url ?? null,
     place_id: c.place_id ?? null,
-    photo_source: 'placeholder', // image resolution is Phase 13
+    photo_url: c.photo_url ?? null,
+    photo_source: c.photo_source ?? 'placeholder',
+    photo_options: c.photo_options ?? [],
     local_note: c.local_note ?? null,
     last_confirmed: c.last_confirmed,
     source: c.source_url,

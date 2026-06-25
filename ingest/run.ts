@@ -14,12 +14,16 @@ import {
   startRun, finishRun, landCandidates, landTags, recordDrops, toThingRow, type RunRow,
 } from './land';
 import { enrich } from './enrich';
+import { resolveImages, type ResolveStats } from './images';
+import { detectClosures } from './adapters/googlePlaces';
+import { sendDigest } from './digest';
 import { getDb } from './db';
-import type { Candidate, RawCandidate, Tod } from '../packages/shared/types';
+import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
 
 const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
+const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -89,8 +93,46 @@ async function backfillEnrich() {
   console.log(`\n[enrich-backfill] updated ${updated} blurbs · inserted ${tagged} tags`);
 }
 
+/** One-time / on-demand: resolve images for existing needs_review rows still on the
+ *  placeholder (rows landed before Phase 13). Updates photo_url/source/options. */
+async function backfillImages() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
+    .eq('status', 'needs_review')
+    .or('photo_source.is.null,photo_source.eq.placeholder');
+  if (error) throw new Error(`image-backfill select: ${error.message}`);
+  const rows = data ?? [];
+  console.log(`\n[image-backfill] ${rows.length} needs_review rows without a real image\n`);
+  if (!rows.length) return;
+
+  const cands: Candidate[] = rows.map((r) => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
+    source_url: '', place_id: (r.place_id as string) ?? undefined,
+    last_confirmed: '', start_strategy: 'none',
+  }));
+
+  const { cands: resolved, stats } = await resolveImages(cands, sb);
+  let updated = 0;
+  for (const c of resolved) {
+    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`image-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+  console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`);
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
+  if (IMAGE_BACKFILL) return backfillImages();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -144,6 +186,16 @@ async function main() {
   const keep = DRY ? deduped : await enrich(deduped, { sb: sb! });
   if (DRY) console.log('  enrich skipped — dry run (no Claude call)');
 
+  // ---- IMAGES (free -> paid waterfall; every card lands with a real image, capped) ----
+  let imageStats: ResolveStats | null = null;
+  let toLand = keep;
+  if (sb) {
+    const r = await resolveImages(keep, sb);
+    toLand = r.cands;
+    imageStats = r.stats;
+    console.log(`  images               free ${r.stats.free}  google ${r.stats.google}  placeholder ${r.stats.placeholder}  over-cap ${r.stats.overCap}`);
+  }
+
   // attribute dedupe drops + landed counts back to each source run
   for (const d of dedupeDrops) {
     const run = runs.get(d.source);
@@ -164,8 +216,8 @@ async function main() {
       }
       for (const [id, ds] of byRun) if (id) await recordDrops(sb, id, ds);
     }
-    landed = await landCandidates(sb, keep);
-    await landTags(sb, keep);
+    landed = await landCandidates(sb, toLand);
+    await landTags(sb, toLand);
     for (const run of runs.values()) await finishRun(sb, run, true);
   }
 
@@ -182,6 +234,21 @@ async function main() {
       const row = toThingRow(c) as { title: string; starts_at: string | null; source: unknown };
       console.log(`  • ${String(row.title).slice(0, 60).padEnd(60)} ${row.starts_at}  ${row.source}`);
     }
+    return;
+  }
+
+  // ---- CLOSURES + DIGEST (live runs only) ----
+  if (sb) {
+    const closed = await detectClosures(sb);
+    if (closed) console.log(`  closures             archived ${closed} permanently-closed place(s)`);
+    await sendDigest(sb, {
+      landed,
+      gateDropped: totalGateDropped,
+      dedupeDropped: dedupeDrops.length,
+      images: imageStats,
+      runs: [...runs.values()],
+      closed,
+    });
   }
 }
 
