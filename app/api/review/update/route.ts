@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/reviewServer";
+import { getAdminUser, revalidatePublic } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { NEIGHBORHOODS, filterTags } from "@/lib/review";
 
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
     blurb_long?: string;
     neighborhood?: string | null;
     tags?: string[];
+    photo?: { url: string; source: string } | null;
   };
   if (!body.id) return NextResponse.json({ error: "no id" }, { status: 400 });
 
@@ -39,14 +40,17 @@ export async function POST(req: Request) {
     price_band: row?.price_band ?? null,
   });
 
-  const { error: upErr } = await sb
-    .from("things")
-    .update({
-      blurb: body.blurb?.trim() || null,
-      blurb_long: body.blurb_long?.trim() || null,
-      neighborhood,
-    })
-    .eq("id", body.id);
+  const patch: Record<string, unknown> = {
+    blurb: body.blurb?.trim() || null,
+    blurb_long: body.blurb_long?.trim() || null,
+    neighborhood,
+  };
+  // Persist the chosen image when the founder picked an alternate in the editor.
+  if (body.photo?.url) {
+    patch.photo_url = body.photo.url;
+    patch.photo_source = body.photo.source;
+  }
+  const { error: upErr } = await sb.from("things").update(patch).eq("id", body.id);
   if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 });
 
   // Replace the row's tags with the founder-approved set (tag_source='founder').
@@ -65,5 +69,6 @@ export async function POST(req: Request) {
     payload: { neighborhood, tags },
   });
 
+  revalidatePublic();
   return NextResponse.json({ ok: true, tags, neighborhood });
 }

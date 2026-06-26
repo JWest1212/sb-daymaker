@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/reviewServer";
+import { getAdminUser, revalidatePublic } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 
 export const dynamic = "force-dynamic";
@@ -24,5 +24,6 @@ export async function POST(req: Request) {
     actor: "founder",
     payload: { reason: reason ?? null },
   });
+  revalidatePublic();
   return NextResponse.json({ ok: true });
 }

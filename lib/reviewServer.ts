@@ -4,12 +4,23 @@
 // separate from lib/review.ts so the pure formatters stay client-safe.
 
 import "server-only";
+import { revalidatePath } from "next/cache";
 import { getServerSupabase } from "./supabaseServer";
 import { getAdminSupabase } from "./supabaseAdmin";
 import {
   chipFor, whenString, prioritize, rollupSources,
   type QueueRow, type DropRow, type SourceRow, type PhotoOption,
 } from "./review";
+
+/** Refresh the ISR-cached public surfaces after a publish/edit/reject so approved
+ *  content appears promptly instead of waiting up to 10 minutes. */
+export function revalidatePublic() {
+  revalidatePath("/");
+  revalidatePath("/discover");
+  revalidatePath("/saved");
+  revalidatePath("/discover/[id]", "page");
+  revalidatePath("/thing/[id]", "page");
+}
 
 /** The signed-in admin user, or null. Used to gate the page + API routes. */
 export async function getAdminUser() {

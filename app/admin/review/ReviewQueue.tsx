@@ -109,15 +109,19 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     const d = edits[item.id];
     if (!d) return;
     const tags = filterTags(d.tags, { is_21_plus: item.is_21_plus, price_band: item.price_band });
+    // Persist the image alternate the founder arrowed to, if any.
+    const opt = item.photo_options[picks[item.id] ?? 0];
+    const photo = opt?.url ? { url: opt.url, source: opt.source } : undefined;
     setQueue((q) => q.map((c) => (c.id === item.id ? {
       ...c, blurb: d.blurb.trim() || null, blurb_long: d.blurb_long.trim() || null,
       neighborhood: d.neighborhood || null, tags,
+      ...(photo ? { photo_url: photo.url, photo_source: photo.source } : {}),
     } : c)));
     post("/api/review/update", {
-      id: item.id, blurb: d.blurb, blurb_long: d.blurb_long, neighborhood: d.neighborhood || null, tags,
+      id: item.id, blurb: d.blurb, blurb_long: d.blurb_long, neighborhood: d.neighborhood || null, tags, photo,
     });
     showToast(`Saved ${item.title}`);
-  }, [edits, showToast]);
+  }, [edits, picks, showToast]);
 
   const updateDraft = useCallback((id: string, patch: Partial<ReviewDraft>) => {
     setEdits((e) => ({ ...e, [id]: { ...e[id], ...patch } }));
