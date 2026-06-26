@@ -1,23 +1,16 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { runNightly } from "@/lib/pipeline";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // headroom for the enrichment loop (Vercel Pro/Fluid)
 
-// Vercel Cron calls this with `Authorization: Bearer ${CRON_SECRET}` automatically.
-export async function GET(req: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  const auth = req.headers.get("authorization");
-  if (!secret || auth !== `Bearer ${secret}`) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-  try {
-    const summary = await runNightly();
-    return NextResponse.json({ ok: true, ...summary });
-  } catch (e) {
-    return NextResponse.json(
-      { ok: false, error: (e as Error).message },
-      { status: 500 },
-    );
-  }
+// DEPRECATED (Phase 13). The nightly pipeline moved to the GitHub Action worker
+// (ingest/run.ts); public submissions now flow through it via the `submissions`
+// adapter — gate → dedupe → enrich → images → land — replacing the old
+// lib/pipeline.runNightly. The Vercel cron entry was removed; this endpoint stays
+// as a no-op so a stray call can't re-run the retired duplicate pipeline.
+export async function GET() {
+  return NextResponse.json({
+    ok: false,
+    deprecated: true,
+    moved_to: "GitHub Action worker (ingest/run.ts) via the submissions adapter",
+  });
 }
