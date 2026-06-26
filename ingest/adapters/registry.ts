@@ -8,8 +8,9 @@ import type { SourceAdapter } from './types';
 import { ticketmaster } from './ticketmaster';
 import { soho } from './soho';
 import { independent } from './independent';
+import { citySites } from './citySites';
 
 // Order matters for dedupe's canonical-source preference (venue-owned > aggregators).
 // Deferred to the Phase-14 managed-scrape reserve: Visit SB (JS-rendered) and
-// LiveNotes (inline, year-less dates). City of SB (Drupal) is a clean follow-on.
-export const registry: SourceAdapter[] = [ticketmaster, soho, independent];
+// LiveNotes (inline, year-less dates).
+export const registry: SourceAdapter[] = [ticketmaster, soho, independent, citySites];
