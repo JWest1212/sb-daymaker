@@ -55,6 +55,19 @@ export function ExploreClient({
 
   return (
     <div className="sbd-explore">
+      {/* QW-3: thin job-line strip under the masthead, Explore screen only */}
+      <div className="sbd-job-strip">
+        <span className="sbd-job-strip__find">Find it</span>
+        <span className="sbd-job-strip__dot" aria-hidden="true">
+          ·
+        </span>
+        <span className="sbd-job-strip__save">Save it</span>
+        <span className="sbd-job-strip__dot" aria-hidden="true">
+          ·
+        </span>
+        <span className="sbd-job-strip__share">Share it</span>
+      </div>
+
       <Hero
         tod={tod}
         dateLabel={dateLabel}

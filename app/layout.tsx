@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: "%s",
   },
   description:
-    "Find what's worth doing in Santa Barbara today — find it, save it, share it.",
+    "Find what's worth doing in Santa Barbara, daily — find it, save it, share it.",
   applicationName: "SB Daymaker",
   appleWebApp: {
     capable: true,
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SB Daymaker",
     description:
-      "Find what's worth doing in Santa Barbara today — find it, save it, share it.",
+      "Find what's worth doing in Santa Barbara, daily — find it, save it, share it.",
     siteName: "SB Daymaker",
     type: "website",
   },

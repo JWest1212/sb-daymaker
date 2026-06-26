@@ -8,7 +8,7 @@ export function AppHeader() {
       <span>
         <span className="sbd-header__name">SB Daymaker</span>
         <span className="sbd-header__tag" style={{ display: "block" }}>
-          Santa Barbara, today
+          Santa Barbara, daily
         </span>
       </span>
     </header>

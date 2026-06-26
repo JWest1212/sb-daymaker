@@ -460,7 +460,10 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-8) var(--space-5) var(--space-3);
+  /* Top pad tightened hard (was --space-8/32px) so the masthead hugs the top of
+     the screen; still honors the safe-area inset on notched phones. */
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-1)) var(--space-5)
+    var(--space-3);
   background: var(--bg);
 }
 .sbd-header__mark {
@@ -491,6 +494,38 @@
   text-transform: uppercase;
   color: var(--sage-text); /* AA-safe small accent text on light */
   margin-top: 2px;
+}
+
+/* Job strip (QW-3) — Explore masthead micro-line "Find it · Save it · Share it".
+   Sits on --plaster so it reads as part of the masthead, above the hero.
+   Colors use the AA-safe darkened variants so each word clears 4.5:1. */
+.sbd-job-strip {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  padding: 2px 0 4px;
+  background: var(--bg);
+}
+.sbd-job-strip span {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-family: var(--font-body);
+}
+.sbd-job-strip__find {
+  color: var(--terra-text);
+}
+.sbd-job-strip__save {
+  color: var(--pacific);
+}
+.sbd-job-strip__share {
+  color: var(--gold-text);
+}
+.sbd-job-strip__dot {
+  color: var(--line);
+  font-weight: 700;
 }
 
 /* Bottom navigation */
