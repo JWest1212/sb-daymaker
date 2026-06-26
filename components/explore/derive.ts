@@ -26,11 +26,20 @@ export function cardPlace(t: Thing): string | undefined {
 }
 
 function eventTime(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  // Assemble from parts rather than letting Intl auto-join: Node's ICU and the
+  // browser's disagree on the weekday/time separator ("Fri 12 PM" vs "Fri, 12
+  // PM"), which causes a React hydration mismatch. Joining the meaningful parts
+  // ourselves yields the same string on server and client.
+  const parts = new Intl.DateTimeFormat("en-US", {
     weekday: "short",
     hour: "numeric",
     timeZone: "America/Los_Angeles",
-  }).format(new Date(iso));
+  }).formatToParts(new Date(iso));
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  return [value("weekday"), value("hour"), value("dayPeriod")]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function cardFacts(t: Thing): string[] {
