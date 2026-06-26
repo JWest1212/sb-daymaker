@@ -41,6 +41,19 @@ export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeho
  */
 export type StartStrategy = 'structured' | 'server_detail' | 'none';
 
+export type RecurFrequency = 'weekly' | 'biweekly' | 'monthly';
+
+/** A Tier-2 recurring rhythm occurrence. start_time is null when the day is known
+ *  but the time isn't — we never guess a time (it lands blank + flagged). */
+export interface RecurringSpec {
+  day_of_week: number;          // 0 = Sunday
+  start_time: string | null;    // 'HH:MM' or null (time unknown)
+  end_time: string | null;
+  frequency: RecurFrequency;
+  label?: string;
+  time_unknown?: boolean;
+}
+
 /** Raw, pre-gate item emitted by an adapter. Deliberately permissive. */
 export interface RawCandidate {
   source: string;                 // adapter key (or, for seed fixtures, the source URL / sentinel)
@@ -63,6 +76,7 @@ export interface RawCandidate {
   reasonToGo?: string;            // required for Tier-3 at gate time
   localNote?: string;
   is21Plus?: boolean;             // feeds the family_day negative rule (unset unless a source knows)
+  recurring?: RecurringSpec[];    // Tier-2 rhythms — written to recurring_schedules at land time
   raw?: unknown;                  // original payload, for drop logging / rescue
 }
 
@@ -87,6 +101,7 @@ export interface Candidate {
   reason_to_go?: string;          // required for T3
   local_note?: string;
   is_21_plus?: boolean;           // carried for the family_day negative rule (enrich.ts)
+  recurring?: RecurringSpec[];    // Tier-2 schedule rows to write at land time
   last_confirmed: string;         // run date
   start_strategy: StartStrategy;  // carried through for the cockpit trust chip
   // image fields (set by resolveImages, pre-landing — see Doc 11 §7b):

@@ -11,7 +11,7 @@ import { registry } from './adapters/registry';
 import { gate } from './gate';
 import { dedupe, type DropRecord, type ExistingRow } from './dedupe';
 import {
-  startRun, finishRun, landCandidates, landTags, recordDrops, toThingRow, type RunRow,
+  startRun, finishRun, landCandidates, landTags, landRecurring, recordDrops, toThingRow, type RunRow,
 } from './land';
 import { enrich } from './enrich';
 import { resolveImages, type ResolveStats } from './images';
@@ -220,6 +220,7 @@ async function main() {
     }
     landed = await landCandidates(sb, toLand);
     await landTags(sb, toLand);
+    await landRecurring(sb, toLand);
     for (const run of runs.values()) await finishRun(sb, run, true);
   }
 

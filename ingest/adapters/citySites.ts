@@ -10,6 +10,7 @@ import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';
 import type { RawCandidate, HappeningCategory } from '../../packages/shared/types';
 import { sbISO } from '../tz';
+import { fetchHtml } from './http';
 
 const ORIGIN = 'https://calendar.santabarbaraca.gov';
 const MONTHS: Record<string, number> = {
@@ -45,23 +46,11 @@ function venueFromTitle(title: string): string {
   return parts.length > 1 ? parts[parts.length - 1].trim() : 'Santa Barbara';
 }
 
-async function get(url: string): Promise<string> {
-  const headers = { 'user-agent': 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)' };
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error(`City SB ${res.status}`);
-      return await res.text();
-    } catch (err) { if (attempt === 1) throw err; }
-  }
-  throw new Error('unreachable');
-}
-
 export const citySites: SourceAdapter = {
   key: 'citysb',
   label: 'City of Santa Barbara',
   async fetch(): Promise<RawCandidate[]> {
-    const $ = cheerio.load(await get(`${ORIGIN}/events/upcoming`));
+    const $ = cheerio.load(await fetchHtml(`${ORIGIN}/events/upcoming`, 'citysb'));
     const bySlug = new Map<string, RawCandidate>();
     $('.lc-event').each((_, el) => {
       const link = $(el).find('a[aria-label^="View Details - "]').first();

@@ -11,6 +11,7 @@ import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';
 import type { RawCandidate } from '../../packages/shared/types';
 import { sbISO } from '../tz';
+import { fetchHtml } from './http';
 
 const ORIGIN = 'https://tickets.sohosb.com';
 const SOHO_ADDRESS = '1221 State St, Santa Barbara, CA 93101';
@@ -54,25 +55,11 @@ export function extractShows(html: string): RawShow[] {
   return [...bySlug.values()];
 }
 
-async function get(url: string): Promise<string> {
-  const headers = { 'user-agent': 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)' };
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error(`SOhO ${res.status}`);
-      return await res.text();
-    } catch (err) {
-      if (attempt === 1) throw err;
-    }
-  }
-  throw new Error('unreachable');
-}
-
 export const soho: SourceAdapter = {
   key: 'soho',
   label: 'SOhO ticketing',
   async fetch(): Promise<RawCandidate[]> {
-    const html = await get(`${ORIGIN}/`);
+    const html = await fetchHtml(`${ORIGIN}/`, 'soho');
     return extractShows(html).map((s): RawCandidate => {
       const startISO = parseShowDateTime(s.dateText) ?? undefined;
       const detailUrl = `${ORIGIN}/e/${s.slug}`;

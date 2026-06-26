@@ -34,3 +34,8 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DIGEST_TO: ${{ secrets.DIGEST_TO }}
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          # Phase 14: managed-scrape reserve (OFF by default). To route a blocked
+          # source through Scrapfly, set MANAGED_SCRAPE to its key (e.g. "soho") and
+          # add SCRAPFLY_KEY. Empty = every source uses plain HTTP.
+          MANAGED_SCRAPE: ${{ secrets.MANAGED_SCRAPE }}
+          SCRAPFLY_KEY: ${{ secrets.SCRAPFLY_KEY }}

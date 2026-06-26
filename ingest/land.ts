@@ -115,6 +115,30 @@ export async function landTags(sb: SupabaseClient, cands: Candidate[]): Promise<
   return data?.length ?? 0;
 }
 
+/** Insert/refresh recurring_schedules for kept Tier-2 candidates (Doc 11 §8).
+ *  start_time is null when the day is known but the time isn't (never guessed). */
+export async function landRecurring(sb: SupabaseClient, cands: Candidate[]): Promise<number> {
+  const rows = cands.flatMap((c) =>
+    (c.recurring ?? []).map((r) => ({
+      thing_id: c.id,
+      category: c.happening_category,
+      day_of_week: r.day_of_week,
+      start_time: r.start_time,   // null => time unknown / flagged
+      end_time: r.end_time,
+      label: r.label ?? null,
+      frequency: r.frequency,
+      last_confirmed: c.last_confirmed,
+    })),
+  );
+  if (!rows.length) return 0;
+  const { data, error } = await sb
+    .from('recurring_schedules')
+    .upsert(rows, { onConflict: 'thing_id,day_of_week,category' })
+    .select('id');
+  if (error) throw new Error(`landRecurring: ${error.message}`);
+  return data?.length ?? 0;
+}
+
 export async function recordDrops(
   sb: SupabaseClient,
   runId: number,

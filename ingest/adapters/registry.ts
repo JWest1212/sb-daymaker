@@ -9,10 +9,13 @@ import { ticketmaster } from './ticketmaster';
 import { soho } from './soho';
 import { independent } from './independent';
 import { citySites } from './citySites';
+import { recurringRegistry } from './recurringRegistry';
 import { submissions } from './submissions';
 
 // Order matters for dedupe's canonical-source preference (venue-owned > aggregators
 // > public submissions, which sit last so a real source wins a near-dupe).
-// Deferred to the Phase-14 managed-scrape reserve: Visit SB (JS-rendered) and
-// LiveNotes (inline, year-less dates).
-export const registry: SourceAdapter[] = [ticketmaster, soho, independent, citySites, submissions];
+// Visit SB (JS-rendered) + LiveNotes (year-less inline) can be switched on via the
+// MANAGED_SCRAPE reserve when worth the spend.
+export const registry: SourceAdapter[] = [
+  ticketmaster, soho, independent, citySites, recurringRegistry, submissions,
+];

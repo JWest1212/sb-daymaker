@@ -9,6 +9,7 @@ import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';
 import type { RawCandidate, HappeningCategory } from '../../packages/shared/types';
 import { sbISO } from '../tz';
+import { fetchHtml } from './http';
 
 const ORIGIN = 'https://www.independent.com';
 const MONTHS: Record<string, number> = {
@@ -44,23 +45,11 @@ export function classifyIndependent(classList: string): HappeningCategory {
   return 'community_gathering';
 }
 
-async function get(url: string): Promise<string> {
-  const headers = { 'user-agent': 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)' };
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error(`Independent ${res.status}`);
-      return await res.text();
-    } catch (err) { if (attempt === 1) throw err; }
-  }
-  throw new Error('unreachable');
-}
-
 export const independent: SourceAdapter = {
   key: 'independent',
   label: 'The Independent',
   async fetch(): Promise<RawCandidate[]> {
-    const $ = cheerio.load(await get(`${ORIGIN}/events/`));
+    const $ = cheerio.load(await fetchHtml(`${ORIGIN}/events/`, 'independent'));
     const out: RawCandidate[] = [];
     $('article.events, article.type-events').each((_, el) => {
       const $a = $(el);
