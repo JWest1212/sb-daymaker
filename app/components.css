@@ -1060,6 +1060,8 @@
 .sbd-savedcard__thumb {
   width: 84px;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
 .sbd-savedcard__body {
   flex: 1;
@@ -1511,6 +1513,8 @@
   height: 180px;
   border-radius: var(--radius-lg);
   margin-top: var(--space-2);
+  position: relative;
+  overflow: hidden;
 }
 .sbd-detail__title {
   font-family: var(--font-display);

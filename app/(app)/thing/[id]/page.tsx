@@ -66,7 +66,12 @@ export default async function ThingPage({
         ‹ Explore
       </Link>
 
-      <div className={`sbd-detail__media sbd-media--${TONE_BY_TYPE[t.type] ?? "gold"}`} />
+      <div className={`sbd-detail__media sbd-media--${TONE_BY_TYPE[t.type] ?? "gold"}`}>
+        {t.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="sbd-card__img" src={t.photo_url} alt="" />
+        ) : null}
+      </div>
 
       <h1 className="sbd-detail__title">{t.title}</h1>
 

@@ -45,7 +45,12 @@ export function SavedCard({
       <div
         className={`sbd-savedcard__thumb sbd-media--${cardTone(index)}`}
         aria-hidden="true"
-      />
+      >
+        {thing.photo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className="sbd-card__img" src={thing.photo_url} alt="" loading="lazy" />
+        ) : null}
+      </div>
 
       <div className="sbd-savedcard__body">
         {tag ? (
