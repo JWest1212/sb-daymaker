@@ -39,6 +39,8 @@ export interface Thing {
   time_of_day_fit: string[] | null;
   is_21_plus: boolean;
   indoor: boolean;
+  photo_url: string | null;
+  photo_source: string | null;
   tags: OccasionKey[];
   happyHours: HappyHourWindow[];
   recurring: RecurringSchedule[];
@@ -48,7 +50,7 @@ export interface Thing {
 // query (getThing), so the feeds keep working before phase7.sql runs.
 const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go,
   happening_tier, happening_category, neighborhood, nearby_zone, price_band, free,
-  starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor`;
+  starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor, photo_url, photo_source`;
 const RELATIONS = `thing_tags ( tag ),
   happy_hour_windows ( day_of_week, starts_local, ends_local, deal_text ),
   recurring_schedules ( category, day_of_week, start_time, end_time, label )`;
@@ -76,6 +78,8 @@ function mapThing(row: Record<string, unknown>): Thing {
     time_of_day_fit: (row.time_of_day_fit as string[]) ?? null,
     is_21_plus: (row.is_21_plus as boolean) ?? false,
     indoor: (row.indoor as boolean) ?? false,
+    photo_url: (row.photo_url as string) ?? null,
+    photo_source: (row.photo_source as string) ?? null,
     tags: ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag),
     happyHours: (row.happy_hour_windows as HappyHourWindow[]) ?? [],
     recurring: (row.recurring_schedules as RecurringSchedule[]) ?? [],

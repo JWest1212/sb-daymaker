@@ -42,6 +42,7 @@ export function PickCard({
   onToggleSave,
   tone = "gold",
   href,
+  photo,
 }: {
   title: string;
   blurb: string;
@@ -52,10 +53,12 @@ export function PickCard({
   onToggleSave: () => void;
   tone?: MediaTone;
   href?: string;
+  photo?: string;
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
       <div className={`sbd-pick__media sbd-media--${tone}`}>
+        {photo ? <img className="sbd-card__img" src={photo} alt="" loading="lazy" /> : null}
         {tag ? (
           <span className="sbd-pick__tag">
             <Tag color="gold">{tag}</Tag>
@@ -97,6 +100,7 @@ export function ListCard({
   saved,
   onToggleSave,
   href,
+  photo,
 }: {
   title: string;
   blurb: string;
@@ -107,10 +111,13 @@ export function ListCard({
   saved?: boolean;
   onToggleSave?: () => void;
   href?: string;
+  photo?: string;
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
-      <div className={`sbd-listcard__thumb sbd-media--${tone}`} aria-hidden="true" />
+      <div className={`sbd-listcard__thumb sbd-media--${tone}`} aria-hidden="true">
+        {photo ? <img className="sbd-card__img" src={photo} alt="" loading="lazy" /> : null}
+      </div>
       <div className="sbd-listcard__body">
         {tag ? (
           <Tag color={tagColor} micro>

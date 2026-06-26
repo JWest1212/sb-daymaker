@@ -43,6 +43,7 @@ export function CascadeFeed({ items }: { items: Thing[] }) {
                     title={t.title}
                     blurb={cardBlurb(t)}
                     facts={cardFacts(t)}
+                    photo={t.photo_url ?? undefined}
                     saved={isSaved(t.id)}
                     onToggleSave={() => toggle(t.id)}
                   />
@@ -55,6 +56,7 @@ export function CascadeFeed({ items }: { items: Thing[] }) {
                     title={t.title}
                     blurb={cardBlurb(t)}
                     meta={cardFacts(t).join(" · ")}
+                    photo={t.photo_url ?? undefined}
                     saved={isSaved(t.id)}
                     onToggleSave={() => toggle(t.id)}
                   />

@@ -62,6 +62,7 @@ export function Hero({
       {pick ? (
         <div className="sbd-hero__pick">
           <div className="sbd-hero__pick-img sbd-media--gold">
+            {pick.photo_url ? <img className="sbd-card__img" src={pick.photo_url} alt="" loading="lazy" /> : null}
             <span className="sbd-hero__pick-heart">
               <SaveHeart
                 overlay
