@@ -4,10 +4,60 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSaves } from "@/components/saves/SavesProvider";
 
+// Custom line icons (S2-B): sun-over-mountain (Explore, ties to the hero/brand),
+// heart (Saved), compass (Discover SB). Stroke = currentColor so each inherits
+// the active/inactive tab color. OS-independent — no emoji.
+const ICONS: Record<string, React.ReactNode> = {
+  explore: (
+    <svg
+      className="sbd-nav__ico"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="9" r="3.2" />
+      <path d="M3 19 L9 12 L13 16 L17 11 L21 19 Z" />
+    </svg>
+  ),
+  saved: (
+    <svg
+      className="sbd-nav__ico"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z" />
+    </svg>
+  ),
+  discover: (
+    <svg
+      className="sbd-nav__ico"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M15 9 L11 11 L9 15 L13 13 Z" />
+    </svg>
+  ),
+};
+
 const TABS = [
-  { href: "/", label: "Explore", icon: "🌅" },
-  { href: "/saved", label: "Saved", icon: "❤️" },
-  { href: "/discover", label: "Discover SB", icon: "🧭" },
+  { href: "/", key: "explore", label: "Explore" },
+  { href: "/saved", key: "saved", label: "Saved" },
+  { href: "/discover", key: "discover", label: "Discover SB" },
 ] as const;
 
 /** Bottom navigation — exactly three tabs (v9: Explore · Saved · Discover SB). */
@@ -28,7 +78,7 @@ export function BottomNav() {
             aria-current={active ? "page" : undefined}
           >
             <span className="sbd-nav__icon" aria-hidden="true">
-              {tab.icon}
+              {ICONS[tab.key]}
               {tab.href === "/saved" && counts.total > 0 ? (
                 <span className="sbd-nav__badge">{counts.total}</span>
               ) : null}

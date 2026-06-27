@@ -447,9 +447,9 @@
   background: var(--bg);
 }
 .sbd-shell__main {
-  /* clear the fixed 56px nav + safe area */
+  /* clear the fixed 54px nav + a comfortable gap + safe area (S3) */
   padding: 0 var(--space-5)
-    calc(56px + var(--space-8) + env(safe-area-inset-bottom));
+    calc(54px + var(--space-8) + env(safe-area-inset-bottom));
 }
 
 /* Header */
@@ -528,7 +528,8 @@
   font-weight: 700;
 }
 
-/* Bottom navigation */
+/* Bottom navigation (S1-B / S2-B / S3) — Pacific teal bar, custom line icons,
+   gold active tab with a top pip. The teal is the divider (no top border). */
 .sbd-nav {
   position: fixed;
   bottom: 0;
@@ -536,12 +537,12 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 56px;
+  height: 54px; /* was 56 */
   display: flex;
-  border-top: 1px solid var(--border);
-  background: color-mix(in srgb, var(--bg) 94%, transparent);
-  backdrop-filter: blur(10px);
-  padding-bottom: env(safe-area-inset-bottom);
+  border-top: none;
+  background: var(--pacific);
+  padding-top: 8px; /* S3: more room above the icons */
+  padding-bottom: max(4px, env(safe-area-inset-bottom)); /* minimal below */
   z-index: 60;
 }
 .sbd-nav__btn {
@@ -550,44 +551,62 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 2px;
+  justify-content: flex-start; /* icons hug the top of the bar (S3) */
+  gap: 3px;
   text-decoration: none;
-  color: var(--text-muted);
+  /* inactive: dimmed white on teal (≥4.5:1 for the label) */
+  color: rgba(255, 255, 255, 0.78);
   font-family: var(--font-body);
+  position: relative;
 }
 .sbd-nav__btn[aria-current="page"] {
-  color: var(--text-link);
+  /* active gold, brightened so the 11px label clears AA on teal (pure --gold
+     is only ~3.7:1 here; the pip + badge keep the vibrant brand gold). */
+  color: color-mix(in srgb, var(--gold), white 30%);
+}
+/* gold pip at the very top edge of the bar on the active tab */
+.sbd-nav__btn[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--gold);
 }
 .sbd-nav__btn:focus-visible {
-  outline: 2px solid var(--pacific);
+  outline: 2px solid var(--gold); /* visible on teal */
   outline-offset: -2px;
 }
-.sbd-nav__icon {
-  font-size: 20px;
-  line-height: 1;
+.sbd-nav__ico {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 .sbd-nav__icon {
   position: relative;
+  line-height: 1;
 }
 .sbd-nav__label {
-  font-size: var(--text-xs);
+  font-size: 11px;
   font-weight: var(--weight-semi);
 }
 .sbd-nav__badge {
   position: absolute;
-  top: -6px;
-  left: 12px;
-  min-width: 16px;
-  height: 16px;
+  top: -4px;
+  right: calc(50% - 16px);
+  min-width: 15px;
+  height: 15px;
   padding: 0 4px;
   border-radius: var(--radius-pill);
-  background: var(--terracotta);
-  color: var(--paper);
+  background: var(--gold); /* readable gold-on-ink badge on the teal bar */
+  color: var(--ink);
   font-family: var(--font-body);
-  font-size: 10px;
+  font-size: 8px;
   font-weight: var(--weight-bold);
-  line-height: 16px;
+  line-height: 15px;
   text-align: center;
 }
 
