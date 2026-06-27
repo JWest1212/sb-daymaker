@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type TagColor = "gold" | "sage" | "terracotta" | "neutral";
+export type TagColor = "gold" | "sage" | "terracotta" | "pacific" | "neutral";
 
 /** Static label pill (occasion tag, badge). Accent FILL with readable text. */
 export function Tag({

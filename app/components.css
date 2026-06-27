@@ -82,11 +82,17 @@
   color: var(--ink);
 }
 .sbd-tag--sage {
-  background: var(--sage);
+  /* AA fix (QW-2): white on raw --sage is only 3.6:1; the darkened sage token
+     clears 4.5:1 as a solid pill. */
+  background: var(--sage-text);
   color: var(--paper);
 }
 .sbd-tag--terracotta {
   background: var(--terracotta);
+  color: var(--paper);
+}
+.sbd-tag--pacific {
+  background: var(--pacific);
   color: var(--paper);
 }
 .sbd-tag--neutral {

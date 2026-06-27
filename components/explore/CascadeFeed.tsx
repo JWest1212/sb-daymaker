@@ -4,7 +4,14 @@ import { PickCard, ListCard, EmptyState } from "@/components/ui";
 import type { Thing } from "@/lib/things";
 import { TIER_META } from "@/lib/explore";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { cardBlurb, cardFacts, cardPlace, cardTag, cardTone } from "./derive";
+import {
+  cardBlurb,
+  cardFacts,
+  cardPlace,
+  cardTag,
+  cardTagColor,
+  cardTone,
+} from "./derive";
 
 export function CascadeFeed({ items }: { items: Thing[] }) {
   const { isSaved, toggle } = useSaves();
@@ -53,6 +60,7 @@ export function CascadeFeed({ items }: { items: Thing[] }) {
                     href={`/thing/${t.id}`}
                     tone={cardTone(i)}
                     tag={cardTag(t)}
+                    tagColor={cardTagColor(t)}
                     title={t.title}
                     blurb={cardBlurb(t)}
                     meta={cardFacts(t).join(" · ")}

@@ -1,5 +1,6 @@
 import type { Thing } from "@/lib/things";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
+import type { TagColor } from "@/components/ui/Chip";
 
 const TONES = ["gold", "sage", "pacific"] as const;
 export type Tone = (typeof TONES)[number];
@@ -19,6 +20,17 @@ export function prettify(s: string | null | undefined): string {
 export function cardTag(t: Thing): string | undefined {
   const k = t.tags[0];
   return k ? OCCASION_BY_KEY[k]?.label : undefined;
+}
+
+/**
+ * Color-code the list-card label pill by kind (QW-2): places teal, free
+ * green, everything else terracotta. All three clear AA with white text
+ * (raw --sage does not, so the pill uses the darkened sage token).
+ */
+export function cardTagColor(t: Thing): TagColor {
+  if (t.type === "place") return "pacific";
+  if (t.free) return "sage";
+  return "terracotta";
 }
 
 export function cardPlace(t: Thing): string | undefined {
