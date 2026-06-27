@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Plan Feature · Build Kickoff Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --gold:#E0A82E; --sage:#7E8B6B;
+    --line:#D8CDB8; --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--plaster);line-height:1.6;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:780px;margin:0 auto;padding:0 22px 80px;}
+
+  /* HEADER */
+  header{background:linear-gradient(165deg,var(--pacificDk),var(--pacific));color:#fff;padding:46px 0 38px;margin-bottom:34px;}
+  .hin{max-width:780px;margin:0 auto;padding:0 22px;}
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:20px;}
+  .brand .m{width:32px;height:32px;border-radius:8px;background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:18px;}
+  .brand .nm{font-family:'Fraunces',serif;font-weight:600;font-size:17px;}
+  .brand .sub{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;opacity:.6;font-weight:700;margin-top:2px;}
+  header h1{font-family:'Fraunces',serif;font-weight:600;font-size:34px;line-height:1.05;letter-spacing:-.5px;margin:0;}
+  header .lede{font-size:15px;opacity:.88;margin-top:13px;max-width:600px;}
+  header .docrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
+  header .chip{font-size:11px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;}
+
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:24px;letter-spacing:-.3px;margin:38px 0 6px;display:flex;align-items:center;gap:11px;}
+  h2 .step{width:30px;height:30px;border-radius:9px;background:var(--tile);color:#fff;display:grid;place-items:center;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;flex-shrink:0;}
+  .sublede{color:var(--ink2);font-size:14.5px;margin:0 0 16px;}
+  p{font-size:14.5px;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--plaster2);padding:2px 6px;border-radius:5px;color:var(--terra-text);}
+
+  /* FLAG CALLOUT */
+  .flag{border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(224,168,46,.13),rgba(224,168,46,.04));border-radius:16px;padding:20px 22px;margin:26px 0;}
+  .flag .ft{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--gold-text);display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+  .flag p{margin:8px 0 0;font-size:14px;color:#5e4a20;}
+  .flag p strong{color:#3f3110;}
+
+  /* CARD */
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin:18px 0;box-shadow:0 14px 30px -24px rgba(20,40,50,.5);}
+
+  /* COPY BLOCK */
+  .copywrap{margin:18px 0;}
+  .copyhead{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:#fff;border-radius:14px 14px 0 0;padding:11px 16px;}
+  .copyhead .lbl{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;gap:8px;}
+  .copyhead .hint{font-size:11px;opacity:.65;font-weight:600;}
+  .copybody{background:#1c1611;color:#f3ece0;border:1px solid var(--ink);border-top:none;border-radius:0 0 14px 14px;padding:18px 18px;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;white-space:pre-wrap;}
+  .copybody .hl{color:var(--gold);}
+
+  /* STEPS LIST */
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:14px 0;}
+  ol.steps li{position:relative;padding:0 0 16px 44px;}
+  ol.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;background:var(--pacific);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;font-family:'Inter',sans-serif;}
+  ol.steps li b{font-weight:700;}
+  ol.steps li .d{font-size:13.5px;color:var(--ink2);margin-top:2px;}
+
+  /* PHASE CHECKLIST */
+  .phase{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line);}
+  .phase:last-child{border-bottom:none;}
+  .phase .pn{flex-shrink:0;width:30px;height:30px;border-radius:8px;background:var(--plaster2);color:var(--terra-text);display:grid;place-items:center;font-weight:800;font-size:13px;font-family:'JetBrains Mono',monospace;}
+  .phase .pb{flex:1;}
+  .phase .pt{font-family:'Fraunces',serif;font-size:15.5px;font-weight:600;line-height:1.2;}
+  .phase .pd{font-size:13px;color:var(--ink2);margin-top:3px;}
+  .phase.zero .pn{background:var(--gold);color:var(--ink);}
+
+  /* WHAT TO DO ROW */
+  .todo{display:flex;gap:12px;align-items:flex-start;margin:11px 0;}
+  .todo .ic{width:26px;height:26px;border-radius:7px;background:var(--sage);color:#fff;display:grid;place-items:center;font-size:14px;flex-shrink:0;}
+  .todo .tx{flex:1;font-size:14px;}
+  .todo .tx b{font-weight:700;}
+
+  .pill{display:inline-block;background:var(--plaster2);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:11.5px;font-weight:700;color:var(--ink2);}
+  .ok{color:var(--sage-text);font-weight:700;}
+  hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
+  .foot{text-align:center;color:var(--sage-text);font-size:12px;font-weight:600;margin-top:40px;}
+  .approve{background:var(--plaster2);border-radius:12px;padding:14px 18px;margin:14px 0;font-size:13.5px;}
+  .approve b{color:var(--ink);}
+</style>
+</head>
+<body>
+<header>
+  <div class="hin">
+    <div class="brand">
+      <div class="m">S</div>
+      <div><div class="nm">SB Daymaker</div><div class="sub">Santa Barbara, daily</div></div>
+    </div>
+    <h1>Building the Plan feature — your kickoff guide</h1>
+    <p class="lede">Everything you need to hand this to Claude Code and watch it build, one approvable phase at a time. No commands for you to run — just look and approve.</p>
+    <div class="docrow">
+      <span class="chip">📄 1 message to paste</span>
+      <span class="chip">🧱 11 phases</span>
+      <span class="chip">👀 You approve each one</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="sublede">This pairs with two other files: <code>SBDaymaker_Plan_Build.md</code> (the detailed spec Claude Code follows) and <code>SBDaymaker_Plan_Mockup.html</code> (the picture it builds toward). You don't need to read those — Claude Code does. This guide is just for you.</p>
+
+  <div class="flag">
+    <div class="ft">⚠️ One thing to know before you start</div>
+    <p>Back in v9, you deliberately <strong>removed</strong> the old "My Plan" itinerary builder and timed plans — and your project's rulebook (<code>CLAUDE.md</code>) still says <strong>"do not build"</strong> them. The Plan feature is a fresh, intentional revival of that idea, so the very first thing Claude Code will do is <strong>update that rulebook</strong> to say Plan is now approved. That's <strong>Phase 0</strong> below.</p>
+    <p>Why it matters: if we skipped this, Claude Code would (correctly) stop partway and ask why it's building something the rules forbid — wasting a session. Updating the rule first keeps the build smooth. You'll see the change and approve it like any other phase.</p>
+  </div>
+
+  <h2><span class="step">1</span>Put the three files in your project</h2>
+  <p class="sublede">So Claude Code can read them.</p>
+  <div class="card">
+    <p style="margin-top:0;">Inside your project repo, create a folder named <code>docs/plan-feature/</code> and drop these three files into it:</p>
+    <ol class="steps">
+      <li><b>SBDaymaker_Plan_Build.md</b><div class="d">The build spec — the step-by-step plan Claude Code executes.</div></li>
+      <li><b>SBDaymaker_Plan_Mockup.html</b><div class="d">The visual target — the six screens it builds toward.</div></li>
+      <li><b>SBDaymaker_Plan_ClickGuide.html</b><div class="d">This guide (optional to include, but tidy to keep them together).</div></li>
+    </ol>
+    <p style="margin-bottom:0;">That's the same pattern as <code>docs/wave-next/</code> from last time.</p>
+  </div>
+
+  <h2><span class="step">2</span>Paste this one message into Claude Code</h2>
+  <p class="sublede">Open Claude Code in your project, and paste the message below exactly. It points Claude Code at the right files and tells it how to proceed.</p>
+
+  <div class="copywrap">
+    <div class="copyhead">
+      <span class="lbl">📋 Copy everything in this box</span>
+      <span class="hint">paste into Claude Code</span>
+    </div>
+    <div class="copybody">Read <span class="hl">CLAUDE.md</span>, <span class="hl">sbdaymaker_tokens.css</span>, <span class="hl">sbdaymaker_schema.sql</span>, the wireframe (<span class="hl">02b_SBDaymaker_Wireframe.html</span>), and the two new files in <span class="hl">docs/plan-feature/</span>: <span class="hl">SBDaymaker_Plan_Build.md</span> (the full spec) and <span class="hl">SBDaymaker_Plan_Mockup.html</span> (the visual target).
+
+Heads-up and first task: this feature adds a Plan surface — a single-day planner. It deliberately revives capability the v9 note in CLAUDE.md lists as retired ("My Plan itinerary builder", "timed/sequenced plans"). This is an approved, intentional evolution. Phase 0 in the build doc updates CLAUDE.md so the contract is current — do Phase 0 first.
+
+Then build the Plan feature phase by phase, exactly as the build doc specifies. Plan mode first for each phase. After each phase: stop, run the dev server, tell me in plain terms what changed and exactly what to look at, and wait for my visual approval before the next phase.
+
+Honor every constraint in CLAUDE.md §2: no accounts (localStorage only), no per-tap AI (deterministic slotting from pre-computed content + the hand-authored day-shapes), no transactions, no .ics/calendar export, no map, tokens only (never hardcode a hex), and WCAG 2.2 AA on every component.
+
+Start with Phase 0.</div>
+  </div>
+
+  <h2><span class="step">3</span>Then just review and approve, phase by phase</h2>
+  <p class="sublede">Claude Code does the rest. Here's the rhythm you'll fall into.</p>
+
+  <div class="card">
+    <ol class="steps">
+      <li><b>Claude Code builds one phase</b><div class="d">It works through a single chunk — for example, "the raised Plan button in the bottom bar."</div></li>
+      <li><b>It stops and tells you what to look at</b><div class="d">It'll start the dev server and say something like "open the app and tap the new Plan button — here's what changed." It handles all the terminal, Git, and database work itself; it never asks you to type commands.</div></li>
+      <li><b>You look — ideally on your phone</b><div class="d">Use your Vercel preview link or a narrow browser window. Check it feels right.</div></li>
+      <li><b>You approve or redirect</b><div class="d">A short reply is all it needs (see below). Then it moves to the next phase.</div></li>
+    </ol>
+    <div class="approve">
+      <b>To approve:</b> &nbsp;"Looks good — next." &nbsp;&nbsp; <b>To tweak:</b> &nbsp;"The Plan button is too big, shrink it, then continue." &nbsp;&nbsp; <b>To pause:</b> &nbsp;"Stop here for now."
+    </div>
+  </div>
+
+  <h2><span class="step">4</span>What you'll actually need to do</h2>
+  <p class="sublede">Short list. Most of it is just looking.</p>
+
+  <div class="todo"><div class="ic">👀</div><div class="tx"><b>Approve each phase visually.</b> The main job. Eleven quick check-ins.</div></div>
+  <div class="todo"><div class="ic">🗄️</div><div class="tx"><b>Nothing for the database.</b> One tiny change happens in Phase 8 (adding a "shared plan" type so plans can be shared by link) — Claude Code runs it for you. No setup on your end.</div></div>
+  <div class="todo"><div class="ic">🔑</div><div class="tx"><b>No new API keys.</b> Plan reuses what's already wired (your content, Supabase, the share link). Nothing new to sign up for.</div></div>
+  <div class="todo"><div class="ic">📱</div><div class="tx"><b>Test on your phone</b> whenever you can — this is a mobile-first app and the spine especially is worth seeing on a real screen.</div></div>
+
+  <hr>
+
+  <h2 style="margin-bottom:14px;">The 11 phases, in plain terms</h2>
+  <p class="sublede" style="margin-top:-2px;">So you know roughly where you are. Claude Code pauses after each for your OK.</p>
+
+  <div class="card" style="padding:8px 24px;">
+    <div class="phase zero"><div class="pn">0</div><div class="pb"><div class="pt">Update the rulebook</div><div class="pd">Marks the Plan feature as approved in <code>CLAUDE.md</code> (the v9 reconciliation above). No app changes yet — just the diff to approve.</div></div></div>
+    <div class="phase"><div class="pn">1</div><div class="pb"><div class="pt">The raised Plan button</div><div class="pd">Adds the gold-and-terracotta "Plan" button to the bottom bar on every screen, and an empty Plan page behind it. Your three tabs stay exactly as they are.</div></div></div>
+    <div class="phase"><div class="pn">2</div><div class="pb"><div class="pt">The behind-the-scenes engine</div><div class="pd">No visible screen. Builds the day-planning logic, the saved-itinerary storage, and the curated "day shapes." Claude Code will show you it works via a quick log.</div></div></div>
+    <div class="phase"><div class="pn">3</div><div class="pb"><div class="pt">The setup screen</div><div class="pd">"Make My Day" plus your five questions and the "pin saved spots" hook. This is mockup Screen 1.</div></div></div>
+    <div class="phase"><div class="pn">4</div><div class="pb"><div class="pt">The itinerary spine</div><div class="pd">The signature screen — your day on a timeline that warms from morning teal to evening gold, with swappable stops. Mockup Screen 3.</div></div></div>
+    <div class="phase"><div class="pn">5</div><div class="pb"><div class="pt">Swap a stop</div><div class="pd">The sheet that lets you change any stop, with your saved spots floated to the top. Mockup Screen 4.</div></div></div>
+    <div class="phase"><div class="pn">6</div><div class="pb"><div class="pt">Build from your saved</div><div class="pd">The picker that pins your saved spots into the day and fills the gaps around them. Mockup Screen 2.</div></div></div>
+    <div class="phase"><div class="pn">7</div><div class="pb"><div class="pt">Save &amp; the Days view</div><div class="pd">Saving a plan, the new "Things / Days" tabs on Saved, and the "My plans" dropdown in Plan. Mockup Screen 5.</div></div></div>
+    <div class="phase"><div class="pn">8</div><div class="pb"><div class="pt">Sharing a plan</div><div class="pd">The locked, view-only link a friend opens, with "Save this plan." Mockup Screen 6. (The one tiny database change lives here.)</div></div></div>
+    <div class="phase"><div class="pn">9</div><div class="pb"><div class="pt">Detail access &amp; accessibility</div><div class="pd">Makes sure every card opens its detail the same way, plus the full keyboard/contrast/reduced-motion pass.</div></div></div>
+    <div class="phase"><div class="pn">10</div><div class="pb"><div class="pt">Edges, empties &amp; final polish</div><div class="pd">Graceful "nothing saved yet" states, fallbacks so a day is never blank, loading states, and a final check against all six screens.</div></div></div>
+  </div>
+
+  <hr>
+
+  <div class="card">
+    <p style="margin-top:0;"><strong>A note on the honest stuff.</strong> If at any phase something looks off to you, say so plainly — Claude Code will fix it before moving on, and that's far cheaper than catching it later. And if it ever flags a concern of its own (it's instructed to, rather than quietly working around a rule), take it seriously; that's the system working as intended.</p>
+    <p style="margin-bottom:0;">When all 11 phases are done and approved, the Plan surface is live in your app — no accounts, no per-tap AI cost, fully on-brand. <span class="ok">That's the whole build.</span></p>
+  </div>
+
+  <div class="foot">SB Daymaker · Plan feature · build kickoff guide — paste the message, then approve your way through.</div>
+
+</div>
+</body>
+</html>

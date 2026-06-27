@@ -617,6 +617,43 @@
 }
 
 /* ==========================================================================
+   PLAN (v9.1) — surface header + My-plans button
+   ========================================================================== */
+.sbd-plan-header {
+  justify-content: space-between;
+}
+.sbd-plan-header__brand {
+  margin-right: auto;
+}
+.sbd-myplans-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--pacific);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+.sbd-myplans-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+.sbd-myplans-btn:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-myplans-btn__chevron {
+  font-size: 0.7em;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+/* ==========================================================================
    EXPLORE (Phase 4) — hero, control row, cascade feed, One Perfect SB Day
    Hero sky gradients are derived from palette tokens via color-mix (no
    invented hexes) to approximate the wireframe's golden-hour look.
