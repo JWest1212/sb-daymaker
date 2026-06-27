@@ -607,8 +607,11 @@
   overflow: hidden;
   /* full-bleed within the horizontally-padded shell main */
   margin: 0 calc(-1 * var(--space-5));
-  padding: var(--space-4) var(--space-5) var(--space-4);
-  min-height: 210px;
+  /* Elongated so the pick card sits up top and the full SB skyline gets its own
+     clear band beneath it (both visible at once). Pad/min-height tuned with the
+     skyline height below. */
+  padding: var(--space-3) var(--space-5) 0;
+  min-height: 228px;
   display: flex;
   flex-direction: column;
 }
@@ -654,6 +657,94 @@
   );
 }
 
+/* ---- SB skyline silhouette (H2) ---------------------------------------- */
+/* Warm horizon glow rising behind the silhouette: lifts the dark skyline off
+   every sky (esp. the dark evening/night skies) and reads as the sunset glow.
+   Color is token-derived (the same pale gold as the sun core) — no new hex. */
+.sbd-hero__glow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  height: 104px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    125% 95% at 50% 100%,
+    color-mix(
+        in srgb,
+        color-mix(in srgb, var(--gold), white 70%) 52%,
+        transparent
+      )
+      0%,
+    transparent 60%
+  );
+}
+.sbd-hero--gray .sbd-hero__glow {
+  display: none; /* cold marine-layer day: the fog band handles the horizon */
+}
+.sbd-hero__range {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  /* Full skyline band along the hero bottom, below the pick card. Tall enough
+     to show the whole silhouette (towers, palm, clock tower, roofline, wharf)
+     un-clipped at the shell's max width. */
+  height: 120px;
+  z-index: 1; /* above the sky gradient, below the date text + pick card */
+  pointer-events: none;
+}
+.sbd-hero__hills {
+  fill: var(--pacific);
+  fill-opacity: 0.5; /* soft foothills behind the city */
+}
+.sbd-hero__buildings {
+  fill: var(--pacific-dark);
+}
+.sbd-hero__palm {
+  fill: none;
+  stroke: var(--pacific-dark);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.sbd-hero__window {
+  fill: var(--pacific); /* lit clock-tower window, lighter than the facade */
+}
+/* Marine-layer (gray) day: desaturate the silhouette to a fog-muted slate and
+   raise a fog band from behind it. Built from neutral token mixes (no new hex). */
+.sbd-hero--gray .sbd-hero__hills {
+  fill: color-mix(in srgb, var(--ink-2), white 22%);
+  fill-opacity: 0.55;
+}
+.sbd-hero--gray .sbd-hero__buildings {
+  fill: var(--ink-2);
+}
+.sbd-hero--gray .sbd-hero__palm {
+  stroke: var(--ink-2);
+}
+.sbd-hero--gray .sbd-hero__window {
+  fill: color-mix(in srgb, var(--ink-2), white 22%);
+}
+.sbd-hero__fog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 46px;
+  height: 88px;
+  z-index: 1;
+  pointer-events: none;
+  display: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--plaster), white 30%) 72%
+  );
+}
+.sbd-hero--gray .sbd-hero__fog {
+  display: block;
+}
+
 .sbd-hero__sun {
   position: absolute;
   width: 52px;
@@ -666,6 +757,7 @@
     transparent 72%
   );
   box-shadow: 0 0 50px 16px color-mix(in srgb, var(--gold) 45%, transparent);
+  z-index: 0; /* above the glow, behind the silhouette (sets behind the city) */
   animation: sunEntry 0.8s ease-out, sunPulse 3s ease-in-out 1s infinite;
 }
 .sbd-hero--morning .sbd-hero__sun { left: 16%; top: 40%; }
@@ -689,7 +781,6 @@
   position: relative;
   z-index: 2;
   color: var(--paper);
-  flex: 1;
 }
 .sbd-hero__date {
   font-family: var(--font-mono);
@@ -699,30 +790,17 @@
   text-transform: uppercase;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
 }
-.sbd-hero__cond {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-  flex-wrap: wrap;
-}
-.sbd-hero__cond span {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: color-mix(in srgb, white 22%, transparent);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
+/* S4-B: conditions now ride inline on the date line (no stacked pill row). */
+.sbd-hero__cond-inline {
   font-weight: var(--weight-semi);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(3px);
+  opacity: 0.92;
 }
 
-/* Hero pick card (side-by-side) */
+/* Hero pick card (side-by-side) — compacted for S4-B so the skyline reads above it */
 .sbd-hero__pick {
   position: relative;
   z-index: 3;
-  margin-top: var(--space-4);
+  margin-top: var(--space-2);
   display: flex;
   align-items: stretch;
   background: var(--bg);
@@ -733,7 +811,7 @@
 }
 .sbd-hero__pick-img {
   position: relative;
-  width: 100px;
+  width: 84px;
   flex-shrink: 0;
   overflow: hidden;
 }
@@ -743,13 +821,13 @@
   right: var(--space-1);
 }
 .sbd-hero__pick-body {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 1px;
 }
 .sbd-hero__pick-eyebrow {
   font-size: var(--text-xs);
@@ -764,21 +842,17 @@
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
   color: var(--text);
+  /* Clamp to 2 lines: keeps the pick card compact so the skyline reads above
+     it, while still showing the full title in the common case (S4-B). */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sbd-hero__pick-meta {
   font-size: var(--text-sm);
   font-weight: var(--weight-semi);
   color: var(--text-link);
-}
-.sbd-hero__pick-blurb {
-  font-size: var(--text-sm);
-  line-height: var(--leading-snug);
-  color: var(--text-muted);
-  margin-top: 2px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* ---- Control row (Lens + Near Me + horizon) ----------------------------- */
