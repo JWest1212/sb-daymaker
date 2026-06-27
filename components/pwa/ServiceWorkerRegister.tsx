@@ -2,38 +2,34 @@
 
 import { useEffect } from "react";
 
-/** Registers the service worker in production; tears down stale ones in dev. */
+/**
+ * The offline service worker was caching stale assets during the build, so it's
+ * neutralized for now (see public/sw.js). This component no longer registers a
+ * worker; it tears down any existing one and clears its caches, with one guarded
+ * reload so the page self-heals to fresh assets. Re-introduce a real worker at
+ * go-live if offline support is wanted.
+ */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
-
-    // In development, a service worker left over from a past production build
-    // keeps serving stale cached assets (it does cache-first on /_next/static),
-    // so code changes show up intermittently. Proactively unregister any worker
-    // and clear its caches so dev always reflects the latest build.
-    if (process.env.NODE_ENV !== "production") {
-      navigator.serviceWorker
-        .getRegistrations()
-        .then((regs) => regs.forEach((r) => r.unregister()))
-        .catch(() => {});
+    const cleanup = async () => {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
       if (typeof caches !== "undefined") {
-        caches
-          .keys()
-          .then((keys) => keys.forEach((k) => caches.delete(k)))
-          .catch(() => {});
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
       }
-      return;
-    }
-
-    const onLoad = () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        /* registration failures are non-fatal */
-      });
+      if (
+        navigator.serviceWorker.controller &&
+        !sessionStorage.getItem("sbd-sw-cleared")
+      ) {
+        sessionStorage.setItem("sbd-sw-cleared", "1");
+        window.location.reload();
+      }
     };
-    window.addEventListener("load", onLoad);
-    return () => window.removeEventListener("load", onLoad);
+    cleanup().catch(() => {});
   }, []);
 
   return null;
