@@ -4,7 +4,7 @@
 
 > **What this file is.** The always-loaded context for building **SB Daymaker**. Claude Code reads this at the start of every session. It encodes the product, the constraints, the stack, and the rules of engagement so I don't have to re-explain them each time. **Read this before doing anything.** When a detail here conflicts with your training instincts, this file wins. When this file conflicts with the canonical documents, the documents win (see "Source of truth" below).
 >
-> **Current build target: v9 — a three-section app (Explore · Saved · Discover SB).** The Map screen and the My Plan itinerary builder were removed in v9; see §3 ("v9 note") and §9. Where any older document still shows five tabs, a Map screen, or My Plan, the wireframe v9 and this file supersede it.
+> **Current build target: v9.1 — a three-section app (Explore · Saved · Discover SB) plus the Plan surface (a single-day planner reached from a raised action button).** The Map screen was removed in v9; the My Plan removal is superseded by the v9.1 Plan surface — see §3 ("v9 note"), §9, and `docs/plan-feature/`. Where any older document still shows five tabs, a Map screen, or My Plan, the wireframe v9 and this file supersede it.
 
 ---
 
@@ -51,13 +51,15 @@ The thinking is already done. Build *from* these, don't reinvent them.
 | `09_SBDaymaker_Seed_Data_Guide.html` | How to produce seed/content data correctly. | Phase 1 (dev fixtures) and Phase 8/launch (real content). **Rule: enrich real facts, never invent them.** |
 | `SBDaymaker_Credentials_and_Env.md` | Every account, API key, and env var the app needs + where each goes. | When wiring Supabase/OpenWeather/Resend/Anthropic. **Never expose a service-role or API key in client code.** |
 | `00_SBDaymaker_Project_Context.md` | The master overview (everything above, summarized). | Orientation. Read first if you've read nothing else. |
+| `docs/plan-feature/SBDaymaker_Plan_Build.md` | **The phased build spec for the Plan surface** (v9.1 single-day planner). | The order to build Plan in; the deterministic slotting engine + UI↔schema mappings. Follow it phase by phase. |
+| `docs/plan-feature/SBDaymaker_Plan_Mockup-2.html` | **The visual target for Plan** — six rendered states. | What every Plan screen looks like; the tiebreaker on any Plan UI/pixel question. |
 
 > **All files, titles, and references read SB Daymaker** (e.g. `sbdaymaker_schema.sql`, `02b_SBDaymaker_Wireframe.html`). The previous brand name appears nowhere in the canon. If you ever encounter it, it's an out-of-date artifact — flag it.
 
 **Precedence when they disagree:** the wireframe v9 wins on any UI/flow question. Then the locked UX decisions + follow-on decisions (in `00_SBDaymaker_Project_Context.md` and Document 6), then Document 5, then the rest. The schema and tokens files are authoritative for their domains.
 
 > **v9 note (current build target — this resolves all stale-surface conflicts):**
-> - The app has **three sections: Explore, Saved, Discover SB.** There are **no** Map or My Plan tabs.
+> - The app has **three browse tabs (Explore · Saved · Discover SB) + one raised Plan action button.** No Map tab. (Plan is a create-action, not a fourth browse destination — see `docs/plan-feature/`.)
 > - **Near Me** is an in-view **sort** (by neighborhood), available on Explore and Saved. It is *not* a map. It needs geolocation + a neighborhood lookup, nothing more.
 > - **Sharing** is a **view-only saved-list link** (Option A): a friend opens the link, sees the picks, and can save their own copy. Single items or a multi-select batch. No recipient PII is stored.
 > - **One Perfect SB Day** is a hand-curated lineup on Explore that seeds the saved list (deterministic; no AI at tap time).
@@ -141,14 +143,17 @@ WCAG 2.2 AA is a floor we build *to*, not a pass we do at the end. On every comp
 
 **V1 (launch) — three sections:**
 
-- **Explore** (the front door): the daily golden-hour hero · the happenings cascade feed (dated → recurring → evergreen) · occasion tags (the Lens) · Today / This Week / This Month horizons · the **Near Me** sort · the **One Perfect SB Day** card (a hand-curated lineup that seeds the saved list) · First Looks + New This Week · light Happy Hour (a "last confirmed" list, no live countdowns).
+- **Explore** (the front door): the daily golden-hour hero · the happenings cascade feed (dated → recurring → evergreen) · occasion tags (the Lens) · Today / This Week / This Month horizons · the **Near Me** sort · (**One Perfect SB Day** has moved to the Plan surface as the **"Make My Day"** express button — it is no longer on Explore) · First Looks + New This Week · light Happy Hour (a "last confirmed" list, no live countdowns).
 - **Saved**: two-state on-device saves (**want / been**) · the **Near Me** sort · **share** — one item or a multi-select batch → a view-only link a friend opens and can save their own copy · magic-link backup (no account).
 - **Discover SB**: the city guides — **neighborhood** guides + **theme** guides, each surfacing the live happenings scoped to it (ISR).
+- **Plan** (a raised create-action button, **not** a fourth browse tab): a single-day planner — setup (**Make My Day** express + five questions) → a **time-of-day spine** of swappable stops → swap-a-stop (saved spots float to the top) → build-from-saved → save to **Saved › Days** → **view-only share** link. Fully deterministic (hand-authored day-shapes + pre-computed `things`); **no AI at tap time** (same rule as the old One Perfect SB Day). See `docs/plan-feature/`.
 - **Plus:** the 2×/week email · the public submission form · the six-surface admin cockpit · the nightly pipeline.
 
 **Phase 2 (committed, sequenced — do NOT build in V1):** web push for installed users · the **full Mapbox map** (clustering, sub-tabs, filter-sync) · live Happy Hour countdowns · the full Spanish-language layer · operator-submitted photos · account-based cross-device sync.
 
-**Removed in v9 (retired — do NOT build):** the Map screen · the My Plan itinerary builder · timed/sequenced plans · the drum-roll time picker · `.ics` calendar export. Near Me replaced the Map (as a sort); the saved-list share replaced plan sharing.
+**Removed in v9 (retired — do NOT build):** the Map screen · the drum-roll time picker · `.ics` calendar export. Near Me replaced the Map (as a sort).
+
+**v9.1 — the Plan surface (a single-day planner) supersedes the My Plan removal; see `docs/plan-feature/`.** It revives a deliberately narrower planner — timed/sequenced plans on a time-of-day spine — and stays no-accounts (localStorage), batch-AI-only (deterministic slotting from hand-authored day-shapes + pre-computed `things`), no transactions, no `.ics`, no map. The saved-list share remains; the Plan view-only share rides the same `shared_states` mechanism.
 
 **Never:** in-app ticketing/payment · reviews/ratings · separate Visitor/Local modes · a full account system · AI-written digest *synthesis* (editions assemble pre-approved content only).
 
