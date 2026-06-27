@@ -1176,6 +1176,10 @@
 /* Saved card */
 .sbd-savedcard {
   display: flex;
+  flex-direction: column;
+}
+.sbd-savedcard__top {
+  display: flex;
   align-items: stretch;
 }
 .sbd-savedcard.is-selected {
@@ -1216,52 +1220,53 @@
   color: var(--text-link);
   margin-top: 2px;
 }
+/* QW-4: full-width action row beneath the card content. The primary "Mark as
+   been" button is the load-bearing memory tap (≥44px); share + remove sit
+   beside it. Greens use the darkened sage token so they clear AA. */
 .sbd-savedcard__actions {
   display: flex;
-  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-3);
-  flex-wrap: wrap;
+  padding: 9px 11px;
+  border-top: 1px solid var(--line);
 }
-.sbd-savedcard__states {
-  display: inline-flex;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-.sbd-savedcard__states button {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
+.sbd-savedcard__been {
+  flex: 1;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid var(--sage-text);
+  background: var(--paper);
+  color: var(--sage-text);
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  padding: var(--space-2) var(--space-3);
-  min-height: 36px;
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   cursor: pointer;
 }
-.sbd-savedcard__states button[aria-pressed="true"] {
-  background: var(--pacific);
+.sbd-savedcard__been.is-been {
+  background: var(--sage-text);
   color: var(--paper);
 }
-.sbd-savedcard__icon {
-  margin-left: auto;
-  width: var(--tap-min);
-  height: var(--tap-min);
+.sbd-savedcard__act {
+  min-height: 44px;
+  width: 48px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--pacific);
+  font-size: 15px;
   display: grid;
   place-items: center;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: var(--text-lg);
   cursor: pointer;
-  border-radius: 50%;
 }
-.sbd-savedcard__icon:not(:first-of-type) {
-  margin-left: 0;
+.sbd-savedcard__act--remove {
+  color: var(--text-muted);
 }
-.sbd-savedcard__states button:focus-visible,
-.sbd-savedcard__icon:focus-visible {
+.sbd-savedcard__been:focus-visible,
+.sbd-savedcard__act:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: -2px;
 }
@@ -1271,7 +1276,7 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(56px + env(safe-area-inset-bottom));
+  bottom: calc(54px + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
   display: flex;
