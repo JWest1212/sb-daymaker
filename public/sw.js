@@ -1,7 +1,7 @@
 // SB Daymaker service worker — minimal offline shell.
 // network-first for navigations (fresh content when online, offline page when not);
 // cache-first for hashed static assets. Bump CACHE to invalidate.
-const CACHE = "sbd-v1";
+const CACHE = "sbd-v2";
 const OFFLINE_URL = "/offline";
 const PRECACHE = [OFFLINE_URL, "/icon-192.png"];
 
