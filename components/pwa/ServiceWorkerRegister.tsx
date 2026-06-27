@@ -3,33 +3,38 @@
 import { useEffect } from "react";
 
 /**
- * The offline service worker was caching stale assets during the build, so it's
- * neutralized for now (see public/sw.js). This component no longer registers a
- * worker; it tears down any existing one and clears its caches, with one guarded
- * reload so the page self-heals to fresh assets. Re-introduce a real worker at
- * go-live if offline support is wanted.
+ * Registers the offline service worker in production (where hashed asset URLs
+ * make its cache-first strategy safe). In development it instead tears down any
+ * worker left over from a past prod build and clears its caches, so dev never
+ * serves stale assets. Renders nothing.
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) {
       return;
     }
-    const cleanup = async () => {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister()));
+
+    if (process.env.NODE_ENV !== "production") {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {});
       if (typeof caches !== "undefined") {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((k) => caches.delete(k)));
+        caches
+          .keys()
+          .then((keys) => keys.forEach((k) => caches.delete(k)))
+          .catch(() => {});
       }
-      if (
-        navigator.serviceWorker.controller &&
-        !sessionStorage.getItem("sbd-sw-cleared")
-      ) {
-        sessionStorage.setItem("sbd-sw-cleared", "1");
-        window.location.reload();
-      }
+      return;
+    }
+
+    const onLoad = () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        /* registration failures are non-fatal */
+      });
     };
-    cleanup().catch(() => {});
+    window.addEventListener("load", onLoad);
+    return () => window.removeEventListener("load", onLoad);
   }, []);
 
   return null;
