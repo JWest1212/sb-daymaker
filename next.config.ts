@@ -12,7 +12,17 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    const rules = [{ source: "/:path*", headers: securityHeaders }];
+    // Dev only: Turbopack chunk URLs are stable and the dev server returns a
+    // stale ETag, so browsers revalidate, get 304s, and keep old CSS/JS. Tell
+    // the browser never to store dev static assets so it always refetches.
+    if (process.env.NODE_ENV !== "production") {
+      rules.push({
+        source: "/_next/static/:path*",
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      });
+    }
+    return rules;
   },
 };
 
