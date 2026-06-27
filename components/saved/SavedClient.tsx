@@ -13,6 +13,7 @@ import { createSharedList } from "@/lib/shares";
 import { SavedCard } from "./SavedCard";
 import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
+import { MemoryRecap } from "./MemoryRecap";
 import { shareUrl } from "./share";
 
 export function SavedClient({ things }: { things: Thing[] }) {
@@ -33,6 +34,18 @@ export function SavedClient({ things }: { things: Thing[] }) {
 
   const savedSet = useMemo(() => new Set(ids), [ids]);
 
+  // Ghost-only cleanup: drop saves whose item is absent from a COMPLETE
+  // published pool (i.e. archived/deleted from the platform). Real past events
+  // stay published, so they're never touched. Guards ensure it never fires on
+  // an empty or truncated fetch (Supabase caps at 1000 rows), so it can't
+  // wrongly remove real saves now or as the catalog grows.
+  useEffect(() => {
+    if (things.length === 0 || things.length >= 1000) return;
+    const live = new Set(things.map((t) => t.id));
+    for (const id of ids) if (!live.has(id)) remove(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [things, ids]);
+
   // Items in the current Want/Been view, near-me sorted.
   const viewItems = useMemo(() => {
     const inView = things.filter(
@@ -42,7 +55,31 @@ export function SavedClient({ things }: { things: Thing[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [things, savedSet, stateFilter, zone]);
 
-  const groups = groupSaved(viewItems);
+  // Split the Want view: past saved events drop to their own lower section so
+  // the user can mark the ones they made it to. (Been shows everything.)
+  const nowMs = useMemo(() => Date.now(), []);
+  const isPastEvent = (t: Thing) =>
+    t.type === "event" &&
+    t.starts_at != null &&
+    new Date(t.starts_at).getTime() < nowMs;
+  const splitPast = stateFilter === "want";
+  const mainItems = splitPast ? viewItems.filter((t) => !isPastEvent(t)) : viewItems;
+  const pastItems = splitPast ? viewItems.filter(isPastEvent) : [];
+  const groups = groupSaved(mainItems);
+
+  // LB-1: been-marked items in save order (oldest → newest) for the recap card.
+  const beenItems = useMemo(() => {
+    const byId = new Map(things.map((t) => [t.id, t]));
+    const out: Thing[] = [];
+    for (const id of ids) {
+      if (state(id) === "been") {
+        const t = byId.get(id);
+        if (t) out.push(t);
+      }
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [things, ids]);
 
   const toggleSelect = (id: string) =>
     setSelected((prev) => {
@@ -128,15 +165,18 @@ export function SavedClient({ things }: { things: Thing[] }) {
         <p className="sbd-saved__hint">Tap to choose what to send — one or many.</p>
       ) : null}
 
+      {/* LB-1: the recap leads the Been tab (its empty state is the invite). */}
+      {stateFilter === "been" && !selectMode ? (
+        <MemoryRecap beenCount={counts.been} beenItems={beenItems} />
+      ) : null}
+
       {viewItems.length === 0 ? (
-        <EmptyState
-          icon={stateFilter === "been" ? "✅" : "❤️"}
-          message={
-            stateFilter === "been"
-              ? "Nothing marked as “been” yet. Flip an item to Been once you've done it."
-              : "Nothing in your want-to-go list right now."
-          }
-        />
+        stateFilter === "been" ? null : (
+          <EmptyState
+            icon="❤️"
+            message="Nothing in your want-to-go list right now."
+          />
+        )
       ) : (
         groups.map((g) => (
           <section key={g.key} className="sbd-saved__group">
@@ -163,6 +203,37 @@ export function SavedClient({ things }: { things: Thing[] }) {
           </section>
         ))
       )}
+
+      {pastItems.length > 0 ? (
+        <section className="sbd-saved__group sbd-saved__past">
+          <div className="sbd-group-hdr">
+            <span
+              className="sbd-group-dot"
+              style={{ background: "var(--ink-2)" }}
+            />
+            Past events
+          </div>
+          <p className="sbd-saved__pasthint">
+            Did you make it? Mark the ones you did.
+          </p>
+          <div className="sbd-saved__list">
+            {pastItems.map((t, i) => (
+              <SavedCard
+                key={t.id}
+                thing={t}
+                index={i}
+                state={(state(t.id) ?? "want") as SaveState}
+                selectMode={selectMode}
+                selected={selected.has(t.id)}
+                onToggleSelect={() => toggleSelect(t.id)}
+                onSetState={(s) => setState(t.id, s)}
+                onRemove={() => remove(t.id)}
+                onShareOne={() => makeLinkAndShare([t.id])}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {!selectMode ? <RestorePanel /> : null}
 

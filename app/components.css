@@ -1149,6 +1149,17 @@
 .sbd-saved__group {
   margin-top: var(--space-5);
 }
+/* Past saved events — a distinct lower section, set off with a rule above it. */
+.sbd-saved__past {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+.sbd-saved__pasthint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
+}
 .sbd-saved__list {
   display: flex;
   flex-direction: column;
@@ -1174,6 +1185,120 @@
 }
 
 /* Saved card */
+/* ---- "Your Santa Barbara" memory recap (LB-1) -------------------------- */
+.sbd-recap {
+  margin: 0 0 var(--space-4);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  color: var(--paper);
+  background: linear-gradient(
+    140deg,
+    var(--pacific-dark),
+    var(--pacific) 55%,
+    color-mix(in srgb, var(--pacific), white 16%)
+  );
+  padding: var(--space-4) var(--space-4) var(--space-5);
+}
+.sbd-recap__kicker {
+  font-size: 10px;
+  font-weight: var(--weight-black);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.sbd-recap__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-tight);
+  margin: var(--space-1) 0 0;
+}
+.sbd-recap__big {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 2px;
+}
+.sbd-recap__n {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-weight: var(--weight-semi);
+  line-height: 1;
+  color: var(--gold);
+}
+.sbd-recap__nl {
+  font-size: 11px;
+  opacity: 0.9;
+}
+.sbd-recap__hoods {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+}
+.sbd-recap__chip {
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--gold);
+  color: var(--ink);
+}
+.sbd-recap__bar {
+  height: 6px;
+  border-radius: 4px;
+  background: color-mix(in srgb, white 18%, transparent);
+  margin-top: var(--space-3);
+  overflow: hidden;
+}
+.sbd-recap__bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--terracotta));
+}
+.sbd-recap__barl {
+  font-size: 11px;
+  opacity: 0.85;
+  margin-top: 5px;
+}
+.sbd-recap__laneh {
+  font-size: 10px;
+  font-weight: var(--weight-black);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: var(--space-3) 0 4px;
+}
+.sbd-recap__tl {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: 4px 0;
+}
+.sbd-recap__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.sbd-recap__tln {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+}
+.sbd-recap__tld {
+  font-size: 11px;
+  opacity: 0.8;
+}
+.sbd-recap--empty .sbd-recap__lead {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  opacity: 0.92;
+  margin-top: var(--space-2);
+}
+
 .sbd-savedcard {
   display: flex;
   flex-direction: column;
