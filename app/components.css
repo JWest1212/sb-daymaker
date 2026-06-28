@@ -426,6 +426,8 @@
 
 /* The selectable part: thumb + body */
 .sbd-swapopt__select {
+  -webkit-appearance: none;
+  appearance: none;
   display: flex;
   align-items: center;
   gap: 11px;
@@ -438,13 +440,18 @@
   cursor: pointer;
   font-family: var(--font-body);
   min-height: var(--tap-min);
+  overflow: hidden;
 }
 .sbd-swapopt__thumb {
   width: 46px;
+  min-width: 46px;
+  max-width: 46px;
   height: 46px;
+  min-height: 46px;
   border-radius: 10px;
   flex-shrink: 0;
   object-fit: cover;
+  display: block;
 }
 .sbd-swapopt__body {
   flex: 1;
