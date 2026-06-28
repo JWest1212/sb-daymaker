@@ -663,6 +663,14 @@
   text-align: center;
   margin: var(--space-4) 0 var(--space-3);
 }
+.sbd-pinhelper--empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-2) 0 var(--space-4);
+  text-align: left;
+  margin: 0;
+}
 .sbd-pinbuild {
   margin-top: var(--space-2);
 }
@@ -1030,6 +1038,19 @@
 .sbd-myplans-btn__chevron {
   font-size: 0.7em;
   transition: transform var(--dur-fast) var(--ease-out);
+}
+.sbd-myplans-btn__count {
+  min-width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--pacific);
+  color: var(--paper);
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  display: inline-grid;
+  place-items: center;
+  padding: 0 4px;
+  line-height: 1;
 }
 
 /* The Plan results back button (interim Phase 3 + the spine header in Phase 4). */
@@ -1679,7 +1700,8 @@
   align-items: center;
   gap: 4px;
 }
-/* ⓘ info circle — visual affordance only (tabIndex=-1, aria-hidden) */
+/* ⓘ info circle — visual affordance only (tabIndex=-1, aria-hidden).
+   Padding + negative margin expands touch target to ≥44px without layout shift. */
 .sbd-scard__info {
   width: 25px;
   height: 25px;
@@ -1696,6 +1718,9 @@
   font-weight: var(--weight-bold);
   font-size: var(--text-sm);
   line-height: 1;
+  padding: 10px;
+  margin: -10px;
+  box-sizing: content-box;
 }
 .sbd-scard__info:hover {
   border-color: var(--pacific);
@@ -3219,6 +3244,216 @@ textarea.sbd-field__input {
 }
 .sbd-review__actions .sbd-btn {
   width: 100%;
+}
+
+/* ==========================================================================
+   SHARED PLAN VIEW /p/[token] (Phase 8) — view-only public plan
+   ========================================================================== */
+
+/* Page wrapper: column flex so the sticky footer stays at the bottom */
+.sbd-shplan {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+/* Sticky header */
+.sbd-shplan__hd {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--pacific-dark, var(--pacific));
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 15%, transparent);
+}
+.sbd-shplan__hd-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-5);
+  gap: var(--space-3);
+}
+.sbd-shplan__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--paper);
+}
+.sbd-shplan__mark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-base);
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  line-height: 1;
+}
+.sbd-shplan__wordmark {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-base);
+  color: var(--paper);
+  line-height: 1;
+}
+.sbd-shplan__lock {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--paper) 70%, transparent);
+  white-space: nowrap;
+}
+.sbd-shplan__brand:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Scrollable body */
+.sbd-shplan__body {
+  flex: 1;
+  padding: 0 0 var(--space-6);
+}
+
+/* Hero section */
+.sbd-shplan__hero {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5) var(--space-4);
+}
+.sbd-shplan__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-link);
+  margin: 0 0 var(--space-2);
+}
+.sbd-shplan__title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-2xl);
+  color: var(--accent);
+  margin: 0 0 var(--space-2);
+  line-height: var(--leading-tight);
+}
+.sbd-shplan__meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+/* Read-only stop card (no swap, no heart) */
+.sbd-rcard {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  min-width: 0;
+}
+.sbd-rcard__thumb {
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+.sbd-rcard__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sbd-rcard__eb {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.sbd-rcard__nm {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sbd-rcard__mt {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sbd-rcard__det {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text-link);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: var(--space-2);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.sbd-rcard__det:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Sticky footer */
+.sbd-shplan__foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+}
+.sbd-shplan__savebtn {
+  width: 100%;
+  max-width: 420px;
+}
+.sbd-shplan__saved {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--forest);
+  margin: 0;
+  text-align: center;
+}
+.sbd-shplan__footlink {
+  color: var(--text-link);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.sbd-shplan__footlink:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 /* ==========================================================================

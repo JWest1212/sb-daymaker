@@ -103,6 +103,7 @@ export function PlanClient({ things }: { things: Thing[] }) {
           initialShapeId={shapeId}
           initialOverrides={initialOverrides}
           itineraries={itineraries}
+          myPlansOpen={myPlansOpen}
           onSave={save}
           onMyPlans={() => setMyPlansOpen(true)}
           onBack={handleBack}

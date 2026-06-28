@@ -80,6 +80,28 @@ begin
 end;
 $$;
 
+-- Create a view-only shared plan (kind='shared_plan', Phase 8).
+-- Payload = SharedPlanPayload (denormalized snapshot). No email stored.
+create or replace function create_shared_plan(p_payload jsonb)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_token text;
+begin
+  if p_payload is null then
+    raise exception 'payload required';
+  end if;
+  v_token := replace(gen_random_uuid()::text, '-', '');
+  insert into shared_states (token, kind, payload, email)
+  values (v_token, 'shared_plan', p_payload, null);
+  return v_token;
+end;
+$$;
+
 grant execute on function create_shared_list(jsonb) to anon, authenticated;
 grant execute on function create_save_restore(citext, jsonb) to anon, authenticated;
 grant execute on function get_shared_state(text) to anon, authenticated;
+grant execute on function create_shared_plan(jsonb) to anon, authenticated;

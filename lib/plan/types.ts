@@ -91,5 +91,6 @@ export interface SharedPlanPayload {
     blurb: string;
     category: string;
     thingId: string; // lets the opener deep-link to the live detail if present
+    photo_url?: string | null;
   }>;
 }

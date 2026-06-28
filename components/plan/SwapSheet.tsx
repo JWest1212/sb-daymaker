@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { BLOCK_TIME_LABEL } from "@/lib/plan/buildDay";
@@ -24,12 +25,18 @@ export function SwapSheet({
   onClose,
 }: SwapSheetProps) {
   const { isSaved } = useSaves();
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const saved = candidates.filter((t) => isSaved(t.id));
   const rest = candidates.filter((t) => !isSaved(t.id));
 
+  function handleSelect(thing: Thing, fromSaved: boolean) {
+    setPendingId(thing.id);
+    setTimeout(() => onSelect(thing, fromSaved), 300);
+  }
+
   function renderRow(thing: Thing, fromSaved: boolean) {
-    const isCurrent = thing.id === currentStopId;
+    const isSelected = thing.id === (pendingId ?? currentStopId);
     const zone = thing.nearby_zone ? planZoneLabel(thing.nearby_zone) : null;
     const meta = [zone ? `📍 ${zone}` : null, thing.reason_to_go]
       .filter(Boolean)
@@ -38,18 +45,19 @@ export function SwapSheet({
     return (
       <div
         key={thing.id}
-        className={`sbd-swapopt${isCurrent ? " sbd-swapopt--sel" : ""}`}
+        className={`sbd-swapopt${isSelected ? " sbd-swapopt--sel" : ""}`}
       >
         <button
           type="button"
           className="sbd-swapopt__select"
-          onClick={() => onSelect(thing, fromSaved)}
+          onClick={() => handleSelect(thing, fromSaved)}
           aria-label={
-            isCurrent
+            isSelected
               ? `${thing.title} (currently selected)`
               : `Select ${thing.title}`
           }
-          aria-pressed={isCurrent}
+          aria-pressed={isSelected}
+          disabled={pendingId !== null}
         >
           {thing.photo_url ? (
             <img
@@ -82,9 +90,16 @@ export function SwapSheet({
         >
           <span aria-hidden="true">i</span>
         </Link>
-        <div className="sbd-swapopt__ck" aria-hidden="true">
-          {isCurrent ? "✓" : ""}
-        </div>
+        <button
+          type="button"
+          className="sbd-swapopt__ck"
+          onClick={() => handleSelect(thing, fromSaved)}
+          aria-label={isSelected ? `${thing.title} (currently selected)` : `Select ${thing.title}`}
+          aria-pressed={isSelected}
+          disabled={pendingId !== null}
+        >
+          {isSelected ? "✓" : ""}
+        </button>
       </div>
     );
   }
@@ -115,7 +130,7 @@ export function SwapSheet({
       ) : null}
 
       {candidates.length === 0 ? (
-        <p className="sbd-swap-empty">No other options available right now.</p>
+        <p className="sbd-swap-empty">Nothing else fits this slot right now — try a different shape or check back after new spots are added.</p>
       ) : null}
     </BottomSheet>
   );

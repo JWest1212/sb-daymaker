@@ -5,13 +5,15 @@ import { EmptyState } from "@/components/ui";
 import { DayShapeSelector } from "./DayShapeSelector";
 import { ItinerarySpine } from "./ItinerarySpine";
 import { SwapSheet } from "./SwapSheet";
-import { buildDay, rankedCandidates } from "@/lib/plan/buildDay";
+import { buildDay, rankedCandidates, BLOCK_TIME_LABEL } from "@/lib/plan/buildDay";
 import { shortStamp } from "@/lib/plan/dates";
 import { PLAN_SELECTOR_SHAPES, DAY_SHAPE_BY_ID } from "@/lib/plan/dayShapes";
-import { blockShortName } from "@/lib/plan/labels";
+import { blockShortName, planZoneLabel } from "@/lib/plan/labels";
 import type { ItineraryInput, SavedItinerary } from "@/lib/plan/itineraries";
 import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
+import { createSharedPlan } from "@/lib/shares";
+import { shareUrl } from "@/components/saved/share";
 
 interface PlanResultsProps {
   answers: PlanAnswers;
@@ -20,6 +22,7 @@ interface PlanResultsProps {
   initialShapeId?: string;
   initialOverrides?: Partial<Record<Block, Stop>>;
   itineraries: SavedItinerary[];
+  myPlansOpen?: boolean;
   onSave: (data: ItineraryInput) => string;
   onMyPlans: () => void;
   onBack: () => void;
@@ -32,6 +35,7 @@ export function PlanResults({
   initialShapeId = "coastal",
   initialOverrides = {},
   itineraries,
+  myPlansOpen = false,
   onSave,
   onMyPlans,
   onBack,
@@ -40,6 +44,9 @@ export function PlanResults({
   const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>(initialOverrides);
   const [swapBlock, setSwapBlock] = useState<Block | null>(null);
   const [savedToast, setSavedToast] = useState(false);
+  const [shareState, setShareState] = useState<
+    "idle" | "pending" | "shared" | "copied" | "failed"
+  >("idle");
 
   const thingMap = useMemo(
     () => new Map(things.map((t) => [t.id, t])),
@@ -99,6 +106,41 @@ export function PlanResults({
     setSwapBlock(null);
   }
 
+  async function handleShare() {
+    if (shareState === "pending" || displayStops.length === 0) return;
+    setShareState("pending");
+    const title = `${selectedShape.name} Day — ${shortStamp(answers.dateISO)}`;
+    const payload = {
+      title,
+      dateISO: answers.dateISO,
+      stops: displayStops.flatMap((s) => {
+        const t = thingMap.get(s.thingId);
+        if (!t) return [];
+        const zone = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
+        return [{
+          block: s.block,
+          timeLabel: BLOCK_TIME_LABEL[s.block],
+          title: t.title,
+          area: zone,
+          blurb: t.reason_to_go ?? "",
+          category: t.happening_category ?? t.type ?? "",
+          thingId: t.id,
+          photo_url: t.photo_url ?? null,
+        }];
+      }),
+    };
+    const token = await createSharedPlan(payload);
+    if (!token) {
+      setShareState("failed");
+      setTimeout(() => setShareState("idle"), 2200);
+      return;
+    }
+    const url = `${window.location.origin}/p/${token}`;
+    const result = await shareUrl(url, title);
+    setShareState(result === "shared" ? "shared" : result === "copied" ? "copied" : "failed");
+    setTimeout(() => setShareState("idle"), 2200);
+  }
+
   function handleSave() {
     onSave({
       title: `${selectedShape.name} Day`,
@@ -138,11 +180,16 @@ export function PlanResults({
         <button
           type="button"
           className="sbd-myplans-btn"
-          aria-label="My plans"
-          aria-expanded={false}
+          aria-label={`My plans${itineraries.length > 0 ? ` (${itineraries.length})` : ""}`}
+          aria-expanded={myPlansOpen}
           onClick={onMyPlans}
         >
           <span aria-hidden="true">🗓</span>
+          {itineraries.length > 0 ? (
+            <span className="sbd-myplans-btn__count" aria-hidden="true">
+              {itineraries.length}
+            </span>
+          ) : null}
           <span className="sbd-myplans-btn__chevron" aria-hidden="true">
             ▾
           </span>
@@ -168,8 +215,8 @@ export function PlanResults({
           <div style={{ padding: "0 var(--space-5)" }}>
             <EmptyState
               icon="🗺️"
-              title="No day to build yet"
-              message="No published spots are available right now. Once content is connected, your day appears here."
+              title="Nothing to work with yet"
+              message="Our catalog is still being built out. Try a different date or day shape — or check back soon."
             />
           </div>
         ) : (
@@ -195,9 +242,18 @@ export function PlanResults({
         <button
           type="button"
           className="sbd-btn sbd-btn--secondary"
-          disabled
+          onClick={handleShare}
+          disabled={shareState === "pending" || displayStops.length === 0}
         >
-          ↗ Share
+          {shareState === "pending"
+            ? "Sharing…"
+            : shareState === "shared"
+              ? "✓ Shared!"
+              : shareState === "copied"
+                ? "✓ Link copied"
+                : shareState === "failed"
+                  ? "Share failed"
+                  : "↗ Share"}
         </button>
       </div>
 
