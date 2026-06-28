@@ -15,10 +15,11 @@ import type { Thing } from "@/lib/things";
 interface PlanResultsProps {
   answers: PlanAnswers;
   things: Thing[];
+  pinned?: Thing[];
   onBack: () => void;
 }
 
-export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
+export function PlanResults({ answers, things, pinned = [], onBack }: PlanResultsProps) {
   const [selectedShapeId, setSelectedShapeId] = useState("coastal");
   const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>({});
   const [swapBlock, setSwapBlock] = useState<Block | null>(null);
@@ -31,8 +32,8 @@ export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
   const selectedShape = DAY_SHAPE_BY_ID[selectedShapeId] ?? PLAN_SELECTOR_SHAPES[0];
 
   const baseStops = useMemo(
-    () => buildDay(answers, selectedShape, things, []),
-    [answers, selectedShape, things],
+    () => buildDay(answers, selectedShape, things, pinned),
+    [answers, selectedShape, things, pinned],
   );
 
   // Merge engine output with any user-swapped stops

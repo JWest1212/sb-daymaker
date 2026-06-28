@@ -62,7 +62,7 @@ const ZONE_OPTS: { value: Zone | null; label: string }[] = [
 interface PlanSetupProps {
   onMakeMyDay: () => void;
   onShowDay: (answers: PlanAnswers) => void;
-  onBuildFromSaved: () => void;
+  onBuildFromSaved: (answers: PlanAnswers) => void;
 }
 
 export function PlanSetup({
@@ -75,13 +75,9 @@ export function PlanSetup({
   const [when, setWhen] = useState<WhenChoice>("today");
   const [pickDate, setPickDate] = useState<string>(todayISO());
   const [zone, setZone] = useState<Zone | null>(null); // Anywhere
-  const [periods, setPeriods] = useState<Period[]>([
-    "morning",
-    "afternoon",
-    "evening",
-  ]);
-  const [who, setWho] = useState<Who>("couple");
-  const [vibes, setVibes] = useState<VibeKey[]>(["outdoors_active", "wine_food"]);
+  const [periods, setPeriods] = useState<Period[]>([]);
+  const [who, setWho] = useState<Who | null>(null);
+  const [vibes, setVibes] = useState<VibeKey[]>([]);
   const [fineOpen, setFineOpen] = useState(false);
   const [whereOpen, setWhereOpen] = useState(false);
 
@@ -106,7 +102,7 @@ export function PlanSetup({
     );
   }
   function showDay() {
-    onShowDay({ dateISO, periods, who, vibes, zone });
+    onShowDay({ dateISO, periods, who: who ?? "friends", vibes, zone });
   }
 
   const showSavedHook = hydrated && counts.want > 0;
@@ -215,7 +211,7 @@ export function PlanSetup({
           <button
             type="button"
             className="sbd-savedhook"
-            onClick={onBuildFromSaved}
+            onClick={() => onBuildFromSaved({ dateISO, periods, who: who ?? "friends", vibes, zone })}
           >
             <span className="sbd-savedhook__ic" aria-hidden="true">
               ❤️
@@ -236,12 +232,13 @@ export function PlanSetup({
         <div className="sbd-finetune">
           <button
             type="button"
-            className="sbd-finetune__btn"
+            className={`sbd-finetune__btn${fineOpen ? " sbd-finetune__btn--open" : ""}`}
             aria-expanded={fineOpen}
             aria-controls="plan-finetune-panel"
             onClick={() => setFineOpen((o) => !o)}
           >
-            <span>＋ Fine-tune your day</span>
+            <span aria-hidden="true">{fineOpen ? "−" : "＋"}</span>
+            <span>Fine-tune your day</span>
             <span
               className={`sbd-finetune__cv${fineOpen ? " sbd-finetune__cv--open" : ""}`}
               aria-hidden="true"
@@ -265,7 +262,7 @@ export function PlanSetup({
                   key={w.value}
                   type="button"
                   className="sbd-qbtn"
-                  aria-pressed={who === w.value}
+                  aria-pressed={who !== null && who === w.value}
                   onClick={() => setWho(w.value)}
                 >
                   <span className="sbd-qbtn__g" aria-hidden="true">

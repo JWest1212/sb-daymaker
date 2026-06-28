@@ -22,7 +22,8 @@
 .sbd-daypill:focus-visible,
 .sbd-scard__swap:focus-visible,
 .sbd-swapopt__select:focus-visible,
-.sbd-swapopt__info:focus-visible {
+.sbd-swapopt__info:focus-visible,
+.sbd-swapopt__ck:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: 2px;
 }
@@ -513,6 +514,9 @@
 
 /* Check circle */
 .sbd-swapopt__ck {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -524,6 +528,9 @@
   font-size: 13px;
   font-weight: var(--weight-bold);
   margin-right: 11px;
+  cursor: pointer;
+  padding: 0;
+  min-height: 0;
 }
 .sbd-swapopt--sel .sbd-swapopt__ck {
   border-color: var(--pacific);
@@ -535,6 +542,129 @@
   color: var(--text-muted);
   padding: var(--space-3) 0;
   margin: 0;
+}
+
+/* ---- PIN PICKER SHEET (Plan Phase 6) --------------------------------------- */
+.sbd-pinopt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.sbd-pinopt--sel {
+  border-color: var(--pacific);
+  box-shadow: 0 0 0 1.5px var(--pacific);
+}
+.sbd-pinopt__select {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 9px 0 9px 11px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  min-height: var(--tap-min);
+  overflow: hidden;
+}
+.sbd-pinopt__thumb {
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  object-fit: cover;
+  display: block;
+}
+.sbd-pinopt__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sbd-pinopt__nm {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-snug);
+  color: var(--text);
+}
+.sbd-pinopt__blk {
+  font-size: var(--text-xs);
+  color: var(--pacific);
+  font-weight: var(--weight-semi);
+}
+.sbd-pinopt__info {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--pacific);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-style: italic;
+  font-family: Georgia, serif;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  line-height: 1;
+  padding: 7px;
+  margin: 0 2px;
+}
+.sbd-pinopt__info:hover {
+  border-color: var(--pacific);
+}
+.sbd-pinopt__ck {
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  margin-right: 11px;
+  cursor: pointer;
+  padding: 0;
+  min-height: 0;
+}
+.sbd-pinopt--sel .sbd-pinopt__ck {
+  border-color: var(--pacific);
+  background: var(--pacific);
+}
+.sbd-pinopt__select:focus-visible,
+.sbd-pinopt__info:focus-visible,
+.sbd-pinopt__ck:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-pinhelper {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+  margin: var(--space-4) 0 var(--space-3);
+}
+.sbd-pinbuild {
+  margin-top: var(--space-2);
 }
 
 /* ---- SKELETON LOADERS --------------------------------------------------- */
