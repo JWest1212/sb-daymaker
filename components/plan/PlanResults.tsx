@@ -4,11 +4,12 @@ import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui";
 import { DayShapeSelector } from "./DayShapeSelector";
 import { ItinerarySpine } from "./ItinerarySpine";
-import { buildDay } from "@/lib/plan/buildDay";
+import { SwapSheet } from "./SwapSheet";
+import { buildDay, rankedCandidates } from "@/lib/plan/buildDay";
 import { shortStamp } from "@/lib/plan/dates";
 import { PLAN_SELECTOR_SHAPES, DAY_SHAPE_BY_ID } from "@/lib/plan/dayShapes";
 import { blockShortName } from "@/lib/plan/labels";
-import type { PlanAnswers, Block } from "@/lib/plan/types";
+import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
 interface PlanResultsProps {
@@ -19,21 +20,29 @@ interface PlanResultsProps {
 
 export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
   const [selectedShapeId, setSelectedShapeId] = useState("coastal");
+  const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>({});
+  const [swapBlock, setSwapBlock] = useState<Block | null>(null);
 
   const thingMap = useMemo(
     () => new Map(things.map((t) => [t.id, t])),
     [things],
   );
 
-  const stops = useMemo(() => {
-    const shape = DAY_SHAPE_BY_ID[selectedShapeId] ?? PLAN_SELECTOR_SHAPES[0];
-    return buildDay(answers, shape, things, []);
-  }, [answers, selectedShapeId, things]);
+  const selectedShape = DAY_SHAPE_BY_ID[selectedShapeId] ?? PLAN_SELECTOR_SHAPES[0];
 
-  const selectedShape = DAY_SHAPE_BY_ID[selectedShapeId];
+  const baseStops = useMemo(
+    () => buildDay(answers, selectedShape, things, []),
+    [answers, selectedShape, things],
+  );
 
-  const firstBlock = stops[0]?.block;
-  const lastBlock = stops[stops.length - 1]?.block;
+  // Merge engine output with any user-swapped stops
+  const displayStops = useMemo(
+    () => baseStops.map((s) => overrides[s.block] ?? s),
+    [baseStops, overrides],
+  );
+
+  const firstBlock = displayStops[0]?.block;
+  const lastBlock = displayStops[displayStops.length - 1]?.block;
   const subline = [
     shortStamp(answers.dateISO),
     firstBlock && lastBlock && firstBlock !== lastBlock
@@ -45,8 +54,38 @@ export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
     .filter(Boolean)
     .join(" · ");
 
-  function handleSwap(_block: Block) {
-    // Phase 5 wires the swap sheet
+  // Ranked alternates for the open swap block
+  const swapCandidates = useMemo(() => {
+    if (!swapBlock) return [];
+    return rankedCandidates(swapBlock, answers, selectedShape, things, displayStops);
+  }, [swapBlock, answers, selectedShape, things, displayStops]);
+
+  const currentSwapStopId =
+    swapBlock != null
+      ? (displayStops.find((s) => s.block === swapBlock)?.thingId ?? null)
+      : null;
+
+  function handleShapeChange(id: string) {
+    setSelectedShapeId(id);
+    setOverrides({});
+  }
+
+  function handleSwap(block: Block) {
+    setSwapBlock(block);
+  }
+
+  function handleSwapSelect(thing: Thing, fromSaved: boolean) {
+    if (!swapBlock) return;
+    setOverrides((prev) => ({
+      ...prev,
+      [swapBlock]: {
+        block: swapBlock,
+        thingId: thing.id,
+        pinned: false,
+        fromSaved,
+      },
+    }));
+    setSwapBlock(null);
   }
 
   return (
@@ -88,14 +127,14 @@ export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
         <DayShapeSelector
           shapes={PLAN_SELECTOR_SHAPES}
           value={selectedShapeId}
-          onChange={setSelectedShapeId}
+          onChange={handleShapeChange}
         />
 
         {selectedShape ? (
           <p className="sbd-daycap">{selectedShape.caption}</p>
         ) : null}
 
-        {stops.length === 0 ? (
+        {displayStops.length === 0 ? (
           <div style={{ padding: "0 var(--space-5)" }}>
             <EmptyState
               icon="🗺️"
@@ -105,7 +144,7 @@ export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
           </div>
         ) : (
           <ItinerarySpine
-            stops={stops}
+            stops={displayStops}
             things={thingMap}
             onSwap={handleSwap}
           />
@@ -130,6 +169,16 @@ export function PlanResults({ answers, things, onBack }: PlanResultsProps) {
           ↗ Share
         </button>
       </div>
+
+      {swapBlock != null ? (
+        <SwapSheet
+          block={swapBlock}
+          currentStopId={currentSwapStopId}
+          candidates={swapCandidates}
+          onSelect={handleSwapSelect}
+          onClose={() => setSwapBlock(null)}
+        />
+      ) : null}
     </>
   );
 }

@@ -295,6 +295,48 @@ export function buildDay(
 }
 
 /**
+ * Ranked alternate candidates for one block — used by the swap sheet.
+ * Returns up to `limit` things scored for `block`, excluding ids that are
+ * already placed in OTHER blocks (the current block's occupant stays in the
+ * list so the sheet can show it checked). Saved-first ordering is applied by
+ * the UI; this returns by score so the sheet can partition freely.
+ */
+export function rankedCandidates(
+  block: Block,
+  answers: PlanAnswers,
+  shape: DayShape,
+  pool: Thing[],
+  currentStops: Stop[],
+  limit = 14,
+): Thing[] {
+  const byId = new Map(pool.map((t) => [t.id, t]));
+  const excludeIds = new Set<string>();
+  const placedZones = new Set<Zone>();
+
+  for (const s of currentStops) {
+    if (s.block !== block) {
+      excludeIds.add(s.thingId);
+      const t = byId.get(s.thingId);
+      if (t?.nearby_zone) placedZones.add(t.nearby_zone);
+    }
+  }
+
+  const slot = slotFor(shape, block);
+  const ctx: ScoreContext = { block, answers, shape, slot, placedZones };
+
+  return pool
+    .filter((t) => !excludeIds.has(t.id) && isAvailableOnDate(t, answers.dateISO))
+    .filter((t) => !(answers.who === "family" && t.is_21_plus))
+    .map((t) => ({ thing: t, score: scoreCandidate(t, ctx) }))
+    .sort(
+      (a, b) =>
+        b.score - a.score || (a.thing.id < b.thing.id ? -1 : 1),
+    )
+    .slice(0, limit)
+    .map(({ thing }) => thing);
+}
+
+/**
  * The express "Make My Day" answers: today, the whole day, no vibe filter, no
  * anchor. buildDay(makeMyDayAnswers(today), DEFAULT_DAY_SHAPE, pool) is one tap.
  */
