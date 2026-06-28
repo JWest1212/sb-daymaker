@@ -66,3 +66,14 @@ export const DAY_SHAPE_BY_ID: Record<string, DayShape> = Object.fromEntries(
 
 /** The flagship "Make My Day" default shape (balanced, all-day, anchor-agnostic). */
 export const DEFAULT_DAY_SHAPE = DAY_SHAPE_BY_ID.daymaker;
+
+/**
+ * The three themed pills shown on the results day-shape selector (mockup #dayopts).
+ * `daymaker` is intentionally absent — it stays as the Make My Day engine default,
+ * not a visible selector pill.
+ */
+export const PLAN_SELECTOR_SHAPES: DayShape[] = [
+  DAY_SHAPE_BY_ID.coastal,
+  DAY_SHAPE_BY_ID.funk,
+  DAY_SHAPE_BY_ID.arts,
+];

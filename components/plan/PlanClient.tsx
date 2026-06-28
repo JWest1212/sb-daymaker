@@ -3,27 +3,27 @@
 import { useState } from "react";
 import { PlanSetup } from "./PlanSetup";
 import { PlanResults } from "./PlanResults";
-import { buildDay, makeMyDayAnswers, DEFAULT_DAY_SHAPE } from "@/lib/plan/buildDay";
+import { makeMyDayAnswers } from "@/lib/plan/buildDay";
 import { todayISO } from "@/lib/plan/dates";
-import type { PlanAnswers, Stop } from "@/lib/plan/types";
+import type { PlanAnswers } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
 /**
- * Root of the Plan surface — a small state machine between the setup screen and
- * the day results. Phase 3 ships setup + an interim results list; Phase 4 swaps
- * the results for the time-of-day spine + day-shape selector.
+ * Root of the Plan surface — a small state machine between the setup screen
+ * and the day results. Passes answers (not pre-built stops) to PlanResults so
+ * the day-shape selector can re-run buildDay on pill switch without a round-trip.
  */
 export function PlanClient({ things }: { things: Thing[] }) {
   const [view, setView] = useState<"setup" | "results">("setup");
-  const [stops, setStops] = useState<Stop[]>([]);
+  const [answers, setAnswers] = useState<PlanAnswers | null>(null);
 
   function makeMyDay() {
-    setStops(buildDay(makeMyDayAnswers(todayISO()), DEFAULT_DAY_SHAPE, things));
+    setAnswers(makeMyDayAnswers(todayISO()));
     setView("results");
   }
 
-  function showDay(answers: PlanAnswers) {
-    setStops(buildDay(answers, DEFAULT_DAY_SHAPE, things));
+  function showDay(a: PlanAnswers) {
+    setAnswers(a);
     setView("results");
   }
 
@@ -31,9 +31,13 @@ export function PlanClient({ things }: { things: Thing[] }) {
     // Wired to the build-from-saved picker in Phase 6.
   }
 
-  if (view === "results") {
+  if (view === "results" && answers) {
     return (
-      <PlanResults stops={stops} things={things} onBack={() => setView("setup")} />
+      <PlanResults
+        answers={answers}
+        things={things}
+        onBack={() => setView("setup")}
+      />
     );
   }
 

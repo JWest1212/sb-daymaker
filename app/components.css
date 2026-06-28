@@ -18,7 +18,9 @@
 .sbd-daychip:focus-visible,
 .sbd-selrow:focus-visible,
 .sbd-finetune__btn:focus-visible,
-.sbd-zoneopt:focus-visible {
+.sbd-zoneopt:focus-visible,
+.sbd-daypill:focus-visible,
+.sbd-scard__swap:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: 2px;
 }
@@ -633,6 +635,12 @@
 .sbd-plan-header__brand {
   margin-right: auto;
 }
+/* Left group on the results header: back button + title/tag stacked */
+.sbd-plan-header__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
 .sbd-myplans-btn {
   display: inline-flex;
   align-items: center;
@@ -1044,9 +1052,15 @@
   background: linear-gradient(180deg, transparent, var(--bg) 36%);
   z-index: 55;
   pointer-events: none;
+  display: flex;
+  gap: var(--space-2);
 }
 .sbd-plan-gobar > * {
   pointer-events: auto;
+}
+/* Save plan button — grows to fill available width beside the Share stub */
+.sbd-plan-gobar__save {
+  flex: 1;
 }
 
 /* Interim results list (Phase 3 only — replaced by the spine in Phase 4). */
@@ -1086,6 +1100,255 @@
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
   color: var(--gold-text);
+}
+
+/* ==========================================================================
+   PLAN RESULTS (Phase 4) — subline, day-shape selector, spine, stop cards
+   ========================================================================== */
+
+/* Mono subline: "SAT · JUN 27 · MORNING → EVENING" */
+.sbd-subline {
+  padding: 2px var(--space-5) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  color: var(--pacific);
+  margin: 0;
+}
+
+/* ---- Day-shape selector -------------------------------------------------- */
+.sbd-dayopts {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding: 14px var(--space-5) 4px;
+  scrollbar-width: none;
+}
+.sbd-dayopts::-webkit-scrollbar {
+  height: 0;
+}
+.sbd-daypill {
+  flex: 0 0 auto;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+  min-width: 128px;
+  min-height: var(--tap-min);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sbd-daypill__dl {
+  font-size: 8.5px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sage-text);
+  line-height: 1;
+}
+.sbd-daypill__dn {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  line-height: 1.05;
+}
+.sbd-daypill--on {
+  border-color: var(--terracotta);
+  background: linear-gradient(
+    135deg,
+    rgba(192, 83, 46, 0.1),
+    rgba(224, 168, 46, 0.06)
+  );
+}
+.sbd-daypill--on .sbd-daypill__dl {
+  color: var(--terra-text);
+}
+
+/* Shape caption beneath the selector */
+.sbd-daycap {
+  margin: 11px var(--space-5) 2px;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ---- The spine ----------------------------------------------------------- */
+.sbd-spine {
+  position: relative;
+  padding: 14px var(--space-5) 8px;
+}
+/* Warm gradient rail: teal morning → gold evening */
+.sbd-spine__rail {
+  position: absolute;
+  left: calc(var(--space-5) + 11px + 14px); /* padding + node margin + half-node */
+  top: 24px;
+  bottom: 30px;
+  width: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--tod-morning),
+    var(--tod-midday) 32%,
+    var(--tod-afternoon) 64%,
+    var(--tod-evening)
+  );
+  border-radius: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sbd-spine__rail {
+    /* Static rail — no animation was planned, but guard for future */
+    background: var(--tod-morning);
+  }
+}
+
+/* One row on the spine: node circle + stop card */
+.sbd-stop {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+/* Colored block node */
+.sbd-node {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  z-index: 2;
+  box-shadow: 0 0 0 4px var(--bg);
+  margin-left: 11px;
+  margin-top: 14px;
+  line-height: 1;
+}
+
+/* ---- Stop card ----------------------------------------------------------- */
+.sbd-scard {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  box-shadow: 0 8px 20px -16px rgba(20, 40, 50, 0.5);
+  position: relative;
+}
+/* Photo thumb (or tone gradient fallback) */
+.sbd-scard__thumb {
+  width: 74px;
+  flex-shrink: 0;
+  align-self: stretch;
+  object-fit: cover;
+}
+/* Body: eyebrow + Fraunces title + meta */
+.sbd-scard__body {
+  padding: 13px 12px 12px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sbd-scard__eb {
+  font-size: 8.5px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--terracotta);
+  line-height: 1;
+}
+.sbd-scard__nm {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.02em;
+  margin: 2px 0 0;
+  color: var(--text);
+}
+.sbd-scard__mt {
+  font-size: var(--text-xs);
+  color: var(--pacific);
+  font-weight: var(--weight-semi);
+  margin-top: 4px;
+}
+/* ♥ Saved chip — floats over the bottom-left of the card */
+.sbd-scard__savedchip {
+  position: absolute;
+  bottom: 9px;
+  left: 84px; /* thumb width + 10px */
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 8px;
+  font-weight: var(--weight-bold);
+  padding: 3px 7px;
+  border-radius: 8px;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+}
+/* Acts column — ⓘ + heart on top, Swap below; z-index above sbd-stretch::after */
+.sbd-scard__acts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 9px 9px 9px 0;
+  flex-shrink: 0;
+  z-index: 2;
+  position: relative;
+}
+.sbd-scard__acttop {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* ⓘ info circle — visual affordance only (tabIndex=-1, aria-hidden) */
+.sbd-scard__info {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--pacific);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-style: italic;
+  font-family: Georgia, serif;
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+.sbd-scard__info:hover {
+  border-color: var(--pacific);
+}
+/* Swap pill */
+.sbd-scard__swap {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 5px 9px;
+  font-size: 9.5px;
+  font-weight: var(--weight-bold);
+  color: var(--pacific);
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  min-height: var(--tap-min);
 }
 
 /* ==========================================================================
