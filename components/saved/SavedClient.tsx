@@ -11,14 +11,18 @@ import { SegmentedControl, EmptyState } from "@/components/ui";
 import { NearMeSheet } from "@/components/explore/NearMeSheet";
 import { createSharedList } from "@/lib/shares";
 import { SavedCard } from "./SavedCard";
+import { SavedDays } from "./SavedDays";
 import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
 import { MemoryRecap } from "./MemoryRecap";
 import { shareUrl } from "./share";
+import { useItineraries } from "@/lib/plan/itineraries";
 
 export function SavedClient({ things }: { things: Thing[] }) {
   const { ids, state, setState, remove, counts } = useSaves();
+  const { itineraries } = useItineraries();
 
+  const [tab, setTab] = useState<"things" | "days">("things");
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
   const [zone, setZone] = useState<Zone | null>(null);
   const [nearOpen, setNearOpen] = useState(false);
@@ -113,8 +117,8 @@ export function SavedClient({ things }: { things: Thing[] }) {
     setSelected(new Set());
   };
 
-  // Whole-list empty (nothing saved at all)
-  if (counts.total === 0) {
+  // Whole-list empty (nothing saved AND no plans)
+  if (counts.total === 0 && itineraries.length === 0) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
         <EmptyState
@@ -128,6 +132,23 @@ export function SavedClient({ things }: { things: Thing[] }) {
 
   return (
     <div className="sbd-saved">
+      {/* Top-level Things / Days toggle */}
+      <div className="sbd-saved__toptab">
+        <SegmentedControl
+          ariaLabel="Saved view"
+          value={tab}
+          onChange={(v) => setTab(v as "things" | "days")}
+          options={[
+            { label: `Things${counts.total ? ` · ${counts.total}` : ""}`, value: "things" },
+            { label: `Days${itineraries.length ? ` · ${itineraries.length}` : ""}`, value: "days" },
+          ]}
+        />
+      </div>
+
+      {tab === "days" ? (
+        <SavedDays />
+      ) : (
+        <>
       <div className="sbd-saved__controls">
         <SegmentedControl
           ariaLabel="Saved state"
@@ -259,6 +280,8 @@ export function SavedClient({ things }: { things: Thing[] }) {
       ) : null}
 
       {toast ? <div className="sbd-toast">{toast}</div> : null}
+        </>
+      )}
     </div>
   );
 }

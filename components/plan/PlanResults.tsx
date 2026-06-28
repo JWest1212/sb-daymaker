@@ -9,6 +9,7 @@ import { buildDay, rankedCandidates } from "@/lib/plan/buildDay";
 import { shortStamp } from "@/lib/plan/dates";
 import { PLAN_SELECTOR_SHAPES, DAY_SHAPE_BY_ID } from "@/lib/plan/dayShapes";
 import { blockShortName } from "@/lib/plan/labels";
+import type { ItineraryInput, SavedItinerary } from "@/lib/plan/itineraries";
 import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
@@ -16,13 +17,29 @@ interface PlanResultsProps {
   answers: PlanAnswers;
   things: Thing[];
   pinned?: Thing[];
+  initialShapeId?: string;
+  initialOverrides?: Partial<Record<Block, Stop>>;
+  itineraries: SavedItinerary[];
+  onSave: (data: ItineraryInput) => string;
+  onMyPlans: () => void;
   onBack: () => void;
 }
 
-export function PlanResults({ answers, things, pinned = [], onBack }: PlanResultsProps) {
-  const [selectedShapeId, setSelectedShapeId] = useState("coastal");
-  const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>({});
+export function PlanResults({
+  answers,
+  things,
+  pinned = [],
+  initialShapeId = "coastal",
+  initialOverrides = {},
+  itineraries,
+  onSave,
+  onMyPlans,
+  onBack,
+}: PlanResultsProps) {
+  const [selectedShapeId, setSelectedShapeId] = useState(initialShapeId);
+  const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>(initialOverrides);
   const [swapBlock, setSwapBlock] = useState<Block | null>(null);
+  const [savedToast, setSavedToast] = useState(false);
 
   const thingMap = useMemo(
     () => new Map(things.map((t) => [t.id, t])),
@@ -36,7 +53,6 @@ export function PlanResults({ answers, things, pinned = [], onBack }: PlanResult
     [answers, selectedShape, things, pinned],
   );
 
-  // Merge engine output with any user-swapped stops
   const displayStops = useMemo(
     () => baseStops.map((s) => overrides[s.block] ?? s),
     [baseStops, overrides],
@@ -55,7 +71,6 @@ export function PlanResults({ answers, things, pinned = [], onBack }: PlanResult
     .filter(Boolean)
     .join(" · ");
 
-  // Ranked alternates for the open swap block
   const swapCandidates = useMemo(() => {
     if (!swapBlock) return [];
     return rankedCandidates(swapBlock, answers, selectedShape, things, displayStops);
@@ -79,15 +94,29 @@ export function PlanResults({ answers, things, pinned = [], onBack }: PlanResult
     if (!swapBlock) return;
     setOverrides((prev) => ({
       ...prev,
-      [swapBlock]: {
-        block: swapBlock,
-        thingId: thing.id,
-        pinned: false,
-        fromSaved,
-      },
+      [swapBlock]: { block: swapBlock, thingId: thing.id, pinned: false, fromSaved },
     }));
     setSwapBlock(null);
   }
+
+  function handleSave() {
+    onSave({
+      title: `${selectedShape.name} Day`,
+      shapeId: selectedShapeId,
+      answers,
+      stops: displayStops,
+    });
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 2200);
+  }
+
+  const alreadySaved = itineraries.some(
+    (it) =>
+      it.shapeId === selectedShapeId &&
+      it.answers.dateISO === answers.dateISO &&
+      it.stops.length === displayStops.length &&
+      it.stops.every((s, i) => s.thingId === displayStops[i]?.thingId),
+  );
 
   return (
     <>
@@ -109,9 +138,9 @@ export function PlanResults({ answers, things, pinned = [], onBack }: PlanResult
         <button
           type="button"
           className="sbd-myplans-btn"
-          aria-label="My plans (coming soon)"
+          aria-label="My plans"
           aria-expanded={false}
-          disabled
+          onClick={onMyPlans}
         >
           <span aria-hidden="true">🗓</span>
           <span className="sbd-myplans-btn__chevron" aria-hidden="true">
@@ -158,9 +187,10 @@ export function PlanResults({ answers, things, pinned = [], onBack }: PlanResult
         <button
           type="button"
           className="sbd-btn sbd-btn--primary sbd-plan-gobar__save"
-          disabled
+          onClick={handleSave}
+          disabled={displayStops.length === 0 || alreadySaved || savedToast}
         >
-          💾 Save plan
+          {savedToast ? "✓ Saved!" : alreadySaved ? "✓ Already saved" : "💾 Save plan"}
         </button>
         <button
           type="button"

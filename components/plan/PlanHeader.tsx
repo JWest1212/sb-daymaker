@@ -1,11 +1,11 @@
 "use client";
 
-/**
- * The Plan surface's header: logo mark + "Plan" + tagline, with a right-aligned
- * "My plans" collapsible button. The drawer it opens is wired in Phase 7 — for now
- * it's an accessible stub.
- */
-export function PlanHeader() {
+interface PlanHeaderProps {
+  itineraryCount: number;
+  onMyPlans: () => void;
+}
+
+export function PlanHeader({ itineraryCount, onMyPlans }: PlanHeaderProps) {
   return (
     <header className="sbd-header sbd-plan-header">
       <span className="sbd-header__mark" aria-hidden="true">
@@ -22,10 +22,10 @@ export function PlanHeader() {
         className="sbd-myplans-btn"
         aria-label="My plans"
         aria-expanded={false}
-        disabled
+        onClick={onMyPlans}
       >
         <span aria-hidden="true">🗓</span>
-        My plans
+        My plans{itineraryCount > 0 ? ` · ${itineraryCount}` : ""}
         <span className="sbd-myplans-btn__chevron" aria-hidden="true">
           ▾
         </span>

@@ -63,12 +63,16 @@ interface PlanSetupProps {
   onMakeMyDay: () => void;
   onShowDay: (answers: PlanAnswers) => void;
   onBuildFromSaved: (answers: PlanAnswers) => void;
+  itineraryCount: number;
+  onMyPlans: () => void;
 }
 
 export function PlanSetup({
   onMakeMyDay,
   onShowDay,
   onBuildFromSaved,
+  itineraryCount,
+  onMyPlans,
 }: PlanSetupProps) {
   const { counts, hydrated } = useSaves();
 
@@ -109,7 +113,7 @@ export function PlanSetup({
 
   return (
     <>
-      <PlanHeader />
+      <PlanHeader itineraryCount={itineraryCount} onMyPlans={onMyPlans} />
       <main id="main" className="sbd-shell__main sbd-plan-setup">
         {/* Flagship express button */}
         <button type="button" className="sbd-makeday" onClick={onMakeMyDay}>
