@@ -4,6 +4,18 @@ import type { Zone } from "./zones";
 
 export type Horizon = "today" | "week" | "month";
 
+// SB is always America/Los_Angeles; en-CA gives YYYY-MM-DD without extra config.
+const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Los_Angeles",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function sbDay(ms: number): string {
+  return SB_DATE_FMT.format(ms);
+}
+
 /** Happenings-first order: Tier 1 (dated) → 2 (recurring/HH) → 3 (evergreen).
  *  Within Tier 1, soonest first; otherwise keep input order (already tier-sorted). */
 export function cascade(things: Thing[]): Thing[] {
@@ -16,7 +28,9 @@ export function cascade(things: Thing[]): Thing[] {
   });
 }
 
-/** Dated (Tier-1) events are bound by the horizon; ongoing items always pass. */
+/** Dated (Tier-1) events are bound by the horizon; ongoing items always pass.
+ *  Date comparison uses the SB (Pacific) calendar day so yesterday's events
+ *  don't bleed into today just because < 24 h has elapsed. */
 export function withinHorizon(
   thing: Thing,
   horizon: Horizon,
@@ -24,9 +38,11 @@ export function withinHorizon(
 ): boolean {
   if (thing.happening_tier !== 1 || !thing.starts_at) return true;
   const start = new Date(thing.starts_at).getTime();
+  const todayKey = sbDay(now);
+  const startKey = sbDay(start);
+  if (startKey < todayKey) return false; // already passed in SB time
+  if (horizon === "today") return startKey === todayKey;
   const days = (start - now) / 86_400_000;
-  if (days < -1) return false; // already passed (allow same-day)
-  if (horizon === "today") return days < 1;
   if (horizon === "week") return days < 7;
   return days < 31;
 }
