@@ -924,12 +924,11 @@
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  height: 54px; /* was 56 */
   display: flex;
   border-top: none;
   background: var(--pacific);
-  padding-top: 8px; /* S3: more room above the icons */
-  padding-bottom: max(4px, env(safe-area-inset-bottom)); /* minimal below */
+  padding-top: 8px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 60;
 }
 .sbd-nav__btn {
