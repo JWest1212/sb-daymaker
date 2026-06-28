@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SavesProvider } from "@/components/saves/SavesProvider";
+import { ItinerariesProvider } from "@/components/plan/ItinerariesProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 // CSS load order is the cascade order: tokens first, then Tailwind + token-var
 // overrides (globals), then the component layer.
@@ -74,7 +75,9 @@ export default function RootLayout({
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full">
-        <SavesProvider>{children}</SavesProvider>
+        <SavesProvider>
+          <ItinerariesProvider>{children}</ItinerariesProvider>
+        </SavesProvider>
         <ServiceWorkerRegister />
       </body>
     </html>

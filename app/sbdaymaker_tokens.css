@@ -27,6 +27,17 @@
   --purple:     #9C6B9E;   /* persona accent — large / UI only           */
   --forest:     #3E7C5A;   /* persona accent — large / UI only           */
 
+  /* ---- TIME-OF-DAY SPINE (v9.1 Plan surface) ---------------------------
+     The Plan itinerary spine warms from teal morning to gold evening — the
+     golden-hour identity on a rail. morning/midday are formalized hero-family
+     values; afternoon/evening/night reuse sage/gold/pacific-dark. FILLS only
+     (rail gradient, block nodes) — never small text on light.               */
+  --tod-morning:   #3D8AA0;
+  --tod-midday:    #2D7D8F;
+  --tod-afternoon: #7E8B6B;
+  --tod-evening:   #E0A82E;
+  --tod-night:     #0E3C49;
+
   /* ---- AA-SAFE TEXT VARIANTS -------------------------------------------
      When an accent MUST carry small text on a light background, use these
      darkened variants (each clears 4.5:1 on --plaster).                   */
