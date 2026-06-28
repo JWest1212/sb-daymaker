@@ -51,8 +51,8 @@ The thinking is already done. Build *from* these, don't reinvent them.
 | `09_SBDaymaker_Seed_Data_Guide.html` | How to produce seed/content data correctly. | Phase 1 (dev fixtures) and Phase 8/launch (real content). **Rule: enrich real facts, never invent them.** |
 | `SBDaymaker_Credentials_and_Env.md` | Every account, API key, and env var the app needs + where each goes. | When wiring Supabase/OpenWeather/Resend/Anthropic. **Never expose a service-role or API key in client code.** |
 | `00_SBDaymaker_Project_Context.md` | The master overview (everything above, summarized). | Orientation. Read first if you've read nothing else. |
-| `docs/plan-feature/SBDaymaker_Plan_Build.md` | **The phased build spec for the Plan surface** (v9.1 single-day planner). | The order to build Plan in; the deterministic slotting engine + UI↔schema mappings. Follow it phase by phase. |
-| `docs/plan-feature/SBDaymaker_Plan_Mockup-2.html` | **The visual target for Plan** — six rendered states. | What every Plan screen looks like; the tiebreaker on any Plan UI/pixel question. |
+| `docs/plan-feature/SBDaymaker_Plan_Build - fresh setup.md` | **The phased build spec for the Plan surface** (v9.1 single-day planner; current canon). | The order to build Plan in; the deterministic slotting engine + UI↔schema mappings + the Option-C setup. Follow it phase by phase. |
+| `docs/plan-feature/SBDaymaker_Plan_Mockup - fresh setup.html` | **The visual target for Plan** — six rendered states (current canon). | What every Plan screen looks like; the tiebreaker on any Plan UI/pixel question. |
 
 > **All files, titles, and references read SB Daymaker** (e.g. `sbdaymaker_schema.sql`, `02b_SBDaymaker_Wireframe.html`). The previous brand name appears nowhere in the canon. If you ever encounter it, it's an out-of-date artifact — flag it.
 

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Plan Page · High-Fidelity Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tileLight:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+    --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(1300px 760px at 50% -8%,#2c6b78 0%,#16586A 34%,#0E3C49 100%);
+    min-height:100vh;padding:0 0 80px;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---- PAGE INTRO ---- */
+  .wrap{max-width:1280px;margin:0 auto;padding:0 22px;}
+  .intro{color:#fff;padding:40px 4px 14px;}
+  .intro .brandrow{display:flex;align-items:center;gap:11px;margin-bottom:18px;}
+  .intro .logo{width:34px;height:34px;border-radius:9px;background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:19px;}
+  .intro .brandtxt .nm{font-family:'Fraunces',serif;font-weight:600;font-size:18px;line-height:1;}
+  .intro .brandtxt .sub{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;opacity:.62;font-weight:700;margin-top:3px;}
+  .intro h1{font-family:'Fraunces',serif;font-weight:600;font-size:40px;line-height:1.04;letter-spacing:-.6px;margin:6px 0 0;max-width:760px;}
+  .intro h1 em{font-style:normal;color:var(--gold);}
+  .intro .lede{font-size:15px;line-height:1.6;opacity:.86;max-width:680px;margin:14px 0 0;}
+  .intro .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
+  .intro .chip{font-size:11px;font-weight:700;letter-spacing:.3px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:999px;display:flex;align-items:center;gap:6px;}
+  .intro .chip .d{width:7px;height:7px;border-radius:50%;background:var(--gold);}
+
+  /* ---- FLOW STRIP ---- */
+  .flow{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;padding:30px 0 10px;align-items:flex-start;}
+  .frameblock{width:392px;max-width:100%;}
+  .cap{color:#fff;margin:0 4px 14px;}
+  .cap .step{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);}
+  .cap .step .n{width:22px;height:22px;border-radius:7px;background:var(--gold);color:var(--pacificDk);display:grid;place-items:center;font-size:12px;font-weight:900;}
+  .cap .t{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin:8px 0 0;letter-spacing:-.3px;}
+  .cap .d{font-size:12.5px;line-height:1.5;opacity:.82;margin-top:5px;}
+  .cap .live{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;color:var(--pacificDk);background:var(--gold);padding:3px 9px;border-radius:999px;}
+
+  /* ---- DEVICE ---- */
+  .device{width:392px;max-width:100%;background:#15110d;border-radius:42px;padding:11px;
+    box-shadow:0 44px 90px -34px rgba(0,0,0,.72),0 0 0 2px rgba(255,255,255,.05);position:relative;}
+  .screen{background:var(--plaster);border-radius:32px;overflow:hidden;position:relative;
+    min-height:780px;display:flex;flex-direction:column;}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#15110d;border-radius:0 0 15px 15px;z-index:50;}
+  .body{flex:1;position:relative;overflow:hidden;}
+
+  /* ---- APP HEADER ---- */
+  .hdr{display:flex;align-items:center;justify-content:space-between;padding:30px 17px 12px;background:var(--plaster);}
+  .hdr .lg{display:flex;align-items:center;gap:9px;}
+  .hdr .lg .m{width:28px;height:28px;border-radius:7px;background:var(--pacific);color:var(--gold);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:15px;}
+  .hdr .lg .back{width:30px;height:30px;border-radius:50%;border:none;background:none;font-size:21px;color:var(--ink);cursor:pointer;display:grid;place-items:center;}
+  .hdr .nm{font-family:'Fraunces',serif;font-weight:600;font-size:16px;line-height:1;}
+  .hdr .tg{font-size:8px;color:var(--sage);font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-top:3px;}
+  /* My-plans collapsible button */
+  .myplans-btn{display:flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:700;color:var(--pacific);cursor:pointer;font-family:'Inter',sans-serif;}
+  .myplans-btn .cv{font-size:9px;transition:transform .2s;}
+  .myplans-btn.open .cv{transform:rotate(180deg);}
+
+  /* ---- SCROLLABLE CONTENT ---- */
+  .scroll{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;}
+  .scroll::-webkit-scrollbar{width:0;}
+  .pad{height:18px;}
+
+  /* ---- MAKE MY DAY (flagship) ---- */
+  .makeday{margin:6px 17px 0;cursor:pointer;border-radius:18px;overflow:hidden;position:relative;
+    background:linear-gradient(135deg,#C0532E,#E0A82E);box-shadow:0 14px 30px -16px rgba(192,83,46,.6);}
+  .makeday .glow{position:absolute;right:-18px;top:-22px;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,243,208,.55),rgba(224,168,46,0) 68%);}
+  .makeday .in{position:relative;padding:16px 17px;color:#fff;}
+  .makeday .eb{font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;opacity:.92;}
+  .makeday .ttl{font-family:'Fraunces',serif;font-size:24px;font-weight:600;line-height:1.02;letter-spacing:-.4px;margin-top:3px;display:flex;align-items:center;gap:8px;}
+  .makeday .ttl .sun{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle,#FFF6DC,#FFE49A 60%,rgba(255,228,154,0) 74%);flex-shrink:0;}
+  .makeday .sb{font-size:11.5px;opacity:.94;margin-top:5px;max-width:280px;line-height:1.4;}
+
+  .orline{display:flex;align-items:center;gap:11px;margin:20px 24px 4px;color:var(--sage-text);}
+  .orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line);}
+  .orline span{font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;}
+
+  /* ---- QUESTION GROUPS ---- */
+  .qgroup{margin:18px 17px 0;}
+  .qhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px;}
+  .qhead .k{font-family:'Fraunces',serif;font-size:15px;font-weight:600;letter-spacing:-.2px;}
+  .qhead .hint{font-size:9.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--sage);}
+  .qrow{display:flex;flex-wrap:wrap;gap:7px;}
+  .qrow.span{gap:6px;}
+  .qbtn{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;color:var(--ink2);
+    border-radius:13px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;
+    font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:6px;
+    transition:border-color .14s,background .14s,color .14s;line-height:1;min-height:44px;}
+  .qbtn .g{font-size:15px;line-height:1;}
+  .qbtn:hover{border-color:var(--tileLight);}
+  .qbtn.on{border-color:var(--pacific);background:var(--pacific);color:#fff;box-shadow:0 6px 14px -8px rgba(22,88,106,.7);}
+  .qrow.span .qbtn{flex:1 1 0;min-width:0;justify-content:center;padding:11px 4px;font-size:12px;flex-direction:column;gap:4px;}
+  .qrow.span .qbtn .g{font-size:16px;}
+  .qrow.span .qbtn .tx{font-size:10.5px;font-weight:700;}
+
+  .savedhook{margin:18px 17px 0;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(224,168,46,.15),rgba(224,168,46,.05));border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;cursor:pointer;}
+  .savedhook .ic{font-size:18px;}
+  .savedhook .tx{flex:1;}
+  .savedhook .t{font-size:12.5px;font-weight:700;color:var(--gold-text);}
+  .savedhook .s{font-size:10.5px;color:#9a7a50;margin-top:2px;}
+  .savedhook .cv{font-size:13px;color:var(--gold-text);font-weight:800;}
+
+  /* ---- OPTION C: essentials + fine-tune ---- */
+  .miniq{font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--sage);margin:18px 17px 8px;}
+  .seg{display:flex;background:var(--plaster2);border-radius:12px;padding:3px;gap:3px;margin:0 17px;}
+  .seg button{flex:1;border:none;background:none;padding:11px 6px;font-size:12.5px;font-weight:700;color:var(--ink2);border-radius:9px;font-family:'Inter',sans-serif;cursor:pointer;min-height:44px;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .seg button.on{background:#fff;color:var(--pacific);box-shadow:0 2px 7px -2px rgba(20,40,50,.28);}
+  .selrow{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--line);background:#fff;border-radius:13px;padding:13px 14px;margin:0 17px;cursor:pointer;min-height:44px;}
+  .selrow .lab{font-size:12.5px;font-weight:700;color:var(--ink2);}
+  .selrow .val{font-size:13px;font-weight:700;color:var(--pacific);display:flex;align-items:center;gap:6px;}
+  .finetune{margin:16px 17px 0;text-align:center;}
+  .finetune > button{background:none;border:none;color:var(--pacific);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:7px;cursor:pointer;padding:8px 12px;min-height:44px;}
+  .finetune > button .cv{font-size:10px;transition:transform .2s;}
+  .ftpanel{display:none;margin-top:4px;padding-top:6px;border-top:1px dashed var(--line);}
+  .ftpanel.open{display:block;}
+  .ftpanel .miniq{margin-top:14px;}
+
+  /* ---- STICKY GO BAR ---- */
+  .gobar{position:absolute;left:0;right:0;bottom:0;padding:12px 17px 14px;
+    background:linear-gradient(180deg,rgba(246,241,231,0),var(--plaster) 32%);display:flex;gap:9px;z-index:30;}
+  .gobtn{flex:1;background:var(--pacific);color:#fff;border:none;border-radius:14px;padding:15px;
+    font-size:14.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 12px 26px -12px rgba(22,88,106,.8);}
+  .gobtn.alt{flex:0 0 auto;background:#fff;color:var(--pacific);border:1.5px solid var(--line);box-shadow:none;padding:15px 17px;}
+  .gobtn.cta{background:var(--tile);box-shadow:0 12px 26px -12px rgba(192,83,46,.8);}
+
+  /* ---- BOTTOM NAV (3 tabs + raised Plan) ---- */
+  .nav{height:62px;display:flex;border-top:1px solid var(--line);background:rgba(246,241,231,.97);position:relative;z-index:40;flex-shrink:0;}
+  .navbtn{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9a8f80;cursor:pointer;padding-top:6px;position:relative;}
+  .navbtn.on{color:var(--pacific);}
+  .navbtn .ni{font-size:18px;line-height:1;}
+  .navbtn .nl{font-size:9px;font-weight:700;}
+  .navbtn .nbadge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--tile);color:#fff;font-size:8px;font-weight:800;min-width:15px;height:15px;border-radius:8px;display:grid;place-items:center;padding:0 4px;}
+  /* raised plan fab */
+  .navbtn.plan{position:relative;}
+  .navbtn.plan .fab{position:absolute;top:-18px;width:52px;height:52px;border-radius:50%;
+    background:linear-gradient(135deg,#C0532E,#E0A82E);display:grid;place-items:center;
+    box-shadow:0 10px 22px -6px rgba(192,83,46,.75),0 0 0 4px var(--plaster);}
+  .navbtn.plan .fab svg{width:26px;height:26px;}
+  .navbtn.plan .nl{margin-top:38px;color:var(--terra-text);font-weight:800;}
+  .navbtn.plan.on .nl{color:var(--terra-text);}
+
+  /* ---- RESULTS: day-shape selector ---- */
+  .subline{padding:2px 17px 0;font-size:11px;font-weight:700;color:var(--pacific);font-family:'JetBrains Mono',monospace;}
+  .dayopts{display:flex;gap:8px;overflow-x:auto;padding:14px 17px 4px;}
+  .dayopts::-webkit-scrollbar{height:0;}
+  .daypill{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:10px 14px;cursor:pointer;text-align:left;font-family:'Inter',sans-serif;transition:border-color .14s,background .14s;min-width:128px;}
+  .daypill .dl{font-size:8.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--sage);}
+  .daypill .dn{font-family:'Fraunces',serif;font-size:14px;font-weight:600;color:var(--ink);line-height:1.05;margin-top:3px;}
+  .daypill.on{border-color:var(--tile);background:linear-gradient(135deg,rgba(192,83,46,.1),rgba(224,168,46,.06));}
+  .daypill.on .dl{color:var(--terra-text);}
+  .daycap{margin:11px 17px 2px;font-size:12.5px;line-height:1.5;color:var(--ink2);font-style:italic;}
+
+  /* ---- THE SPINE ---- */
+  .spine{position:relative;padding:14px 17px 8px 17px;}
+  .spine .rail{position:absolute;left:42px;top:24px;bottom:30px;width:2px;
+    background:linear-gradient(180deg,#3d8aa0,#2d7d8f 32%,#7E8B6B 64%,#E0A82E);border-radius:2px;}
+  .stop{position:relative;display:flex;gap:14px;margin-bottom:13px;}
+  .node{flex:0 0 auto;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:14px;z-index:2;box-shadow:0 0 0 4px var(--plaster);margin-left:11px;margin-top:14px;}
+  .scard{flex:1;min-width:0;background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden;display:flex;cursor:pointer;box-shadow:0 8px 20px -16px rgba(20,40,50,.5);position:relative;}
+  .scard .blk{position:absolute;top:-9px;left:13px;font-size:8.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#fff;padding:2px 8px;border-radius:8px;}
+  .scard .thumb{width:74px;flex-shrink:0;align-self:stretch;}
+  .scard .b{padding:13px 12px 12px;flex:1;min-width:0;}
+  .scard .eb{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--tile);}
+  .scard .nm{font-family:'Fraunces',serif;font-size:15px;font-weight:600;line-height:1.1;letter-spacing:-.2px;margin-top:2px;}
+  .scard .mt{font-size:10.5px;color:var(--pacific);font-weight:600;margin-top:4px;}
+  .scard .acts{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:9px 9px 9px 0;flex-shrink:0;}
+  .scard .heart{background:none;border:none;font-size:17px;cursor:pointer;line-height:1;padding:2px;}
+  .scard .acttop{display:flex;align-items:center;gap:7px;}
+  .scard .sinfo{width:25px;height:25px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:13px;line-height:1;cursor:pointer;flex-shrink:0;}
+  .scard .sinfo:hover{border-color:var(--pacific);}
+  .scard .swap{background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 9px;font-size:9.5px;font-weight:800;color:var(--pacific);cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+  .savedchip{position:absolute;bottom:9px;left:84px;background:var(--gold);color:var(--ink);font-size:8px;font-weight:800;padding:3px 7px;border-radius:8px;letter-spacing:.3px;}
+  .addstop{display:flex;align-items:center;gap:10px;margin:0 0 13px 11px;padding-left:33px;}
+  .addstop button{background:none;border:1.5px dashed var(--line);border-radius:12px;padding:9px 14px;font-size:11px;font-weight:700;color:var(--sage);cursor:pointer;font-family:'Inter',sans-serif;}
+
+  /* ---- SHEET (swap) ---- */
+  .scrim{position:absolute;inset:0;background:rgba(20,28,22,.52);z-index:60;}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--plaster);border-radius:22px 22px 0 0;padding:9px 17px 20px;z-index:61;max-height:80%;overflow-y:auto;box-shadow:0 -8px 40px rgba(20,40,50,.28);}
+  .sheet::-webkit-scrollbar{width:0;}
+  .grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:6px auto 13px;}
+  .sheet .sk{font-size:9.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--tile);}
+  .sheet .st{font-family:'Fraunces',serif;font-size:20px;font-weight:600;letter-spacing:-.3px;margin:1px 0 13px;}
+  .sublabel{font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink2);margin:14px 0 8px;display:flex;align-items:center;gap:7px;}
+  .sublabel .ic{color:var(--gold-text);}
+  .opt{display:flex;gap:11px;align-items:center;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:9px 11px;margin-bottom:8px;cursor:pointer;position:relative;}
+  .opt.sel{border-color:var(--pacific);box-shadow:0 0 0 1.5px var(--pacific);}
+  .opt .th{width:46px;height:46px;border-radius:10px;flex-shrink:0;}
+  .opt .ob{flex:1;min-width:0;}
+  .opt .on2{font-family:'Fraunces',serif;font-size:14px;font-weight:600;line-height:1.1;}
+  .opt .om{font-size:10px;color:var(--pacific);font-weight:600;margin-top:3px;}
+  .opt .sv{display:inline-block;background:var(--gold);color:var(--ink);font-size:7.5px;font-weight:800;padding:2px 6px;border-radius:7px;margin-left:6px;letter-spacing:.3px;vertical-align:middle;}
+  .opt .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;}
+  .opt.sel .ck{border-color:var(--pacific);background:var(--pacific);}
+  .opt .info{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:Georgia,serif;font-style:italic;font-weight:700;font-size:15px;line-height:1;flex-shrink:0;cursor:pointer;}
+  .opt .info:hover{border-color:var(--pacific);}
+  .opt .blkchip{display:inline-block;background:var(--plaster2);color:var(--ink2);font-size:8px;font-weight:800;padding:2px 7px;border-radius:7px;margin-left:6px;letter-spacing:.3px;text-transform:uppercase;vertical-align:middle;}
+
+  /* ---- MY-PLANS DRAWER ---- */
+  .drawer{position:absolute;top:70px;right:14px;left:50px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:0 22px 44px -18px rgba(20,40,50,.45);z-index:55;overflow:hidden;}
+  .drawer .dh{padding:13px 15px 9px;border-bottom:1px solid var(--line);}
+  .drawer .dh .k{font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--tile);}
+  .drawer .dh .t{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-top:2px;}
+  .prow{display:flex;align-items:center;gap:11px;padding:12px 15px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .prow:last-of-type{border-bottom:none;}
+  .pdots{display:flex;gap:3px;flex-shrink:0;}
+  .pdots i{width:8px;height:8px;border-radius:50%;display:block;}
+  .prow .pb{flex:1;min-width:0;}
+  .prow .pn{font-family:'Fraunces',serif;font-size:14px;font-weight:600;line-height:1.1;}
+  .prow .pm{font-size:10px;color:var(--ink2);font-weight:600;margin-top:2px;}
+  .prow .go{font-size:14px;color:var(--pacific);font-weight:800;}
+  .drawer .dfoot{padding:11px 15px;font-size:10.5px;color:var(--sage-text);font-weight:600;background:rgba(126,139,107,.07);}
+  .dim{position:absolute;inset:0;background:rgba(20,28,22,.18);z-index:50;}
+
+  /* ---- SHARED (locked) VIEW ---- */
+  .shared-top{padding:30px 18px 14px;background:linear-gradient(180deg,var(--pacificDk),var(--pacific));color:#fff;position:relative;}
+  .shared-top .wm{display:flex;align-items:center;gap:8px;}
+  .shared-top .wm .m{width:24px;height:24px;border-radius:6px;background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:13px;}
+  .shared-top .wm .nm{font-family:'Fraunces',serif;font-weight:600;font-size:13px;}
+  .shared-top .lock{position:absolute;top:30px;right:18px;display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:5px 11px;font-size:10px;font-weight:700;}
+  .shared-top .stt{font-family:'Fraunces',serif;font-size:25px;font-weight:600;line-height:1.05;letter-spacing:-.4px;margin:16px 0 0;}
+  .shared-top .shareby{font-size:12px;opacity:.85;margin-top:6px;}
+  .shared-top .smeta{font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.8;margin-top:9px;}
+  .ro-scard{cursor:pointer;}
+  .ro-scard .tapfor{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:800;color:var(--pacific);background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:5px 9px;white-space:nowrap;}
+  .sharedfoot{position:absolute;left:0;right:0;bottom:0;padding:12px 17px 16px;background:linear-gradient(180deg,rgba(246,241,231,0),var(--plaster) 30%);display:flex;flex-direction:column;gap:8px;z-index:30;}
+  .sharedfoot .saveplan{background:var(--tile);color:#fff;border:none;border-radius:14px;padding:15px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 12px 26px -12px rgba(192,83,46,.8);}
+  .sharedfoot .mkown{background:none;border:none;color:var(--pacific);font-size:12.5px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;padding:4px;}
+
+  /* ---- ANNOTATIONS ---- */
+  .notes{max-width:1000px;margin:46px auto 0;background:var(--paper);border-radius:20px;padding:30px 30px 26px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5);}
+  .notes h2{font-family:'Fraunces',serif;font-size:23px;font-weight:600;margin:0 0 4px;letter-spacing:-.3px;}
+  .notes .nsub{font-size:13px;color:var(--ink2);margin:0 0 20px;line-height:1.5;}
+  .ntable{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+  @media(max-width:720px){.ntable{grid-template-columns:1fr;}}
+  .ncard{border:1px solid var(--line);border-radius:13px;padding:14px 15px;background:var(--plaster);}
+  .ncard .nk{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--tile);display:flex;align-items:center;gap:7px;}
+  .ncard .nk .dot{width:8px;height:8px;border-radius:50%;background:var(--forest);}
+  .ncard .nt{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:6px 0 4px;}
+  .ncard .nd{font-size:12px;line-height:1.5;color:var(--ink2);}
+  .ncard .nd b{color:var(--ink);}
+  .openq{margin-top:18px;border:1.5px dashed var(--gold);border-radius:13px;padding:15px 16px;background:linear-gradient(135deg,rgba(224,168,46,.1),rgba(224,168,46,.03));}
+  .openq .qk{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--gold-text);}
+  .openq h3{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:5px 0 8px;}
+  .openq ul{margin:0;padding-left:18px;}
+  .openq li{font-size:12.5px;line-height:1.6;color:var(--ink2);margin-bottom:4px;}
+  .openq li b{color:var(--ink);}
+
+  .footnote{text-align:center;color:rgba(255,255,255,.5);font-size:11px;margin-top:34px;font-weight:600;letter-spacing:.3px;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="intro">
+    <div class="brandrow">
+      <div class="logo">S</div>
+      <div class="brandtxt"><div class="nm">SB Daymaker</div><div class="sub">Santa Barbara, daily</div></div>
+    </div>
+    <h1>The <em>Plan</em> page — turn what's worth doing into <em>one day</em>, start to finish.</h1>
+    <p class="lede">A new fourth surface, reached from a raised button in the bottom bar. Answer five quick taps (or skip them entirely), get two-to-three ready-made days on a time-of-day spine, swap any stop — including from your saved list — then save and share. Six states shown left to right.</p>
+    <div class="meta">
+      <span class="chip"><span class="d"></span>Mobile · 392px</span>
+      <span class="chip"><span class="d"></span>House tokens v9</span>
+      <span class="chip"><span class="d"></span>Single-day · no accounts</span>
+      <span class="chip"><span class="d"></span>Batch-AI safe (curated day-shapes)</span>
+    </div>
+  </div>
+
+  <div class="flow">
+
+    <!-- ============ FRAME 1 — SETUP ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">1</span>Plan · setup</span>
+        <div class="t">Hero first — the rest is optional</div>
+        <div class="d">"Make My Day" gives a full day in one tap. Below it, only the essentials show — When, Where, Time of day — with Who and the full Vibe set folded into "Fine-tune." Far fewer buttons on landing. Tap Fine-tune to expand it.</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="hdr">
+              <div class="lg"><div class="m">S</div><div><div class="nm">Plan</div><div class="tg">Build your Santa Barbara day</div></div></div>
+              <button class="myplans-btn"><span>🗓</span> My plans <span class="cv">▾</span></button>
+            </div>
+            <div class="scroll">
+              <!-- flagship -->
+              <div class="makeday">
+                <div class="glow"></div>
+                <div class="in">
+                  <div class="eb">Short on time?</div>
+                  <div class="ttl"><span class="sun"></span>Make My Day</div>
+                  <div class="sb">A ready-made SB day, dawn to dusk — built from what's on today. Tweak it after.</div>
+                </div>
+              </div>
+
+              <div class="orline"><span>or shape it yourself</span></div>
+
+              <!-- When (segmented) -->
+              <div class="miniq">When</div>
+              <div class="seg">
+                <button class="on" data-seg="when">Today</button>
+                <button data-seg="when">Tomorrow</button>
+                <button data-seg="when"><span>📅</span> Pick a date</button>
+              </div>
+
+              <!-- Where (opens picker) -->
+              <div class="miniq">Where</div>
+              <div class="selrow"><span class="lab">📍 Area</span><span class="val">Anywhere ▾</span></div>
+
+              <!-- Time of day (moved up, multi) -->
+              <div class="miniq">Time of day</div>
+              <div class="qrow span" style="margin:0 17px;">
+                <button class="qbtn on" data-multi="tod"><span class="g">🌅</span><span class="tx">Morning</span></button>
+                <button class="qbtn on" data-multi="tod"><span class="g">⛅</span><span class="tx">Afternoon</span></button>
+                <button class="qbtn on" data-multi="tod"><span class="g">🌆</span><span class="tx">Evening</span></button>
+                <button class="qbtn" data-multi="tod"><span class="g">🌙</span><span class="tx">Night</span></button>
+              </div>
+
+              <!-- saved hook -->
+              <div class="savedhook">
+                <div class="ic">❤️</div>
+                <div class="tx"><div class="t">Have spots saved already?</div><div class="s">Pin them into your day →</div></div>
+                <div class="cv">›</div>
+              </div>
+
+              <!-- Fine-tune (collapsed) -->
+              <div class="finetune">
+                <button id="ftbtn"><span>＋ Fine-tune your day</span> <span class="cv">▾</span></button>
+                <div class="ftpanel" id="ftpanel">
+                  <div class="miniq">Who's with you</div>
+                  <div class="qrow span" style="margin:0 17px;">
+                    <button class="qbtn" data-group="who"><span class="g">🚶</span><span class="tx">Solo</span></button>
+                    <button class="qbtn on" data-group="who"><span class="g">💞</span><span class="tx">Couple</span></button>
+                    <button class="qbtn" data-group="who"><span class="g">👨‍👩‍👧</span><span class="tx">Family</span></button>
+                    <button class="qbtn" data-group="who"><span class="g">🥂</span><span class="tx">Friends</span></button>
+                  </div>
+                  <div class="miniq">Vibe</div>
+                  <div class="qrow" style="margin:0 17px;">
+                    <button class="qbtn on" data-multi="vibe"><span class="g">⛰️</span> Outdoors</button>
+                    <button class="qbtn on" data-multi="vibe"><span class="g">🍇</span> Wine &amp; Food</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">🎨</span> Arts &amp; Culture</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">🍷</span> Date Night</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">🎭</span> Catch a Show</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">🍸</span> Nightlife</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">🎟️</span> Showing Visitors</button>
+                    <button class="qbtn" data-multi="vibe"><span class="g">💸</span> Free SB</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:96px;"></div>
+            </div>
+
+            <div class="gobar">
+              <button class="gobtn">Show me my day →</button>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn"><span class="ni">🌅</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">❤️</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn plan on">
+              <span class="fab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.5" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></g></svg></span>
+              <span class="nl">Plan</span>
+            </button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FRAME 2 — BUILD FROM SAVED ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">2</span>Plan · build from saved</span>
+        <div class="t">Pin the spots you've been collecting</div>
+        <div class="d">This is what the "Pin them into your day" hook opens. Choose saved spots to lock in; each auto-slots into its best time of day, and the planner fills the rest of the day around them. The memory moat, doing work.</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="hdr">
+              <div class="lg"><div class="m">S</div><div><div class="nm">Plan</div><div class="tg">Build your Santa Barbara day</div></div></div>
+              <button class="myplans-btn"><span>🗓</span> My plans <span class="cv">▾</span></button>
+            </div>
+            <div class="scroll" style="filter:saturate(.92);">
+              <div class="makeday">
+                <div class="glow"></div>
+                <div class="in"><div class="eb">Short on time?</div><div class="ttl"><span class="sun"></span>Make My Day</div><div class="sb">A ready-made SB day, dawn to dusk — built from what's on today.</div></div>
+              </div>
+              <div class="orline"><span>or shape it yourself</span></div>
+              <div class="miniq">When</div>
+              <div class="seg"><button class="on">Today</button><button>Tomorrow</button><button><span>📅</span> Pick a date</button></div>
+              <div class="miniq">Where</div>
+              <div class="selrow"><span class="lab">📍 Area</span><span class="val">Anywhere ▾</span></div>
+              <div style="height:30px;"></div>
+            </div>
+
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="grab"></div>
+              <div class="sk">From your want-to-go list</div>
+              <div class="st">Build around your saved</div>
+              <div style="font-size:11.5px;color:var(--ink2);line-height:1.5;margin:-7px 0 14px;">Pick the spots to lock in. We'll drop each into its best time of day and build the rest of the day around them.</div>
+
+              <div class="opt sel">
+                <div class="th" style="background:linear-gradient(135deg,#241C16,#16586A);"></div>
+                <div class="ob"><div class="on2">Mesa Lane Steps</div><div class="om">📍 The Mesa <span class="blkchip">→ Morning</span></div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck">✓</div>
+              </div>
+              <div class="opt">
+                <div class="th" style="background:linear-gradient(135deg,#9C6B9E,#C0532E);"></div>
+                <div class="ob"><div class="on2">SB Museum of Art</div><div class="om">📍 1130 State St <span class="blkchip">→ Afternoon</span></div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck"></div>
+              </div>
+              <div class="opt sel">
+                <div class="th" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"></div>
+                <div class="ob"><div class="on2">The Lark</div><div class="om">📍 Funk Zone <span class="blkchip">→ Evening</span></div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck">✓</div>
+              </div>
+              <div class="opt">
+                <div class="th" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"></div>
+                <div class="ob"><div class="on2">Butterfly Beach</div><div class="om">📍 Montecito <span class="blkchip">→ Evening</span></div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck"></div>
+              </div>
+
+              <button class="gobtn" style="width:100%;margin-top:16px;">Build my day around these (2) →</button>
+              <div style="text-align:center;font-size:10.5px;color:var(--sage-text);font-weight:600;margin-top:10px;">We'll fill the empty blocks with picks nearby.</div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn"><span class="ni">🌅</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">❤️</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn plan on">
+              <span class="fab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.5" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></g></svg></span>
+              <span class="nl">Plan</span>
+            </button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FRAME 3 — RESULTS / SPINE (LIVE) ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">3</span>Plan · your day</span>
+        <div class="t">Whole days on a time-of-day spine</div>
+        <div class="d">Two-to-three complete days you can switch between; every stop is swappable. The spine warms from teal morning to gold evening — the app's golden-hour identity.</div>
+        <span class="live">↓ Live — tap the day options</span>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="hdr">
+              <div class="lg"><button class="back">‹</button><div><div class="nm">Your SB Day</div><div class="tg">Tap a stop to see details</div></div></div>
+              <button class="myplans-btn"><span>🗓</span> <span class="cv">▾</span></button>
+            </div>
+            <div class="scroll">
+              <div class="subline">SAT · JUN 27 · MORNING → EVENING</div>
+              <div class="dayopts" id="dayopts">
+                <button class="daypill on" data-day="coastal"><span class="dl">Day shape</span><span class="dn">Classic Coastal</span></button>
+                <button class="daypill" data-day="funk"><span class="dl">Day shape</span><span class="dn">Funk Zone &amp; Wine</span></button>
+                <button class="daypill" data-day="arts"><span class="dl">Day shape</span><span class="dn">Arts &amp; State St.</span></button>
+              </div>
+              <div class="daycap" id="daycap"></div>
+              <div class="spine">
+                <div class="rail"></div>
+                <div id="spinestops"></div>
+              </div>
+              <div style="height:104px;"></div>
+            </div>
+
+            <div class="gobar">
+              <button class="gobtn">💾 Save plan</button>
+              <button class="gobtn alt">↗ Share</button>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn"><span class="ni">🌅</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">❤️</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn plan on">
+              <span class="fab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.5" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></g></svg></span>
+              <span class="nl">Plan</span>
+            </button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FRAME 3 — SWAP A STOP ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">4</span>Plan · swap a stop</span>
+        <div class="t">Saved things live right inside the swap</div>
+        <div class="d">Tapping "Swap" on any stop opens alternates for that block — your saved spots float to the top with a gold badge, then more ideas. One tap drops it into the spine; tap the ⓘ to see a card's full detail before choosing.</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="hdr">
+              <div class="lg"><button class="back">‹</button><div><div class="nm">Your SB Day</div><div class="tg">Classic Coastal</div></div></div>
+              <button class="myplans-btn"><span>🗓</span> <span class="cv">▾</span></button>
+            </div>
+            <div class="scroll" style="filter:saturate(.9);">
+              <div class="subline">SAT · JUN 27</div>
+              <div class="spine" style="padding-top:18px;">
+                <div class="rail" style="bottom:60px;"></div>
+                <div class="stop">
+                  <div class="node" style="background:#3d8aa0;">🌅</div>
+                  <div class="scard"><div class="thumb" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div><div class="b"><div class="eb">Morning · 9–11 AM</div><div class="nm">Stearns Wharf</div><div class="mt">📍 Waterfront · Walk the harbor</div></div></div>
+                </div>
+                <div class="stop">
+                  <div class="node" style="background:#7E8B6B;">⛅</div>
+                  <div class="scard" style="opacity:.45;"><div class="thumb" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"></div><div class="b"><div class="eb">Afternoon · 2–5 PM</div><div class="nm">Old Mission SB</div><div class="mt">📍 Choosing a new stop…</div></div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="scrim"></div>
+            <div class="sheet">
+              <div class="grab"></div>
+              <div class="sk">Afternoon · 2–5 PM</div>
+              <div class="st">Swap this stop</div>
+
+              <div class="sublabel"><span class="ic">❤️</span> From your saved list</div>
+              <div class="opt sel">
+                <div class="th" style="background:linear-gradient(135deg,#9C6B9E,#C0532E);"></div>
+                <div class="ob"><div class="on2">SB Museum of Art <span class="sv">♥ Saved</span></div><div class="om">📍 1130 State St · Open till 5</div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck">✓</div>
+              </div>
+              <div class="opt">
+                <div class="th" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div>
+                <div class="ob"><div class="on2">Lighthouse Wine Bar <span class="sv">♥ Saved</span></div><div class="om">📍 The Mesa · Sea-view pour</div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck"></div>
+              </div>
+
+              <div class="sublabel">More ideas for the afternoon</div>
+              <div class="opt">
+                <div class="th" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"></div>
+                <div class="ob"><div class="on2">Old Mission Santa Barbara</div><div class="om">📍 Mission Canyon · The postcard</div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck"></div>
+              </div>
+              <div class="opt">
+                <div class="th" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div>
+                <div class="ob"><div class="on2">MOXI Museum</div><div class="om">📍 Lower State · Hands-on, kid-proof</div></div>
+                <button class="info" title="See details">i</button>
+                <div class="ck"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn"><span class="ni">🌅</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">❤️</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn plan on">
+              <span class="fab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.5" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></g></svg></span>
+              <span class="nl">Plan</span>
+            </button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FRAME 4 — MY PLANS DRAWER ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">5</span>Plan · saved plans</span>
+        <div class="t">Past days, one tap away</div>
+        <div class="d">The top-right "My plans" button drops down your saved itineraries — each with a tiny spine preview. Tap one to reopen and edit. They also live in Saved › Days, the canonical home.</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="hdr">
+              <div class="lg"><div class="m">S</div><div><div class="nm">Plan</div><div class="tg">Build your Santa Barbara day</div></div></div>
+              <button class="myplans-btn open"><span>🗓</span> My plans <span class="cv">▾</span></button>
+            </div>
+            <div class="scroll">
+              <div class="makeday">
+                <div class="glow"></div>
+                <div class="in">
+                  <div class="eb">Short on time?</div>
+                  <div class="ttl"><span class="sun"></span>Make My Day</div>
+                  <div class="sb">A ready-made SB day, dawn to dusk — built from what's on today. Tweak it after.</div>
+                </div>
+              </div>
+              <div class="orline"><span>or shape it yourself</span></div>
+              <div class="miniq">When</div>
+              <div class="seg"><button class="on">Today</button><button>Tomorrow</button><button><span>📅</span> Pick a date</button></div>
+              <div class="miniq">Where</div>
+              <div class="selrow"><span class="lab">📍 Area</span><span class="val">Anywhere ▾</span></div>
+              <div style="height:40px;"></div>
+            </div>
+
+            <!-- dim + drawer -->
+            <div class="dim"></div>
+            <div class="drawer">
+              <div class="dh"><div class="k">Saved on this phone</div><div class="t">My plans</div></div>
+              <div class="prow">
+                <div class="pdots"><i style="background:#3d8aa0;"></i><i style="background:#7E8B6B;"></i><i style="background:#E0A82E;"></i></div>
+                <div class="pb"><div class="pn">Anniversary in Montecito</div><div class="pm">Jun 14 · 4 stops</div></div>
+                <div class="go">›</div>
+              </div>
+              <div class="prow">
+                <div class="pdots"><i style="background:#3d8aa0;"></i><i style="background:#2d7d8f;"></i><i style="background:#7E8B6B;"></i><i style="background:#E0A82E;"></i></div>
+                <div class="pb"><div class="pn">Mom's first visit</div><div class="pm">May 2 · 5 stops</div></div>
+                <div class="go">›</div>
+              </div>
+              <div class="prow">
+                <div class="pdots"><i style="background:#7E8B6B;"></i><i style="background:#E0A82E;"></i></div>
+                <div class="pb"><div class="pn">Rainy Saturday downtown</div><div class="pm">Apr 19 · 3 stops</div></div>
+                <div class="go">›</div>
+              </div>
+              <div class="dfoot">These also live in <b>Saved › Days</b> ❤️</div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn"><span class="ni">🌅</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">❤️</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn plan on">
+              <span class="fab"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.5" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></g></svg></span>
+              <span class="nl">Plan</span>
+            </button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ FRAME 5 — SHARED (LOCKED) VIEW ============ -->
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">6</span>Shared · what a friend sees</span>
+        <div class="t">A locked-down, beautiful hand-off</div>
+        <div class="d">The shared link is view-only: the same spine, cards tappable for details, no editing. One button copies the whole day into the recipient's own planner — the growth loop.</div>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+            <div class="shared-top">
+              <div class="wm"><div class="m">S</div><div class="nm">SB Daymaker</div></div>
+              <div class="lock">🔒 View-only</div>
+              <div class="stt">A Santa Barbara Day</div>
+              <div class="shareby">Shared by Jim</div>
+              <div class="smeta">SAT · JUN 27 · 4 STOPS</div>
+            </div>
+            <div class="scroll" style="top:148px;">
+              <div class="spine" style="padding-top:18px;">
+                <div class="rail"></div>
+                <div class="stop">
+                  <div class="node" style="background:#3d8aa0;">🌅</div>
+                  <div class="scard ro-scard"><div class="thumb" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div><div class="b"><div class="eb">Morning · 9–11 AM</div><div class="nm">Stearns Wharf</div><div class="mt">📍 Waterfront</div></div><div class="tapfor">Details ›</div></div>
+                </div>
+                <div class="stop">
+                  <div class="node" style="background:#2d7d8f;">☀️</div>
+                  <div class="scard ro-scard"><div class="thumb" style="background:linear-gradient(135deg,#16586A,#3d8aa0);"></div><div class="b"><div class="eb">Midday · 12–2 PM</div><div class="nm">Brophy Bros</div><div class="mt">📍 The Harbor</div></div><div class="tapfor">Details ›</div></div>
+                </div>
+                <div class="stop">
+                  <div class="node" style="background:#7E8B6B;">⛅</div>
+                  <div class="scard ro-scard"><div class="thumb" style="background:linear-gradient(135deg,#9C6B9E,#C0532E);"></div><div class="b"><div class="eb">Afternoon · 2–5 PM</div><div class="nm">SB Museum of Art</div><div class="mt">📍 1130 State St</div></div><div class="tapfor">Details ›</div></div>
+                </div>
+                <div class="stop">
+                  <div class="node" style="background:#E0A82E;">🌆</div>
+                  <div class="scard ro-scard"><div class="thumb" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"></div><div class="b"><div class="eb">Evening · 6–8 PM</div><div class="nm">Butterfly Beach</div><div class="mt">📍 Montecito · Golden hour</div></div><div class="tapfor">Details ›</div></div>
+                </div>
+              </div>
+              <div style="height:120px;"></div>
+            </div>
+
+            <div class="sharedfoot">
+              <button class="saveplan">❤️ Save this plan</button>
+              <button class="mkown">Make your own day in SB Daymaker →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============ ANNOTATIONS ============ -->
+  <div class="notes">
+    <h2>What's reflected here — every locked decision</h2>
+    <p class="nsub">A quick map from each call you made to where it shows up, so you can confirm at a glance before the build spec.</p>
+    <div class="ntable">
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Nav placement — option (b)</div>
+        <div class="nt">Raised "Plan" button</div>
+        <div class="nd">The three browse tabs stay intact; <b>Plan is a raised, accent-gradient create button</b> in the bar, present on every screen. Reads as "make something," not a fourth destination — the locked three-section shape is preserved.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Recommendations — hybrid-lean-A</div>
+        <div class="nt">Whole days, every stop swappable</div>
+        <div class="nd">Frame 2 hands over <b>complete days</b> (the day-shape pills), each fillable from current happenings or evergreen. No empty canvas. Stays batch-AI-safe via curated, seasonally-refreshed day skeletons.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>The setup screen</div>
+        <div class="nt">Hero + essentials, the rest on demand</div>
+        <div class="nd"><b>Make My Day</b> gives a full day in one tap. Only the essentials show on landing — <b>When · Where · Time of day</b> — while <b>Who</b> and the <b>full vibe set</b> (8 tags) stay folded inside "Fine-tune." Time-of-day is multi-select; Where opens a neighborhood picker. Far less density than the old five-group form.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Saved things in the flow</div>
+        <div class="nt">Badged inside every swap</div>
+        <div class="nd">Frame 3 — your saved spots <b>float to the top of each block's alternates</b> with a gold "♥ Saved" badge. Plus a "start from my saved" hook on the setup screen.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Where plans live</div>
+        <div class="nt">Saved › Days (drawer is a shortcut)</div>
+        <div class="nd">The top-right "My plans" drawer (Frame 4) is a fast shortcut; the <b>canonical home is the Saved page</b>, gaining a Things / Days split. One source of truth.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>One Perfect SB Day → promoted</div>
+        <div class="nt">"Make My Day" flagship</div>
+        <div class="nd">The old card becomes the <b>default express skeleton</b> at the top of Plan. Same seed-a-day mechanic, new front door. (Alternates if you'd rather: "Make me a day" / "Daymaker pick".)</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Shared view — copyable</div>
+        <div class="nt">"Save this plan" included</div>
+        <div class="nd">Frame 5 stays strictly view-only (🔒), but offers the renamed <b>"Save this plan"</b> copy-to-own — the recipient-becomes-a-user growth loop, riding the existing share-link infra.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Scope</div>
+        <div class="nt">Single day only</div>
+        <div class="nd">A day-planner, not a multi-day trip planner — confirmed. Everything above fits inside the no-accounts, localStorage + magic-link world already built.</div>
+      </div>
+      <div class="ncard">
+        <div class="nk"><span class="dot"></span>Detail access from every card</div>
+        <div class="nt">Three contexts, one clean rule</div>
+        <div class="nd">Every "things" card reaches its detail screen without added density: <b>spine cards open on tap</b> (the header says so); <b>selection cards carry a small ⓘ</b> so a tap still picks while ⓘ previews; <b>shared cards show "Details ›"</b>. Plans in the drawer open the plan, as expected.</div>
+      </div>
+    </div>
+
+    <div class="openq">
+      <div class="qk">Before I write the build spec — a few small calls</div>
+      <h3>Worth your eye on the mockup</h3>
+      <ul>
+        <li><b>The raised Plan button</b> sits in cell 3 of a four-cell bar (Explore · Saved · Plan · Discover). It's slightly right of dead-center by geometry, but the raised treatment makes it the focal point. If you'd prefer it visually dead-center, the alternative is a flat terracotta-filled Plan cell instead of a raised circle — say the word.</li>
+        <li><b>"Make My Day"</b> — is the brand-verb wink right, or do you want the plainer "Make me a day"? Easy swap.</li>
+        <li><b>Day-shape names</b> (Classic Coastal · Funk Zone &amp; Wine · Arts &amp; State St.) are placeholders — the real seasonal set is a content decision we'll lock when building the skeletons.</li>
+        <li><b>Saved-stop badge</b> on the spine — in Frame 2 I kept the spine clean and surfaced "♥ Saved" only in the swap sheet. If you want a saved stop to wear the badge on the spine itself too, I can add it.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footnote">SB Daymaker · Plan page · high-fidelity mockup — review one, then I'll generate the Claude Code build spec + your click-by-click guide.</div>
+</div>
+
+<script>
+  // ---- light interactivity: question selections ----
+  document.querySelectorAll('[data-group]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var g=btn.getAttribute('data-group');
+      btn.closest('.qrow').querySelectorAll('[data-group="'+g+'"]').forEach(function(b){b.classList.remove('on');});
+      btn.classList.add('on');
+    });
+  });
+  document.querySelectorAll('[data-multi]').forEach(function(btn){
+    btn.addEventListener('click',function(){btn.classList.toggle('on');});
+  });
+  // segmented (When)
+  document.querySelectorAll('[data-seg]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var g=btn.getAttribute('data-seg');
+      btn.closest('.seg').querySelectorAll('[data-seg="'+g+'"]').forEach(function(b){b.classList.remove('on');});
+      btn.classList.add('on');
+    });
+  });
+  // fine-tune expander
+  (function(){
+    var b=document.getElementById('ftbtn'), p=document.getElementById('ftpanel');
+    if(b&&p){b.addEventListener('click',function(){
+      p.classList.toggle('open');
+      b.querySelector('.cv').textContent=p.classList.contains('open')?'▴':'▾';
+    });}
+  })();
+
+  // ---- live spine (Frame 2) ----
+  var DAYS={
+    coastal:{
+      cap:'An easy day along the water and up through the old town — the visitor classic, done right.',
+      stops:[
+        {blk:'Morning · 9–11 AM',g:'🌅',c:'#3d8aa0',eb:'Place to be',nm:'Stearns Wharf',mt:'📍 Waterfront · Walk the harbor',img:'linear-gradient(135deg,#16586A,#3d8aa0)'},
+        {blk:'Midday · 12–2 PM',g:'☀️',c:'#2d7d8f',eb:'Wine & Food',nm:'Brophy Bros',mt:'📍 The Harbor · Chowder + a view',img:'linear-gradient(135deg,#16586A,#3d8aa0)'},
+        {blk:'Afternoon · 2–5 PM',g:'⛅',c:'#7E8B6B',eb:'Arts & Culture',nm:'Old Mission Santa Barbara',mt:'📍 Mission Canyon · The postcard',img:'linear-gradient(135deg,#C0532E,#E0A82E)'},
+        {blk:'Evening · 6–8 PM',g:'🌆',c:'#E0A82E',eb:'Outdoors',nm:'Butterfly Beach',mt:'📍 Montecito · Golden hour',img:'linear-gradient(135deg,#7E8B6B,#16586A)',saved:true}
+      ]
+    },
+    funk:{
+      cap:'Park once and wander — tasting rooms, the Funk Zone\u2019s best dinner, and a show to close.',
+      stops:[
+        {blk:'Morning · 9–11 AM',g:'🌅',c:'#3d8aa0',eb:'Outdoors',nm:'Mesa Lane Steps',mt:'📍 The Mesa · 229 steps to quiet sand',img:'linear-gradient(135deg,#241C16,#16586A)'},
+        {blk:'Midday · 12–2 PM',g:'☀️',c:'#2d7d8f',eb:'Wine & Food',nm:'The Lark',mt:'📍 Funk Zone · Shared plates, the patio',img:'linear-gradient(135deg,#C0532E,#E0A82E)'},
+        {blk:'Afternoon · 2–5 PM',g:'⛅',c:'#7E8B6B',eb:'Wine & Food',nm:'Funk Zone tasting flight',mt:'📍 Funk Zone · A pour or three',img:'linear-gradient(135deg,#7E8B6B,#16586A)'},
+        {blk:'Evening · 6–8 PM',g:'🌆',c:'#E0A82E',eb:'Catch a Show',nm:'Sunset Jazz at the Lobero',mt:'📍 Downtown · 140 years of velvet',img:'linear-gradient(135deg,#C0532E,#E0A82E)'}
+      ]
+    },
+    arts:{
+      cap:'The market, small plates on State, world-class art, and an orchestra in the gilded hall.',
+      stops:[
+        {blk:'Morning · 9–11 AM',g:'🌅',c:'#3d8aa0',eb:'Free · Today',nm:'Saturday Farmers Market',mt:'📍 Sta. Barbara & Cota · The whole town',img:'linear-gradient(135deg,#7E8B6B,#16586A)'},
+        {blk:'Midday · 12–2 PM',g:'☀️',c:'#2d7d8f',eb:'Wine & Food',nm:'Loquita',mt:'📍 202 State St · Spanish small plates',img:'linear-gradient(135deg,#C0532E,#E0A82E)'},
+        {blk:'Afternoon · 2–5 PM',g:'⛅',c:'#7E8B6B',eb:'Arts & Culture',nm:'SB Museum of Art',mt:'📍 1130 State St · Compact, world-class',img:'linear-gradient(135deg,#9C6B9E,#C0532E)'},
+        {blk:'Evening · 6–8 PM',g:'🌆',c:'#E0A82E',eb:'Catch a Show',nm:'SB Symphony · The Granada',mt:'📍 1214 State St · A full orchestra',img:'linear-gradient(135deg,#241C16,#16586A)'}
+      ]
+    }
+  };
+
+  function renderSpine(key){
+    var d=DAYS[key];
+    document.getElementById('daycap').textContent=d.cap;
+    var html='';
+    d.stops.forEach(function(s){
+      var savedChip=s.saved?'<div class="savedchip">♥ Saved</div>':'';
+      html+='<div class="stop">'
+        + '<div class="node" style="background:'+s.c+';">'+s.g+'</div>'
+        + '<div class="scard">'
+        +   '<div class="thumb" style="background:'+s.img+';"></div>'
+        +   '<div class="b"><div class="eb">'+s.blk+'</div><div class="nm">'+s.nm+'</div><div class="mt">'+s.mt+'</div></div>'
+        +   '<div class="acts"><div class="acttop"><button class="sinfo" title="See details">i</button><button class="heart">'+(s.saved?'❤️':'🤍')+'</button></div><button class="swap">↔ Swap</button></div>'
+        +   savedChip
+        + '</div>'
+      + '</div>';
+    });
+    document.getElementById('spinestops').innerHTML=html;
+  }
+  document.querySelectorAll('#dayopts .daypill').forEach(function(p){
+    p.addEventListener('click',function(){
+      document.querySelectorAll('#dayopts .daypill').forEach(function(x){x.classList.remove('on');});
+      p.classList.add('on');
+      renderSpine(p.getAttribute('data-day'));
+    });
+  });
+  renderSpine('coastal');
+</script>
+</body>
+</html>

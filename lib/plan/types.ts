@@ -11,11 +11,20 @@ import type { Zone } from "@/lib/zones";
 // tod='late', and "midday" is a planner-only lunch bridge (not a stored tod).
 export type Block = "morning" | "midday" | "afternoon" | "evening" | "night";
 
-// The vibe subset the setup screen exposes (a deliberate 4 of the 10 occasion
-// tags — see build doc §4). Kept as OccasionKey so it flows straight into ranking.
+// The vibe subset the setup screen's Fine-tune exposes — 8 of the 10 occasion
+// tags (build doc §4). `solo` and `family_day` are deliberately excluded because
+// the Who selector right above already collects that signal. Kept as OccasionKey
+// so it flows straight into ranking.
 export type VibeKey = Extract<
   OccasionKey,
-  "outdoors_active" | "wine_food" | "arts_culture" | "date_night"
+  | "outdoors_active"
+  | "wine_food"
+  | "arts_culture"
+  | "date_night"
+  | "catch_a_show"
+  | "nightlife"
+  | "hosting_visitors"
+  | "free_sb"
 >;
 
 // UI "parts of the day" → the DB `tod` values they map to ("Night" → 'late').

@@ -10,7 +10,15 @@
 .sbd-chip:focus-visible,
 .sbd-seg__btn:focus-visible,
 .sbd-heart:focus-visible,
-.sbd-card--interactive:focus-visible {
+.sbd-card--interactive:focus-visible,
+.sbd-qbtn:focus-visible,
+.sbd-makeday:focus-visible,
+.sbd-savedhook:focus-visible,
+.sbd-plan-back:focus-visible,
+.sbd-daychip:focus-visible,
+.sbd-selrow:focus-visible,
+.sbd-finetune__btn:focus-visible,
+.sbd-zoneopt:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: 2px;
 }
@@ -651,6 +659,433 @@
 .sbd-myplans-btn__chevron {
   font-size: 0.7em;
   transition: transform var(--dur-fast) var(--ease-out);
+}
+
+/* The Plan results back button (interim Phase 3 + the spine header in Phase 4). */
+.sbd-plan-back {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  margin-left: calc(var(--space-2) * -1);
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* ---- PLAN setup screen (mockup State 1) -------------------------------- */
+/* Extra bottom room so the last group / saved hook clears the fixed go-bar. */
+.sbd-plan-setup {
+  padding-bottom: calc(54px + 86px + env(safe-area-inset-bottom));
+}
+
+/* Make My Day — flagship express card. The copy sits over a left dark scrim so
+   white text clears AA on the bright terracotta→gold gradient (mockup is a
+   prototype; the app enforces the §6 contrast floor). */
+.sbd-makeday {
+  display: block;
+  width: 100%;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+  border: none;
+  cursor: pointer;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--terracotta), var(--gold));
+  box-shadow: 0 14px 30px -16px
+    color-mix(in srgb, var(--terracotta) 60%, transparent);
+}
+.sbd-makeday__glow {
+  position: absolute;
+  right: -18px;
+  top: -22px;
+  width: 120px;
+  height: 120px;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--gold) 55%, white),
+    transparent 68%
+  );
+}
+.sbd-makeday__in {
+  position: relative;
+  display: block;
+  padding: var(--space-4);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ink) 32%, transparent),
+    transparent 78%
+  );
+}
+.sbd-makeday__eyebrow {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.sbd-makeday__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 3px;
+  font-family: var(--font-display);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-xl);
+  line-height: 1.02;
+  color: var(--paper);
+}
+.sbd-makeday__sun {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--gold) 18%, white),
+    var(--gold) 62%,
+    transparent 74%
+  );
+}
+.sbd-makeday__sub {
+  display: block;
+  margin-top: var(--space-1);
+  max-width: 280px;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  color: var(--paper);
+}
+
+/* "or build your own" divider */
+.sbd-orline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) var(--space-2) var(--space-1);
+  color: var(--sage-text);
+}
+.sbd-orline::before,
+.sbd-orline::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.sbd-orline span {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Section eyebrow label (When / Where / Time of day / Who / Vibe). Uses the
+   AA-safe --sage-text variant for this small label (the mockup's --sage fails
+   4.5:1 at this size — §6 floor wins). */
+.sbd-miniq {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--sage-text);
+}
+/* Where — selector row that opens the neighborhood picker sheet. */
+.sbd-selrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+}
+.sbd-selrow__lab {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+}
+.sbd-selrow__val {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--pacific);
+}
+.sbd-q__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.sbd-qbtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.sbd-qbtn:hover {
+  border-color: var(--tile-light);
+}
+.sbd-qbtn[aria-pressed="true"] {
+  border-color: var(--pacific);
+  background: var(--pacific);
+  color: var(--paper);
+}
+/* Full-width rows (Parts of day, Who, Where): equal columns, icon over label. */
+.sbd-q__row--span .sbd-qbtn {
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-1);
+}
+.sbd-qbtn__g {
+  font-size: 1rem;
+  line-height: 1;
+}
+.sbd-qbtn__tx {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+/* Pick-a-date: a scrollable row of the next ~2 weeks (no native popup). */
+.sbd-q__days {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  margin-top: var(--space-2);
+  padding-bottom: var(--space-1);
+  scrollbar-width: none;
+}
+.sbd-q__days::-webkit-scrollbar {
+  display: none;
+}
+.sbd-daychip {
+  flex: 0 0 auto;
+  min-width: 54px;
+  min-height: var(--tap-min);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  padding: var(--space-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.sbd-daychip:hover {
+  border-color: var(--tile-light);
+}
+.sbd-daychip[aria-pressed="true"] {
+  border-color: var(--pacific);
+  background: var(--pacific);
+  color: var(--paper);
+}
+.sbd-daychip__wd {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sbd-daychip__d {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  line-height: 1;
+}
+
+/* Saved hook — gold-tinted, only shown when there are want-to-go saves. */
+.sbd-savedhook {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--gold);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
+  cursor: pointer;
+}
+.sbd-savedhook__ic {
+  font-size: 1.25rem;
+}
+.sbd-savedhook__tx {
+  flex: 1;
+}
+.sbd-savedhook__t {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--gold-text);
+}
+.sbd-savedhook__s {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.sbd-savedhook__cv {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  color: var(--gold-text);
+}
+
+/* Fine-tune — centered expander holding the soft signals (Who + Vibe). */
+.sbd-finetune {
+  margin-top: var(--space-4);
+  text-align: center;
+}
+.sbd-finetune__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: none;
+  color: var(--pacific);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+.sbd-finetune__cv {
+  font-size: 0.7em;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.sbd-finetune__cv--open {
+  transform: rotate(180deg);
+}
+.sbd-ftpanel {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border);
+  text-align: left;
+}
+
+/* Where picker sheet — zone options. */
+.sbd-zonelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sbd-zoneopt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: var(--space-3) var(--space-4);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  text-align: left;
+  cursor: pointer;
+}
+.sbd-zoneopt[aria-pressed="true"] {
+  border-color: var(--pacific);
+  color: var(--pacific);
+}
+.sbd-zoneopt__ck {
+  color: var(--pacific);
+  font-weight: var(--weight-bold);
+}
+
+/* Sticky go-bar — fixed just above the 54px bottom nav, centered to the shell. */
+.sbd-plan-gobar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 54px;
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-3) var(--space-5)
+    calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent, var(--bg) 36%);
+  z-index: 55;
+  pointer-events: none;
+}
+.sbd-plan-gobar > * {
+  pointer-events: auto;
+}
+
+/* Interim results list (Phase 3 only — replaced by the spine in Phase 4). */
+.sbd-plan-interim {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sbd-plan-interim__row {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.sbd-plan-interim__time {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pacific);
+}
+.sbd-plan-interim__title {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+}
+.sbd-plan-interim__saved {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--gold-text);
 }
 
 /* ==========================================================================
