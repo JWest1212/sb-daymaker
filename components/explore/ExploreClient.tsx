@@ -19,7 +19,6 @@ import { ControlRow } from "./ControlRow";
 import { LensSheet } from "./LensSheet";
 import { NearMeSheet } from "./NearMeSheet";
 import { CascadeFeed } from "./CascadeFeed";
-import { OnePerfectDayCard } from "./OnePerfectDayCard";
 import { EmailSignup } from "@/components/signup/EmailSignup";
 
 export function ExploreClient({
@@ -27,14 +26,12 @@ export function ExploreClient({
   tod,
   dateLabel,
   weather,
-  perfectDayIds,
   nowMs,
 }: {
   things: Thing[];
   tod: TimeOfDay;
   dateLabel: string;
   weather: Weather | null;
-  perfectDayIds: string[];
   nowMs: number;
 }) {
   const { isSaved, toggle } = useSaves();
@@ -86,7 +83,6 @@ export function ExploreClient({
           onOpenNearMe={() => setNearOpen(true)}
           onHorizon={setHorizon}
         />
-        <OnePerfectDayCard ids={perfectDayIds} />
         <CascadeFeed items={feed} />
 
         <footer className="sbd-foot">

@@ -1,5 +1,4 @@
 import { getPublishedThings } from "@/lib/things";
-import { pickPerfectDay } from "@/lib/explore";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 
@@ -18,7 +17,6 @@ export default async function ExplorePage() {
       tod={getTimeOfDay()}
       dateLabel={getDateLabel()}
       weather={weather}
-      perfectDayIds={pickPerfectDay(things)}
       nowMs={Date.now()}
     />
   );
