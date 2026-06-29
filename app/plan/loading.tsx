@@ -18,8 +18,6 @@ export default function PlanLoading() {
           <span className="sbd-skel sbd-skel--line" style={{ width: "35%", height: 10 }} />
         </div>
       </div>
-      {/* Make My Day card skeleton */}
-      <span className="sbd-skel sbd-skel--block" style={{ height: 80, marginBottom: "var(--space-5)", borderRadius: "var(--radius-lg)" }} />
       {/* Question rows */}
       {[1, 2, 3].map((i) => (
         <div key={i} style={{ marginBottom: "var(--space-5)" }}>

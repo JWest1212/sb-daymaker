@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { BLOCK_TIME_LABEL } from "@/lib/plan/buildDay";
+import { BLOCK_LABEL } from "@/lib/plan/labels";
+// SwapSheet is no longer used (swap removed in Plan simplification; see AddStopSheet).
 import { planZoneLabel } from "@/lib/plan/labels";
 import type { Block } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
@@ -108,7 +109,7 @@ export function SwapSheet({
     <BottomSheet
       open
       onClose={onClose}
-      kicker={BLOCK_TIME_LABEL[block]}
+      kicker={BLOCK_LABEL[block]}
       title="Swap this stop"
     >
       {saved.length > 0 ? (

@@ -1,26 +1,37 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { EmptyState } from "@/components/ui";
-import { DayShapeSelector } from "./DayShapeSelector";
 import { ItinerarySpine } from "./ItinerarySpine";
-import { SwapSheet } from "./SwapSheet";
-import { buildDay, rankedCandidates, BLOCK_TIME_LABEL } from "@/lib/plan/buildDay";
+import { AddStopSheet } from "./AddStopSheet";
+import { SaveNameSheet } from "./SaveNameSheet";
 import { shortStamp } from "@/lib/plan/dates";
-import { PLAN_SELECTOR_SHAPES, DAY_SHAPE_BY_ID } from "@/lib/plan/dayShapes";
-import { blockShortName, planZoneLabel } from "@/lib/plan/labels";
+import { blockShortName, planZoneLabel, BLOCK_LABEL } from "@/lib/plan/labels";
 import type { ItineraryInput, SavedItinerary } from "@/lib/plan/itineraries";
 import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
 import { shareUrl } from "@/components/saved/share";
 
+// Auto-title per §9: "Your SB Day · Jun 28" or "{Area} Day · Jun 28"
+function autoTitle(answers: PlanAnswers): string {
+  const monthDay = new Date(answers.dateISO + "T12:00:00").toLocaleDateString(
+    "en-US",
+    { month: "short", day: "numeric" },
+  );
+  if (answers.zone) {
+    return `${planZoneLabel(answers.zone)} Day · ${monthDay}`;
+  }
+  return `Your SB Day · ${monthDay}`;
+}
+
+function genStopId(): string {
+  return Math.random().toString(36).slice(2, 9);
+}
+
 interface PlanResultsProps {
   answers: PlanAnswers;
   things: Thing[];
-  pinned?: Thing[];
-  initialShapeId?: string;
-  initialOverrides?: Partial<Record<Block, Stop>>;
+  initialStops?: Stop[];
   itineraries: SavedItinerary[];
   myPlansOpen?: boolean;
   onSave: (data: ItineraryInput) => string;
@@ -31,18 +42,16 @@ interface PlanResultsProps {
 export function PlanResults({
   answers,
   things,
-  pinned = [],
-  initialShapeId = "coastal",
-  initialOverrides = {},
+  initialStops = [],
   itineraries,
   myPlansOpen = false,
   onSave,
   onMyPlans,
   onBack,
 }: PlanResultsProps) {
-  const [selectedShapeId, setSelectedShapeId] = useState(initialShapeId);
-  const [overrides, setOverrides] = useState<Partial<Record<Block, Stop>>>(initialOverrides);
-  const [swapBlock, setSwapBlock] = useState<Block | null>(null);
+  const [stops, setStops] = useState<Stop[]>(initialStops);
+  const [pickerBlock, setPickerBlock] = useState<Block | null>(null);
+  const [namingOpen, setNamingOpen] = useState(false);
   const [savedToast, setSavedToast] = useState(false);
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
@@ -53,75 +62,52 @@ export function PlanResults({
     [things],
   );
 
-  const selectedShape = DAY_SHAPE_BY_ID[selectedShapeId] ?? PLAN_SELECTOR_SHAPES[0];
-
-  const baseStops = useMemo(
-    () => buildDay(answers, selectedShape, things, pinned),
-    [answers, selectedShape, things, pinned],
-  );
-
-  const displayStops = useMemo(
-    () => baseStops.map((s) => overrides[s.block] ?? s),
-    [baseStops, overrides],
-  );
-
-  const firstBlock = displayStops[0]?.block;
-  const lastBlock = displayStops[displayStops.length - 1]?.block;
+  // Build subline from the selected periods range.
+  const firstPeriod = answers.periods[0];
+  const lastPeriod = answers.periods[answers.periods.length - 1];
   const subline = [
     shortStamp(answers.dateISO),
-    firstBlock && lastBlock && firstBlock !== lastBlock
-      ? `${blockShortName(firstBlock)} → ${blockShortName(lastBlock)}`
-      : firstBlock
-        ? blockShortName(firstBlock)
+    firstPeriod && lastPeriod && firstPeriod !== lastPeriod
+      ? `${blockShortName(firstPeriod)} → ${blockShortName(lastPeriod)}`
+      : firstPeriod
+        ? blockShortName(firstPeriod)
         : null,
   ]
     .filter(Boolean)
     .join(" · ");
 
-  const swapCandidates = useMemo(() => {
-    if (!swapBlock) return [];
-    return rankedCandidates(swapBlock, answers, selectedShape, things, displayStops);
-  }, [swapBlock, answers, selectedShape, things, displayStops]);
-
-  const currentSwapStopId =
-    swapBlock != null
-      ? (displayStops.find((s) => s.block === swapBlock)?.thingId ?? null)
-      : null;
-
-  function handleShapeChange(id: string) {
-    setSelectedShapeId(id);
-    setOverrides({});
+  function addStop(block: Block, thing: Thing, fromSaved: boolean) {
+    const newStop: Stop = {
+      id: genStopId(),
+      block,
+      thingId: thing.id,
+      fromSaved,
+    };
+    setStops((prev) => [...prev, newStop]);
+    setPickerBlock(null);
   }
 
-  function handleSwap(block: Block) {
-    setSwapBlock(block);
-  }
-
-  function handleSwapSelect(thing: Thing, fromSaved: boolean) {
-    if (!swapBlock) return;
-    setOverrides((prev) => ({
-      ...prev,
-      [swapBlock]: { block: swapBlock, thingId: thing.id, pinned: false, fromSaved },
-    }));
-    setSwapBlock(null);
+  function removeStop(stopId: string) {
+    setStops((prev) => prev.filter((s) => s.id !== stopId));
   }
 
   async function handleShare() {
-    if (shareState === "pending" || displayStops.length === 0) return;
+    if (shareState === "pending" || stops.length === 0) return;
     setShareState("pending");
-    const title = `${selectedShape.name} Day — ${shortStamp(answers.dateISO)}`;
+    const title = autoTitle(answers);
     const payload = {
       title,
       dateISO: answers.dateISO,
-      stops: displayStops.flatMap((s) => {
+      stops: stops.flatMap((s) => {
         const t = thingMap.get(s.thingId);
         if (!t) return [];
-        const zone = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
+        const area = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
         return [{
           block: s.block,
-          timeLabel: BLOCK_TIME_LABEL[s.block],
+          blockLabel: BLOCK_LABEL[s.block],
+          startsAt: t.starts_at ?? null,
           title: t.title,
-          area: zone,
+          area,
           blurb: t.reason_to_go ?? "",
           category: t.happening_category ?? t.type ?? "",
           thingId: t.id,
@@ -142,22 +128,23 @@ export function PlanResults({
   }
 
   function handleSave() {
-    onSave({
-      title: `${selectedShape.name} Day`,
-      shapeId: selectedShapeId,
-      answers,
-      stops: displayStops,
-    });
+    setNamingOpen(true);
+  }
+
+  function confirmSave(title: string) {
+    onSave({ title, answers, stops });
+    setNamingOpen(false);
     setSavedToast(true);
     setTimeout(() => setSavedToast(false), 2200);
   }
 
+  const hasStops = stops.length > 0;
+
   const alreadySaved = itineraries.some(
     (it) =>
-      it.shapeId === selectedShapeId &&
       it.answers.dateISO === answers.dateISO &&
-      it.stops.length === displayStops.length &&
-      it.stops.every((s, i) => s.thingId === displayStops[i]?.thingId),
+      it.stops.length === stops.length &&
+      it.stops.every((s, i) => s.thingId === stops[i]?.thingId),
   );
 
   return (
@@ -185,11 +172,7 @@ export function PlanResults({
           onClick={onMyPlans}
         >
           <span aria-hidden="true">🗓</span>
-          {itineraries.length > 0 ? (
-            <span className="sbd-myplans-btn__count" aria-hidden="true">
-              {itineraries.length}
-            </span>
-          ) : null}
+          My plans{itineraries.length > 0 ? ` · ${itineraries.length}` : ""}
           <span className="sbd-myplans-btn__chevron" aria-hidden="true">
             ▾
           </span>
@@ -201,31 +184,13 @@ export function PlanResults({
           {subline}
         </p>
 
-        <DayShapeSelector
-          shapes={PLAN_SELECTOR_SHAPES}
-          value={selectedShapeId}
-          onChange={handleShapeChange}
+        <ItinerarySpine
+          sections={answers.periods}
+          stops={stops}
+          things={thingMap}
+          onAddStop={(block) => setPickerBlock(block)}
+          onRemoveStop={removeStop}
         />
-
-        {selectedShape ? (
-          <p className="sbd-daycap">{selectedShape.caption}</p>
-        ) : null}
-
-        {displayStops.length === 0 ? (
-          <div style={{ padding: "0 var(--space-5)" }}>
-            <EmptyState
-              icon="🗺️"
-              title="Nothing to work with yet"
-              message="Our catalog is still being built out. Try a different date or day shape — or check back soon."
-            />
-          </div>
-        ) : (
-          <ItinerarySpine
-            stops={displayStops}
-            things={thingMap}
-            onSwap={handleSwap}
-          />
-        )}
 
         <div style={{ height: "104px" }} />
       </main>
@@ -235,7 +200,7 @@ export function PlanResults({
           type="button"
           className="sbd-btn sbd-btn--primary sbd-plan-gobar__save"
           onClick={handleSave}
-          disabled={displayStops.length === 0 || alreadySaved || savedToast}
+          disabled={!hasStops || alreadySaved || savedToast}
         >
           {savedToast ? "✓ Saved!" : alreadySaved ? "✓ Already saved" : "💾 Save plan"}
         </button>
@@ -243,7 +208,7 @@ export function PlanResults({
           type="button"
           className="sbd-btn sbd-btn--secondary"
           onClick={handleShare}
-          disabled={shareState === "pending" || displayStops.length === 0}
+          disabled={shareState === "pending" || !hasStops}
         >
           {shareState === "pending"
             ? "Sharing…"
@@ -257,13 +222,21 @@ export function PlanResults({
         </button>
       </div>
 
-      {swapBlock != null ? (
-        <SwapSheet
-          block={swapBlock}
-          currentStopId={currentSwapStopId}
-          candidates={swapCandidates}
-          onSelect={handleSwapSelect}
-          onClose={() => setSwapBlock(null)}
+      {pickerBlock != null ? (
+        <AddStopSheet
+          block={pickerBlock}
+          answers={answers}
+          things={things}
+          onAdd={(thing, fromSaved) => addStop(pickerBlock, thing, fromSaved)}
+          onClose={() => setPickerBlock(null)}
+        />
+      ) : null}
+
+      {namingOpen ? (
+        <SaveNameSheet
+          defaultTitle={autoTitle(answers)}
+          onSave={confirmSave}
+          onClose={() => setNamingOpen(false)}
         />
       ) : null}
     </>

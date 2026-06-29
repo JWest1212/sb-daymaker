@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useSaves } from "@/components/saves/SavesProvider";
 import { SegmentedControl, BottomSheet } from "@/components/ui";
 import { PlanHeader } from "./PlanHeader";
 import {
@@ -36,7 +35,6 @@ const WHO: { value: Who; glyph: string; label: string }[] = [
   { value: "friends", glyph: "🥂", label: "Friends" },
 ];
 
-// The 8 vibe tags (build doc §4) — excludes solo & family_day (covered by Who).
 const VIBES: { value: VibeKey; glyph: string; label: string }[] = [
   { value: "outdoors_active", glyph: "⛰️", label: "Outdoors" },
   { value: "wine_food", glyph: "🍇", label: "Wine & Food" },
@@ -48,7 +46,6 @@ const VIBES: { value: VibeKey; glyph: string; label: string }[] = [
   { value: "free_sb", glyph: "💸", label: "Free SB" },
 ];
 
-// Where → nearby_zone; "Anywhere" is null. Reuses the Near-Me anchor set.
 const ZONE_OPTS: { value: Zone | null; label: string }[] = [
   { value: null, label: "Anywhere" },
   { value: "downtown", label: "Downtown" },
@@ -60,25 +57,15 @@ const ZONE_OPTS: { value: Zone | null; label: string }[] = [
 ];
 
 interface PlanSetupProps {
-  onMakeMyDay: () => void;
   onShowDay: (answers: PlanAnswers) => void;
-  onBuildFromSaved: (answers: PlanAnswers) => void;
   itineraryCount: number;
   onMyPlans: () => void;
 }
 
-export function PlanSetup({
-  onMakeMyDay,
-  onShowDay,
-  onBuildFromSaved,
-  itineraryCount,
-  onMyPlans,
-}: PlanSetupProps) {
-  const { counts, hydrated } = useSaves();
-
+export function PlanSetup({ onShowDay, itineraryCount, onMyPlans }: PlanSetupProps) {
   const [when, setWhen] = useState<WhenChoice>("today");
   const [pickDate, setPickDate] = useState<string>(todayISO());
-  const [zone, setZone] = useState<Zone | null>(null); // Anywhere
+  const [zone, setZone] = useState<Zone | null>(null);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [who, setWho] = useState<Who | null>(null);
   const [vibes, setVibes] = useState<VibeKey[]>([]);
@@ -92,8 +79,7 @@ export function PlanSetup({
   }, [when, pickDate]);
 
   const dayChoices = useMemo(() => nextDays(14), []);
-  const zoneLabel =
-    ZONE_OPTS.find((o) => o.value === zone)?.label ?? "Anywhere";
+  const zoneLabel = ZONE_OPTS.find((o) => o.value === zone)?.label ?? "Anywhere";
 
   function togglePeriod(p: Period) {
     setPeriods((prev) =>
@@ -105,36 +91,16 @@ export function PlanSetup({
       prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
     );
   }
-  function showDay() {
+  function buildDay() {
     onShowDay({ dateISO, periods, who: who ?? "friends", vibes, zone });
   }
 
-  const showSavedHook = hydrated && counts.want > 0;
+  const canBuild = periods.length > 0;
 
   return (
     <>
       <PlanHeader itineraryCount={itineraryCount} onMyPlans={onMyPlans} />
       <main id="main" className="sbd-shell__main sbd-plan-setup">
-        {/* Flagship express button */}
-        <button type="button" className="sbd-makeday" onClick={onMakeMyDay}>
-          <span className="sbd-makeday__glow" aria-hidden="true" />
-          <span className="sbd-makeday__in">
-            <span className="sbd-makeday__eyebrow">Short on time?</span>
-            <span className="sbd-makeday__title">
-              <span className="sbd-makeday__sun" aria-hidden="true" />
-              Make My Day
-            </span>
-            <span className="sbd-makeday__sub">
-              A ready-made SB day, dawn to dusk — built from what&rsquo;s on today.
-              Tweak it after.
-            </span>
-          </span>
-        </button>
-
-        <div className="sbd-orline">
-          <span>or shape it yourself</span>
-        </div>
-
         {/* When — segmented */}
         <p className="sbd-miniq" id="plan-when-label">
           When
@@ -187,7 +153,7 @@ export function PlanSetup({
           </span>
         </button>
 
-        {/* Time of day — always visible, multi */}
+        {/* Time of day — always visible, multi-select; selection = spine sections */}
         <p className="sbd-miniq">Time of day</p>
         <div
           className="sbd-q__row sbd-q__row--span"
@@ -209,28 +175,6 @@ export function PlanSetup({
             </button>
           ))}
         </div>
-
-        {/* Saved hook — only when there are want-to-go saves */}
-        {showSavedHook ? (
-          <button
-            type="button"
-            className="sbd-savedhook"
-            onClick={() => onBuildFromSaved({ dateISO, periods, who: who ?? "friends", vibes, zone })}
-          >
-            <span className="sbd-savedhook__ic" aria-hidden="true">
-              ❤️
-            </span>
-            <span className="sbd-savedhook__tx">
-              <span className="sbd-savedhook__t">
-                Have spots saved already?
-              </span>
-              <span className="sbd-savedhook__s">Pin them into your day →</span>
-            </span>
-            <span className="sbd-savedhook__cv" aria-hidden="true">
-              ›
-            </span>
-          </button>
-        ) : null}
 
         {/* Fine-tune — collapsed soft signals */}
         <div className="sbd-finetune">
@@ -306,9 +250,11 @@ export function PlanSetup({
         <button
           type="button"
           className="sbd-btn sbd-btn--primary sbd-btn--block"
-          onClick={showDay}
+          onClick={buildDay}
+          disabled={!canBuild}
+          aria-disabled={!canBuild}
         >
-          Show me my day →
+          Build my day →
         </button>
       </div>
 

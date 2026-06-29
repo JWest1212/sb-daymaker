@@ -4,25 +4,24 @@ import { useState } from "react";
 import Link from "next/link";
 import { useItineraries } from "@/lib/plan/itineraries";
 import { shortStamp } from "@/lib/plan/dates";
-import type { SharedPlanPayload, Block, Period } from "@/lib/plan/types";
+import { BLOCK_LABEL } from "@/lib/plan/labels";
+import type { SharedPlanPayload, Block } from "@/lib/plan/types";
 
 const BLOCK_NODE: Record<Block, { glyph: string; color: string }> = {
-  morning: { glyph: "🌅", color: "var(--tod-morning)" },
-  midday: { glyph: "☀️", color: "var(--tod-midday)" },
+  morning:   { glyph: "🌅", color: "var(--tod-morning)" },
   afternoon: { glyph: "⛅", color: "var(--tod-afternoon)" },
-  evening: { glyph: "🌆", color: "var(--tod-evening)" },
-  night: { glyph: "🌙", color: "var(--tod-night)" },
+  evening:   { glyph: "🌆", color: "var(--tod-evening)" },
+  late:      { glyph: "🌙", color: "var(--tod-night)" },
 };
 
-function derivePeriods(stops: SharedPlanPayload["stops"]): Period[] {
-  const seen = new Set<Period>();
-  const out: Period[] = [];
-  for (const s of stops) {
-    if (s.block === "midday") continue;
-    const p: Period = s.block === "night" ? "late" : (s.block as Period);
-    if (!seen.has(p)) { seen.add(p); out.push(p); }
-  }
-  return out.length ? out : ["morning"];
+// Format a real startsAt ISO datetime as a clock time in SB local time (Rule 3).
+function formatClockTime(iso: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(new Date(iso));
 }
 
 export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
@@ -31,21 +30,28 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
 
   function handleSave() {
     if (saved) return;
-    const periods = derivePeriods(payload.stops);
+    // Derive unique periods from stops in order.
+    const seenBlocks = new Set<Block>();
+    const periods: Block[] = [];
+    for (const s of payload.stops) {
+      if (!seenBlocks.has(s.block)) {
+        seenBlocks.add(s.block);
+        periods.push(s.block);
+      }
+    }
     save({
       title: payload.title,
-      shapeId: "daymaker",
       answers: {
         dateISO: payload.dateISO,
-        periods,
+        periods: periods.length ? periods : ["morning"],
         who: "friends",
         vibes: [],
         zone: null,
       },
       stops: payload.stops.map((s) => ({
+        id: Math.random().toString(36).slice(2, 9),
         block: s.block,
         thingId: s.thingId,
-        pinned: false,
         fromSaved: false,
       })),
     });
@@ -85,10 +91,21 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
         {/* Read-only spine */}
         <div className="sbd-spine">
           <div className="sbd-spine__rail" aria-hidden="true" />
-          {payload.stops.map((s) => {
-            const node = BLOCK_NODE[s.block];
+          {payload.stops.map((s, idx) => {
+            // Safe fallback for old payload blocks ('night'/'midday') from stored data.
+            const safeBlock: Block =
+              s.block === ("night" as string)
+                ? "late"
+                : s.block === ("midday" as string)
+                  ? "afternoon"
+                  : s.block;
+            const node = BLOCK_NODE[safeBlock] ?? BLOCK_NODE.morning;
+            // Rule 3: show clock time only if startsAt is present.
+            const timeStr = s.startsAt ? formatClockTime(s.startsAt) : null;
+            const blockLabel = s.blockLabel ?? BLOCK_LABEL[safeBlock];
+
             return (
-              <div key={s.block} className="sbd-stop">
+              <div key={idx} className="sbd-stop">
                 <div
                   className="sbd-node"
                   style={{ background: node.color }}
@@ -108,7 +125,10 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
                     <div className="sbd-rcard__thumb sbd-media--sage" aria-hidden="true" />
                   )}
                   <div className="sbd-rcard__body">
-                    <span className="sbd-rcard__eb">{s.timeLabel}</span>
+                    {/* Show section label; add clock time only if real */}
+                    <span className="sbd-rcard__eb">
+                      {timeStr ? `${blockLabel} · ${timeStr}` : blockLabel}
+                    </span>
                     <h2 className="sbd-rcard__nm">{s.title}</h2>
                     <span className="sbd-rcard__mt">
                       {s.area}

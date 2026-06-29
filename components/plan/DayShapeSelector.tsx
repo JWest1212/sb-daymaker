@@ -1,6 +1,8 @@
 "use client";
 
-import type { DayShape } from "@/lib/plan/types";
+// DayShapeSelector is no longer used (day-shapes removed in Plan simplification).
+// Kept as a file to avoid broken references in git; imports cleaned up.
+interface DayShape { id: string; name: string; }
 
 interface DayShapeSelectorProps {
   shapes: DayShape[];

@@ -53,7 +53,7 @@ export function MyPlansDrawer({
               <div className="sbd-dayrow__dots" aria-hidden="true">
                 {plan.stops.map((s) => (
                   <span
-                    key={s.block}
+                    key={s.id}
                     className="sbd-dayrow__dot"
                     style={{ background: BLOCK_DOT_COLOR[s.block] }}
                   />

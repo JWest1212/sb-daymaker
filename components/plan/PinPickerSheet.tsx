@@ -4,8 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { naturalBlock, BLOCK_TIME_LABEL } from "@/lib/plan/buildDay";
 import type { Thing } from "@/lib/things";
+
+// PinPickerSheet is no longer used (build-from-saved removed in Plan simplification).
+// Kept as a file to avoid broken references; dead code.
 
 interface PinPickerSheetProps {
   things: Thing[];
@@ -13,9 +15,8 @@ interface PinPickerSheetProps {
   onClose: () => void;
 }
 
-/** Short block name from the full time label, e.g. "Morning · 9–11 AM" → "Morning" */
-function blockName(thing: Thing): string {
-  return BLOCK_TIME_LABEL[naturalBlock(thing)].split(" · ")[0];
+function blockName(_thing: Thing): string {
+  return "Morning";
 }
 
 export function PinPickerSheet({ things, onBuild, onClose }: PinPickerSheetProps) {

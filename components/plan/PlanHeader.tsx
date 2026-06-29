@@ -14,7 +14,7 @@ export function PlanHeader({ itineraryCount, onMyPlans }: PlanHeaderProps) {
       <span className="sbd-plan-header__brand">
         <span className="sbd-header__name">Plan</span>
         <span className="sbd-header__tag" style={{ display: "block" }}>
-          Build your Santa Barbara day
+          Plan your SB Day
         </span>
       </span>
       <button

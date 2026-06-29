@@ -6,9 +6,8 @@ import type { PlanAnswers, Block, Stop } from "./types";
 export interface SavedItinerary {
   id: string;
   title: string;
-  shapeId: string;
   answers: PlanAnswers;
-  stops: Stop[];    // snapshot at save time — restored as overrides on reopen
+  stops: Stop[];    // snapshot at save time — restored on reopen; insertion order preserved
   savedAt: string;  // ISO timestamp
 }
 
@@ -80,11 +79,10 @@ export function useItineraries(): UseItinerariesReturn {
   );
 }
 
-/** Block → CSS token for mini spine dots. */
+/** Block → CSS token for mini spine dots in My Plans drawer. */
 export const BLOCK_DOT_COLOR: Record<Block, string> = {
   morning: "var(--tod-morning)",
-  midday: "var(--tod-midday)",
   afternoon: "var(--tod-afternoon)",
   evening: "var(--tod-evening)",
-  night: "var(--tod-night)",
+  late: "var(--tod-night)",
 };

@@ -3,23 +3,16 @@
 import { useEffect, useState } from "react";
 import { PlanSetup } from "./PlanSetup";
 import { PlanResults } from "./PlanResults";
-import { PinPickerSheet } from "./PinPickerSheet";
 import { MyPlansDrawer } from "./MyPlansDrawer";
-import { makeMyDayAnswers } from "@/lib/plan/buildDay";
-import { todayISO } from "@/lib/plan/dates";
 import { useItineraries, type SavedItinerary } from "@/lib/plan/itineraries";
-import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
+import type { PlanAnswers, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
 export function PlanClient({ things }: { things: Thing[] }) {
   const [view, setView] = useState<"setup" | "results">("setup");
   const [answers, setAnswers] = useState<PlanAnswers | null>(null);
-  const [shapeId, setShapeId] = useState("coastal");
-  const [initialOverrides, setInitialOverrides] = useState<Partial<Record<Block, Stop>>>({});
+  const [initialStops, setInitialStops] = useState<Stop[]>([]);
   const [planKey, setPlanKey] = useState(0);
-  const [pinned, setPinned] = useState<Thing[]>([]);
-  const [pinPickerOpen, setPinPickerOpen] = useState(false);
-  const [pendingAnswers, setPendingAnswers] = useState<PlanAnswers | null>(null);
   const [myPlansOpen, setMyPlansOpen] = useState(false);
 
   const { itineraries, save, remove } = useItineraries();
@@ -39,56 +32,27 @@ export function PlanClient({ things }: { things: Thing[] }) {
   }, []);
 
   function loadItinerary(plan: SavedItinerary) {
-    const overrides = Object.fromEntries(
-      plan.stops.map((s) => [s.block, s]),
-    ) as Partial<Record<Block, Stop>>;
+    // Ensure each stop has an id (migration-safety for old stored plans).
+    const stops: Stop[] = plan.stops.map((s) => ({
+      ...s,
+      id: s.id || Math.random().toString(36).slice(2, 9),
+    }));
     setAnswers(plan.answers);
-    setShapeId(plan.shapeId);
-    setInitialOverrides(overrides);
-    setPinned([]);
+    setInitialStops(stops);
     setPlanKey((k) => k + 1);
     setView("results");
     setMyPlansOpen(false);
   }
 
-  function makeMyDay() {
-    setPinned([]);
-    setInitialOverrides({});
-    setShapeId("coastal");
-    setAnswers(makeMyDayAnswers(todayISO()));
-    setPlanKey((k) => k + 1);
-    setView("results");
-  }
-
   function showDay(a: PlanAnswers) {
-    setPinned([]);
-    setInitialOverrides({});
-    setShapeId("coastal");
     setAnswers(a);
-    setPlanKey((k) => k + 1);
-    setView("results");
-  }
-
-  function openPinPicker(a: PlanAnswers) {
-    setPendingAnswers(a);
-    setPinPickerOpen(true);
-  }
-
-  function handleBuildWithPins(pins: Thing[]) {
-    if (!pendingAnswers) return;
-    setPinned(pins);
-    setInitialOverrides({});
-    setShapeId("coastal");
-    setAnswers(pendingAnswers);
-    setPendingAnswers(null);
-    setPinPickerOpen(false);
+    setInitialStops([]);
     setPlanKey((k) => k + 1);
     setView("results");
   }
 
   function handleBack() {
-    setPinned([]);
-    setInitialOverrides({});
+    setInitialStops([]);
     setView("setup");
   }
 
@@ -99,9 +63,7 @@ export function PlanClient({ things }: { things: Thing[] }) {
           key={planKey}
           answers={answers}
           things={things}
-          pinned={pinned}
-          initialShapeId={shapeId}
-          initialOverrides={initialOverrides}
+          initialStops={initialStops}
           itineraries={itineraries}
           myPlansOpen={myPlansOpen}
           onSave={save}
@@ -122,22 +84,10 @@ export function PlanClient({ things }: { things: Thing[] }) {
   return (
     <>
       <PlanSetup
-        onMakeMyDay={makeMyDay}
         onShowDay={showDay}
-        onBuildFromSaved={openPinPicker}
         itineraryCount={itineraries.length}
         onMyPlans={() => setMyPlansOpen(true)}
       />
-      {pinPickerOpen ? (
-        <PinPickerSheet
-          things={things}
-          onBuild={handleBuildWithPins}
-          onClose={() => {
-            setPinPickerOpen(false);
-            setPendingAnswers(null);
-          }}
-        />
-      ) : null}
       <MyPlansDrawer
         open={myPlansOpen}
         onClose={() => setMyPlansOpen(false)}

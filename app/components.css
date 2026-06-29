@@ -21,6 +21,8 @@
 .sbd-zoneopt:focus-visible,
 .sbd-daypill:focus-visible,
 .sbd-scard__swap:focus-visible,
+.sbd-scard__remove:focus-visible,
+.sbd-addslot:focus-visible,
 .sbd-swapopt__select:focus-visible,
 .sbd-swapopt__info:focus-visible,
 .sbd-swapopt__ck:focus-visible {
@@ -1003,13 +1005,26 @@
   justify-content: space-between;
 }
 .sbd-plan-header__brand {
+  /* Shrink to give the My-plans button room; truncate the tag instead of wrapping */
   margin-right: auto;
+  min-width: 0;
+  overflow: hidden;
 }
 /* Left group on the results header: back button + title/tag stacked */
 .sbd-plan-header__left {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
+}
+/* Truncate the "Build your Santa Barbara day" / "Tap a stop to see details" tag
+   so it never pushes the My-plans button onto a second line */
+.sbd-plan-header .sbd-header__tag,
+.sbd-plan-header__left .sbd-header__tag {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sbd-myplans-btn {
   display: inline-flex;
@@ -1025,6 +1040,9 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
   cursor: pointer;
+  /* Never wrap or shrink — the brand/left side yields space to this button */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .sbd-myplans-btn:disabled {
   cursor: default;
@@ -1740,6 +1758,217 @@
   gap: 4px;
   white-space: nowrap;
   min-height: var(--tap-min);
+}
+
+/* ---- Spine section (build-it-yourself: header + items + add slot) --------- */
+.sbd-section {
+  margin-bottom: var(--space-3);
+}
+/* Section header row: colored node + label */
+.sbd-section__hd {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: var(--space-2);
+}
+/* Override node top-margin when it appears in a section header (not a stop row) */
+.sbd-section__hd .sbd-node {
+  margin-top: 0;
+}
+.sbd-section__lbl {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+/* Items container: indent to align with where cards appear after the section node */
+.sbd-section__items {
+  padding-left: calc(11px + 30px + 14px); /* node-margin + node-width + gap */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ---- Add a stop slot (dashed, ≥48px) ------------------------------------- */
+.sbd-addslot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-3) var(--space-4);
+  background: transparent;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--pacific);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sbd-addslot:hover {
+  border-color: var(--pacific);
+  background: color-mix(in oklab, var(--pacific) 6%, transparent);
+}
+.sbd-addslot__plus {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* ---- Remove (×) pill on stop card ---------------------------------------- */
+.sbd-scard__remove {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 4px 9px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  line-height: 1;
+}
+.sbd-scard__remove:hover {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+
+/* ---- Time chip in picker rows (Rule 3) ------------------------------------ */
+.sbd-swapopt__time {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--terracotta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+/* ---- Add-stop picker: section dividers ------------------------------------ */
+/* Full-bleed background band that visually separates each tier */
+.sbd-picker-section {
+  /* Bleed to sheet edges (sheet has --space-5 = 20px horizontal padding) */
+  margin: var(--space-4) calc(-1 * var(--space-5)) var(--space-3);
+  padding: 9px var(--space-5);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.sbd-picker-section__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+/* ♥ From your saved — warm gold tint */
+.sbd-picker-section--saved {
+  background: color-mix(in oklab, var(--gold) 18%, var(--bg));
+}
+.sbd-picker-section--saved .sbd-picker-section__label {
+  color: color-mix(in oklab, var(--gold) 50%, var(--ink));
+}
+/* 🎫 Happening at this time — teal tint */
+.sbd-picker-section--tier1 {
+  background: color-mix(in oklab, var(--pacific) 8%, var(--bg));
+}
+.sbd-picker-section--tier1 .sbd-picker-section__label {
+  color: var(--pacific);
+}
+/* 🔄 On the regular — sage tint */
+.sbd-picker-section--tier2 {
+  background: color-mix(in oklab, var(--sage) 20%, var(--bg));
+}
+.sbd-picker-section--tier2 .sbd-picker-section__label {
+  color: var(--sage-text);
+}
+/* ⭐ Always worth it — terracotta tint */
+.sbd-picker-section--tier3 {
+  background: color-mix(in oklab, var(--terracotta) 7%, var(--bg));
+}
+.sbd-picker-section--tier3 .sbd-picker-section__label {
+  color: var(--terra-text);
+}
+
+/* ---- Show more pill ------------------------------------------------------- */
+.sbd-showmore {
+  display: block;
+  width: 100%;
+  padding: 10px var(--space-4);
+  margin: var(--space-3) 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--pacific);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.sbd-showmore:hover {
+  border-color: var(--pacific);
+  background: color-mix(in oklab, var(--pacific) 6%, var(--surface));
+}
+.sbd-showmore:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+
+/* ---- Save-name sheet ------------------------------------------------------- */
+.sbd-namepicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sbd-namepicker__lbl {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.sbd-namepicker__input {
+  width: 100%;
+  padding: 13px var(--space-4);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-card);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.sbd-namepicker__input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+.sbd-namepicker__input:focus {
+  border-color: var(--pacific);
+}
+.sbd-namepicker__hint {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0;
+}
+.sbd-namepicker__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
 /* ==========================================================================
