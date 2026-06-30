@@ -77,6 +77,12 @@ export interface RawCandidate {
   localNote?: string;
   is21Plus?: boolean;             // feeds the family_day negative rule (unset unless a source knows)
   recurring?: RecurringSpec[];    // Tier-2 rhythms — written to recurring_schedules at land time
+  /** When true: a rhythm proposal bound for recurringRegistry.ts (§3). The gate
+   *  enforces recurring[0].start_time presence; dedupe checks against the live file;
+   *  the cockpit emits a paste-ready snippet on approval (never auto-publishes). */
+  registryCandidate?: true;
+  /** Adapter-seeded occasion tags, carried through to proposed_tags at enrich time. */
+  occasionTags?: OccasionTag[];
   raw?: unknown;                  // original payload, for drop logging / rescue
 }
 
@@ -114,7 +120,12 @@ export interface Candidate {
   proposed_tags?: { tag: OccasionTag; confidence: number }[];
 }
 
-export type DropReason = 'no_title' | 'no_address' | 'no_source' | 'no_start' | 'duplicate';
+export type DropReason =
+  | 'no_title' | 'no_address' | 'no_source' | 'no_start' | 'duplicate'
+  /** Registry candidate missing a deterministic day+time (§3.2). */
+  | 'registry_incomplete_time'
+  /** Registry candidate whose rhythm already lives in recurringRegistry.ts (§3.3). */
+  | 'registry_exists';
 export interface GateResult {
   ok: boolean;
   candidate?: Candidate;

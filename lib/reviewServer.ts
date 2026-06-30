@@ -9,6 +9,7 @@ import { getServerSupabase } from "./supabaseServer";
 import { getAdminSupabase } from "./supabaseAdmin";
 import {
   chipFor, whenString, prioritize, rollupSources,
+  isRegistryProposalSource, buildRegistrySnippet,
   type QueueRow, type DropRow, type SourceRow, type PhotoOption,
 } from "./review";
 
@@ -71,6 +72,25 @@ export async function loadCockpitData(): Promise<CockpitData> {
   const queueRaw = (thingsRes.data ?? []).map((t) => {
     const tier = Number(t.happening_tier);
     const scheds = (t.recurring_schedules as []) ?? [];
+    const source = (t.source as string) ?? null;
+    const tags = ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag);
+
+    // §3.5 — detect registry proposals and generate paste-ready snippets
+    const isRegistry = isRegistryProposalSource(source) && tier === 2 && scheds.length > 0;
+    const registrySnippet = isRegistry
+      ? buildRegistrySnippet(
+          {
+            title: t.title as string,
+            address: (t.address as string) ?? null,
+            neighborhood: (t.neighborhood as string) ?? null,
+            happening_category: (t.happening_category as string) ?? null,
+            source,
+            tags,
+          },
+          scheds,
+        )
+      : undefined;
+
     return {
       id: t.id as string,
       type: t.type as string,
@@ -85,13 +105,14 @@ export async function loadCockpitData(): Promise<CockpitData> {
       free: t.free ?? null,
       is_21_plus: t.is_21_plus ?? null,
       starts_at: (t.starts_at as string) ?? null,
-      source: (t.source as string) ?? null,
+      source,
       photo_url: (t.photo_url as string) ?? null,
       photo_source: (t.photo_source as string) ?? "placeholder",
       photo_options: ((t.photo_options as PhotoOption[]) ?? []),
-      tags: ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag),
+      tags,
       when: whenString(tier, (t.starts_at as string) ?? null, scheds),
       chip: chipFor(tier, (t.starts_at as string) ?? null),
+      ...(registrySnippet ? { registrySnippet } : {}),
     } satisfies QueueRow;
   });
 

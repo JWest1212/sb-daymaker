@@ -29,25 +29,71 @@ export interface ExistingRow {
 
 const NEAR_THRESHOLD = 0.55;
 
-/** Canonical-source preference (Doc 11 §6): lower rank wins. Venue-owned ticketing
- *  (SOhO, Polo) > Ticketmaster > Visit SB > Independent > LiveNotes > aggregators. */
+// Canonical-source preference (§4 / Doc 16): lower rank wins.
+// Existing pairwise order is preserved (soho beats TM, etc.); new venue-direct
+// adapters slot in between soho (0) and ticketmaster (10). Aggregators are losers.
+// NOTE: doc 16 proposes SOURCE_PRIORITY as a string-key array (as const) but the
+// code uses URL-pattern matching — keeping the code structure (flag: §0 mismatch).
 const SOURCE_RANK: Array<[RegExp, number]> = [
-  [/sohosb\.com/i, 0],
-  [/ticketmaster\.com|livenation\.com|axs\.com/i, 2],
-  [/santabarbaraca\.com|santabarbaraca\.gov/i, 3],
-  [/independent\.com/i, 4],
+  // venue-direct ticketing (authoritative for their own events)
+  [/sohosb\.com/i,                                    0],
+  [/sbbowl\.com/i,                                    1],
+  [/lobero\.org/i,                                    2],
+  [/granadasb\.com|granada-sb\.com|thegranada\.com/i, 3],
+  [/thearlington\.com|arlingtonsb\.com/i,             4],
+  [/musicacademy\.org/i,                              5],
+  [/alcazartheater\.com|thealcazar\.org/i,            6],
+  [/centerstagetheater\.org/i,                        7],
+  [/carpinteriaartscenter\.org/i,                     8],
+  // structured ticketing APIs
+  [/ticketmaster\.com|livenation\.com|axs\.com/i,     10],
+  // institution-direct
+  [/moxi\.org/i,                                      15],
+  [/sbnature\.org|nhmlac\.org/i,                      16], // natural history
+  [/sbbotanicgarden\.org/i,                           17],
+  [/sbma\.net/i,                                      18],
+  [/events\.ucsb\.edu/i,                              20],
+  [/sbplibrary\.org|goletavalleylibrary/i,            21],
+  // curated local listings / civic
+  [/independent\.com/i,                               30],
+  [/santabarbaraca\.com|santabarbaraca\.gov/i,        31],
+  [/cityofgoleta\.org/i,                              32],
+  [/carpinteria\.ca\.us/i,                            33],
+  [/downtownsb\.org/i,                                34],
+  [/santabarbaraca\.com\/visit/i,                     35], // visit SB
+  [/coastalview\.com/i,                               36],
+  [/sbac\.ca\.gov/i,                                  37], // sbcountyArts
+  // broad aggregators (dedupe losers; backstop fill)
+  [/eventbrite\.com/i,                                50],
+  [/allevents\.in/i,                                  51],
+  [/seatgeek\.com/i,                                  52],
 ];
+
 function sourceRank(url: string | undefined): number {
   for (const [re, rank] of SOURCE_RANK) if (url && re.test(url)) return rank;
-  return 9;
+  return 99;
 }
 
 /** Short source key for the drop log, derived from the candidate's URL. */
 function sourceKeyOf(url: string | undefined): string {
   if (!url) return 'unknown';
-  if (/sohosb\.com/i.test(url)) return 'soho';
-  if (/ticketmaster\.com/i.test(url)) return 'ticketmaster';
-  try { return new URL(url).host; } catch { return 'unknown'; }
+  const MAP: Array<[RegExp, string]> = [
+    [/sohosb\.com/i, 'soho'],
+    [/sbbowl\.com/i, 'sbbowl'],
+    [/lobero\.org/i, 'lobero'],
+    [/granada/i, 'granada'],
+    [/arlington/i, 'arlington'],
+    [/ticketmaster\.com/i, 'ticketmaster'],
+    [/events\.ucsb\.edu/i, 'ucsb'],
+    [/sbplibrary\.org/i, 'libraries'],
+    [/independent\.com/i, 'independent'],
+    [/santabarbaraca\.gov|santabarbaraca\.com/i, 'citysb'],
+    [/downtownsb\.org/i, 'downtownSB'],
+    [/eventbrite\.com/i, 'eventbrite'],
+    [/sbfarmersmarket\.org/i, 'farmersMarkets'],
+  ];
+  for (const [re, key] of MAP) if (re.test(url)) return key;
+  try { return new URL(url).host.replace(/^www\./, ''); } catch { return 'unknown'; }
 }
 
 export function trigrams(s: string): Set<string> {

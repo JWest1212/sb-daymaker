@@ -3,8 +3,16 @@ import type { SourceRow } from "@/lib/review";
 const LABEL: Record<string, string> = {
   ticketmaster: "Ticketmaster API",
   soho: "SOhO ticketing",
-  visitsb: "Visit Santa Barbara",
+  sbbowl: "Santa Barbara Bowl",
+  lobero: "Lobero Theatre",
   independent: "The Independent",
+  citysb: "City of Santa Barbara",
+  ucsb: "UCSB Campus Events",
+  libraries: "SB Public Library",
+  farmersMarkets: "SB Farmers Markets",
+  registry: "Recurring registry",
+  submission: "Public submissions",
+  visitsb: "Visit Santa Barbara",
   google_places: "Google Places",
   livenotes: "LiveNotes SB",
 };

@@ -271,8 +271,8 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
         </main>
 
         <aside className="side">
-          <DroppedPanel drops={initial.drops} />
           <SourceHealth sources={initial.sources} />
+          <DroppedPanel drops={initial.drops} />
           <div className="panel">
             <h3>Shortcuts</h3>
             <div className="keys">

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   chipLabel, NEIGHBORHOODS, OCCASION_TAGS,
   type ChipKind, type QueueRow, type ReviewDraft,
@@ -12,6 +13,40 @@ const TIER_LABEL: Record<number, string> = {
 const SOURCE_CLASS: Record<string, string> = {
   google: "places", pexels: "soho", wikimedia: "places", owned: "tm", placeholder: "placeholder",
 };
+
+/** Paste-ready snippet panel shown for registry-candidate items (§3.5). */
+function RegistrySnippetPanel({
+  snippet,
+  onReject,
+}: {
+  snippet: string;
+  onReject: (e: React.MouseEvent) => void;
+}) {
+  const [copied, setCopied] = useState(false);
+  const copy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(snippet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+  return (
+    <div className="registry-panel" onClick={(e) => e.stopPropagation()}>
+      <div className="registry-label">
+        REGISTRY RHYTHM — paste into <code>recurringRegistry.ts</code>, then reject this card
+      </div>
+      <pre className="registry-snippet">{snippet}</pre>
+      <div className="actions pt">
+        <button className="btn btn-approve" onClick={copy}>
+          {copied ? "Copied!" : "Copy snippet"}
+        </button>
+        <button className="btn btn-reject" onClick={onReject}>
+          Dismiss (reject after copying) <span className="k">R</span>
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function host(url: string | null): string | null {
   if (!url || !/^https?:\/\//.test(url)) return null;
@@ -143,20 +178,27 @@ export function ReviewCard({
             </div>
           )}
 
-          <div className="actions pt">
-            <button className="btn btn-approve" onClick={(e) => { e.stopPropagation(); onAct("approve"); }}>
-              Approve &amp; publish <span className="k">A</span>
-            </button>
-            <button className="btn btn-edit" onClick={(e) => { e.stopPropagation(); onAct("edit"); }}>
-              {editing ? "Save changes" : "Edit"} <span className="k">E</span>
-            </button>
-            <button className="btn btn-reject" onClick={(e) => { e.stopPropagation(); onAct("reject"); }}>
-              Reject <span className="k">R</span>
-            </button>
-            <span className="right">
-              {editing ? "◂ ▸ cycle images" : chip === "green" ? "✓ trusted source" : chip === "amber" ? "⚠ needs a glance" : "place"}
-            </span>
-          </div>
+          {item.registrySnippet ? (
+            <RegistrySnippetPanel
+              snippet={item.registrySnippet}
+              onReject={(e) => { e.stopPropagation(); onAct("reject"); }}
+            />
+          ) : (
+            <div className="actions pt">
+              <button className="btn btn-approve" onClick={(e) => { e.stopPropagation(); onAct("approve"); }}>
+                Approve &amp; publish <span className="k">A</span>
+              </button>
+              <button className="btn btn-edit" onClick={(e) => { e.stopPropagation(); onAct("edit"); }}>
+                {editing ? "Save changes" : "Edit"} <span className="k">E</span>
+              </button>
+              <button className="btn btn-reject" onClick={(e) => { e.stopPropagation(); onAct("reject"); }}>
+                Reject <span className="k">R</span>
+              </button>
+              <span className="right">
+                {editing ? "◂ ▸ cycle images" : chip === "green" ? "✓ trusted source" : chip === "amber" ? "⚠ needs a glance" : "place"}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </article>

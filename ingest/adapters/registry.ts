@@ -11,11 +11,19 @@ import { independent } from './independent';
 import { citySites } from './citySites';
 import { recurringRegistry } from './recurringRegistry';
 import { submissions } from './submissions';
+// Wave 1 adapters (§6)
+import { sbbowl } from './sbbowl';
+import { lobero } from './lobero';
+import { ucsb } from './ucsb';
+import { libraries } from './libraries';
+import { farmersMarkets } from './farmersMarkets';
 
 // Order matters for dedupe's canonical-source preference (venue-owned > aggregators
 // > public submissions, which sit last so a real source wins a near-dupe).
-// Visit SB (JS-rendered) + LiveNotes (year-less inline) can be switched on via the
-// MANAGED_SCRAPE reserve when worth the spend.
+// Wave 1 venue-direct adapters (sbbowl, lobero) follow existing venue-direct sources.
+// ucsb/libraries/farmersMarkets are institutional; farmersMarkets is registry-only.
 export const registry: SourceAdapter[] = [
-  ticketmaster, soho, independent, citySites, recurringRegistry, submissions,
+  ticketmaster, soho, sbbowl, lobero, independent, citySites,
+  ucsb, libraries, farmersMarkets,
+  recurringRegistry, submissions,
 ];

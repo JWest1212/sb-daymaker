@@ -83,6 +83,24 @@ export function gate(c: RawCandidate): GateResult {
     }
   }
 
+  // --- REGISTRY-CANDIDATE GATE (§3.2): rhythm must carry a valid schedule ---
+  if (c.registryCandidate) {
+    const spec = c.recurring?.[0];
+    const hasFreq = !!spec?.frequency;
+    const hasDay = spec?.day_of_week != null;
+    const hasTime = typeof spec?.start_time === 'string' && /^\d{2}:\d{2}$/.test(spec.start_time);
+    if (!hasFreq || !hasDay || !hasTime) {
+      return {
+        ok: false,
+        reason: 'registry_incomplete_time',
+        detail: !spec ? 'no recurring spec' :
+          !hasFreq ? 'missing frequency' :
+          !hasDay  ? 'missing day_of_week' :
+                     `start_time "${spec?.start_time ?? ''}" is not HH:MM`,
+      };
+    }
+  }
+
   // --- Tier-3 rule: never a bare place ---
   if (c.tier === 3 && !c.reasonToGo?.trim()) {
     // Reuse the no_address bucket (no 'no_reason' value in DropReason); the detail

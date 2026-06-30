@@ -28,8 +28,9 @@ interface Rhythm {
   days: Day[];
 }
 
-// Curated, founder-maintained. Overlaps with the seed are skipped automatically.
-const RHYTHMS: Rhythm[] = [
+// Curated, founder-maintained. Exported so the run.ts dedupe check can compare
+// incoming registry candidates against the live file without a DB round-trip (§3.3).
+export const RHYTHMS: Rhythm[] = [
   {
     slug: 'sb-saturday-farmers-market',
     title: 'Santa Barbara Saturday Farmers Market',
@@ -70,6 +71,29 @@ const RHYTHMS: Rhythm[] = [
 ];
 
 const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+function slug(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+/**
+ * Returns true if a registry-candidate RawCandidate matches an entry already
+ * present in the curated RHYTHMS array. Used by run.ts to drop re-proposals
+ * with reason 'registry_exists' (§3.3). Key: slug(venue)+dows+slug(title).
+ */
+export function isAlreadyInRegistry(c: {
+  title?: string;
+  venueName?: string;
+  recurring?: { day_of_week: number }[];
+}): boolean {
+  const cTitle = slug(c.title ?? '');
+  const cVenue = slug(c.venueName ?? '');
+  const cDows = (c.recurring ?? []).map((r) => r.day_of_week).sort().join(',');
+  return RHYTHMS.some((r) => {
+    const rDows = r.days.map((d) => d.dow).sort().join(',');
+    return slug(r.title) === cTitle || (slug(r.venue) === cVenue && rDows === cDows);
+  });
+}
 
 /** Build the recurring_schedules specs for one rhythm (label + time_unknown flag). */
 export function toRecurringSpecs(r: Rhythm): RecurringSpec[] {

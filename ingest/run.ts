@@ -10,6 +10,7 @@
 import { registry } from './adapters/registry';
 import { gate } from './gate';
 import { dedupe, type DropRecord, type ExistingRow } from './dedupe';
+import { isAlreadyInRegistry } from './adapters/recurringRegistry';
 import {
   startRun, finishRun, landCandidates, landTags, landRecurring, recordDrops, toThingRow, type RunRow,
 } from './land';
@@ -156,8 +157,20 @@ async function main() {
       const drops: DropRecord[] = [];
       for (const r of raw) {
         const g = gate(r);
-        if (g.ok) { gated.push({ cand: g.candidate!, sourceKey: adapter.key }); run.qualified++; }
-        else { drops.push(gateDrop(adapter.key, r, g.reason!, g.detail)); run.dropped++; }
+        if (!g.ok) {
+          drops.push(gateDrop(adapter.key, r, g.reason!, g.detail));
+          run.dropped++;
+          continue;
+        }
+        // §3.3 — dedupe registry candidates against the live recurringRegistry.ts file
+        if (r.registryCandidate && isAlreadyInRegistry(r)) {
+          drops.push(gateDrop(adapter.key, r, 'registry_exists',
+            `rhythm already in recurringRegistry.ts: ${r.title}`));
+          run.dropped++;
+          continue;
+        }
+        gated.push({ cand: g.candidate!, sourceKey: adapter.key });
+        run.qualified++;
       }
       if (sb && drops.length) await recordDrops(sb, run.id, drops);
       totalFetched += run.fetched;

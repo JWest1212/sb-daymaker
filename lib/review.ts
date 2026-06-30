@@ -55,6 +55,9 @@ export interface QueueRow {
   tags: string[];
   when: string; // pre-formatted mono string
   chip: ChipKind;
+  /** Set when this is a registry-candidate rhythm (§3.5). Contains the ready-to-paste
+   *  TypeScript snippet the founder adds to recurringRegistry.ts. Never auto-published. */
+  registrySnippet?: string;
 }
 
 /** The editable draft held while a card is in Edit mode. */
@@ -147,6 +150,73 @@ export function prioritize<T extends { starts_at: string | null }>(rows: T[]): T
     if (b.starts_at) return 1;
     return 0; // both start-less — keep DB order (fetched newest-first)
   });
+}
+
+// Known source-URL patterns that identify registry-proposal adapters (§3.4).
+// Items whose source URL matches these are shown as registry proposals in the
+// cockpit (paste snippet instead of publish). Extend as new registry adapters land.
+export const REGISTRY_SOURCE_PATTERNS = [
+  /sbfarmersmarket\.org/i,
+  /libcal\./i,            // LibCal (library recurring programs)
+  /goleta.*library/i,
+];
+
+export function isRegistryProposalSource(source: string | null): boolean {
+  if (!source) return false;
+  return REGISTRY_SOURCE_PATTERNS.some((p) => p.test(source));
+}
+
+interface RegistrySchedRow {
+  day_of_week: number | null;
+  start_time: string | null;
+  end_time: string | null;
+  frequency: string | null;
+}
+
+const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/**
+ * Build the paste-ready TypeScript snippet for a registry-candidate item.
+ * The founder pastes this into recurringRegistry.ts. (§3.5)
+ */
+export function buildRegistrySnippet(
+  item: {
+    title: string;
+    address: string | null;
+    neighborhood: string | null;
+    happening_category: string | null;
+    source: string | null;
+    tags: string[];
+  },
+  scheds: RegistrySchedRow[],
+): string {
+  const s = scheds[0];
+  if (!s) return '// no schedule data available';
+
+  const daysOfWeek = scheds
+    .map((r) => r.day_of_week)
+    .filter((d): d is number => d != null);
+
+  const escapedTitle = item.title.replace(/'/g, "\\'");
+  const venuePart = (item.address ?? '').split(',')[0].trim();
+  const escapedVenue = venuePart.replace(/'/g, "\\'");
+
+  const lines = [
+    `{`,
+    `  title: '${escapedTitle}',`,
+    `  venueName: '${escapedVenue}',`,
+    item.neighborhood ? `  neighborhood: '${item.neighborhood}',` : `  // neighborhood: '???',`,
+    `  category: '${item.happening_category ?? 'recurring_market'}',`,
+    `  frequency: '${s.frequency ?? 'weekly'}',`,
+    `  daysOfWeek: [${daysOfWeek.join(', ')}],`,
+    s.start_time ? `  startTime: '${s.start_time}',` : `  // startTime: '??:??',  // verify`,
+    s.end_time   ? `  endTime: '${s.end_time}',`   : '',
+    item.tags.length ? `  occasionTags: [${item.tags.map((t) => `'${t}'`).join(',')}],` : '',
+    item.source ? `  sourceUrl: '${item.source}',` : '',
+    `},`,
+  ].filter((l) => l !== '').join('\n');
+
+  return lines;
 }
 
 /** Latest run per source -> a green/amber/red health row. */
