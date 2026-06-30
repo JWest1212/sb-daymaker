@@ -8,8 +8,7 @@ import type { Thing } from "@/lib/things";
 const BLOCK_NODE: Record<Block, { glyph: string; color: string }> = {
   morning:   { glyph: "🌅", color: "var(--tod-morning)" },
   afternoon: { glyph: "⛅", color: "var(--tod-afternoon)" },
-  evening:   { glyph: "🌆", color: "var(--tod-evening)" },
-  late:      { glyph: "🌙", color: "var(--tod-night)" },
+  night:     { glyph: "🌙", color: "var(--tod-night)" },
 };
 
 interface ItinerarySpineProps {

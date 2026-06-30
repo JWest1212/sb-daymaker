@@ -40,6 +40,7 @@ export function PickCard({
   facts = [],
   saved,
   onToggleSave,
+  onShare,
   tone = "gold",
   href,
   photo,
@@ -51,6 +52,7 @@ export function PickCard({
   facts?: string[];
   saved: boolean;
   onToggleSave: () => void;
+  onShare?: () => void;
   tone?: MediaTone;
   href?: string;
   photo?: string;
@@ -64,11 +66,23 @@ export function PickCard({
             <Tag color="gold">{tag}</Tag>
           </span>
         ) : null}
-        <span className="sbd-pick__heart">
-          <SaveHeart overlay saved={saved} onToggle={onToggleSave} title={title} />
-        </span>
         {place ? <span className="sbd-pick__place">📍 {place}</span> : null}
       </div>
+      {/* Acts outside media so tooltips aren't clipped by overflow:hidden */}
+      <span className="sbd-pick__acts">
+        <SaveHeart overlay saved={saved} onToggle={onToggleSave} title={title} tooltip="Save" />
+        {onShare ? (
+          <button
+            type="button"
+            className="sbd-pick__share"
+            onClick={(e) => { e.preventDefault(); onShare(); }}
+            aria-label={`Share ${title}`}
+            data-tooltip="Share"
+          >
+            ↗
+          </button>
+        ) : null}
+      </span>
       <div className="sbd-pick__body">
         <CardTitle href={href} className="sbd-pick__title">
           {title}
@@ -99,6 +113,7 @@ export function ListCard({
   tone = "sage",
   saved,
   onToggleSave,
+  onShare,
   href,
   photo,
 }: {
@@ -110,6 +125,7 @@ export function ListCard({
   tone?: MediaTone;
   saved?: boolean;
   onToggleSave?: () => void;
+  onShare?: () => void;
   href?: string;
   photo?: string;
 }) {
@@ -130,9 +146,22 @@ export function ListCard({
         <p className="sbd-listcard__blurb">{blurb}</p>
         {meta ? <div className="sbd-listcard__meta">{meta}</div> : null}
       </div>
-      {onToggleSave ? (
-        <span className="sbd-listcard__heart">
-          <SaveHeart saved={!!saved} onToggle={onToggleSave} title={title} />
+      {(onToggleSave || onShare) ? (
+        <span className="sbd-listcard__acts">
+          {onToggleSave ? (
+            <SaveHeart saved={!!saved} onToggle={onToggleSave} title={title} tooltip="Save" />
+          ) : null}
+          {onShare ? (
+            <button
+              type="button"
+              className="sbd-listcard__share"
+              onClick={(e) => { e.preventDefault(); onShare(); }}
+              aria-label={`Share ${title}`}
+              data-tooltip="Share"
+            >
+              ↗
+            </button>
+          ) : null}
         </span>
       ) : null}
     </article>

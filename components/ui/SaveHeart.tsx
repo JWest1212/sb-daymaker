@@ -31,11 +31,13 @@ export function SaveHeart({
   onToggle,
   title,
   overlay = false,
+  tooltip,
 }: {
   saved: boolean;
   onToggle: () => void;
   title: string;
   overlay?: boolean;
+  tooltip?: string;
 }) {
   const [pop, setPop] = useState(false);
 
@@ -53,6 +55,7 @@ export function SaveHeart({
       className={cls}
       aria-pressed={saved}
       aria-label={saved ? `Saved ${title}` : `Save ${title}`}
+      data-tooltip={tooltip}
       onClick={() => {
         onToggle();
         setPop(true);

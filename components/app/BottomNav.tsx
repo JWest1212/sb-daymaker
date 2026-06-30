@@ -79,7 +79,6 @@ const ICONS: Record<string, React.ReactNode> = {
 const TABS = [
   { href: "/", key: "explore", label: "Explore" },
   { href: "/saved", key: "saved", label: "Saved" },
-  { href: "/plan", key: "plan", label: "Plan" },
   { href: "/discover", key: "discover", label: "Discover SB" },
 ] as const;
 

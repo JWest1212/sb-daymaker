@@ -22,10 +22,9 @@ const WHEN_OPTIONS = [
 ];
 
 const PERIODS: { value: Period; glyph: string; label: string }[] = [
-  { value: "morning", glyph: "🌅", label: "Morning" },
+  { value: "morning",   glyph: "🌅", label: "Morning" },
   { value: "afternoon", glyph: "⛅", label: "Afternoon" },
-  { value: "evening", glyph: "🌆", label: "Evening" },
-  { value: "late", glyph: "🌙", label: "Night" },
+  { value: "night",     glyph: "🌙", label: "Night" },
 ];
 
 const WHO: { value: Who; glyph: string; label: string }[] = [
@@ -58,11 +57,9 @@ const ZONE_OPTS: { value: Zone | null; label: string }[] = [
 
 interface PlanSetupProps {
   onShowDay: (answers: PlanAnswers) => void;
-  itineraryCount: number;
-  onMyPlans: () => void;
 }
 
-export function PlanSetup({ onShowDay, itineraryCount, onMyPlans }: PlanSetupProps) {
+export function PlanSetup({ onShowDay }: PlanSetupProps) {
   const [when, setWhen] = useState<WhenChoice>("today");
   const [pickDate, setPickDate] = useState<string>(todayISO());
   const [zone, setZone] = useState<Zone | null>(null);
@@ -99,7 +96,7 @@ export function PlanSetup({ onShowDay, itineraryCount, onMyPlans }: PlanSetupPro
 
   return (
     <>
-      <PlanHeader itineraryCount={itineraryCount} onMyPlans={onMyPlans} />
+      <PlanHeader />
       <main id="main" className="sbd-shell__main sbd-plan-setup">
         {/* When — segmented */}
         <p className="sbd-miniq" id="plan-when-label">

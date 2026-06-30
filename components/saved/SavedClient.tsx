@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import { nearMeSort } from "@/lib/explore";
 import { groupSaved } from "@/lib/savedGroups";
@@ -11,18 +12,14 @@ import { SegmentedControl, EmptyState } from "@/components/ui";
 import { NearMeSheet } from "@/components/explore/NearMeSheet";
 import { createSharedList } from "@/lib/shares";
 import { SavedCard } from "./SavedCard";
-import { SavedDays } from "./SavedDays";
 import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
 import { MemoryRecap } from "./MemoryRecap";
 import { shareUrl } from "./share";
-import { useItineraries } from "@/lib/plan/itineraries";
 
 export function SavedClient({ things }: { things: Thing[] }) {
   const { ids, state, setState, remove, counts } = useSaves();
-  const { itineraries } = useItineraries();
 
-  const [tab, setTab] = useState<"things" | "days">("things");
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
   const [zone, setZone] = useState<Zone | null>(null);
   const [nearOpen, setNearOpen] = useState(false);
@@ -38,11 +35,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
 
   const savedSet = useMemo(() => new Set(ids), [ids]);
 
-  // Ghost-only cleanup: drop saves whose item is absent from a COMPLETE
-  // published pool (i.e. archived/deleted from the platform). Real past events
-  // stay published, so they're never touched. Guards ensure it never fires on
-  // an empty or truncated fetch (Supabase caps at 1000 rows), so it can't
-  // wrongly remove real saves now or as the catalog grows.
+  // Ghost-only cleanup.
   useEffect(() => {
     if (things.length === 0 || things.length >= 1000) return;
     const live = new Set(things.map((t) => t.id));
@@ -50,7 +43,6 @@ export function SavedClient({ things }: { things: Thing[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [things, ids]);
 
-  // Items in the current Want/Been view, near-me sorted.
   const viewItems = useMemo(() => {
     const inView = things.filter(
       (t) => savedSet.has(t.id) && (state(t.id) ?? "want") === stateFilter,
@@ -59,19 +51,14 @@ export function SavedClient({ things }: { things: Thing[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [things, savedSet, stateFilter, zone]);
 
-  // Split the Want view: past saved events drop to their own lower section so
-  // the user can mark the ones they made it to. (Been shows everything.)
   const nowMs = useMemo(() => Date.now(), []);
   const isPastEvent = (t: Thing) =>
-    t.type === "event" &&
-    t.starts_at != null &&
-    new Date(t.starts_at).getTime() < nowMs;
+    t.type === "event" && t.starts_at != null && new Date(t.starts_at).getTime() < nowMs;
   const splitPast = stateFilter === "want";
   const mainItems = splitPast ? viewItems.filter((t) => !isPastEvent(t)) : viewItems;
   const pastItems = splitPast ? viewItems.filter(isPastEvent) : [];
   const groups = groupSaved(mainItems);
 
-  // LB-1: been-marked items in save order (oldest → newest) for the recap card.
   const beenItems = useMemo(() => {
     const byId = new Map(things.map((t) => [t.id, t]));
     const out: Thing[] = [];
@@ -117,10 +104,18 @@ export function SavedClient({ things }: { things: Thing[] }) {
     setSelected(new Set());
   };
 
-  // Whole-list empty (nothing saved AND no plans)
-  if (counts.total === 0 && itineraries.length === 0) {
+  if (counts.total === 0) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
+        {/* Build-a-day CTA */}
+        <Link href="/plan" className="sbd-build-cta" aria-label="Build a day from your saved">
+          <div className="sbd-build-cta__icon" aria-hidden="true">☀️</div>
+          <div className="sbd-build-cta__body">
+            <span className="sbd-build-cta__title">Build a day</span>
+            <span className="sbd-build-cta__sub">Your saved spots, shaped into a plan.</span>
+          </div>
+          <span className="sbd-build-cta__arrow" aria-hidden="true">→</span>
+        </Link>
         <EmptyState
           icon="❤️"
           title="Your saved list"
@@ -132,23 +127,16 @@ export function SavedClient({ things }: { things: Thing[] }) {
 
   return (
     <div className="sbd-saved">
-      {/* Top-level Things / Days toggle */}
-      <div className="sbd-saved__toptab">
-        <SegmentedControl
-          ariaLabel="Saved view"
-          value={tab}
-          onChange={(v) => setTab(v as "things" | "days")}
-          options={[
-            { label: `Things${counts.total ? ` · ${counts.total}` : ""}`, value: "things" },
-            { label: `Days${itineraries.length ? ` · ${itineraries.length}` : ""}`, value: "days" },
-          ]}
-        />
-      </div>
+      {/* Build-a-day CTA — always at top of Saved */}
+      <Link href="/plan" className="sbd-build-cta" aria-label="Build a day from your saved">
+        <div className="sbd-build-cta__icon" aria-hidden="true">☀️</div>
+        <div className="sbd-build-cta__body">
+          <span className="sbd-build-cta__title">Build a day</span>
+          <span className="sbd-build-cta__sub">Your saved spots, shaped into a plan.</span>
+        </div>
+        <span className="sbd-build-cta__arrow" aria-hidden="true">→</span>
+      </Link>
 
-      {tab === "days" ? (
-        <SavedDays />
-      ) : (
-        <>
       <div className="sbd-saved__controls">
         <SegmentedControl
           ariaLabel="Saved state"
@@ -186,17 +174,13 @@ export function SavedClient({ things }: { things: Thing[] }) {
         <p className="sbd-saved__hint">Tap to choose what to send — one or many.</p>
       ) : null}
 
-      {/* LB-1: the recap leads the Been tab (its empty state is the invite). */}
       {stateFilter === "been" && !selectMode ? (
         <MemoryRecap beenCount={counts.been} beenItems={beenItems} />
       ) : null}
 
       {viewItems.length === 0 ? (
         stateFilter === "been" ? null : (
-          <EmptyState
-            icon="❤️"
-            message="Nothing in your want-to-go list right now."
-          />
+          <EmptyState icon="❤️" message="Nothing in your want-to-go list right now." />
         )
       ) : (
         groups.map((g) => (
@@ -228,15 +212,10 @@ export function SavedClient({ things }: { things: Thing[] }) {
       {pastItems.length > 0 ? (
         <section className="sbd-saved__group sbd-saved__past">
           <div className="sbd-group-hdr">
-            <span
-              className="sbd-group-dot"
-              style={{ background: "var(--ink-2)" }}
-            />
+            <span className="sbd-group-dot" style={{ background: "var(--ink-2)" }} />
             Past events
           </div>
-          <p className="sbd-saved__pasthint">
-            Did you make it? Mark the ones you did.
-          </p>
+          <p className="sbd-saved__pasthint">Did you make it? Mark the ones you did.</p>
           <div className="sbd-saved__list">
             {pastItems.map((t, i) => (
               <SavedCard
@@ -280,8 +259,6 @@ export function SavedClient({ things }: { things: Thing[] }) {
       ) : null}
 
       {toast ? <div className="sbd-toast">{toast}</div> : null}
-        </>
-      )}
     </div>
   );
 }

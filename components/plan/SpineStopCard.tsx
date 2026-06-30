@@ -60,8 +60,11 @@ export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
           </Link>
         </h3>
         {meta ? <span className="sbd-scard__mt">{meta}</span> : null}
+        {stop.fromDraft ? (
+          <span className="sbd-scard__chip sbd-scard__chip--suggested">Suggested</span>
+        ) : null}
         {stop.fromSaved ? (
-          <span className="sbd-scard__savedchip">♥ Saved</span>
+          <span className="sbd-scard__chip sbd-scard__chip--saved">♥ Saved</span>
         ) : null}
       </div>
 

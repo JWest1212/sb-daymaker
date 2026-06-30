@@ -3,39 +3,33 @@
 import { useMemo, useState } from "react";
 import { ItinerarySpine } from "./ItinerarySpine";
 import { AddStopSheet } from "./AddStopSheet";
-import { SaveNameSheet } from "./SaveNameSheet";
 import { shortStamp } from "@/lib/plan/dates";
 import { blockShortName, planZoneLabel, BLOCK_LABEL } from "@/lib/plan/labels";
-import type { ItineraryInput, SavedItinerary } from "@/lib/plan/itineraries";
+import { buildDraft } from "@/lib/plan/buildDraft";
+import { useSaves } from "@/components/saves/SavesProvider";
 import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
 import { shareUrl } from "@/components/saved/share";
 
-// Auto-title per §9: "Your SB Day · Jun 28" or "{Area} Day · Jun 28"
-function autoTitle(answers: PlanAnswers): string {
-  const monthDay = new Date(answers.dateISO + "T12:00:00").toLocaleDateString(
-    "en-US",
-    { month: "short", day: "numeric" },
-  );
-  if (answers.zone) {
-    return `${planZoneLabel(answers.zone)} Day · ${monthDay}`;
-  }
-  return `Your SB Day · ${monthDay}`;
-}
-
 function genStopId(): string {
   return Math.random().toString(36).slice(2, 9);
+}
+
+// Auto-title: "Your SB Day · Jun 28" or "{Area} Day · Jun 28"
+function autoTitle(answers: PlanAnswers): string {
+  const monthDay = new Date(answers.dateISO + "T12:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+  if (answers.zone) return `${planZoneLabel(answers.zone)} Day · ${monthDay}`;
+  return `Your SB Day · ${monthDay}`;
 }
 
 interface PlanResultsProps {
   answers: PlanAnswers;
   things: Thing[];
   initialStops?: Stop[];
-  itineraries: SavedItinerary[];
-  myPlansOpen?: boolean;
-  onSave: (data: ItineraryInput) => string;
-  onMyPlans: () => void;
   onBack: () => void;
 }
 
@@ -43,28 +37,25 @@ export function PlanResults({
   answers,
   things,
   initialStops = [],
-  itineraries,
-  myPlansOpen = false,
-  onSave,
-  onMyPlans,
   onBack,
 }: PlanResultsProps) {
   const [stops, setStops] = useState<Stop[]>(initialStops);
   const [pickerBlock, setPickerBlock] = useState<Block | null>(null);
-  const [namingOpen, setNamingOpen] = useState(false);
-  const [savedToast, setSavedToast] = useState(false);
+  const [clearConfirm, setClearConfirm] = useState(false);
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
   >("idle");
+
+  const { state } = useSaves();
 
   const thingMap = useMemo(
     () => new Map(things.map((t) => [t.id, t])),
     [things],
   );
 
-  // Build subline from the selected periods range.
+  // Subline from selected periods range.
   const firstPeriod = answers.periods[0];
-  const lastPeriod = answers.periods[answers.periods.length - 1];
+  const lastPeriod  = answers.periods[answers.periods.length - 1];
   const subline = [
     shortStamp(answers.dateISO),
     firstPeriod && lastPeriod && firstPeriod !== lastPeriod
@@ -82,6 +73,7 @@ export function PlanResults({
       block,
       thingId: thing.id,
       fromSaved,
+      fromDraft: false,  // user-added — no Suggested chip
     };
     setStops((prev) => [...prev, newStop]);
     setPickerBlock(null);
@@ -89,6 +81,24 @@ export function PlanResults({
 
   function removeStop(stopId: string) {
     setStops((prev) => prev.filter((s) => s.id !== stopId));
+  }
+
+  function handleRegenerate() {
+    // Keep user-added stops; replace only fromDraft ones with fresh picks.
+    const userStops = stops.filter((s) => !s.fromDraft);
+    const alreadyPlaced = new Set(userStops.map((s) => s.thingId));
+    const freshDraft = buildDraft(answers, things, (id) => (state(id) as "want" | "been" | null) ?? null, alreadyPlaced);
+    setStops([...userStops, ...freshDraft]);
+  }
+
+  function handleClear() {
+    if (!clearConfirm) {
+      setClearConfirm(true);
+      setTimeout(() => setClearConfirm(false), 3000);
+      return;
+    }
+    setStops([]);
+    setClearConfirm(false);
   }
 
   async function handleShare() {
@@ -127,25 +137,8 @@ export function PlanResults({
     setTimeout(() => setShareState("idle"), 2200);
   }
 
-  function handleSave() {
-    setNamingOpen(true);
-  }
-
-  function confirmSave(title: string) {
-    onSave({ title, answers, stops });
-    setNamingOpen(false);
-    setSavedToast(true);
-    setTimeout(() => setSavedToast(false), 2200);
-  }
-
   const hasStops = stops.length > 0;
-
-  const alreadySaved = itineraries.some(
-    (it) =>
-      it.answers.dateISO === answers.dateISO &&
-      it.stops.length === stops.length &&
-      it.stops.every((s, i) => s.thingId === stops[i]?.thingId),
-  );
+  const hasDraftStops = stops.some((s) => s.fromDraft);
 
   return (
     <>
@@ -161,28 +154,23 @@ export function PlanResults({
           </button>
           <div>
             <div className="sbd-header__name">Your SB Day</div>
-            <div className="sbd-header__tag">Tap a stop to see details</div>
+            <div className="sbd-header__tag">Tap + to add stops</div>
           </div>
         </div>
-        <button
-          type="button"
-          className="sbd-myplans-btn"
-          aria-label={`My plans${itineraries.length > 0 ? ` (${itineraries.length})` : ""}`}
-          aria-expanded={myPlansOpen}
-          onClick={onMyPlans}
-        >
-          <span aria-hidden="true">🗓</span>
-          My plans{itineraries.length > 0 ? ` · ${itineraries.length}` : ""}
-          <span className="sbd-myplans-btn__chevron" aria-hidden="true">
-            ▾
-          </span>
-        </button>
+        {hasDraftStops ? (
+          <button
+            type="button"
+            className="sbd-regen-btn"
+            onClick={handleRegenerate}
+            aria-label="Regenerate suggested stops"
+          >
+            ↺ Regenerate
+          </button>
+        ) : null}
       </header>
 
       <main id="main" className="sbd-shell__main">
-        <p className="sbd-subline" aria-live="polite">
-          {subline}
-        </p>
+        <p className="sbd-subline" aria-live="polite">{subline}</p>
 
         <ItinerarySpine
           sections={answers.periods}
@@ -195,18 +183,11 @@ export function PlanResults({
         <div style={{ height: "104px" }} />
       </main>
 
+      {/* Bottom bar: Share + Clear (ephemeral — no Save) */}
       <div className="sbd-plan-gobar">
         <button
           type="button"
-          className="sbd-btn sbd-btn--primary sbd-plan-gobar__save"
-          onClick={handleSave}
-          disabled={!hasStops || alreadySaved || savedToast}
-        >
-          {savedToast ? "✓ Saved!" : alreadySaved ? "✓ Already saved" : "💾 Save plan"}
-        </button>
-        <button
-          type="button"
-          className="sbd-btn sbd-btn--secondary"
+          className="sbd-btn sbd-btn--primary sbd-plan-gobar__share"
           onClick={handleShare}
           disabled={shareState === "pending" || !hasStops}
         >
@@ -218,7 +199,14 @@ export function PlanResults({
                 ? "✓ Link copied"
                 : shareState === "failed"
                   ? "Share failed"
-                  : "↗ Share"}
+                  : "↗ Share day"}
+        </button>
+        <button
+          type="button"
+          className={`sbd-btn sbd-btn--ghost sbd-plan-gobar__clear${clearConfirm ? " sbd-btn--warn" : ""}`}
+          onClick={handleClear}
+        >
+          {clearConfirm ? "Tap again to clear" : "✕ Clear"}
         </button>
       </div>
 
@@ -229,14 +217,6 @@ export function PlanResults({
           things={things}
           onAdd={(thing, fromSaved) => addStop(pickerBlock, thing, fromSaved)}
           onClose={() => setPickerBlock(null)}
-        />
-      ) : null}
-
-      {namingOpen ? (
-        <SaveNameSheet
-          defaultTitle={autoTitle(answers)}
-          onSave={confirmSave}
-          onClose={() => setNamingOpen(false)}
         />
       ) : null}
     </>

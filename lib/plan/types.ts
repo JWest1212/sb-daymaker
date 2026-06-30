@@ -5,12 +5,22 @@
 import type { OccasionKey } from "@/lib/occasions";
 import type { Zone } from "@/lib/zones";
 
-// Block mirrors the DB `tod` enum exactly. UI "Night" = 'late'.
-// (Old 'midday' lunch bridge and 'night' alias are removed.)
-export type Block = "morning" | "afternoon" | "evening" | "late";
+// UI blocks — three time-of-day periods shown to the user.
+// DB `tod` enum has 4 values; Night maps to evening + late via BLOCK_TO_TOD.
+export type Block = "morning" | "afternoon" | "night";
+
+// DB tod enum — unchanged. Reach from UI via BLOCK_TO_TOD.
+export type Tod = "morning" | "afternoon" | "evening" | "late";
 
 // Period is a type alias for Block (kept for existing imports).
 export type Period = Block;
+
+// Maps each UI block to the DB tod values it covers.
+export const BLOCK_TO_TOD: Record<Block, Tod[]> = {
+  morning:   ["morning"],
+  afternoon: ["afternoon"],
+  night:     ["evening", "late"],
+};
 
 // The vibe subset the setup screen's Fine-tune exposes — 8 of the 10 occasion
 // tags. `solo` and `family_day` are deliberately excluded because
@@ -29,12 +39,13 @@ export type VibeKey = Extract<
 
 export type Who = "solo" | "couple" | "family" | "friends";
 
-/** A placed stop on the spine. Added by the user via the picker; insertion order is meaningful. */
+/** A placed stop on the spine. Insertion order is meaningful. */
 export interface Stop {
   id: string;          // local uuid, stable key
   block: Block;
   thingId: string;     // FK into published `things`
-  fromSaved: boolean;  // drives the ♥ Saved chip (true if added from saved band)
+  fromSaved: boolean;  // drives the ♥ Saved chip
+  fromDraft: boolean;  // seeded by buildDraft → shows "Suggested" chip; false = user-added
 }
 
 /** A saved single-day itinerary (localStorage). */

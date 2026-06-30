@@ -9,21 +9,19 @@ export function planZoneLabel(zone: Zone | null): string {
 }
 
 const BLOCK_SHORT_MAP: Record<Block, string> = {
-  morning: "MORNING",
+  morning:   "MORNING",
   afternoon: "AFTERNOON",
-  evening: "EVENING",
-  late: "NIGHT",
+  night:     "NIGHT",
 };
 
-/** Uppercase block name for the spine subline (e.g. MORNING → EVENING). */
+/** Uppercase block name for the spine subline (e.g. MORNING → NIGHT). */
 export function blockShortName(block: Block): string {
   return BLOCK_SHORT_MAP[block];
 }
 
 /** Display label for a block (title case). Used in section headers and picker kicker. */
 export const BLOCK_LABEL: Record<Block, string> = {
-  morning: "Morning",
+  morning:   "Morning",
   afternoon: "Afternoon",
-  evening: "Evening",
-  late: "Night",
+  night:     "Night",
 };

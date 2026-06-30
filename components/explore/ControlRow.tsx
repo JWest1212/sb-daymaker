@@ -22,6 +22,19 @@ export function ControlRow({
 
   return (
     <div className="sbd-ctrl">
+      <div className="sbd-ctrl__horizon">
+        <SegmentedControl
+          ariaLabel="Time horizon"
+          value={horizon}
+          onChange={(v) => onHorizon(v as Horizon)}
+          options={[
+            { label: "Today", value: "today" },
+            { label: "This Week", value: "week" },
+            { label: "This Month", value: "month" },
+          ]}
+        />
+      </div>
+
       <div className="sbd-ctrl__row">
         <button
           type="button"
@@ -46,19 +59,6 @@ export function ControlRow({
           <span aria-hidden="true">📍</span>
           <span>{zone ? ZONE_LABEL[zone] : "Near Me"}</span>
         </button>
-      </div>
-
-      <div className="sbd-ctrl__horizon">
-        <SegmentedControl
-          ariaLabel="Time horizon"
-          value={horizon}
-          onChange={(v) => onHorizon(v as Horizon)}
-          options={[
-            { label: "Today", value: "today" },
-            { label: "This Week", value: "week" },
-            { label: "This Month", value: "month" },
-          ]}
-        />
       </div>
     </div>
   );

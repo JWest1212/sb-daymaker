@@ -4,6 +4,7 @@ import { getThing } from "@/lib/things";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { Tag, EmptyState } from "@/components/ui";
 import { DetailSaveButton } from "@/components/detail/DetailSaveButton";
+import { BackButton } from "@/components/detail/BackButton";
 import { prettify } from "@/components/explore/derive";
 
 export const metadata: Metadata = { title: "Detail — SB Daymaker" };
@@ -62,9 +63,7 @@ export default async function ThingPage({
 
   return (
     <div className="sbd-detail">
-      <Link href="/" className="sbd-backlink">
-        ‹ Explore
-      </Link>
+      <BackButton />
 
       <div className={`sbd-detail__media sbd-media--${TONE_BY_TYPE[t.type] ?? "gold"}`}>
         {t.photo_url ? (

@@ -81,8 +81,7 @@ export function useItineraries(): UseItinerariesReturn {
 
 /** Block → CSS token for mini spine dots in My Plans drawer. */
 export const BLOCK_DOT_COLOR: Record<Block, string> = {
-  morning: "var(--tod-morning)",
+  morning:   "var(--tod-morning)",
   afternoon: "var(--tod-afternoon)",
-  evening: "var(--tod-evening)",
-  late: "var(--tod-night)",
+  night:     "var(--tod-night)",
 };

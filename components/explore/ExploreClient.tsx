@@ -83,7 +83,7 @@ export function ExploreClient({
           onOpenNearMe={() => setNearOpen(true)}
           onHorizon={setHorizon}
         />
-        <CascadeFeed items={feed} />
+        <CascadeFeed items={feed} horizon={horizon} />
 
         <footer className="sbd-foot">
           <EmailSignup />

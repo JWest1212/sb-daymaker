@@ -10,8 +10,7 @@ import type { SharedPlanPayload, Block } from "@/lib/plan/types";
 const BLOCK_NODE: Record<Block, { glyph: string; color: string }> = {
   morning:   { glyph: "🌅", color: "var(--tod-morning)" },
   afternoon: { glyph: "⛅", color: "var(--tod-afternoon)" },
-  evening:   { glyph: "🌆", color: "var(--tod-evening)" },
-  late:      { glyph: "🌙", color: "var(--tod-night)" },
+  night:     { glyph: "🌙", color: "var(--tod-night)" },
 };
 
 // Format a real startsAt ISO datetime as a clock time in SB local time (Rule 3).
@@ -53,6 +52,7 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
         block: s.block,
         thingId: s.thingId,
         fromSaved: false,
+        fromDraft: false,
       })),
     });
     setSaved(true);
@@ -92,10 +92,10 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
         <div className="sbd-spine">
           <div className="sbd-spine__rail" aria-hidden="true" />
           {payload.stops.map((s, idx) => {
-            // Safe fallback for old payload blocks ('night'/'midday') from stored data.
+            // Safe fallback for old payload blocks ('evening'/'late'/'midday') from stored data.
             const safeBlock: Block =
-              s.block === ("night" as string)
-                ? "late"
+              s.block === ("evening" as string) || s.block === ("late" as string)
+                ? "night"
                 : s.block === ("midday" as string)
                   ? "afternoon"
                   : s.block;

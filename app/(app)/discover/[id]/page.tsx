@@ -82,7 +82,7 @@ export default async function GuidePage({
           <h2 className="sbd-disc__title">What&rsquo;s on right now</h2>
         </div>
         {happenings.length > 0 ? (
-          <CascadeFeed items={happenings} />
+          <CascadeFeed items={happenings} horizon="today" />
         ) : (
           <EmptyState
             icon="🌙"
