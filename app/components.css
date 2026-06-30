@@ -150,6 +150,79 @@
   border-color: var(--pacific);
 }
 
+/* ---- T2: SAVED WANT/BEEN TOGGLE ----------------------------------------- */
+.sbd-saved-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--plaster-2);
+  border-radius: var(--radius-pill);
+  width: 100%;
+}
+.sbd-saved-toggle__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+.sbd-saved-toggle__btn:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-saved-toggle__icon {
+  font-size: 12px;
+}
+.sbd-saved-toggle__chip {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  line-height: 1.7;
+}
+/* Inactive chip tints — each half keeps its identity color when not active */
+.sbd-saved-toggle__btn--want .sbd-saved-toggle__chip {
+  background: rgba(22, 88, 106, 0.14);
+  color: var(--pacific);
+}
+.sbd-saved-toggle__btn--been .sbd-saved-toggle__chip {
+  background: rgba(126, 139, 107, 0.18);
+  color: var(--sage-text);
+}
+/* Active — want → pacific */
+.sbd-saved-toggle__btn--want.is-active {
+  background: var(--pacific);
+  color: var(--paper);
+  box-shadow: 0 2px 8px -2px rgba(22, 88, 106, 0.45);
+}
+/* Active — been → #2F6248 (darkened forest, white text ≈6:1 AA) */
+.sbd-saved-toggle__btn--been.is-active {
+  background: #2F6248;
+  color: var(--paper);
+  box-shadow: 0 2px 8px -2px rgba(47, 98, 72, 0.45);
+}
+/* Active chip — white translucent override */
+.sbd-saved-toggle__btn.is-active .sbd-saved-toggle__chip {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--paper);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sbd-saved-toggle__btn {
+    transition: none;
+  }
+}
+
 /* ---- SEGMENTED CONTROL (Today / This Week / This Month) ----------------- */
 .sbd-seg {
   display: inline-flex;
@@ -3024,9 +3097,6 @@
 .sbd-saved {
   padding-top: var(--space-4);
 }
-.sbd-saved > .sbd-build-cta:first-child {
-  margin-top: 0;
-}
 .sbd-saved__controls {
   display: flex;
   flex-direction: column;
@@ -3056,6 +3126,134 @@
   color: var(--text-muted);
   margin: 0 0 var(--space-3);
 }
+
+/* B3 — editorial status line beneath Want/Been toggle */
+.sbd-saved__status {
+  margin: var(--space-4) 0 0;
+}
+.sbd-saved__status-main {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  margin: 0;
+  line-height: var(--leading-snug);
+}
+.sbd-saved__status-sub {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  margin: 3px 0 0;
+}
+
+/* C2 — proactive "Did you make it?" prompt */
+.sbd-c2 {
+  margin: var(--space-5) 0 0;
+  border: 1.5px solid var(--gold);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  padding: var(--space-4);
+}
+.sbd-c2__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-text);
+  margin: 0 0 var(--space-2);
+}
+.sbd-c2__content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.sbd-c2__thumb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+.sbd-c2__question {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  margin: 0;
+  line-height: var(--leading-snug);
+}
+.sbd-c2__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.sbd-c2__yes,
+.sbd-c2__no {
+  min-height: 44px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  padding: 0 var(--space-4);
+}
+.sbd-c2__yes {
+  background: var(--pacific);
+  color: var(--paper);
+  border: 1.5px solid var(--pacific);
+}
+.sbd-c2__no {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1.5px solid var(--line);
+}
+.sbd-c2__yes:focus-visible,
+.sbd-c2__no:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+
+/* B1 — bottom section: Build a day + Share my list + RestorePanel */
+.sbd-saved__bottom {
+  margin-top: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+/* S2: Share my list — solid pacific gradient, icon chip, clearly #2 to Build a day */
+.sbd-share-list-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--pacific), var(--pacific-dark));
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  box-shadow: 0 8px 20px -10px rgba(22, 88, 106, 0.55);
+}
+.sbd-share-list-btn:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 3px;
+}
+.sbd-share-list-btn__chip {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
 .sbd-saved__list {
   display: flex;
   flex-direction: column;
@@ -3078,6 +3276,24 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+/* G1: count chip + hairline rule */
+.sbd-group-hdr__chip {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  background: var(--plaster-2);
+  color: var(--sage-text);
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  line-height: 1.7;
+  letter-spacing: 0;
+  text-transform: none;
+  flex-shrink: 0;
+}
+.sbd-group-hdr__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
 }
 
 /* Saved card */
@@ -3245,55 +3461,51 @@
   color: var(--text-link);
   margin-top: 2px;
 }
-/* QW-4: full-width action row beneath the card content. The primary "Mark as
-   been" button is the load-bearing memory tap (≥44px); share + remove sit
-   beside it. Greens use the darkened sage token so they clear AA. */
+/* C1: three equal-weight, quiet controls — transparent fill, no dominant pill */
 .sbd-savedcard__actions {
   display: flex;
-  gap: var(--space-2);
-  padding: 9px 11px;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 6px 8px;
   border-top: 1px solid var(--line);
-}
-.sbd-savedcard__been {
-  flex: 1;
-  min-height: 44px;
-  border-radius: 10px;
-  border: 1.5px solid var(--sage-text);
-  background: var(--paper);
-  color: var(--sage-text);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: var(--weight-bold);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-}
-.sbd-savedcard__been.is-been {
-  background: var(--sage-text);
-  color: var(--paper);
 }
 .sbd-savedcard__act {
   min-height: 44px;
-  width: 48px;
-  flex-shrink: 0;
-  border-radius: 10px;
-  border: 1.5px solid var(--line);
-  background: var(--paper);
-  color: var(--pacific);
-  font-size: 15px;
-  display: grid;
-  place-items: center;
+  min-width: 44px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--weight-semi);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
 }
-.sbd-savedcard__act--info {
-  color: var(--pacific);
-  text-decoration: none;
-  font-size: 16px;
+.sbd-savedcard__act:hover {
+  background: var(--plaster);
+}
+/* Been flip — sage color, no border */
+.sbd-savedcard__act--been {
+  color: var(--sage-text);
+}
+/* Been state — same quiet style, slightly deeper sage to signal active */
+.sbd-savedcard__act--been.is-been {
+  color: var(--sage-text);
+  background: rgba(126, 139, 107, 0.12);
 }
 .sbd-savedcard__act--remove {
-  color: var(--text-muted);
+  color: var(--ink-2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .sbd-savedcard__act {
+    transition: none;
+  }
 }
 
 /* Tooltips on savedcard action buttons only */
@@ -3327,7 +3539,6 @@
     transition: none;
   }
 }
-.sbd-savedcard__been:focus-visible,
 .sbd-savedcard__act:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: -2px;
@@ -3377,12 +3588,13 @@
   cursor: not-allowed;
 }
 
-/* Restore panel */
+/* BK1: Restore panel — solid card with pacific left-edge accent */
 .sbd-restore {
-  margin-top: var(--space-10);
   padding: var(--space-5);
-  border: 1.5px dashed var(--border);
-  border-radius: var(--radius-lg);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--pacific);
+  border-radius: var(--radius-md);
 }
 .sbd-restore__title {
   font-family: var(--font-display);
@@ -3455,6 +3667,31 @@
   animation: fade var(--dur-base) var(--ease-out);
   max-width: 90vw;
   text-align: center;
+}
+/* C3: been acknowledgment — forest accent, multi-line */
+.sbd-toast--been {
+  background: var(--forest);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.sbd-toast__check {
+  font-size: var(--text-lg);
+}
+.sbd-toast__sub {
+  display: block;
+  font-size: 11px;
+  font-weight: var(--weight-normal);
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sbd-toast,
+  .sbd-toast--been {
+    animation: none;
+  }
 }
 
 /* ---- Public pages (shared list / restore) ------------------------------ */

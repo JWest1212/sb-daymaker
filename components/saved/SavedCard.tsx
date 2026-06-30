@@ -37,7 +37,6 @@ export function SavedCard({
       role={selectMode ? "button" : undefined}
       aria-pressed={selectMode ? selected : undefined}
     >
-      {/* Top portion only is the link — actions bar below is separate */}
       {selectMode ? (
         <div className="sbd-savedcard__top">
           <span className="sbd-savedcard__check" aria-hidden="true">
@@ -59,6 +58,7 @@ export function SavedCard({
           </div>
         </div>
       ) : (
+        /* Card body tap → opens detail screen */
         <Link href={`/thing/${thing.id}`} className="sbd-savedcard__top sbd-savedcard__top--link">
           <div
             className={`sbd-savedcard__thumb sbd-media--${cardTone(index)}`}
@@ -78,27 +78,24 @@ export function SavedCard({
       )}
 
       {!selectMode ? (
+        /* C1: three equal-weight, quiet controls — no dominant pill */
         <div className="sbd-savedcard__actions">
           <button
             type="button"
-            className={`sbd-savedcard__been${state === "been" ? " is-been" : ""}`}
+            className={`sbd-savedcard__act sbd-savedcard__act--been${state === "been" ? " is-been" : ""}`}
             aria-pressed={state === "been"}
-            onClick={() => onSetState(state === "been" ? "want" : "been")}
+            aria-label={state === "been" ? `Mark ${thing.title} as want to go` : `Mark ${thing.title} as been`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSetState(state === "been" ? "want" : "been");
+            }}
           >
-            {state === "been" ? "↩ Want to go" : "✓ Mark as been"}
+            {state === "been" ? "↩ Want to go" : "✓ Mark been"}
           </button>
-          <Link
-            href={`/thing/${thing.id}`}
-            className="sbd-savedcard__act sbd-savedcard__act--info"
-            aria-label={`Details for ${thing.title}`}
-            data-tooltip="View details"
-          >
-            <span aria-hidden="true" style={{ fontStyle: "italic", fontFamily: "Georgia, serif" }}>i</span>
-          </Link>
           <button
             type="button"
             className="sbd-savedcard__act"
-            onClick={onShareOne}
+            onClick={(e) => { e.stopPropagation(); onShareOne(); }}
             aria-label={`Share ${thing.title}`}
             data-tooltip="Share"
           >
@@ -107,9 +104,9 @@ export function SavedCard({
           <button
             type="button"
             className="sbd-savedcard__act sbd-savedcard__act--remove"
-            onClick={onRemove}
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
             aria-label={`Remove ${thing.title}`}
-            data-tooltip="Remove from saved"
+            data-tooltip="Remove"
           >
             ✕
           </button>

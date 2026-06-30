@@ -32,10 +32,10 @@ export function RestorePanel() {
 
   return (
     <section className="sbd-restore">
-      <h2 className="sbd-restore__title">Back up your saves</h2>
+      <h2 className="sbd-restore__title">You&apos;ve built a real list — back it up</h2>
       <p className="sbd-restore__desc">
-        Saves live on this device. Get a link to restore them on another phone or
-        browser — no account needed.
+        Saves live on this phone. Email yourself a link so they survive a cleared
+        browser or a new device — no account, no password.
       </p>
 
       {link ? (
