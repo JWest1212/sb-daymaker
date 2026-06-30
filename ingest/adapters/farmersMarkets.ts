@@ -12,7 +12,8 @@
 // Farmers Market's published programme (stable, verified 2026-06-30).
 //
 // DOC MISMATCH (§6.4 example uses type:'recurring'): ThingType does not include
-// 'recurring'. Using 'event' per the actual type definition.
+// 'recurring'. Using 'place' — weekly markets have no single starts_at and the
+// DB events_have_start constraint rejects type:'event' rows with starts_at:null.
 //
 // Robots.txt: Allow: / (Wix default, confirmed 2026-06-30).
 //
@@ -46,8 +47,8 @@ function market(
     neighborhood,
     tier: 2,
     category: 'recurring_market',
-    type: 'event',
-    startStrategy: 'structured',
+    type: 'place',
+    startStrategy: 'none',
     priceLow: null,
     explicitlyFree: true,
     sourceUrl: SOURCE_URL,
