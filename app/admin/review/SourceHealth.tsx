@@ -5,6 +5,21 @@ const LABEL: Record<string, string> = {
   soho: "SOhO ticketing",
   sbbowl: "Santa Barbara Bowl",
   lobero: "Lobero Theatre",
+  // Wave 2 venue-direct
+  granada: "The Granada Theatre",
+  arlington: "Arlington Theatre",
+  musicacademy: "Music Academy of the West",
+  alcazar: "The Alcazar Theater",
+  // Wave 2 institutions
+  moxi: "MOXI Museum",
+  naturalHistory: "SB Museum of Natural History",
+  botanicGarden: "SB Botanic Garden",
+  sbma: "SB Museum of Art",
+  // Wave 2 civic / curated
+  goletaCivic: "City of Goleta",
+  carpinteriaCivic: "City of Carpinteria",
+  downtownSB: "Downtown Santa Barbara",
+  // pre-Wave 2
   independent: "The Independent",
   citysb: "City of Santa Barbara",
   ucsb: "UCSB Campus Events",

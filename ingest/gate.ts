@@ -151,6 +151,13 @@ const VENUE_ADDRESSES: Record<string, string> = {
   'SOhO Restaurant & Music Club': '1221 State St #205, Santa Barbara, CA 93101',
   'The Granada Theatre': '1214 State St, Santa Barbara, CA 93101',
   'Arlington Theatre': '1317 State St, Santa Barbara, CA 93101',
+  // Wave 2 venues
+  'MOXI, The Wolf Museum of Exploration + Innovation': '125 State St, Santa Barbara, CA 93101',
+  'Santa Barbara Museum of Natural History': '2559 Puesta del Sol, Santa Barbara, CA 93105',
+  'Santa Barbara Botanic Garden': '1212 Mission Canyon Rd, Santa Barbara, CA 93105',
+  'Santa Barbara Museum of Art': '1130 State St, Santa Barbara, CA 93101',
+  'Music Academy of the West': '1070 Fairway Rd, Santa Barbara, CA 93108',
+  'The Alcazar Theater': '4916 Carpinteria Ave, Carpinteria, CA 93013',
 };
 export function resolveVenue(name: string): string | undefined {
   return VENUE_ADDRESSES[name.trim()];
