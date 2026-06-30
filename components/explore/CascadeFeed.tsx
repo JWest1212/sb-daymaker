@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PickCard, ListCard, EmptyState } from "@/components/ui";
 import type { Thing } from "@/lib/things";
@@ -15,6 +15,8 @@ import {
   cardTagColor,
   cardTone,
 } from "./derive";
+import { RockGrid } from "./RockTile";
+import { LeadDayRail } from "./LeadDayRail";
 
 const HORIZON_LABEL: Record<Horizon, string> = {
   today: "Happening Today",
@@ -22,10 +24,103 @@ const HORIZON_LABEL: Record<Horizon, string> = {
   month: "Happening This Month",
 };
 
+// ---------------------------------------------------------------------------
+// Shared card-handler types passed through the component tree
+// ---------------------------------------------------------------------------
+type CardHandlers = {
+  isSaved: (id: string) => boolean;
+  toggle: (id: string) => void;
+  handleShare: (t: Thing) => void;
+};
+
+// ---------------------------------------------------------------------------
+// Today branch — PickCard stack (the existing live layout, unchanged)
+// ---------------------------------------------------------------------------
+function TodayLead({ tier1, isSaved, toggle, handleShare }: { tier1: Thing[] } & CardHandlers) {
+  return (
+    <div className="sbd-feed-section__list">
+      {tier1.map((t, i) => (
+        <PickCard
+          key={t.id}
+          href={`/thing/${t.id}`}
+          tone={cardTone(i)}
+          tag={cardTag(t)}
+          place={cardPlace(t)}
+          title={t.title}
+          blurb={cardBlurb(t)}
+          facts={cardFacts(t)}
+          photo={t.photo_url ?? undefined}
+          saved={isSaved(t.id)}
+          onToggleSave={() => toggle(t.id)}
+          onShare={() => handleShare(t)}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// LeadSection — horizon-aware switch; Today is live, Week/Month are TEMP stubs
+// (replaced in Phases 3 and 2 respectively).
+// ---------------------------------------------------------------------------
+function LeadSection({
+  tier1,
+  horizon,
+  monthShownCount,
+  onMonthShowMore,
+  isSaved,
+  toggle,
+  handleShare,
+}: {
+  tier1: Thing[];
+  horizon: Horizon;
+  monthShownCount: number;
+  onMonthShowMore: () => void;
+} & CardHandlers) {
+  return (
+    <section className="sbd-feed-section">
+      <div className="sbd-sh sbd-sh--static">
+        <span className="sbd-sh__icon" aria-hidden="true">📅</span>
+        <h2 className="sbd-sh__label">{HORIZON_LABEL[horizon]}</h2>
+        <span className="sbd-sh__badge" aria-label={`${tier1.length} items`}>
+          {tier1.length}
+        </span>
+      </div>
+      {horizon === "today" && (
+        <TodayLead tier1={tier1} isSaved={isSaved} toggle={toggle} handleShare={handleShare} />
+      )}
+      {horizon === "week" && (
+        <LeadDayRail items={tier1} isSaved={isSaved} toggle={toggle} handleShare={handleShare} />
+      )}
+      {horizon === "month" && (
+        <div className="sbd-feed-section__list">
+          <RockGrid
+            items={tier1}
+            shownCount={monthShownCount}
+            onShowMore={onMonthShowMore}
+            isSaved={isSaved}
+            toggle={toggle}
+            handleShare={handleShare}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CascadeFeed — tier partition + section orchestration
+// ---------------------------------------------------------------------------
 export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horizon }) {
   const { isSaved, toggle } = useSaves();
   const [tier2Open, setTier2Open] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
+  const [monthShownCount, setMonthShownCount] = useState(8);
+
+  // Reset month pagination when leaving Month horizon
+  useEffect(() => {
+    setMonthShownCount(8);
+  }, [horizon]);
 
   const tier1 = items.filter((t) => t.happening_tier === 1);
   const tier2 = items.filter((t) => t.happening_tier === 2);
@@ -47,23 +142,8 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
     shareUrl(url, t.title);
   }
 
-  function renderCard(t: Thing, i: number, isTier1: boolean) {
-    return isTier1 ? (
-      <PickCard
-        key={t.id}
-        href={`/thing/${t.id}`}
-        tone={cardTone(i)}
-        tag={cardTag(t)}
-        place={cardPlace(t)}
-        title={t.title}
-        blurb={cardBlurb(t)}
-        facts={cardFacts(t)}
-        photo={t.photo_url ?? undefined}
-        saved={isSaved(t.id)}
-        onToggleSave={() => toggle(t.id)}
-        onShare={() => handleShare(t)}
-      />
-    ) : (
+  function renderListCard(t: Thing, i: number) {
+    return (
       <ListCard
         key={t.id}
         href={`/thing/${t.id}`}
@@ -83,20 +163,17 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
 
   return (
     <>
-      {/* Lead section — Tier 1, always open, label tracks the horizon selector */}
+      {/* Lead section — Tier 1, always open, layout switches on horizon */}
       {tier1.length > 0 && (
-        <section className="sbd-feed-section">
-          <div className="sbd-sh sbd-sh--static">
-            <span className="sbd-sh__icon" aria-hidden="true">📅</span>
-            <h2 className="sbd-sh__label">{HORIZON_LABEL[horizon]}</h2>
-            <span className="sbd-sh__badge" aria-label={`${tier1.length} items`}>
-              {tier1.length}
-            </span>
-          </div>
-          <div className="sbd-feed-section__list">
-            {tier1.map((t, i) => renderCard(t, i, true))}
-          </div>
-        </section>
+        <LeadSection
+          tier1={tier1}
+          horizon={horizon}
+          monthShownCount={monthShownCount}
+          onMonthShowMore={() => setMonthShownCount((c) => c + 8)}
+          isSaved={isSaved}
+          toggle={toggle}
+          handleShare={handleShare}
+        />
       )}
 
       {/* Build your day CTA — always visible, between lead and collapsed sections */}
@@ -122,7 +199,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
             onClick={() => setTier2Open((o) => !o)}
           >
             <span className="sbd-sh__icon" aria-hidden="true">🔁</span>
-            <span className="sbd-sh__label">Recurring Weekly</span>
+            <span className="sbd-sh__label">Happening this day each week</span>
             <span className="sbd-sh__badge" aria-label={`${tier2.length} items`}>
               {tier2.length}
             </span>
@@ -135,7 +212,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
           </button>
           <div id="explore-tier2" hidden={!tier2Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier2.map((t, i) => renderCard(t, i, false))}
+              {tier2.map((t, i) => renderListCard(t, i))}
             </div>
           </div>
         </section>
@@ -152,7 +229,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
             onClick={() => setTier3Open((o) => !o)}
           >
             <span className="sbd-sh__icon" aria-hidden="true">⭐</span>
-            <span className="sbd-sh__label">Great any time</span>
+            <span className="sbd-sh__label">Great any day</span>
             <span className="sbd-sh__badge" aria-label={`${tier3.length} items`}>
               {tier3.length}
             </span>
@@ -165,7 +242,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
           </button>
           <div id="explore-tier3" hidden={!tier3Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier3.map((t, i) => renderCard(t, i, false))}
+              {tier3.map((t, i) => renderListCard(t, i))}
             </div>
           </div>
         </section>

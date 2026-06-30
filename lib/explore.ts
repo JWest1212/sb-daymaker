@@ -71,6 +71,75 @@ export const TIER_META: Record<number, { key: string; title: string }> = {
   3: { key: "t3", title: "Always worth it" },
 };
 
+// ---------------------------------------------------------------------------
+// Lead-breakout helpers (Phase 16 — Explore horizon lead breakout)
+// These do NOT modify cascade / withinHorizon / filterByLens.
+// ---------------------------------------------------------------------------
+
+export const SB_TZ = "America/Los_Angeles";
+
+const SB_SHORT_DATE = new Intl.DateTimeFormat("en-US", {
+  timeZone: SB_TZ,
+  month: "short",
+  day: "numeric",
+});
+
+/** Sort Tier-1 dated items by starts_at ascending (soonest first).
+ *  Items without starts_at are placed last. */
+export function byDateAsc(items: Thing[]): Thing[] {
+  return [...items].sort((a, b) => {
+    if (!a.starts_at && !b.starts_at) return 0;
+    if (!a.starts_at) return 1;
+    if (!b.starts_at) return -1;
+    return a.starts_at.localeCompare(b.starts_at);
+  });
+}
+
+/** Format a date range for the rock tile "when" pill.
+ *  Single-day or null ends_at → "Jul 4". Multi-day → "Jul 17–18". */
+export function formatWhen(
+  starts_at: string | null,
+  ends_at: string | null
+): string {
+  if (!starts_at) return "";
+  const start = new Date(starts_at);
+  const startLabel = SB_SHORT_DATE.format(start);
+  if (!ends_at) return startLabel;
+  const end = new Date(ends_at);
+  if (sbDay(start.getTime()) === sbDay(end.getTime())) return startLabel;
+  return `${startLabel}–${SB_SHORT_DATE.format(end)}`;
+}
+
+/** Group items by SB-local calendar day, days ascending, items in incoming order within each day. */
+export function groupByDay(
+  items: Thing[]
+): Array<{ dayLabel: string; dateNum: number; items: Thing[] }> {
+  const map = new Map<string, { dayLabel: string; dateNum: number; items: Thing[] }>();
+  for (const t of items) {
+    if (!t.starts_at) continue;
+    const ms = new Date(t.starts_at).getTime();
+    const key = sbDay(ms);
+    if (!map.has(key)) {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: SB_TZ,
+        weekday: "short",
+        day: "numeric",
+      }).formatToParts(new Date(ms));
+      const value = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((p) => p.type === type)?.value ?? "";
+      map.set(key, {
+        dayLabel: value("weekday").toUpperCase(),
+        dateNum: parseInt(value("day"), 10),
+        items: [],
+      });
+    }
+    map.get(key)!.items.push(t);
+  }
+  return [...map.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, v]) => v);
+}
+
 /** A hand-spread "perfect day": one dated event + a few distinct evergreen places. */
 export function pickPerfectDay(things: Thing[]): string[] {
   const ids: string[] = [];
