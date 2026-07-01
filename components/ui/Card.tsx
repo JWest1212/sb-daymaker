@@ -101,9 +101,9 @@ export function PickCard({
 }
 
 /**
- * ListCard — compact horizontal card: optional 52px thumb, occasion pill,
- * DateEyebrow meta line, Fraunces 20px title, blurb, CardActions right column.
- * Thumb is omitted (text row) when no photo_url — never shows an empty slot.
+ * ListCard — Option B: thumb+pill+title in a top row; blurb spans full width
+ * below; date eyebrow + actions share a bottom meta row. Thumb omitted when
+ * no photo_url — never shows an empty slot.
  */
 export function ListCard({
   id,
@@ -126,30 +126,27 @@ export function ListCard({
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
-      {photo ? (
-        <div
-          className={`sbd-listcard__thumb sbd-media--${tone}`}
-          aria-hidden="true"
-        >
-          <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
-        </div>
-      ) : null}
-      <div className="sbd-listcard__body">
-        {occasionKey ? <Pill occasion={occasionKey} /> : null}
-        <CardTitle href={href} className="sbd-listcard__title">
-          {title}
-        </CardTitle>
-        <p className="sbd-listcard__blurb">{blurb}</p>
-        {when ? (
-          <DateEyebrow>{when}</DateEyebrow>
+      <div className="sbd-listcard__top">
+        {photo ? (
+          <div
+            className={`sbd-listcard__thumb sbd-media--${tone}`}
+            aria-hidden="true"
+          >
+            <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
+          </div>
         ) : null}
+        <div className="sbd-listcard__head">
+          {occasionKey ? <Pill occasion={occasionKey} /> : null}
+          <CardTitle href={href} className="sbd-listcard__title">
+            {title}
+          </CardTitle>
+        </div>
       </div>
-      <CardActions
-        id={id}
-        title={title}
-        url={`/thing/${id}`}
-        onImage={false}
-      />
+      <p className="sbd-listcard__blurb">{blurb}</p>
+      <div className="sbd-listcard__meta">
+        {when ? <DateEyebrow>{when}</DateEyebrow> : null}
+        <CardActions id={id} title={title} url={`/thing/${id}`} onImage={false} />
+      </div>
     </article>
   );
 }
