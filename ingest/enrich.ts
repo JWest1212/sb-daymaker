@@ -155,9 +155,36 @@ async function logDrafts(sb: SupabaseClient, cands: Candidate[]): Promise<void> 
   if (rows.length) await sb.from('audit_log').insert(rows);
 }
 
+// Haiku 4.5 max output tokens is 8 192. At ~250 tokens per item, a single call
+// handles at most ~32 items before hitting the model ceiling. We chunk to 20 so
+// each call comfortably fits (5 000 tokens) and finishes well within the timeout.
+const CHUNK_SIZE = 20;
+
+/** One Claude call over a single chunk (≤ CHUNK_SIZE items). */
+async function enrichChunk(
+  chunk: Candidate[],
+  client: Anthropic,
+): Promise<Candidate[]> {
+  const maxTokens = Math.min(8_000, Math.max(1_024, chunk.length * 250));
+  const res = await client.messages.create({
+    model: MODEL,
+    max_tokens: maxTokens,
+    system: SYSTEM,
+    tools: [enrichTool],
+    tool_choice: { type: 'tool', name: 'enrich_batch' },
+    messages: [{ role: 'user', content: `Items (JSON):\n${JSON.stringify(buildItems(chunk))}` }],
+  });
+  const block = res.content.find((b) => b.type === 'tool_use');
+  if (!block || block.type !== 'tool_use') return chunk; // no tool_use → return unchanged
+  const items = (block.input as { items?: ModelItem[] }).items ?? [];
+  return mergeEnrichment(chunk, items);
+}
+
 /**
- * ONE batched Claude call over all gated candidates. Returns enriched copies, or
- * the originals unchanged on any failure / missing key / empty input.
+ * Batched Claude enrichment, chunked so each API call stays within Haiku's
+ * 8 192-token output ceiling. Processes chunks sequentially; any chunk that
+ * fails (timeout, API error) is returned unchanged (fail-soft per chunk).
+ * Returns enriched copies, or the originals unchanged on missing key / empty input.
  */
 export async function enrich(
   cands: Candidate[],
@@ -170,33 +197,33 @@ export async function enrich(
     return cands;
   }
 
-  const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 120_000 });
-  // ~250 output tokens per item, bounded to a safe non-streaming ceiling.
-  const maxTokens = Math.min(16_000, Math.max(2_048, cands.length * 250));
+  const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 90_000 });
 
-  try {
-    const res = await client.messages.create({
-      model: MODEL,
-      max_tokens: maxTokens,
-      system: SYSTEM,
-      tools: [enrichTool],
-      tool_choice: { type: 'tool', name: 'enrich_batch' },
-      messages: [{ role: 'user', content: `Items (JSON):\n${JSON.stringify(buildItems(cands))}` }],
-    });
-    const block = res.content.find((b) => b.type === 'tool_use');
-    if (!block || block.type !== 'tool_use') {
-      console.log('[enrich] no tool_use in response — landing plain titles');
-      return cands;
-    }
-    const items = (block.input as { items?: ModelItem[] }).items ?? [];
-    const enriched = mergeEnrichment(cands, items);
-    if (opts.sb) await logDrafts(opts.sb, enriched);
-    const drafted = enriched.filter((c) => c.blurb).length;
-    console.log(`[enrich] drafted ${drafted}/${cands.length} (1 batched ${MODEL} call)`);
-    return enriched;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.log(`[enrich] enrichment skipped (${msg}) — landing rows with plain titles`);
-    return cands;
+  const chunks: Candidate[][] = [];
+  for (let i = 0; i < cands.length; i += CHUNK_SIZE) {
+    chunks.push(cands.slice(i, i + CHUNK_SIZE));
   }
+
+  const results: Candidate[] = [];
+  let totalDrafted = 0;
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    try {
+      const enriched = await enrichChunk(chunk, client);
+      results.push(...enriched);
+      const drafted = enriched.filter((c) => c.blurb).length;
+      totalDrafted += drafted;
+      console.log(`[enrich] chunk ${i + 1}/${chunks.length}: ${drafted}/${chunk.length} drafted`);
+    } catch (err) {
+      // Fail-soft: one bad chunk doesn't lose the rest of the batch.
+      const msg = err instanceof Error ? err.message : String(err);
+      console.log(`[enrich] chunk ${i + 1}/${chunks.length} failed (${msg}) — landing ${chunk.length} plain titles`);
+      results.push(...chunk);
+    }
+  }
+
+  if (opts.sb) await logDrafts(opts.sb, results);
+  console.log(`[enrich] drafted ${totalDrafted}/${cands.length} across ${chunks.length} ${MODEL} call(s)`);
+  return results;
 }
