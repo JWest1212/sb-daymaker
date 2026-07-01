@@ -37,6 +37,11 @@ import { coastalView } from './coastalView';
 import { nightlifeRhythms } from './nightlifeRhythms';
 import { outdoorsOperators } from './outdoorsOperators';
 import { natureProgramsFree } from './natureProgramsFree';
+// Wave 4 adapters (§9)
+import { seatgeek } from './seatgeek';
+import { sbcountyArts } from './sbcountyArts';
+import { allevents } from './allevents';
+import { newVic } from './newVic';
 
 // Order mirrors SOURCE_PRIORITY in dedupe.ts:
 //   ticketmaster → venue-direct → institution-direct → civic/curated → aggregators
@@ -46,16 +51,16 @@ export const registry: SourceAdapter[] = [
   ticketmaster,
   // venue-direct (authoritative for their own events)
   soho, sbbowl, lobero, granada, arlington,
-  musicacademy, alcazar, centerstage, carpinteriaArts,
+  musicacademy, alcazar, centerstage, carpinteriaArts, newVic,
   // institution-direct
   moxi, naturalHistory, botanicGarden, sbma,
   ucsb, libraries,
   // curated local listings / civic
   independent, citySites,
   goletaCivic, carpinteriaCivic,
-  downtownSB, coastalView,
+  downtownSB, coastalView, sbcountyArts,
   // broad aggregators
-  eventbrite,
+  eventbrite, allevents, seatgeek,
   // registry-bound rhythms
   farmersMarkets,
   nightlifeRhythms, outdoorsOperators, natureProgramsFree,

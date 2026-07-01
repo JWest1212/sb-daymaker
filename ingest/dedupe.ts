@@ -45,6 +45,7 @@ const SOURCE_RANK: Array<[RegExp, number]> = [
   [/alcazartheater\.com|thealcazar\.org/i,            6],
   [/centerstagetheater\.org/i,                        7],
   [/carpinteriaartscenter\.org/i,                     8],
+  [/etcsb\.org/i,                                     8], // New Vic (ETC)
   // Wave 3 venue/operator-direct
   [/figmtnbrew\.com/i,                                9],
   [/darganssb\.com/i,                                 9],

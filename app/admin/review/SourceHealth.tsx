@@ -27,6 +27,11 @@ const LABEL: Record<string, string> = {
   nightlifeRhythms: "Nightlife Rhythms",
   outdoorsOperators: "Outdoor Operators",
   natureProgramsFree: "Nature Programs (Free)",
+  // Wave 4 backstops + venue
+  newVic: "New Vic Theatre (ETC)",
+  sbcountyArts: "SB County Arts Commission",
+  allevents: "AllEvents (SB)",
+  seatgeek: "SeatGeek (SB)",
   // pre-Wave 2
   independent: "The Independent",
   citysb: "City of Santa Barbara",
