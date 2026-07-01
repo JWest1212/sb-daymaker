@@ -6,7 +6,16 @@ on:
     # 09:00 UTC = 02:00 America/Los_Angeles (PDT). Cron is fixed-UTC, so this is
     # 01:00 local in winter (PST) — fine for a nightly batch.
     - cron: '0 9 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      enrich_backfill:
+        description: 'Re-enrich all needs_review rows with no blurb (ENRICH_BACKFILL=1)'
+        type: boolean
+        default: false
+      image_backfill:
+        description: 'Refresh images for needs_review rows (IMAGE_BACKFILL=1)'
+        type: boolean
+        default: false
 
 jobs:
   ingest:
@@ -22,6 +31,8 @@ jobs:
       - run: npm ci
       - run: npx tsx ingest/run.ts
         env:
+          ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}
+          IMAGE_BACKFILL: ${{ inputs.image_backfill == true && '1' || '' }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
