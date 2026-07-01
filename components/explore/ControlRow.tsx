@@ -1,24 +1,25 @@
-import { SegmentedControl } from "@/components/ui";
-import { OCCASION_BY_KEY, type OccasionKey } from "@/lib/occasions";
-import { ZONE_LABEL, type Zone } from "@/lib/zones";
+import { SegmentedControl, SBIcon } from "@/components/ui";
+import type { OccasionKey } from "@/lib/occasions";
+import type { Zone } from "@/lib/zones";
 import type { Horizon } from "@/lib/explore";
 
 export function ControlRow({
   lens,
   zone,
   horizon,
-  onOpenLens,
-  onOpenNearMe,
+  tuneOpen,
+  onOpenTune,
   onHorizon,
 }: {
   lens: OccasionKey | null;
   zone: Zone | null;
   horizon: Horizon;
-  onOpenLens: () => void;
-  onOpenNearMe: () => void;
+  tuneOpen: boolean;
+  onOpenTune: () => void;
   onHorizon: (h: Horizon) => void;
 }) {
-  const lensSel = lens ? OCCASION_BY_KEY[lens] : null;
+  const activeFilterCount = (lens ? 1 : 0) + (zone ? 1 : 0);
+  const isActive = activeFilterCount > 0;
 
   return (
     <div className="sbd-ctrl">
@@ -34,32 +35,24 @@ export function ControlRow({
           ]}
         />
       </div>
-
-      <div className="sbd-ctrl__row">
-        <button
-          type="button"
-          className={`sbd-ctrl__lens${lensSel ? " is-active" : ""}`}
-          onClick={onOpenLens}
-        >
-          <span className="sbd-ctrl__lens-icon" aria-hidden="true">
-            {lensSel ? lensSel.icon : "✦"}
+      <button
+        type="button"
+        className={`sbd-ctrl__tune${isActive ? " is-active" : ""}`}
+        aria-haspopup="dialog"
+        aria-expanded={tuneOpen}
+        onClick={onOpenTune}
+      >
+        <SBIcon name="sliders" size={15} stroke="var(--pacific)" strokeWidth={2} />
+        <span>Tune</span>
+        {isActive ? (
+          <span
+            className="sbd-ctrl__tune-dot"
+            aria-label={`${activeFilterCount} filter${activeFilterCount > 1 ? "s" : ""} active`}
+          >
+            {activeFilterCount}
           </span>
-          <span className="sbd-ctrl__lens-text">
-            {lensSel ? lensSel.label : "Any vibe"}
-          </span>
-          <span aria-hidden="true">▾</span>
-        </button>
-
-        <button
-          type="button"
-          className={`sbd-ctrl__near${zone ? " is-active" : ""}`}
-          aria-pressed={Boolean(zone)}
-          onClick={onOpenNearMe}
-        >
-          <span aria-hidden="true">📍</span>
-          <span>{zone ? ZONE_LABEL[zone] : "Near Me"}</span>
-        </button>
-      </div>
+        ) : null}
+      </button>
     </div>
   );
 }

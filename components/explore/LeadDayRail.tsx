@@ -3,11 +3,9 @@ import { groupByDay } from "@/lib/explore";
 import { cardBlurb, cardFacts } from "./derive";
 import type { Thing } from "@/lib/things";
 
-// ---------------------------------------------------------------------------
-// LeadDayRail — groups Tier-1 week items by SB-local day, days ascending.
-// Each row is now a ListCard (unified chrome). Thumbnails + date-column
-// narrowing are Phase 4 (B4); photos are withheld here to keep the rail clean.
-// ---------------------------------------------------------------------------
+// Groups Tier-1 week items by SB-local day; each row is a ListCard.
+// Date column (44px) shows weekday+number on the first row of each day group;
+// subsequent rows use a narrow indent so content reclaims the space.
 export function LeadDayRail({ items }: { items: Thing[] }) {
   const days = groupByDay(items);
 
@@ -15,23 +13,30 @@ export function LeadDayRail({ items }: { items: Thing[] }) {
     <div className="sbd-leadday-list">
       {days.map(({ dayLabel, dateNum, items: dayItems }) => (
         <div className="sbd-leadday" key={`${dayLabel}-${dateNum}`}>
-          <div className="sbd-leadday__dd" aria-hidden="true">
-            <div className="sbd-leadday__dd-w">{dayLabel}</div>
-            <div className="sbd-leadday__dd-n">{dateNum}</div>
-          </div>
-          <div className="sbd-leadday__items">
-            {dayItems.map((t) => (
+          {dayItems.map((t, idx) => (
+            <div
+              key={t.id}
+              className={`sbd-leadday-row${idx === 0 ? " sbd-leadday-row--first" : ""}`}
+            >
+              <div className="sbd-leadday__dd" aria-hidden="true">
+                {idx === 0 ? (
+                  <>
+                    <div className="sbd-leadday__dd-w">{dayLabel}</div>
+                    <div className="sbd-leadday__dd-n">{dateNum}</div>
+                  </>
+                ) : null}
+              </div>
               <ListCard
-                key={t.id}
                 id={t.id}
                 title={t.title}
                 blurb={cardBlurb(t)}
                 occasionKey={t.tags[0]}
                 when={cardFacts(t).join(" · ")}
                 href={`/thing/${t.id}`}
+                photo={t.photo_url ?? undefined}
               />
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       ))}
     </div>
