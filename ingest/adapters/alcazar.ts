@@ -6,6 +6,11 @@
 //
 // The Alcazar is a small community theater; ticket links are often direct (not AXS).
 // buyUrl defaults to the detail page URL when no external ticket link is found.
+//
+// NOTE: As of 2026-06, thealcazar.org is an empty Squarespace shell — no event
+// items are published in any Squarespace collection. All three resolution paths
+// return 0 results correctly; this is not a scrape failure. Re-enable when the
+// venue begins publishing events on the site.
 
 import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';

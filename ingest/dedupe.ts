@@ -40,7 +40,7 @@ const SOURCE_RANK: Array<[RegExp, number]> = [
   [/sbbowl\.com/i,                                    1],
   [/lobero\.org/i,                                    2],
   [/granadasb\.com|granada-sb\.com|thegranada\.com/i, 3],
-  [/thearlington\.com|arlingtonsb\.com/i,             4],
+  [/arlingtontheatresb\.com|thearlington\.com/i,       4],
   [/musicacademy\.org/i,                              5],
   [/alcazartheater\.com|thealcazar\.org/i,            6],
   [/centerstagetheater\.org/i,                        7],
@@ -58,7 +58,7 @@ const SOURCE_RANK: Array<[RegExp, number]> = [
   [/independent\.com/i,                               30],
   [/santabarbaraca\.com|santabarbaraca\.gov/i,        31],
   [/cityofgoleta\.org/i,                              32],
-  [/carpinteria\.ca\.us/i,                            33],
+  [/carpinteriaca\.gov|carpinteria\.ca\.us/i,          33],
   [/downtownsb\.org/i,                                34],
   [/santabarbaraca\.com\/visit/i,                     35], // visit SB
   [/coastalview\.com/i,                               36],

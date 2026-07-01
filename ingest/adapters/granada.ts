@@ -8,6 +8,11 @@
 //
 // Robots.txt: checked at runtime via fetchHtmlPolite.
 // Addresses resolved from gate.ts VENUE_ADDRESSES ('The Granada Theatre').
+//
+// NOTE: granadaSB.com is hosted by CIO Solutions on infrastructure that IP-blocks
+// cloud runners (GitHub Actions / AWS ranges). This adapter returns 0 from CI; it
+// may work from a residential or proxy IP. Enable useManagedScrape (Scrapfly) if
+// coverage is needed in production.
 
 import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';

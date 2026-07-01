@@ -1,25 +1,27 @@
 // ingest/adapters/carpinteriaCivic.ts
 //
-// City of Carpinteria civic calendar (§7.5). carpinteria.ca.us.
-// Resolution order: CivicPlus iCal → Localist API → HTML scrape.
+// City of Carpinteria civic calendar (§7.5). carpinteriaca.gov.
+// Resolution order: WP Tribe REST → HTML scrape.
+//
+// Investigation: site is WordPress + The Events Calendar (Tribe REST confirmed live
+// at /wp-json/tribe/events/v1/events). Calendar is thin; even a handful of clean
+// events per window is a net win over zero.
 //
 // Filtered to public community events; internal admin minutiae are dropped via
-// the DENY list. Carpinteria is a thin-coverage city; even a handful of clean
-// events per window is a net win over zero.
+// the DENY list.
 //
 // useManagedScrape: false. Robots.txt checked at runtime.
 
 import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';
 import type { RawCandidate } from '../../packages/shared/types';
-import { fetchLocalist } from './_shared/localist';
-import { parseIcsFeed } from './_shared/ics';
+import { fetchTribeEvents } from './_shared/wpEvents';
 import { fetchHtmlPolite } from './_shared/fetchHtml';
 import { extractEvents } from './_shared/jsonLd';
 import { seedOccasionTags } from './_shared/occasionTags';
 
 const SOURCE_KEY = 'carpinteriaCivic';
-const CITY_BASE = 'https://www.carpinteria.ca.us';
+const CITY_BASE = 'https://carpinteriaca.gov';
 const VENUE_NAME = 'City of Carpinteria';
 const VENUE_ADDRESS = 'Carpinteria, CA 93013';
 
@@ -35,31 +37,6 @@ const DENY: RegExp[] = [
 
 function isDenied(title: string): boolean {
   return DENY.some((rx) => rx.test(title));
-}
-
-const CIVIC_ICAL_URLS = [
-  `${CITY_BASE}/calendar.aspx?CID=1&format=ical`,
-  `${CITY_BASE}/ical/2.0/icalendar.aspx`,
-  `${CITY_BASE}/government/calendar/?ical=1`,
-  `${CITY_BASE}/calendar/?ical=1`,
-];
-
-async function tryCivicIcal(w: { fromISO: string; toISO: string }): Promise<RawCandidate[]> {
-  for (const url of CIVIC_ICAL_URLS) {
-    try {
-      const cands = await parseIcsFeed(url, w, {
-        sourceKey: SOURCE_KEY,
-        venueName: VENUE_NAME,
-        address: VENUE_ADDRESS,
-        neighborhood: 'carpinteria',
-        category: 'community_gathering',
-        tier: 1,
-      });
-      const filtered = cands.filter((c) => !isDenied(c.title ?? ''));
-      if (filtered.length > 0 || cands.length > 0) return filtered;
-    } catch { /* try next */ }
-  }
-  return [];
 }
 
 async function scrapeCalendar(w: { fromISO: string; toISO: string }): Promise<RawCandidate[]> {
@@ -130,24 +107,21 @@ export const carpinteriaCivic: SourceAdapter = {
   label: 'City of Carpinteria',
   useManagedScrape: false,
   async fetch(w): Promise<RawCandidate[]> {
-    // 1. CivicPlus iCal (Carpinteria uses CivicEngage — try first)
-    const icalCands = await tryCivicIcal(w);
-    if (icalCands.length) return icalCands;
-
-    // 2. Localist API (if available)
+    // 1. WP Tribe REST (The Events Calendar — confirmed live at carpinteriaca.gov)
     try {
-      const cands = await fetchLocalist('https://events.carpinteria.ca.us', w, {
+      const cands = await fetchTribeEvents(CITY_BASE, w, {
         sourceKey: SOURCE_KEY,
+        label: VENUE_NAME,
         venueName: VENUE_NAME,
         address: VENUE_ADDRESS,
         neighborhood: 'carpinteria',
         tier: 1,
-        denyKeywords: DENY,
       });
-      if (cands.length) return cands;
-    } catch { /* not a Localist instance */ }
+      const filtered = cands.filter((c) => !isDenied(c.title ?? ''));
+      if (filtered.length || cands.length) return filtered;
+    } catch { /* fall through */ }
 
-    // 3. Generic HTML scrape fallback
+    // 2. Generic HTML scrape fallback
     return scrapeCalendar(w);
   },
 };

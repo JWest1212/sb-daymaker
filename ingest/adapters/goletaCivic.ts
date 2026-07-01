@@ -8,6 +8,11 @@
 // net-new coverage for Goleta only.
 //
 // useManagedScrape: false. Robots.txt checked at runtime.
+//
+// NOTE: cityofgoleta.org is protected by Akamai edge security which blocks all
+// automated requests (including browser UAs) from cloud/datacenter IPs. Returns 0
+// from GitHub Actions runners. Enable useManagedScrape (Scrapfly) if coverage is
+// needed; without it this adapter runs but yields nothing.
 
 import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';

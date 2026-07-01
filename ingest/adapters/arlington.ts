@@ -17,7 +17,7 @@ import { extractEvents } from './_shared/jsonLd';
 import { seedOccasionTags } from './_shared/occasionTags';
 import { sbISO } from '../tz';
 
-const BASE = 'https://thearlington.com';
+const BASE = 'https://www.arlingtontheatresb.com';
 const SOURCE_KEY = 'arlington';
 const VENUE_NAME = 'Arlington Theatre';
 const VENUE_ADDRESS = '1317 State St, Santa Barbara, CA 93101';
@@ -52,7 +52,8 @@ function extractEventUrls(html: string): string[] {
   const seen = new Set<string>();
   $('a[href]').each((_, el) => {
     const href = $(el).attr('href') ?? '';
-    if (/\/(event|events|show|shows|calendar)\/[^/#?]+\/?$/.test(href)) {
+    // Wix site uses /event-details/{slug} (not /events/ or /shows/)
+    if (/\/event-details\/[^/#?]+\/?$/.test(href)) {
       seen.add(href.replace(/\/$/, ''));
     }
   });
@@ -65,7 +66,8 @@ async function scrapeVenue(w: { fromISO: string; toISO: string }): Promise<RawCa
   const out: RawCandidate[] = [];
 
   let listHtml = '';
-  for (const path of ['/events/', '/shows/', '/calendar/']) {
+  // Wix site: upcoming shows are listed at /upcoming-events
+  for (const path of ['/upcoming-events', '/']) {
     try {
       listHtml = await fetchHtmlPolite(`${BASE}${path}`, SOURCE_KEY);
       break;
