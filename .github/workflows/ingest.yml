@@ -39,3 +39,5 @@ jobs:
           # add SCRAPFLY_KEY. Empty = every source uses plain HTTP.
           MANAGED_SCRAPE: ${{ secrets.MANAGED_SCRAPE }}
           SCRAPFLY_KEY: ${{ secrets.SCRAPFLY_KEY }}
+          # Wave 4: SeatGeek backstop (free client_id; omit to skip)
+          SEATGEEK_CLIENT_ID: ${{ secrets.SEATGEEK_CLIENT_ID }}
