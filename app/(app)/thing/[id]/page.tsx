@@ -39,9 +39,9 @@ export default async function ThingPage({
   if (!t) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
-        <Link href="/" className="sbd-backlink">
-          ‹ Explore
-        </Link>
+        <div className="sbd-backrow">
+          <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
+        </div>
         <EmptyState
           icon="🔍"
           title="Not found"

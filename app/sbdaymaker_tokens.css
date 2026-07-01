@@ -44,6 +44,7 @@
   --gold-text:   #7A5E13;  /* readable "gold" for small labels            */
   --sage-text:   #566049;
   --terra-text:  #9E3F20;
+  --gold-nav-active: #F5C95B; /* AA-safe active label on --pacific (≥4.5:1) */
 
   /* ---- SEMANTIC TOKENS --------------------------------------------------
      Build against THESE, not raw palette, so contrast rules stay enforced. */
@@ -122,6 +123,9 @@
 
   /* ---- BREAKPOINTS (reference — use in media queries) ------------------- */
   /* mobile (base) <600 · tablet 600–1023 · desktop ≥1024 · wide ≥1280       */
+
+  /* ---- LAYOUT / STICKY OFFSETS ------------------------------------------ */
+  --sbd-header-h: 62px; /* rendered height of BrandHeader (row + 3px hairline, no notch) */
 }
 
 /* Reduced motion: kill loops, keep instant feedback.  (WCAG 2.2 AA floor) */

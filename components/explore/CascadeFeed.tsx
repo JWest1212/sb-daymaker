@@ -5,16 +5,13 @@ import Link from "next/link";
 import { PickCard, ListCard, EmptyState } from "@/components/ui";
 import type { Thing } from "@/lib/things";
 import type { Horizon } from "@/lib/explore";
-import { useSaves } from "@/components/saves/SavesProvider";
-import { shareUrl } from "@/components/saved/share";
 import {
   cardBlurb,
   cardFacts,
   cardPlace,
-  cardTag,
-  cardTagColor,
   cardTone,
 } from "./derive";
+import { formatWhen } from "@/lib/explore";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
@@ -25,34 +22,25 @@ const HORIZON_LABEL: Record<Horizon, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Shared card-handler types passed through the component tree
+// Today branch — first item is the feature PickCard; rest are ListCard briefs.
+// Phase 4 (B4) formalises lead+briefs split; for now all render as PickCard.
 // ---------------------------------------------------------------------------
-type CardHandlers = {
-  isSaved: (id: string) => boolean;
-  toggle: (id: string) => void;
-  handleShare: (t: Thing) => void;
-};
-
-// ---------------------------------------------------------------------------
-// Today branch — PickCard stack (the existing live layout, unchanged)
-// ---------------------------------------------------------------------------
-function TodayLead({ tier1, isSaved, toggle, handleShare }: { tier1: Thing[] } & CardHandlers) {
+function TodayLead({ tier1 }: { tier1: Thing[] }) {
   return (
     <div className="sbd-feed-section__list">
       {tier1.map((t, i) => (
         <PickCard
           key={t.id}
+          id={t.id}
           href={`/thing/${t.id}`}
           tone={cardTone(i)}
-          tag={cardTag(t)}
+          occasionKey={t.tags[0]}
           place={cardPlace(t)}
           title={t.title}
           blurb={cardBlurb(t)}
           facts={cardFacts(t)}
+          when={formatWhen(t.starts_at, t.ends_at) ?? undefined}
           photo={t.photo_url ?? undefined}
-          saved={isSaved(t.id)}
-          onToggleSave={() => toggle(t.id)}
-          onShare={() => handleShare(t)}
         />
       ))}
     </div>
@@ -60,23 +48,19 @@ function TodayLead({ tier1, isSaved, toggle, handleShare }: { tier1: Thing[] } &
 }
 
 // ---------------------------------------------------------------------------
-// LeadSection — horizon-aware switch; Today is live, Week/Month are TEMP stubs
-// (replaced in Phases 3 and 2 respectively).
+// LeadSection — horizon-aware switch
 // ---------------------------------------------------------------------------
 function LeadSection({
   tier1,
   horizon,
   monthShownCount,
   onMonthShowMore,
-  isSaved,
-  toggle,
-  handleShare,
 }: {
   tier1: Thing[];
   horizon: Horizon;
   monthShownCount: number;
   onMonthShowMore: () => void;
-} & CardHandlers) {
+}) {
   return (
     <section className="sbd-feed-section">
       <div className="sbd-sh sbd-sh--static">
@@ -86,21 +70,14 @@ function LeadSection({
           {tier1.length}
         </span>
       </div>
-      {horizon === "today" && (
-        <TodayLead tier1={tier1} isSaved={isSaved} toggle={toggle} handleShare={handleShare} />
-      )}
-      {horizon === "week" && (
-        <LeadDayRail items={tier1} isSaved={isSaved} toggle={toggle} handleShare={handleShare} />
-      )}
+      {horizon === "today" && <TodayLead tier1={tier1} />}
+      {horizon === "week" && <LeadDayRail items={tier1} />}
       {horizon === "month" && (
         <div className="sbd-feed-section__list">
           <RockGrid
             items={tier1}
             shownCount={monthShownCount}
             onShowMore={onMonthShowMore}
-            isSaved={isSaved}
-            toggle={toggle}
-            handleShare={handleShare}
           />
         </div>
       )}
@@ -112,12 +89,10 @@ function LeadSection({
 // CascadeFeed — tier partition + section orchestration
 // ---------------------------------------------------------------------------
 export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horizon }) {
-  const { isSaved, toggle } = useSaves();
   const [tier2Open, setTier2Open] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
   const [monthShownCount, setMonthShownCount] = useState(8);
 
-  // Reset month pagination when leaving Month horizon
   useEffect(() => {
     setMonthShownCount(8);
   }, [horizon]);
@@ -137,26 +112,17 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
     );
   }
 
-  function handleShare(t: Thing) {
-    const url = `${window.location.origin}/thing/${t.id}`;
-    shareUrl(url, t.title);
-  }
-
-  function renderListCard(t: Thing, i: number) {
+  function renderListCard(t: Thing) {
     return (
       <ListCard
         key={t.id}
+        id={t.id}
         href={`/thing/${t.id}`}
-        tone={cardTone(i)}
-        tag={cardTag(t)}
-        tagColor={cardTagColor(t)}
+        occasionKey={t.tags[0]}
         title={t.title}
         blurb={cardBlurb(t)}
-        meta={cardFacts(t).join(" · ")}
+        when={cardFacts(t).join(" · ")}
         photo={t.photo_url ?? undefined}
-        saved={isSaved(t.id)}
-        onToggleSave={() => toggle(t.id)}
-        onShare={() => handleShare(t)}
       />
     );
   }
@@ -170,9 +136,6 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
           horizon={horizon}
           monthShownCount={monthShownCount}
           onMonthShowMore={() => setMonthShownCount((c) => c + 8)}
-          isSaved={isSaved}
-          toggle={toggle}
-          handleShare={handleShare}
         />
       )}
 
@@ -212,7 +175,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
           </button>
           <div id="explore-tier2" hidden={!tier2Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier2.map((t, i) => renderListCard(t, i))}
+              {tier2.map((t) => renderListCard(t))}
             </div>
           </div>
         </section>
@@ -242,7 +205,7 @@ export function CascadeFeed({ items, horizon }: { items: Thing[]; horizon: Horiz
           </button>
           <div id="explore-tier3" hidden={!tier3Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier3.map((t, i) => renderListCard(t, i))}
+              {tier3.map((t) => renderListCard(t))}
             </div>
           </div>
         </section>

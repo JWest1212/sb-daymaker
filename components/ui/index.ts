@@ -6,3 +6,6 @@ export { PickCard, ListCard } from "./Card";
 export { BottomSheet } from "./BottomSheet";
 export { Skeleton, SkeletonCard } from "./Skeleton";
 export { EmptyState } from "./EmptyState";
+export { SBIcon, type IconName } from "./SBIcon";
+export { CardActions } from "./CardActions";
+export { Pill, DateEyebrow, PlacePill } from "./Pill";

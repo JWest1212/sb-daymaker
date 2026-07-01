@@ -252,6 +252,7 @@
 
 /* ---- CARDS -------------------------------------------------------------- */
 .sbd-card {
+  position: relative; /* containing block for CardActions --on-image and pick__tag */
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -334,20 +335,11 @@
   outline: 2px solid var(--paper);
   outline-offset: 2px;
 }
+/* Positioning wrapper for PlacePill — visual styles live in .sbd-placepill */
 .sbd-pick__place {
   position: absolute;
   bottom: var(--space-3);
   left: var(--space-3);
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: rgba(36, 28, 22, 0.6);
-  color: var(--paper);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-pill);
-  backdrop-filter: blur(4px);
 }
 .sbd-pick__body {
   padding: var(--space-4) var(--space-5) var(--space-5);
@@ -355,17 +347,29 @@
 .sbd-pick__title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: var(--weight-semi);
-  line-height: var(--leading-tight);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
   letter-spacing: -0.01em;
   color: var(--text);
-  margin: 0;
+  margin: 0 0 var(--space-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* DateEyebrow above title in PickCard body */
+.sbd-pick__body .sbd-eyebrow-date {
+  margin-bottom: 4px;
 }
 .sbd-pick__blurb {
-  font-size: var(--text-base);
-  line-height: var(--leading-body);
+  font-size: var(--text-sm);
+  line-height: 1.4;
   color: var(--text-muted);
-  margin: var(--space-2) 0 var(--space-4);
+  margin: 0 0 var(--space-4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sbd-pick__facts {
   display: flex;
@@ -379,42 +383,50 @@
 /* LIST card (compact, horizontal) */
 .sbd-listcard {
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 12px;
 }
 .sbd-listcard__thumb {
-  width: 96px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  border-radius: var(--radius-md);
 }
 .sbd-listcard__body {
-  padding: var(--space-3) var(--space-4);
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 .sbd-listcard__title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: var(--weight-semi);
-  line-height: var(--leading-snug);
+  line-height: 1.12;
   color: var(--text);
-  margin: var(--space-1) 0 0;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sbd-listcard__blurb {
-  font-size: var(--text-base);
-  line-height: var(--leading-snug);
-  color: var(--text-muted);
-  margin: var(--space-1) 0 var(--space-2);
-}
-.sbd-listcard__meta {
   font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  color: var(--text-link);
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.sbd-listcard__heart {
-  align-self: center;
-  padding-right: var(--space-2);
+/* DateEyebrow as the meta line in ListCard */
+.sbd-listcard__body .sbd-eyebrow-date {
+  margin-top: 2px;
 }
 
 /* ---- SAVE HEART --------------------------------------------------------- */
@@ -2497,11 +2509,11 @@
   margin-top: var(--space-6);
 }
 .sbd-feed-section__title {
-  /* S5: pin each section header just below the sticky app header as you scroll,
+  /* S5: pin each section header just below the sticky brand header as you scroll,
      until the next section pushes it up. Full-bleed background covers the cards
      scrolling underneath; blends with the page when not pinned. */
   position: sticky;
-  top: 50px;
+  top: var(--sbd-header-h);
   z-index: 18;
   font-family: var(--font-display);
   font-size: var(--text-xl);
@@ -2537,7 +2549,7 @@
   min-height: 44px;
   /* sticky so it pins when scrolling past */
   position: sticky;
-  top: 50px;
+  top: var(--sbd-header-h);
   z-index: 18;
   background: color-mix(in srgb, var(--bg) 96%, transparent);
   backdrop-filter: blur(6px);
@@ -2721,9 +2733,9 @@
 .sbd-rock:active {
   transform: scale(0.99);
 }
-/* Gold gradient fallback when no photo */
+/* Fallback gradient when no photo — terracotta→pacific-dark (no gold; A6) */
 .sbd-rock--nophoto {
-  background-image: linear-gradient(135deg, var(--gold), var(--terracotta));
+  background-image: linear-gradient(135deg, var(--terracotta), var(--pacific-dark));
 }
 .sbd-rock__ov {
   position: absolute;
@@ -2786,11 +2798,16 @@
 }
 .sbd-rock__ttl {
   font-family: var(--font-display);
-  font-size: 1.19rem;
-  font-weight: var(--weight-semi);
-  line-height: var(--leading-snug);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: 1.1;
   margin: 0;
   color: var(--paper);
+  text-shadow: 0 1px 3px rgba(0,0,0,.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .sbd-rock__ttl .sbd-stretch {
   color: inherit;
@@ -2803,8 +2820,9 @@
   font-weight: var(--weight-semi);
 }
 .sbd-rock__nt {
-  font-size: 0.688rem;
-  opacity: 0.92;
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 1px 2px rgba(0,0,0,.4);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -3861,6 +3879,40 @@
   min-height: 44px;
   line-height: 44px;
 }
+
+/* Back-row: slim contextual row beneath the brand header on detail / sub-pages.
+   Not sticky — only the brand header sticks. Migrates sbd-backlink into a row. */
+.sbd-backrow {
+  border-top: 1px solid var(--line);
+  padding: 10px 0;
+  margin-bottom: var(--space-3);
+}
+.sbd-backrow__btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 var(--space-2) 0 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-sm);
+  color: var(--text-link);
+  text-decoration: none;
+}
+.sbd-backrow__btn:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.sbd-backrow__ctx {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+
 .sbd-guide-hero {
   position: relative;
   display: flex;
@@ -4684,6 +4736,121 @@ textarea.sbd-field__input {
   }
 }
 
+/* ==========================================================================
+   PHASE 1 PRIMITIVES — SBIcon, CardActions, Pill, DateEyebrow, PlacePill
+   Plus shared CSS utilities: column rule, reveal stagger.
+   ========================================================================== */
+
+/* ---- CardActions --------------------------------------------------------- */
+.sbd-cardact {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+.sbd-cardact--on-image {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 3;
+}
+.sbd-cardact__btn {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  min-width: var(--tap-min);
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink-2);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.sbd-cardact--on-image .sbd-cardact__btn {
+  background: radial-gradient(circle, rgba(20,30,35,.55), rgba(20,30,35,.25) 70%, transparent);
+  color: #fff;
+}
+.sbd-cardact__btn[aria-pressed="true"] {
+  color: var(--terracotta);
+}
+.sbd-cardact__btn:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-cardact__btn--pop svg {
+  animation: heartPop var(--dur-base) var(--ease-spring);
+}
+
+/* ---- Pill (occasion) ----------------------------------------------------- */
+/* Fill and text color come from inline styles (CSS var references) in Pill.tsx
+   so this class only carries geometry and typography. */
+.sbd-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* ---- DateEyebrow --------------------------------------------------------- */
+.sbd-eyebrow-date {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs); /* 12px */
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--terra-text);
+}
+.sbd-eyebrow-date--on-image {
+  color: #fff;
+  opacity: .95;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+
+/* ---- PlacePill ----------------------------------------------------------- */
+.sbd-placepill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(20,30,35,.6);
+  backdrop-filter: blur(3px);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  line-height: 1.4;
+}
+
+/* ---- Column rule (used by SectionHeader lead mode) ----------------------- */
+.sbd-sh__rule {
+  width: 40px;
+  height: 2px;
+  background: var(--terracotta);
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+/* ---- Reveal stagger (feed cards fade in once on scroll) ------------------ */
+.sbd-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+.sbd-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
 /* ---- REDUCED MOTION — stop loops, keep instant feedback (WCAG 2.2 AA) ---- */
 @media (prefers-reduced-motion: reduce) {
   .sbd-scrim,
@@ -4691,6 +4858,9 @@ textarea.sbd-field__input {
     animation: none;
   }
   .sbd-heart--pop .sbd-heart__icon {
+    animation: none;
+  }
+  .sbd-cardact__btn--pop svg {
     animation: none;
   }
   .sbd-skel::after {
@@ -4702,5 +4872,11 @@ textarea.sbd-field__input {
   }
   .sbd-hero__pick {
     animation: none;
+  }
+  /* Reveal: always visible; observer won't run under reduced-motion */
+  .sbd-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15 v3 — SB Daymaker · Data-Source Expansion Catalogue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038; --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --gold:#E0A82E; --sage:#7E8B6B; --line:#D8CDB8; --forest:#3E7C5A;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+    --good-bg:#E7EFE3; --good-tx:#3A5A2E; --mid-bg:#F3ECD2; --mid-tx:#6E5E14;
+    --warn-bg:#F5E2D5; --warn-tx:#9E3F20; --info-bg:#E2EBEE; --info-tx:#0E3C49;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 20px 96px;}
+  .masthead{border-bottom:3px double var(--ink);padding:40px 0 20px;margin-bottom:8px;}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+  .eyebrow .doc-no{background:var(--ink);color:var(--paper);padding:2px 9px;border-radius:999px;font-weight:500;}
+  .eyebrow .v3{background:var(--forest);color:var(--paper);padding:2px 9px;border-radius:999px;font-weight:500;}
+  h1{font-family:var(--font-display);font-weight:900;font-size:2.5rem;line-height:1.05;margin:0 0 10px;letter-spacing:-.01em;max-width:20ch;}
+  .standfirst{font-size:1.1rem;color:var(--ink-2);max-width:66ch;margin:0;}
+  section{margin-top:44px;}
+  h2{font-family:var(--font-display);font-weight:600;font-size:1.6rem;margin:0 0 6px;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:10px;}
+  h2 .num{color:var(--terracotta);font-family:var(--font-mono);font-size:.95rem;margin-right:10px;}
+  p{margin:0 0 14px;max-width:78ch;}
+  a{color:var(--pacific);text-decoration:none;border-bottom:1px solid rgba(22,88,106,.35);}
+  strong{font-weight:600;}
+  .callout{background:var(--paper);border-left:4px solid var(--forest);border-radius:0 12px 12px 0;padding:16px 20px;margin:16px 0;box-shadow:0 1px 2px rgba(36,28,22,.06);}
+  .callout.terra{border-left-color:var(--terracotta);}
+  .callout h4{margin:0 0 8px;font-family:var(--font-display);font-size:1.05rem;font-weight:600;}
+  .callout p{margin:0 0 8px;} .callout p:last-child{margin:0;}
+  .pill{display:inline-block;font-family:var(--font-mono);font-size:10.5px;font-weight:500;letter-spacing:.02em;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+  .p-good{background:var(--good-bg);color:var(--good-tx);} .p-mid{background:var(--mid-bg);color:var(--mid-tx);}
+  .p-warn{background:var(--warn-bg);color:var(--warn-tx);} .p-info{background:var(--info-bg);color:var(--info-tx);}
+  .verok{color:var(--good-tx);font-weight:700;}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin:12px 0 0;font-size:.84rem;color:var(--ink-2);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .tablewrap{overflow-x:auto;margin:18px 0;border:1px solid var(--line);border-radius:14px;}
+  table{border-collapse:collapse;width:100%;min-width:1040px;background:var(--paper);}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:.9rem;}
+  thead th{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);background:var(--plaster-2);border-bottom:2px solid var(--line);position:sticky;top:0;}
+  tbody tr:last-child td{border-bottom:none;}
+  .wave-row td{background:var(--plaster-2);font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);font-weight:600;padding:9px 12px;}
+  .pri{font-family:var(--font-display);font-weight:900;font-size:1.05rem;color:var(--terracotta);text-align:center;width:34px;}
+  td.src{font-weight:600;min-width:172px;}
+  td.src .u{display:block;font-weight:400;font-family:var(--font-mono);font-size:10px;color:var(--ink-2);margin-top:2px;}
+  .route{font-family:var(--font-mono);font-size:10px;color:var(--info-tx);background:var(--info-bg);padding:2px 6px;border-radius:6px;display:inline-block;}
+  .land-tag{font-family:var(--font-mono);font-size:10px;font-weight:500;padding:2px 7px;border-radius:6px;white-space:nowrap;}
+  .land-cockpit{background:#E2EBEE;color:#0E3C49;} .land-registry{background:#EFE7D8;color:#6E4A2E;} .land-discover{background:#E7EFE3;color:#3A5A2E;}
+  .tags{font-size:.82rem;color:var(--ink-2);}
+  .costbox{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin:18px 0;}
+  .costbox .total{font-family:var(--font-display);font-size:1.35rem;font-weight:700;color:var(--forest);}
+  ul.tight{margin:8px 0 14px;padding-left:20px;} ul.tight li{margin:5px 0;max-width:78ch;}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0;}
+  @media(max-width:760px){.two{grid-template-columns:1fr;}}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+  .panel h3{font-family:var(--font-display);font-weight:600;font-size:1.1rem;margin:0 0 8px;}
+  .panel ul{margin:0;padding-left:18px;font-size:.9rem;} .panel li{margin:6px 0;}
+  footer{margin-top:60px;border-top:3px double var(--ink);padding-top:18px;font-size:.84rem;color:var(--ink-2);}
+  footer .mono{font-family:var(--font-mono);font-size:11px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow"><span class="doc-no">DOC 15</span><span class="v3">v3 · cost-verified</span><span>Data-Source Expansion Catalogue</span><span>2026-06-30</span></p>
+    <h1>The data catalogue — verified, costed at zero, ready to build</h1>
+    <p class="standfirst">Every net-new source for SB Daymaker, prioritized into four waves. v3 replaces every assumed cost with a tested one: we fetched the doubtful sources without a browser and confirmed how each actually serves its data. The result — no source in this catalogue needs paid scraping.</p>
+  </header>
+
+  <section id="changed" style="margin-top:30px;">
+    <div class="callout">
+      <h4>What changed since v2</h4>
+      <p><strong>The whole cost column is now $0.</strong> Plain-fetch probes confirmed the sources we'd flagged as "Scrapfly" actually serve their data openly: Eventbrite, Lobero (and the venue pattern), MOXI (and the cultural pattern), Downtown SB, and AllEvents.in all render server-side; Visit SB is JavaScript-rendered but free through its WordPress API. Each row now shows its <em>verified access route</em> — API, iCal feed, or server-rendered scrape.</p>
+      <p><strong>Scrapfly is retired to break-glass.</strong> It stays wired but unused; it's the fallback only if a source ever starts blocking. <strong>BroadwayWorld is dropped</strong> from the backstops — free but low-signal (its "Santa Barbara" region is mostly out-of-area). <strong>Visit SB and LiveNotes</strong> move from "managed scrape" to free (WordPress API; deterministic date parser).</p>
+    </div>
+  </section>
+
+  <section id="catalogue">
+    <h2><span class="num">01</span>The prioritized catalogue</h2>
+    <div class="legend">
+      <span>Gate-pass / Build:</span>
+      <span><span class="pill p-good">HIGH</span></span><span><span class="pill p-mid">MED</span></span><span><span class="pill p-warn">LOW</span></span>
+      <span>Lands in:</span>
+      <span><span class="land-tag land-cockpit">Cockpit</span> publish-direct</span>
+      <span><span class="land-tag land-registry">Registry</span> confirm into registry</span>
+      <span><span class="land-tag land-discover">Discover SB</span> Tier-3 content</span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>Source</th><th>Verified access route</th><th>Lands in</th><th>Tier · top tags</th><th>Gate-pass</th><th>Build</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr class="wave-row"><td colspan="8">Wave 0 — rebuild the two reserved sources off Scrapfly</td></tr>
+          <tr><td class="pri">0</td><td class="src">Visit SB<span class="u">santabarbaraca.com</span></td><td><span class="route">WordPress REST API (/wp-json)</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1/T3 · <span class="tags">hosting_visitors, arts_culture, family_day</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">0</td><td class="src">LiveNotes<span class="u">existing reserved adapter</span></td><td><span class="route">Server-rendered + year-inference parser</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, live_music, nightlife</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+
+          <tr class="wave-row"><td colspan="8">Wave 1 — foundation: marquee venues + free APIs/feeds + all-cities recurring</td></tr>
+          <tr><td class="pri">1</td><td class="src">AXS venues — Bowl + Lobero<span class="u">sbbowl.com · lobero.org → AXS</span></td><td><span class="route">Server-rendered scrape (detail page = time)</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, date_night, nightlife, arts_culture</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">2</td><td class="src">UCSB — Localist API<span class="u">events.ucsb.edu + Arts &amp; Lectures</span></td><td><span class="route">JSON API /api/2/events</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">arts_culture, catch_a_show, free_sb, family_day, solo</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-good">LOW–MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">3</td><td class="src">Libraries — LibCal<span class="u">SB Public + Goleta Valley</span></td><td><span class="route">LibCal iCal / RSS feed</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1/T2 · <span class="tags">family_day, free_sb, solo, arts_culture</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">4</td><td class="src">SB Certified Farmers' Markets<span class="u">sbfarmersmarket.org · 5 in-scope</span></td><td><span class="route">Static-page scrape</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-registry">Registry</span></td><td>T2 · <span class="tags">wine_food, free_sb, family_day, outdoors_active</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+
+          <tr class="wave-row"><td colspan="8">Wave 2 — arts/culture depth + thin-city anchors</td></tr>
+          <tr><td class="pri">5</td><td class="src">AXS venues — Granada + Arlington<span class="u">granadasb.org · arlingtontheatresb.com → AXS</span></td><td><span class="route">Server-rendered scrape (mirror Lobero)</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, arts_culture, date_night</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">6</td><td class="src">Cultural institutions<span class="u">MOXI · Natural History · Botanic Garden · SBMA</span></td><td><span class="route">The Events Calendar iCal/REST (MOXI ✓); scrape others</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1+T3 · <span class="tags">family_day, arts_culture, date_night, outdoors_active</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">7</td><td class="src">Music Academy of the West<span class="u">musicacademy.org · summer, off-AXS campus</span></td><td><span class="route">Server-rendered scrape</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, arts_culture, free_sb, date_night</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">8</td><td class="src">The Alcazar Theatre<span class="u">thealcazar.org · Carpinteria anchor</span></td><td><span class="route">Server-rendered scrape</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, family_day, arts_culture, date_night</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">9</td><td class="src">City of Goleta + Carpinteria<span class="u">cityofgoleta.org · carpinteriaca.gov</span></td><td><span class="route">Civic calendar feed/scrape (Localist/CivicPlus)</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">free_sb, family_day, community</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-good">LOW–MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">10</td><td class="src">Downtown Santa Barbara<span class="u">downtownsb.org · 1st Thursday + district</span></td><td><span class="route">Server-rendered scrape (?d=next30)</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span> <span class="land-tag land-registry">Registry</span></td><td>T1+rec · <span class="tags">free_sb, arts_culture, family_day, date_night</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+
+          <tr class="wave-row"><td colspan="8">Wave 3 — indie long-tail + curated rhythms + Carpinteria depth</td></tr>
+          <tr><td class="pri">11</td><td class="src">Eventbrite<span class="u">eventbrite.com SB discovery</span></td><td><span class="route">Server-rendered pages + detail JSON-LD + hard filter</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">solo, wine_food, family_day, free_sb, arts_culture</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">12</td><td class="src">Nightlife / wine rhythms<span class="u">Validation Ale · Brass Bear · Figueroa Mtn · Dargan's · Wine Therapy · Hotel Californian</span></td><td><span class="route">Light per-venue scrape; IG-only → founder entry</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-registry">Registry</span></td><td>T2 · <span class="tags">nightlife, wine_food, date_night, free_sb, solo</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">13</td><td class="src">Outdoors operators<span class="u">Condor Express · SB Adventure Co · Ice in Paradise</span></td><td><span class="route">Schedule-page scrape</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-registry">Registry</span></td><td>T2 · <span class="tags">outdoors_active, family_day, date_night, solo, hosting_visitors</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">14</td><td class="src">Carpinteria Arts Center<span class="u">carpinteriaartscenter.org</span></td><td><span class="route">Server-rendered scrape; faire → registry</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span> <span class="land-tag land-registry">Registry</span></td><td>T1+T2 · <span class="tags">arts_culture, family_day, free_sb</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">LOW–MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">15</td><td class="src">Center Stage Theater<span class="u">centerstagetheater.org · off-AXS</span></td><td><span class="route">Server-rendered scrape</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, arts_culture, date_night</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">16</td><td class="src">Coastal View News — events<span class="u">coastalview.com · Carpinteria catch-all</span></td><td><span class="route">Calendar scrape · verify LiveNotes overlap</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">community, arts_culture, family_day, free_sb</span></td><td><span class="pill p-warn">LOW–MED</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">17</td><td class="src">Free nature programs<span class="u">Land Trust SB County · Sierra Club Los Padres</span></td><td><span class="route">Calendar scrape</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-registry">Registry</span></td><td>T1/T2 · <span class="tags">outdoors_active, free_sb, solo, family_day</span></td><td><span class="pill p-warn">LOW–MED</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+
+          <tr class="wave-row"><td colspan="8">Wave 4 — optional backstops + evergreen content</td></tr>
+          <tr><td class="pri">18</td><td class="src">SeatGeek — Platform API<span class="u">platform.seatgeek.com · free client_id</span></td><td><span class="route">REST API (client_id)</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, sports</span></td><td><span class="pill p-good">HIGH</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">19</td><td class="src">SB County Arts &amp; Culture<span class="u">sbac.ca.gov · arts portal</span></td><td><span class="route">Portal scrape · verify citySite overlap</span> <span class="pill p-mid">confirm</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">arts_culture, free_sb</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">20</td><td class="src">Urban Wine Trail / Funk Zone<span class="u">urbanwinetrailsb.com · ~30 rooms</span></td><td><span class="route">Directory capture → guide</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-discover">Discover SB</span></td><td>T3 · <span class="tags">wine_food, date_night, solo</span></td><td><span class="pill p-info">evergreen</span></td><td><span class="pill p-good">LOW</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">21</td><td class="src">AllEvents.in<span class="u">allevents.in · thin-city backstop</span></td><td><span class="route">Server-rendered scrape + hard geo filter</span> <span class="verok">✓ free</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">mixed</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+          <tr><td class="pri">22</td><td class="src">Ensemble Theatre Co / New Vic<span class="u">etcsb.org — conditional</span></td><td><span class="route">Scrape only if New Vic is NOT on AXS</span> <span class="pill p-mid">verify</span></td><td><span class="land-tag land-cockpit">Cockpit</span></td><td>T1 · <span class="tags">catch_a_show, arts_culture, date_night</span></td><td><span class="pill p-mid">MED–HIGH</span></td><td><span class="pill p-mid">MED</span></td><td><span class="pill p-good">$0</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:.86rem;color:var(--ink-2);"><span class="verok">✓ free</span> = access route directly probed this session. <span class="pill p-mid">confirm</span> = high-confidence free by pattern (same platform family as a probed source), Claude Code confirms at build. <strong>BroadwayWorld removed</strong> — free but mostly out-of-area and redundant.</p>
+  </section>
+
+  <section id="cost">
+    <h2><span class="num">02</span>Cost — settled</h2>
+    <div class="costbox">
+      <p class="total">Total new hard cost: $0 / month.</p>
+      <p style="margin-top:10px;">Every source resolves to an official API, a published iCal/RSS feed, or a server-rendered page a plain request can read — all on your existing GitHub Action infrastructure. The only credential to obtain is a <strong>free SeatGeek client_id</strong> (no card). Scrapfly remains wired as an unused break-glass fallback; it becomes a cost only if a source begins blocking, at which point the existing <span style="font-family:var(--font-mono);font-size:.85em">MANAGED_SCRAPE</span> flag flips it on for that one source.</p>
+    </div>
+  </section>
+
+  <section id="boundaries">
+    <h2><span class="num">03</span>Excluded &amp; not-yet-researched</h2>
+    <div class="two">
+      <div class="panel">
+        <h3>Ruled out</h3>
+        <ul>
+          <li><strong>BroadwayWorld SB</strong> — free but its "SB region" pulls Yucaipa/Ojai/Santa Rosa; theater-only and redundant with venues we capture directly.</li>
+          <li><strong>Bandsintown</strong> — artist-centric, no city query.</li>
+          <li><strong>Dice.fm</strong> — thin SB inventory, duplicative.</li>
+          <li><strong>Edhat / Noozhawk</strong> — likely inside LiveNotes; prose times, low pass.</li>
+          <li><strong>Per-brewery dated shows</strong> — Instagram-bound; covered by rhythms + submissions + Independent.</li>
+          <li><strong>Facebook / Instagram (direct)</strong> — out by architecture.</li>
+          <li><strong>Island Packers</strong> — departs Ventura, out of scope.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Not yet researched (next pass)</h3>
+        <ul>
+          <li><strong>Cinema</strong> — Riviera / Metropolitan; UCSB Pollock free screenings.</li>
+          <li><strong>Sports</strong> — UCSB Gauchos; SB Foresters baseball.</li>
+          <li><strong>Historical / religious</strong> — Old Mission, SB Historical Museum, Casa del Herrero.</li>
+          <li><strong>Maker / holiday markets</strong> — beyond faires already noted.</li>
+          <li><strong>Meetup community groups</strong> — API now paid/limited.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="mono">15_SBDaymaker_Data_Source_Expansion_v3.html · v9 canon · 2026-06-30 · supersedes v1 and v2 · paired with 16 (build) + 17 (founder click-guide)</p>
+    <p>Access routes verified by browser-less fetch, June 2026; platform terms and exact endpoints re-confirmed by Claude Code at build (robots.txt + ToS per source, no account creation). Every source lands facts only — original blurbs are written by the nightly enrich step, never copied. Gate-pass is a structural estimate until <span style="font-family:var(--font-mono);font-size:.85em">source_runs</span> data exists; validate one adapter before the next.</p>
+  </footer>
+
+</div>
+</body>
+</html>

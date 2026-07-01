@@ -1,0 +1,134 @@
+/* components/brand-header.css
+   Global brand header — "Golden Hour" design (§4 of the build spec).
+   Brand tokens come from sbdaymaker_tokens.css (--plaster, --ink, --pacific,
+   --pacific-dark, --terracotta, --gold, --font-display).
+   The four --hdr-* values below are DECORATIVE illustration stops for the sky/sea
+   scene inside the mark — NOT brand tokens. They mirror the hero's sky gradient.
+   (Flag to Jim if promotion to sbdaymaker_tokens.css is wanted — spec §7 item C.) */
+
+.sbd-brandhdr {
+  --hdr-sky-hi: #bfe0e6;  /* upper sky */
+  --hdr-sky-lo: #7cc0cf;  /* lower sky at the horizon */
+  --hdr-suncore: #FFF3D0; /* sun core */
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--plaster);
+}
+
+.sbd-brandhdr__row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 11px;
+}
+
+.sbd-brandhdr__logo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 10px;
+}
+
+.sbd-brandhdr__logo:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 3px;
+}
+
+/* 34×34 sun-over-Pacific tile mark */
+.sbd-brandhdr__mark {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  /* sky on top, Pacific below a hard horizon at 47%, sun sitting on the line */
+  background: linear-gradient(
+    180deg,
+    var(--hdr-sky-hi) 0%,
+    var(--hdr-sky-lo) 46%,
+    var(--pacific) 47%,
+    var(--pacific-dark) 100%
+  );
+}
+
+/* Sun disk: radial gold glow sitting on the horizon */
+.sbd-brandhdr__sun {
+  position: absolute;
+  left: 50%;
+  bottom: 44%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--hdr-suncore) 10%,
+    var(--gold) 62%,
+    rgba(224, 168, 46, 0) 74%
+  );
+  box-shadow: 0 0 14px 3px rgba(224, 168, 46, 0.55);
+}
+
+/* Gold glint on the water surface below the horizon */
+.sbd-brandhdr__glint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 47%;
+  background: linear-gradient(180deg, rgba(255, 243, 208, 0.3), transparent);
+}
+
+/* Wordmark stacked text */
+.sbd-brandhdr__word {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.sbd-brandhdr__eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 3.4px;
+  text-transform: uppercase;
+  color: var(--pacific);
+}
+
+.sbd-brandhdr__wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.6px;
+  color: var(--ink);
+  margin-top: 3px;
+  line-height: 1;
+}
+
+/* "maker" in terracotta — large text (22px/700) clears AA at 3:1 on --plaster.
+   Spec used --tile which is not a token; --terracotta is the equivalent. */
+.sbd-brandhdr__wordmark b {
+  color: var(--terracotta);
+  font-weight: 700;
+}
+
+/* 3px sunset-gradient hairline beneath the row */
+.sbd-brandhdr__horizon {
+  height: 3px;
+  background: linear-gradient(90deg, var(--pacific), var(--gold) 55%, var(--terracotta));
+}
+
+/* Signature sun breathes; freeze under reduced-motion (WCAG 2.2 AA §6) */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes sbdBrandhdrSun {
+    0%, 100% { filter: brightness(1); }
+    50%       { filter: brightness(1.12); }
+  }
+  .sbd-brandhdr__sun {
+    animation: sbdBrandhdrSun 3.4s ease-in-out infinite;
+  }
+}

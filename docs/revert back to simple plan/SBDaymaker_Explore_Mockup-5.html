@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Explore Page · Mockup 5 (synced + horizon-driven sections)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink2:#4a4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tileLight:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+    --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(1300px 760px at 50% -8%,#2c6b78 0%,#16586A 34%,#0E3C49 100%);min-height:100vh;padding:0 0 80px;}
+  button:focus-visible{outline:2.5px solid var(--gold);outline-offset:2px;}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px;}
+  .intro{color:#fff;padding:40px 4px 14px;}
+  .intro .brandrow{display:flex;align-items:center;gap:11px;margin-bottom:18px;}
+  .intro .logo{width:34px;height:34px;border-radius:9px;background:var(--pacific);color:var(--gold);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:19px;}
+  .intro .brandtxt .nm{font-family:'Fraunces',serif;font-weight:600;font-size:18px;line-height:1;}
+  .intro .brandtxt .sub{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;opacity:.62;font-weight:700;margin-top:3px;}
+  .intro h1{font-family:'Fraunces',serif;font-weight:600;font-size:38px;line-height:1.05;letter-spacing:-.6px;margin:6px 0 0;max-width:800px;}
+  .intro h1 em{font-style:normal;color:var(--gold);}
+  .intro .lede{font-size:15px;line-height:1.6;opacity:.86;max-width:730px;margin:14px 0 0;}
+  .intro .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
+  .intro .chip{font-size:11px;font-weight:700;letter-spacing:.3px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:7px 13px;border-radius:999px;display:flex;align-items:center;gap:6px;}
+  .intro .chip .d{width:7px;height:7px;border-radius:50%;background:var(--gold);}
+  .intro .chip.keep{background:rgba(126,139,107,.22);border-color:rgba(126,139,107,.45);}
+  .intro .chip.keep .d{background:#A7B58C;}
+
+  .flow{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;padding:30px 0 10px;align-items:flex-start;}
+  .frameblock{width:392px;max-width:100%;}
+  .cap{color:#fff;margin:0 4px 14px;}
+  .cap .step{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);}
+  .cap .step .n{padding:3px 8px;border-radius:7px;background:var(--gold);color:var(--pacificDk);font-size:11px;font-weight:900;}
+  .cap .t{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin:8px 0 0;letter-spacing:-.3px;}
+  .cap .d{font-size:12.5px;line-height:1.5;opacity:.82;margin-top:5px;}
+  .cap .live{display:inline-block;margin-top:8px;font-size:10.5px;font-weight:700;color:var(--pacificDk);background:var(--gold);padding:3px 9px;border-radius:999px;}
+
+  .device{width:392px;max-width:100%;background:#15110d;border-radius:42px;padding:11px;box-shadow:0 44px 90px -34px rgba(0,0,0,.72),0 0 0 2px rgba(255,255,255,.05);position:relative;}
+  .screen{background:var(--plaster);border-radius:32px;overflow:hidden;position:relative;min-height:860px;display:flex;flex-direction:column;}
+  .notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#15110d;border-radius:0 0 15px 15px;z-index:50;}
+  .body{flex:1;position:relative;overflow:hidden;}
+
+  /* ====== LIVE TOP (preserved — do not restructure) ====== */
+  .hdr{display:flex;align-items:flex-start;gap:11px;padding:30px 17px 4px;background:var(--plaster);}
+  .hdr .m{width:34px;height:34px;border-radius:9px;background:var(--pacific);color:var(--gold);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:18px;flex-shrink:0;}
+  .hdr .nm{font-family:'Fraunces',serif;font-weight:600;font-size:22px;line-height:1;letter-spacing:-.3px;}
+  .hdr .tg{font-size:9px;color:var(--sage-text);font-weight:800;letter-spacing:1.4px;text-transform:uppercase;margin-top:5px;}
+  .jobline{text-align:center;padding:8px 0 4px;font-size:11.5px;font-weight:800;letter-spacing:1.3px;}
+  .jobline .a{color:var(--tile);} .jobline .b{color:var(--pacific);} .jobline .c{color:var(--gold-text);} .jobline .s{color:var(--sage);margin:0 8px;}
+
+  .hero{position:relative;margin:6px 17px 0;border-radius:18px;overflow:hidden;height:298px;background:linear-gradient(180deg,#1d5f70,#2c6b78 58%,#347487);}
+  .herodate{position:absolute;top:15px;left:16px;right:16px;color:#fff;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;z-index:4;}
+  .sky{position:absolute;left:0;right:0;bottom:0;width:100%;height:158px;display:block;}
+  .pick{position:absolute;top:50px;left:13px;right:13px;background:#fff;border-radius:16px;display:flex;gap:11px;padding:11px;box-shadow:0 16px 32px -16px rgba(0,0,0,.45);z-index:3;}
+  .pick .ph{width:78px;height:78px;border-radius:11px;flex-shrink:0;position:relative;background:linear-gradient(135deg,#3d8aa0,#16586A);}
+  .pick .ph .hb{position:absolute;top:6px;left:6px;width:36px;height:36px;border-radius:50%;background:rgba(20,40,50,.42);display:grid;place-items:center;color:#fff;font-size:17px;border:none;cursor:pointer;}
+  .pick .pb{flex:1;min-width:0;padding-top:2px;}
+  .pick .peb{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--tile);}
+  .pick .pnm{font-family:'Fraunces',serif;font-size:17px;font-weight:700;line-height:1.08;margin-top:3px;color:var(--ink);}
+  .pick .ploc{font-size:12px;color:var(--pacific);font-weight:600;margin-top:6px;}
+
+  .controls2{display:flex;gap:9px;padding:14px 17px 2px;}
+  .vibedd{flex:1;display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:999px;padding:14px 16px;font-size:14px;font-weight:700;color:var(--ink);cursor:pointer;min-height:50px;}
+  .vibedd .l{display:flex;align-items:center;gap:8px;}
+  .vibedd .cv{color:var(--ink2);font-size:12px;}
+  .nearbtn{flex:0 0 auto;background:#fff;border:1px solid var(--line);border-radius:999px;padding:14px 16px;font-size:14px;font-weight:700;color:var(--pacific);display:flex;align-items:center;gap:7px;cursor:pointer;min-height:50px;}
+
+  .horizon{display:flex;background:var(--plaster2);border-radius:14px;padding:5px;gap:4px;margin:12px 17px 2px;}
+  .horizon button{flex:1;border:none;background:none;border-radius:10px;padding:12px 6px;font-size:13.5px;font-weight:700;color:var(--ink2);cursor:pointer;font-family:'Inter';min-height:44px;}
+  .horizon button.on{background:#fff;color:var(--pacific);box-shadow:0 4px 12px -6px rgba(20,40,50,.4);}
+
+  /* ====== divider marking where the restructure begins ====== */
+  .restartline{display:flex;align-items:center;gap:9px;margin:16px 17px 0;}
+  .restartline .ln{flex:1;height:1px;background:var(--line);}
+  .restartline .lbl{font-size:8.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#B9AE97;}
+
+  /* ====== SECTIONS (the restructure — E1/E2) ====== */
+  .sec{margin:14px 17px 0;}
+  .sh{width:100%;display:flex;align-items:center;gap:10px;background:none;border:none;padding:6px 2px 9px;cursor:pointer;font-family:'Inter';text-align:left;border-bottom:1.5px solid var(--line);}
+  .sh.static{cursor:default;}
+  .sh .shk{font-family:'Fraunces',serif;font-size:18px;font-weight:600;letter-spacing:-.3px;color:var(--ink);}
+  .sh .emoji{font-size:15px;}
+  .sh .cnt{font-size:10px;font-weight:800;color:var(--sage-text);background:var(--plaster2);border-radius:999px;padding:2px 8px;letter-spacing:.3px;}
+  .sh .chev{margin-left:auto;font-size:13px;color:var(--sage-text);transition:transform .2s;font-weight:800;}
+  .sh[aria-expanded="false"] .chev{transform:rotate(-90deg);}
+
+  .panel{overflow:hidden;transition:max-height .28s ease,opacity .2s;max-height:1600px;opacity:1;}
+  .panel.collapsed{max-height:0;opacity:0;}
+
+  .ecard{margin:11px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;box-shadow:0 8px 20px -16px rgba(20,40,50,.5);cursor:pointer;}
+  .ecard .th{width:90px;flex-shrink:0;align-self:stretch;min-height:94px;}
+  .ecard .b{padding:11px 12px;flex:1;min-width:0;}
+  .ecard .eb{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--tile);}
+  .ecard .nm{font-family:'Fraunces',serif;font-size:15px;font-weight:600;line-height:1.12;margin-top:2px;}
+  .ecard .rtg{font-size:11.5px;color:var(--ink2);font-style:italic;margin-top:4px;line-height:1.3;}
+  .ecard .mt{font-size:10.5px;color:var(--pacific);font-weight:600;margin-top:6px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+  .timechip{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--ink);background:var(--gold);padding:2px 6px;border-radius:6px;}
+  .datechip{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:#fff;background:var(--pacific);padding:2px 6px;border-radius:6px;letter-spacing:.3px;}
+  .cadence{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:var(--pacific);background:#E2EBEE;padding:2px 6px;border-radius:6px;}
+  .ecard .heart{margin-left:auto;background:none;border:none;font-size:15px;cursor:pointer;align-self:flex-start;padding:2px;}
+
+  .builddaycta{margin:16px 17px 4px;background:linear-gradient(135deg,rgba(224,168,46,.18),rgba(192,83,46,.10));border:1.6px solid var(--gold);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:13px;cursor:pointer;box-shadow:0 10px 24px -16px rgba(192,83,46,.5);}
+  .builddaycta .ic{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,#C0532E,#E0A82E);display:grid;place-items:center;flex-shrink:0;box-shadow:0 6px 14px -7px rgba(192,83,46,.7);}
+  .builddaycta .ic svg{width:23px;height:23px;}
+  .builddaycta .tx{flex:1;min-width:0;}
+  .builddaycta .tt{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600;letter-spacing:-.2px;}
+  .builddaycta .ss{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.35;}
+  .builddaycta .arr{font-size:20px;color:var(--tile);font-weight:700;flex-shrink:0;}
+
+  .nav{height:66px;display:flex;background:var(--pacific);position:relative;z-index:40;flex-shrink:0;padding-bottom:4px;}
+  .navbtn{flex:1;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:rgba(255,255,255,.72);cursor:pointer;position:relative;font-family:'Inter';}
+  .navbtn .ni{font-size:18px;line-height:1;} .navbtn .nl{font-size:10px;font-weight:700;}
+  .navbtn.on{color:var(--gold);}
+  .navbtn.on::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:30px;height:3px;background:var(--gold);border-radius:0 0 3px 3px;}
+  .navbtn .nbadge{position:absolute;top:6px;right:calc(50% - 22px);background:var(--gold);color:var(--ink);font-size:8.5px;font-weight:800;min-width:16px;height:16px;border-radius:8px;display:grid;place-items:center;padding:0 4px;}
+
+  .toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;font-size:11.5px;font-weight:700;padding:9px 15px;border-radius:999px;z-index:70;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.6);}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .h{color:var(--gold);}
+
+  .notes{max-width:1180px;margin:34px auto 0;padding:0 22px;}
+  .notes-card{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px 28px;box-shadow:0 30px 60px -30px rgba(0,0,0,.5);}
+  .notes h2{font-family:'Fraunces',serif;font-size:24px;font-weight:600;letter-spacing:-.4px;margin:0 0 4px;}
+  .notes .lead{font-size:13px;color:var(--ink2);line-height:1.55;margin:0 0 18px;}
+  .ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:14px;}
+  .ncard{background:var(--plaster);border:1px solid var(--line);border-radius:14px;padding:15px 16px;}
+  .nk{font-size:9.5px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--tile);display:flex;align-items:center;gap:7px;margin-bottom:7px;}
+  .nk .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);}
+  .nk.keep{color:var(--sage-text);} .nk.keep .dot{background:var(--sage);}
+  .nt{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:5px;letter-spacing:-.2px;}
+  .nd{font-size:12px;line-height:1.5;color:var(--ink2);} .nd b{color:var(--ink);}
+  .footnote{max-width:1180px;margin:26px auto 0;padding:0 22px;color:rgba(255,255,255,.66);font-size:11.5px;text-align:center;line-height:1.6;}
+
+  @media (prefers-reduced-motion: reduce){ .panel{transition:none;} .sh .chev{transition:none;} }
+  @media (max-width:840px){ .device{width:100%;max-width:392px;} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="intro">
+    <div class="brandrow">
+      <div class="logo">S</div>
+      <div class="brandtxt"><div class="nm">SB Daymaker</div><div class="sub">Santa Barbara, daily</div></div>
+    </div>
+    <h1>Synced to the live top — the horizon now <em>renames</em> the lead section.</h1>
+    <p class="lede">Everything above the first section is the live page, untouched: the Find·Save·Share line, the hero with Today's Pick, the Any-vibe dropdown, Near Me, and the Today / This Week / This Month selector. Tap that selector and watch the lead section rename and refill. The restructure only begins below it.</p>
+    <div class="meta">
+      <span class="chip keep"><span class="d"></span>Preserved · the whole live top</span>
+      <span class="chip"><span class="d"></span>New · horizon renames the lead section</span>
+      <span class="chip"><span class="d"></span>New · two collapsed tiers + CTA</span>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="frameblock">
+      <div class="cap">
+        <span class="step"><span class="n">E1 · E2</span>Explore · synced &amp; horizon-aware</span>
+        <div class="t">Tap Today / This Week / This Month</div>
+        <div class="d">The selector that was missing from the last mockup is back where it lives on the live site — above the feed. Tapping it renames and refills the lead section. The recurring &amp; evergreen tiers are timeless, so they don't change.</div>
+        <span class="live">↓ Live — tap the horizon, fold the lower tiers</span>
+      </div>
+      <div class="device">
+        <div class="notch"></div>
+        <div class="screen">
+          <div class="body">
+
+            <!-- ===== LIVE TOP (preserved) ===== -->
+            <div class="hdr">
+              <div class="m">S</div>
+              <div><div class="nm">SB Daymaker</div><div class="tg">Santa Barbara, daily</div></div>
+            </div>
+            <div class="jobline"><span class="a">FIND IT</span><span class="s">·</span><span class="b">SAVE IT</span><span class="s">·</span><span class="c">SHARE IT</span></div>
+
+            <div class="scroll">
+              <div class="hero">
+                <div class="herodate">MONDAY, JUNE 29 · GOOD AFTERNOON</div>
+                <svg class="sky" viewBox="0 0 392 158" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M0,78 Q90,46 200,68 T392,60 L392,158 L0,158 Z" fill="#2b6c7d"/>
+                  <path d="M0,100 Q120,76 240,96 T392,90 L392,158 L0,158 Z" fill="#205a6b"/>
+                  <g fill="#0E3C49">
+                    <rect x="38" y="84" width="48" height="74"/>
+                    <rect x="50" y="66" width="10" height="20"/>
+                    <rect x="68" y="62" width="8" height="24"/>
+                    <rect x="92" y="98" width="30" height="60"/>
+                    <rect x="128" y="74" width="14" height="84"/>
+                    <rect x="150" y="106" width="40" height="52"/>
+                    <rect x="196" y="112" width="34" height="46"/>
+                    <polygon points="196,112 213,99 230,112"/>
+                    <rect x="238" y="108" width="30" height="50"/>
+                    <polygon points="238,108 253,95 268,108"/>
+                    <rect x="276" y="114" width="24" height="44"/>
+                    <polygon points="276,114 288,103 300,114"/>
+                    <rect x="310" y="120" width="82" height="6"/>
+                    <rect x="314" y="126" width="3" height="32"/><rect x="328" y="126" width="3" height="32"/>
+                    <rect x="342" y="126" width="3" height="32"/><rect x="356" y="126" width="3" height="32"/>
+                    <rect x="370" y="126" width="3" height="32"/><rect x="384" y="126" width="3" height="32"/>
+                  </g>
+                </svg>
+                <div class="pick">
+                  <div class="ph"><button class="hb" aria-label="Save Today's Pick">♥</button></div>
+                  <div class="pb">
+                    <div class="peb">Today's Pick</div>
+                    <div class="pnm">Recreation Swim | Oak Park Wading Pool</div>
+                    <div class="ploc">📍 Santa Barbara</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="controls2">
+                <div class="vibedd"><span class="l">✦ Any vibe</span><span class="cv">▾</span></div>
+                <div class="nearbtn">📍 Near Me</div>
+              </div>
+
+              <div class="horizon" role="tablist" aria-label="Time horizon">
+                <button class="on" data-h="today" role="tab" aria-selected="true">Today</button>
+                <button data-h="week" role="tab" aria-selected="false">This Week</button>
+                <button data-h="month" role="tab" aria-selected="false">This Month</button>
+              </div>
+
+              <div class="restartline"><span class="lbl">live top ends — restructure begins</span><span class="ln"></span></div>
+
+              <!-- ===== SECTION 1 — horizon-driven lead (open, not collapsible) ===== -->
+              <div class="sec">
+                <div class="sh static">
+                  <span class="emoji">📅</span><span class="shk" id="s1label">Happening Today</span>
+                  <span class="cnt" id="s1count">3</span>
+                </div>
+                <div class="panel" id="p1"><!-- injected by horizon --></div>
+              </div>
+
+              <!-- ===== CTA — between section 1 and the folded tiers ===== -->
+              <div class="builddaycta">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5.2" fill="#FFF6DC"/><g stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 2v2.4M12 19.6V22M2 12h2.4M19.6 12H22M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"/></g></svg></div>
+                <div class="tx"><div class="tt">Build your day</div><div class="ss">Tell us the shape — we'll draft it, you tweak it.</div></div>
+                <div class="arr">→</div>
+              </div>
+
+              <!-- ===== SECTION 2 — Recurring Weekly (collapsed, timeless) ===== -->
+              <div class="sec">
+                <button class="sh" aria-expanded="false" aria-controls="p2">
+                  <span class="emoji">🔁</span><span class="shk">Recurring Weekly</span>
+                  <span class="cnt">4</span><span class="chev">⌄</span>
+                </button>
+                <div class="panel collapsed" id="p2">
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"></div><div class="b"><div class="eb">Recurring Arts</div><div class="nm">Funk Zone Art Walk</div><div class="mt">📍 Funk Zone <span class="cadence">1ST THURS</span></div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#C0532E,#9C6B9E);"></div><div class="b"><div class="eb">Weekly Special</div><div class="nm">Lucky's Wine Wednesday</div><div class="mt">📍 Montecito <span class="cadence">WED</span></div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#E0A82E,#C0532E);"></div><div class="b"><div class="eb">Recurring Nightlife</div><div class="nm">The Good Lion Happy Hour</div><div class="mt">📍 Downtown <span class="cadence">DAILY · 4–6</span></div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#3E7C5A,#16586A);"></div><div class="b"><div class="eb">Recurring Market</div><div class="nm">Sunday Farmers Market</div><div class="mt">📍 Downtown <span class="cadence">SUN</span></div></div><button class="heart" aria-label="Save">🤍</button></div>
+                </div>
+              </div>
+
+              <!-- ===== SECTION 3 — Great any time (collapsed, timeless) ===== -->
+              <div class="sec">
+                <button class="sh" aria-expanded="false" aria-controls="p3">
+                  <span class="emoji">⭐</span><span class="shk">Great any time</span>
+                  <span class="cnt">4</span><span class="chev">⌄</span>
+                </button>
+                <div class="panel collapsed" id="p3">
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"></div><div class="b"><div class="eb">Scenic · Chill</div><div class="nm">Butterfly Beach</div><div class="rtg">Sunset that earns the drive to Montecito.</div><div class="mt">📍 Montecito</div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#3E7C5A,#0E3C49);"></div><div class="b"><div class="eb">Outdoor Activity</div><div class="nm">Inspiration Point</div><div class="rtg">Big views for a short climb — go before the heat.</div><div class="mt">📍 Riviera</div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"></div><div class="b"><div class="eb">Food · Drink Spot</div><div class="nm">Municipal Winemakers</div><div class="rtg">Patio pour, no fuss, walkable from the beach.</div><div class="mt">📍 Funk Zone</div></div><button class="heart" aria-label="Save">🤍</button></div>
+                  <div class="ecard"><div class="th" style="background:linear-gradient(135deg,#9C6B9E,#16586A);"></div><div class="b"><div class="eb">Culture Spot</div><div class="nm">SB Museum of Art</div><div class="rtg">Small but mighty — and free on Thursdays.</div><div class="mt">📍 Downtown</div></div><button class="heart" aria-label="Save">🤍</button></div>
+                </div>
+              </div>
+
+              <div style="height:34px;"></div>
+            </div>
+
+            <div class="toast" id="toast"></div>
+          </div>
+
+          <div class="nav">
+            <button class="navbtn on"><span class="ni">⛰️</span><span class="nl">Explore</span></button>
+            <button class="navbtn"><span class="ni">🤍</span><span class="nl">Saved</span><span class="nbadge">3</span></button>
+            <button class="navbtn"><span class="ni">🧭</span><span class="nl">Discover SB</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="notes-card">
+      <h2>What changed since the last mockup</h2>
+      <p class="lead">Re-synced to your live top, plus the horizon-rename behavior you asked for. The restructure boundary is drawn right on the screen ("live top ends — restructure begins").</p>
+      <div class="ngrid">
+        <div class="ncard"><div class="nk keep"><span class="dot"></span>Preserved</div><div class="nt">The entire live top</div><div class="nd">Header, <b>FIND IT · SAVE IT · SHARE IT</b>, the hero with <b>Today's Pick</b>, the <b>Any vibe</b> dropdown, <b>Near Me</b>, and the <b>Today / This Week / This Month</b> selector — all untouched. The build spec says explicitly: do not restructure anything above the first section.</div></div>
+        <div class="ncard"><div class="nk"><span class="dot"></span>Your question</div><div class="nt">Where's the selector?</div><div class="nd">It was missing from the prior mockup. It lives right below Any-vibe/Near Me and above the feed — exactly as on the live site. It's now shown and wired.</div></div>
+        <div class="ncard"><div class="nk"><span class="dot"></span>New behavior</div><div class="nt">Horizon renames the lead</div><div class="nd">Today → <b>Happening Today</b> · This Week → <b>Happening This Week</b> · This Month → <b>Happening This Month</b>. The section's contents and count refill to the window (real times today; day/date chips for the wider windows).</div></div>
+        <div class="ncard"><div class="nk"><span class="dot"></span>Unaffected</div><div class="nt">The timeless tiers</div><div class="nd"><b>Recurring Weekly</b> and <b>Great any time</b> don't change with the horizon — recurring rhythms and evergreen spots are always true. They stay collapsed with their fixed labels.</div></div>
+        <div class="ncard"><div class="nk"><span class="dot"></span>E2</div><div class="nt">CTA still wedged</div><div class="nt"></div><div class="nd"><b>Build your day</b> stays between the lead section and the two folded tiers, regardless of horizon or collapse state.</div></div>
+        <div class="ncard"><div class="nk"><span class="dot"></span>Note</div><div class="nt">Skyline is illustrative</div><div class="nd">The hero skyline here is a stand-in for your live artwork; Claude Code keeps the real hero. This mockup only proves the section structure + horizon binding.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footnote">SB Daymaker · Explore page · Mockup 5 (re-synced) — pairs with SBDaymaker_Explore_Sections_And_Plan_ToD_Build.md. Tap the horizon selector; fold the lower tiers.</div>
+</div>
+
+<script>
+  // ---- horizon-driven lead section ----
+  var HORIZON={
+    today:{ label:'Happening Today', items:[
+      {eb:'Catch a Show', nm:'Sunset Jazz · the Lobero', hood:'Downtown', chip:'7:30 PM', cls:'timechip', img:'linear-gradient(135deg,#241C16,#16586A)'},
+      {eb:'Arts & Theater', nm:'SB Symphony: Beethoven 7', hood:'The Granada', chip:'8:00 PM', cls:'timechip', img:'linear-gradient(135deg,#9C6B9E,#C0532E)'},
+      {eb:'Festival · Fair', nm:'Funk Zone Twilight Market', hood:'Funk Zone', chip:'5:00 PM', cls:'timechip', img:'linear-gradient(135deg,#C0532E,#E0A82E)'}
+    ]},
+    week:{ label:'Happening This Week', items:[
+      {eb:'Catch a Show', nm:'Sunset Jazz · the Lobero', hood:'Downtown', chip:'TONIGHT · 7:30', cls:'datechip', img:'linear-gradient(135deg,#241C16,#16586A)'},
+      {eb:'Live Music', nm:'Lord Huron at the Bowl', hood:'SB Bowl', chip:'FRI · 6:30', cls:'datechip', img:'linear-gradient(135deg,#0E3C49,#3d8aa0)'},
+      {eb:'Festival · Fair', nm:'Outdoor Cinema: Coastal Classics', hood:'Waterfront', chip:'SAT · 8:15', cls:'datechip', img:'linear-gradient(135deg,#16586A,#7E8B6B)'},
+      {eb:'Food · Drink Event', nm:'Funk Zone Wine + Vinyl', hood:'Funk Zone', chip:'SUN · 2:00', cls:'datechip', img:'linear-gradient(135deg,#C0532E,#9C6B9E)'}
+    ]},
+    month:{ label:'Happening This Month', items:[
+      {eb:'Live Music', nm:'Lord Huron at the Bowl', hood:'SB Bowl', chip:'JUL 3', cls:'datechip', img:'linear-gradient(135deg,#0E3C49,#3d8aa0)'},
+      {eb:'Festival · Fair', nm:'Old Spanish Days kickoff', hood:'Downtown', chip:'JUL 30', cls:'datechip', img:'linear-gradient(135deg,#C0532E,#E0A82E)'},
+      {eb:'Live Music', nm:'Hozier at the Bowl', hood:'SB Bowl', chip:'JUL 12', cls:'datechip', img:'linear-gradient(135deg,#241C16,#16586A)'},
+      {eb:'Arts & Theater', nm:'Ballet under the Stars', hood:'The Granada', chip:'JUL 19', cls:'datechip', img:'linear-gradient(135deg,#9C6B9E,#16586A)'},
+      {eb:'Food · Drink Event', nm:'French Festival', hood:'Oak Park', chip:'JUL 13', cls:'datechip', img:'linear-gradient(135deg,#7E8B6B,#C0532E)'}
+    ]}
+  };
+
+  var p1=document.getElementById('p1');
+  var s1label=document.getElementById('s1label');
+  var s1count=document.getElementById('s1count');
+  var toast=document.getElementById('toast');
+
+  function renderLead(h){
+    var data=HORIZON[h];
+    s1label.textContent=data.label;
+    s1count.textContent=data.items.length;
+    var html='';
+    data.items.forEach(function(it){
+      html+='<div class="ecard"><div class="th" style="background:'+it.img+';"></div>'
+        +'<div class="b"><div class="eb">'+it.eb+'</div><div class="nm">'+it.nm+'</div>'
+        +'<div class="mt">📍 '+it.hood+' <span class="'+it.cls+'">'+it.chip+'</span></div></div>'
+        +'<button class="heart" aria-label="Save '+it.nm+'">🤍</button></div>';
+    });
+    p1.innerHTML=html;
+    wireHearts();
+  }
+
+  document.querySelectorAll('.horizon button').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.horizon button').forEach(function(x){x.classList.remove('on');x.setAttribute('aria-selected','false');});
+      b.classList.add('on');b.setAttribute('aria-selected','true');
+      renderLead(b.getAttribute('data-h'));
+    });
+  });
+
+  // ---- collapse for the two timeless tiers ----
+  document.querySelectorAll('.sh[aria-controls]').forEach(function(sh){
+    sh.addEventListener('click',function(){
+      var open=sh.getAttribute('aria-expanded')==='true';
+      sh.setAttribute('aria-expanded',open?'false':'true');
+      var panel=document.getElementById(sh.getAttribute('aria-controls'));
+      if(panel) panel.classList.toggle('collapsed',open);
+    });
+  });
+
+  function wireHearts(){
+    document.querySelectorAll('.heart, .pick .hb').forEach(function(h){
+      if(h._wired) return; h._wired=true;
+      h.addEventListener('click',function(e){
+        e.stopPropagation();
+        var on=(h.textContent.trim()==='❤️');
+        if(h.classList.contains('hb')){ on=h.style.color==='rgb(224, 168, 46)'; h.style.color=on?'#fff':'#E0A82E'; }
+        else { h.textContent=on?'🤍':'❤️'; }
+        toast.innerHTML=on?'Removed from <span class="h">Saved</span>':'Saved <span class="h">♥</span>';
+        toast.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){toast.classList.remove('show');},1500);
+      });
+    });
+  }
+
+  renderLead('today');
+  wireHearts();
+</script>
+</body>
+</html>

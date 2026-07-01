@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Explore: Live Frame + Three-Horizon Lead Breakout</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink2:#4A4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tileLt:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+    --goldText:#7A5E13; --sageText:#566049; --terraText:#9E3F20;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--plaster);line-height:1.55;
+    background-image:radial-gradient(1200px 600px at 50% -200px,rgba(22,88,106,.06),transparent);}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px 80px;}
+
+  /* MASTHEAD */
+  .masthead{border-bottom:3px double var(--ink);margin:0 0 6px;padding:34px 0 16px;}
+  .mh-top{display:flex;align-items:center;gap:11px;}
+  .mh-top .m{width:34px;height:34px;border-radius:8px;background:var(--pacific);color:var(--gold);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:18px;}
+  .mh-top .nm{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1;}
+  .mh-top .tag{font-size:9px;color:var(--sageText);font-weight:700;letter-spacing:1.4px;text-transform:uppercase;margin-top:3px;}
+  h1.title{font-family:'Fraunces',serif;font-weight:600;font-size:40px;line-height:1.03;letter-spacing:-1px;margin:18px 0 6px;}
+  .dek{font-size:15px;color:var(--ink2);max-width:790px;}
+  .dek code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--plaster2);padding:1px 5px;border-radius:5px;}
+  .rule-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+  .chip{font-size:10px;font-weight:700;letter-spacing:.4px;padding:5px 11px;border-radius:20px;background:var(--paper);border:1px solid var(--line);color:var(--ink2);}
+  .chip.src{background:rgba(22,88,106,.08);border-color:rgba(22,88,106,.25);color:var(--pacific);}
+  .chip.new{background:rgba(224,168,46,.12);border-color:rgba(224,168,46,.5);color:var(--goldText);}
+
+  .kicker{font-size:10.5px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--tile);margin-top:46px;}
+  h2.sec{font-family:'Fraunces',serif;font-weight:600;font-size:27px;letter-spacing:-.4px;margin:5px 0 4px;}
+  .lead{font-size:14px;color:var(--ink2);max-width:800px;margin:0 0 18px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:18px;margin:26px 0 8px;letter-spacing:-.2px;}
+  p{font-size:13.5px;}
+  code{font-family:'JetBrains Mono',monospace;}
+
+  /* SHARED-FRAME DIAGRAM */
+  .frame-map{display:grid;grid-template-columns:1fr;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin:6px 0;}
+  .fm-band{border-radius:11px;padding:11px 15px;border:1.5px solid var(--line);background:var(--plaster);display:flex;align-items:center;gap:12px;}
+  .fm-band .fl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--sage);min-width:96px;}
+  .fm-band .ft{font-size:13px;font-weight:600;color:var(--ink);}
+  .fm-band .ft .mono{font-size:11px;color:var(--terraText);}
+  .fm-band.shared{opacity:.92;}
+  .fm-band.variant{border:2px solid var(--gold);background:linear-gradient(110deg,rgba(224,168,46,.14),rgba(224,168,46,.04));box-shadow:0 6px 18px -10px rgba(224,168,46,.6);}
+  .fm-band.variant .fl{color:var(--goldText);}
+  .fm-tag{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:3px 9px;border-radius:20px;}
+  .fm-tag.s{background:var(--plaster2);color:var(--sageText);}
+  .fm-tag.v{background:var(--gold);color:var(--ink);}
+
+  /* HORIZON BLOCKS */
+  .hblock{margin:18px 0 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--paper);}
+  .hbar{padding:15px 20px;display:flex;align-items:center;gap:12px;color:#fff;}
+  .hbar.today{background:linear-gradient(110deg,#b8862a,#E0A82E);}
+  .hbar.week{background:linear-gradient(110deg,#134a59,#16586A);}
+  .hbar.month{background:linear-gradient(110deg,#2f6347,#3E7C5A);}
+  .hbar .hn{font-family:'Fraunces',serif;font-size:21px;font-weight:600;}
+  .hbar .hr{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.92;margin-left:auto;}
+  .hbar .branch{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,.22);padding:4px 9px;border-radius:7px;}
+  .hgrid{display:grid;grid-template-columns:300px 1fr;gap:0;}
+  @media(max-width:820px){.hgrid{grid-template-columns:1fr;}}
+  .hpreview{padding:22px 20px;border-right:1px solid var(--line);background:var(--plaster);display:flex;flex-direction:column;align-items:center;}
+  @media(max-width:820px){.hpreview{border-right:none;border-bottom:1px solid var(--line);}}
+  .hdetail{padding:20px 22px;min-width:0;}
+  .hdetail h4{font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--tile);margin:18px 0 7px;}
+  .hdetail h4:first-child{margin-top:0;}
+  .complist{margin:0;padding-left:0;list-style:none;}
+  .complist li{font-size:12.5px;padding:5px 0;border-bottom:1px dashed var(--line);display:flex;gap:9px;align-items:baseline;}
+  .complist li:last-child{border-bottom:none;}
+  .complist .ord{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;background:var(--sage);min-width:19px;height:19px;border-radius:6px;display:inline-grid;place-items:center;flex-shrink:0;}
+  .complist .fn{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--terraText);}
+  .complist .ds{color:var(--ink2);}
+
+  pre{background:#1d2b30;color:#e9e2d2;border-radius:12px;padding:15px 16px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.6;margin:6px 0 0;}
+  pre .c{color:#7fa3ad;} pre .k{color:#E0A82E;} pre .s{color:#9cc5a1;} pre .f{color:#e09b6b;}
+  .codecap{font-size:10.5px;color:var(--sage);margin:8px 0 0;font-weight:600;}
+
+  .rules{border-radius:12px;padding:13px 16px;margin-top:8px;}
+  .rules.keep{background:rgba(22,88,106,.06);border:1px solid rgba(22,88,106,.3);}
+  .rules.new{background:rgba(224,168,46,.08);border:1px solid rgba(224,168,46,.4);}
+  .rules .rt{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;}
+  .rules.keep .rt{color:var(--pacific);} .rules.new .rt{color:var(--goldText);}
+  .rules ul{margin:0;padding-left:18px;} .rules li{font-size:12.5px;margin:3px 0;color:var(--ink2);}
+  .rules code{font-size:11px;background:#fff;padding:1px 5px;border-radius:5px;color:var(--terraText);}
+
+  /* MATRIX */
+  .matrix{width:100%;border-collapse:collapse;margin:8px 0 6px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:12.5px;}
+  .matrix th,.matrix td{text-align:left;padding:12px 14px;vertical-align:top;border-bottom:1px solid var(--line);}
+  .matrix thead th{background:var(--pacificDk);color:#fff;font-size:11px;letter-spacing:.4px;}
+  .matrix tbody th{font-weight:700;color:var(--pacific);width:150px;background:rgba(22,88,106,.04);font-size:11.5px;}
+  .matrix tr:last-child td,.matrix tr:last-child th{border-bottom:none;}
+  .matrix code{font-size:11px;background:var(--plaster2);padding:1px 5px;border-radius:5px;color:var(--terraText);}
+
+  /* MINI PHONE */
+  .phone{width:240px;background:#15110d;border-radius:30px;padding:8px;box-shadow:0 22px 44px -22px rgba(0,0,0,.5);}
+  .pscreen{background:var(--plaster);border-radius:23px;overflow:hidden;position:relative;height:486px;}
+  .ph-cap{font-size:10.5px;color:var(--sage);font-weight:600;text-align:center;margin-top:12px;max-width:240px;}
+  /* job strip */
+  .mini-job{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;background:var(--plaster);font-size:7px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--sageText);}
+  .mini-job i{font-style:normal;opacity:.5;}
+  /* hero */
+  .mini-hero{padding:8px 10px 8px;color:#fff;position:relative;min-height:78px;background:linear-gradient(180deg,#1b4a5a,#2c6b78 35%,#d98a4a 82%,#e0a82e);}
+  .mini-hero .sun{position:absolute;right:18px;top:12px;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#FFF3D0,var(--gold) 60%,rgba(224,168,46,0) 72%);box-shadow:0 0 20px 6px rgba(224,168,46,.5);}
+  .mini-hero .date{font-size:6.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.92;}
+  .mini-hero .cond{font-size:7px;font-weight:600;margin-top:3px;opacity:.95;}
+  .mini-pick{background:rgba(246,241,231,.98);border-radius:10px;margin-top:8px;display:flex;overflow:hidden;box-shadow:0 5px 14px rgba(0,0,0,.2);position:relative;}
+  .mini-pick .pi{width:46px;background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);}
+  .mini-pick .pb{padding:6px 7px;}
+  .mini-pick .eye{font-size:6px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--tile);}
+  .mini-pick .ttl{font-family:'Fraunces',serif;font-size:10px;font-weight:700;color:var(--ink);line-height:1.05;margin-top:1px;}
+  .mini-pick .mt{font-size:6.5px;font-weight:600;color:var(--pacific);margin-top:2px;}
+  .mini-pick .hh{position:absolute;top:5px;right:5px;width:15px;height:15px;border-radius:50%;background:rgba(20,30,35,.4);display:grid;place-items:center;font-size:7px;}
+  /* controls */
+  .mini-ctrl{padding:8px 10px 0;}
+  .mini-hseg{display:flex;gap:2px;background:var(--plaster2);border-radius:8px;padding:2px;}
+  .mini-hseg b{flex:1;text-align:center;font-size:7.5px;font-weight:700;padding:5px 0;border-radius:6px;color:#8a7f70;}
+  .mini-hseg b.on{background:#fff;color:var(--pacific);}
+  .mini-crow{display:flex;gap:5px;margin-top:5px;}
+  .mini-crow .cb{flex:1;display:flex;align-items:center;gap:4px;border:1.2px solid var(--line);background:#fff;border-radius:14px;padding:5px 8px;font-size:7px;font-weight:700;color:var(--ink);}
+  .mini-crow .cb .ch{margin-left:auto;color:var(--pacific);}
+  /* sticky lead header */
+  .mini-lh{display:flex;align-items:center;gap:5px;margin:9px 10px 6px;}
+  .mini-lh .ic{font-size:9px;}
+  .mini-lh .l{font-size:8px;font-weight:700;letter-spacing:.4px;color:var(--ink);}
+  .mini-lh .bd{margin-left:auto;background:var(--tile);color:#fff;font-size:6.5px;font-weight:800;min-width:13px;height:13px;border-radius:7px;display:grid;place-items:center;padding:0 3px;}
+  .mini-zone{padding:0 10px;}
+  /* TODAY: pick cards */
+  .mini-pc{background:#fff;border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:7px;}
+  .mini-pc .img{height:42px;position:relative;}
+  .mini-pc .tg{position:absolute;top:5px;left:5px;background:var(--gold);color:var(--ink);font-size:6px;font-weight:800;padding:2px 6px;border-radius:8px;}
+  .mini-pc .pl{position:absolute;bottom:5px;left:5px;background:rgba(20,30,35,.6);color:#fff;font-size:6px;font-weight:600;padding:2px 6px;border-radius:8px;}
+  .mini-pc .bd{padding:6px 8px;}
+  .mini-pc .t{font-family:'Fraunces',serif;font-size:10px;font-weight:600;line-height:1.05;}
+  .mini-pc .fct{font-size:6.5px;color:var(--pacific);font-weight:600;margin-top:3px;}
+  /* WEEK: day rail */
+  .mini-day{display:flex;gap:7px;padding:0 10px 8px;}
+  .mini-day .dd{width:24px;flex-shrink:0;text-align:center;}
+  .mini-day .dd .w{font-size:6px;font-weight:700;color:var(--tile);letter-spacing:.5px;}
+  .mini-day .dd .n{font-family:'Fraunces',serif;font-size:14px;font-weight:600;line-height:1;}
+  .mini-day .items{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .mini-it{background:#fff;border:1px solid var(--line);border-radius:7px;padding:5px 7px;display:flex;align-items:center;gap:5px;}
+  .mini-it .nm{font-family:'Fraunces',serif;font-size:8.5px;font-weight:600;line-height:1.05;}
+  .mini-it .m{font-size:6px;color:var(--pacific);font-weight:600;margin-top:1px;}
+  .mini-it .ht{margin-left:auto;font-size:8px;}
+  /* MONTH: rock tiles */
+  .mini-rock{margin:0 10px 7px;border-radius:11px;overflow:hidden;position:relative;min-height:58px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .mini-rock .ov{position:absolute;inset:0;background:linear-gradient(180deg,transparent 28%,rgba(0,0,0,.66));}
+  .mini-rock .hh{position:absolute;top:5px;right:5px;width:15px;height:15px;border-radius:50%;background:rgba(20,30,35,.4);display:grid;place-items:center;font-size:7px;}
+  .mini-rock .c{position:relative;padding:7px 8px;color:#fff;}
+  .mini-rock .when{display:inline-block;background:var(--gold);color:var(--ink);font-size:6px;font-weight:800;padding:2px 5px;border-radius:7px;margin-bottom:3px;}
+  .mini-rock .rt{font-family:'Fraunces',serif;font-size:10px;font-weight:600;line-height:1.05;}
+  .mini-rock .vn{font-size:6px;opacity:.9;margin-top:1px;}
+  .mini-rock .nt{font-size:6px;opacity:.92;margin-top:2px;}
+  /* build cta + shared tier headers */
+  .mini-cta{margin:2px 10px 8px;border:1.4px dashed var(--gold);background:rgba(224,168,46,.08);border-radius:10px;padding:7px 9px;display:flex;align-items:center;gap:7px;}
+  .mini-cta .i{font-size:11px;}
+  .mini-cta .b .t{font-size:8px;font-weight:800;color:var(--goldText);}
+  .mini-cta .b .s{font-size:6px;color:var(--ink2);margin-top:1px;}
+  .mini-cta .ar{margin-left:auto;font-weight:800;color:var(--goldText);}
+  .mini-th{display:flex;align-items:center;gap:5px;margin:0 10px;padding:7px 0;border-top:1px solid var(--line);}
+  .mini-th .ic{font-size:9px;}
+  .mini-th .l{font-size:8px;font-weight:700;color:var(--ink);}
+  .mini-th .bd{background:var(--plaster2);color:var(--sageText);font-size:6.5px;font-weight:800;min-width:13px;height:13px;border-radius:7px;display:grid;place-items:center;padding:0 3px;}
+  .mini-th .cv{margin-left:auto;font-size:8px;color:var(--sage);}
+  /* nav */
+  .mini-nav{position:absolute;bottom:0;left:0;right:0;height:32px;background:rgba(246,241,231,.96);border-top:1px solid var(--line);display:flex;}
+  .mini-nav b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:6px;font-weight:600;color:#9a8f80;}
+  .mini-nav b.on{color:var(--pacific);}
+  .mini-nav b i{font-style:normal;font-size:11px;}
+
+  .note{background:var(--plaster2);border-left:3px solid var(--pacific);border-radius:0 10px 10px 0;padding:13px 16px;margin:14px 0 0;font-size:13px;color:var(--ink2);}
+  .note b{color:var(--ink);}
+  .note code{font-size:11.5px;background:#fff;padding:1px 5px;border-radius:5px;color:var(--terraText);}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);font-size:11.5px;color:var(--sage);text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <div class="mh-top">
+      <div class="m serif">S</div>
+      <div><div class="nm serif">SB Daymaker</div><div class="tag">Santa Barbara, daily</div></div>
+    </div>
+    <h1 class="title">Explore — live frame,<br>three-horizon lead breakout</h1>
+    <p class="dek">The live Explore tab is kept exactly as it ships. The one change: the dated <b>lead section</b> (Tier&nbsp;1) — the only horizon-dependent block on the page — reflows into three distinct treatments by the original principle. <code>Today</code> keeps its editorial pick cards, <code>This&nbsp;Week</code> becomes a day-by-day rail, <code>This&nbsp;Month</code> becomes big-rock tiles. Everything else (hero, controls, Build-your-day CTA, the Recurring&nbsp;Weekly + Great&nbsp;any&nbsp;time tiers, footer) is shared and untouched.</p>
+    <div class="rule-meta">
+      <span class="chip src">Base · live Explore (2026-06-29 audit)</span>
+      <span class="chip new">Change · Tier-1 lead reflows per horizon</span>
+      <span class="chip">Tiers 2 &amp; 3 shared · unchanged</span>
+      <span class="chip">No Refine · controls = horizon ▸ Lens + Near Me</span>
+    </div>
+  </div>
+
+  <!-- 01 SHARED FRAME -->
+  <div class="kicker">01 — The live frame (unchanged)</div>
+  <h2 class="sec">What stays exactly as it ships</h2>
+  <p class="lead">This is the current production scaffold, top to bottom. Only the highlighted band changes per horizon; every other band is identical across Today / This Week / This Month.</p>
+  <div class="frame-map">
+    <div class="fm-band shared"><span class="fl">Job strip</span><span class="ft">Find it · Save it · Share it &nbsp;<span class="mono">.sbd-job-strip</span></span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band shared"><span class="fl">Hero</span><span class="ft">Sky strip (date + condition) + pick card · eyebrow <b>"Today's pick"</b> · gray-weather swap &nbsp;<span class="mono">&lt;Hero&gt;</span></span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band shared"><span class="fl">Controls</span><span class="ft">Horizon segment on top → row: <b>✦ Any vibe ▾</b> + <b>📍 Near Me</b> &nbsp;<span class="mono">&lt;ControlRow&gt;</span></span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band variant"><span class="fl">Lead · Tier 1</span><span class="ft">📅 "Happening {Today|This Week|This Month}" + count — <b>reflows per horizon</b> &nbsp;<span class="mono">LeadSection</span></span><span class="fm-tag v">Variant</span></div>
+    <div class="fm-band shared"><span class="fl">Build CTA</span><span class="ft">☀️ "Build your day" → /plan &nbsp;<span class="mono">.sbd-build-cta</span></span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band shared"><span class="fl">Tier 2</span><span class="ft">🔁 "Recurring Weekly" — collapsible ListCards, timeless &nbsp;<span class="mono">.sbd-feed-section</span></span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band shared"><span class="fl">Tier 3</span><span class="ft">⭐ "Great any time" — collapsible ListCards, timeless</span><span class="fm-tag s">Shared</span></div>
+    <div class="fm-band shared"><span class="fl">Footer</span><span class="ft">Email signup · submit link · trust note &nbsp;<span class="mono">.sbd-foot</span></span><span class="fm-tag s">Shared</span></div>
+  </div>
+  <div class="note"><b>Why the lead is the only place this applies:</b> Tier 1 is the sole section driven by the horizon's date window (<code>withinHorizon(thing, horizon, nowMs)</code>). Tiers 2 and 3 are timeless — they render the same recurring and evergreen items no matter which horizon is selected — so giving them per-horizon layouts would be meaningless. The original "three UIs" principle maps cleanly onto exactly one block: the dated lead.</div>
+
+  <!-- 02 ============ TODAY ============ -->
+  <div class="kicker">02 — Lead treatment one</div>
+  <h2 class="sec">Today → editorial pick cards</h2>
+  <div class="hblock">
+    <div class="hbar today">
+      <span class="hn serif">🌅 Today</span>
+      <span class="hr">Lead = PickCard stack · live, unchanged</span>
+      <span class="branch">horizon === 'today'</span>
+    </div>
+    <div class="hgrid">
+      <div class="hpreview">
+        <div class="phone"><div class="pscreen">
+          <div class="mini-job"><span>Find it</span><i>·</i><span>Save it</span><i>·</i><span>Share it</span></div>
+          <div class="mini-hero"><div class="sun"></div><div class="date">Mon, June 29</div><div class="cond">🌤️ 72° · Partly cloudy</div>
+            <div class="mini-pick"><div class="pi"></div><div class="pb"><div class="eye">Today's pick</div><div class="ttl">Sunset at the Bowl</div><div class="mt">📍 Milpas</div></div><div class="hh">🤍</div></div>
+          </div>
+          <div class="mini-ctrl"><div class="mini-hseg"><b class="on">Today</b><b>This Week</b><b>This Month</b></div>
+            <div class="mini-crow"><div class="cb">✦ Any vibe<span class="ch">▾</span></div><div class="cb">📍 Near Me</div></div>
+          </div>
+          <div class="mini-lh"><span class="ic">📅</span><span class="l">Happening Today</span><span class="bd">3</span></div>
+          <div class="mini-zone">
+            <div class="mini-pc"><div class="img" style="background:linear-gradient(135deg,#1a5a6b,#2d7d8f 40%,#e0a82e 120%);"><span class="tg">Tonight</span><span class="pl">📍 SB Bowl</span></div><div class="bd"><div class="t">Sunset at the Bowl</div><div class="fct">🕕 7:00 PM · 🎟 $45</div></div></div>
+            <div class="mini-pc"><div class="img" style="background:linear-gradient(135deg,#C0532E,#E0A82E);"><span class="tg">Tonight</span><span class="pl">📍 Lobero</span></div><div class="bd"><div class="t">Live Jazz at the Lobero</div><div class="fct">🕕 8:00 PM · 🎟 $30</div></div></div>
+          </div>
+          <div class="mini-cta"><span class="i">☀️</span><div class="b"><div class="t">Build your day</div><div class="s">Tell us the shape…</div></div><span class="ar">→</span></div>
+          <div class="mini-th"><span class="ic">🔁</span><span class="l">Recurring Weekly</span><span class="bd">6</span><span class="cv">⌄</span></div>
+          <div class="mini-nav"><b class="on"><i>🌅</i>Explore</b><b><i>❤️</i>Saved</b><b><i>🧭</i>Discover</b></div>
+        </div></div>
+        <div class="ph-cap">Lead = full editorial PickCards (photo, tag, place, title, facts). Exactly as live today.</div>
+      </div>
+      <div class="hdetail">
+        <h4>Lead render (in order)</h4>
+        <ul class="complist">
+          <li><span class="ord">H</span><span><span class="ds">Sticky header — <span class="fn">📅 "Happening Today"</span> + Tier-1 count badge (live)</span></span></li>
+          <li><span class="ord">1</span><span><span class="fn">PickCard</span> <span class="ds">per Tier-1 item — full photo, tag overlay, place overlay, title, blurb, facts row, save + share acts</span></span></li>
+        </ul>
+        <h4>Data &amp; behavior</h4>
+        <ul class="complist">
+          <li><span class="ord">Q</span><span><span class="fn">withinHorizon(thing,'today',nowMs)</span> <span class="ds">— events whose start lands on today's SB-local calendar day</span></span></li>
+          <li><span class="ord">N</span><span><span class="ds">Near Me bubbles the selected zone's items to the top of the lead (cascade order otherwise preserved)</span></span></li>
+        </ul>
+        <div class="rules keep">
+          <div class="rt">Kept from live — no change</div>
+          <ul>
+            <li>This is the production Today lead as-is: <code>PickCard</code> stack, no cap, not weather-filtered (only the hero does the gray swap).</li>
+            <li>Header copy, badge, sticky behavior at <code>top:50px</code> all unchanged.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 03 ============ THIS WEEK ============ -->
+  <div class="kicker">03 — Lead treatment two</div>
+  <h2 class="sec">This Week → day-by-day rail</h2>
+  <div class="hblock">
+    <div class="hbar week">
+      <span class="hn serif">🗓️ This Week</span>
+      <span class="hr">Lead = day groups · reintroduced principle</span>
+      <span class="branch">horizon === 'week'</span>
+    </div>
+    <div class="hgrid">
+      <div class="hpreview">
+        <div class="phone"><div class="pscreen">
+          <div class="mini-job"><span>Find it</span><i>·</i><span>Save it</span><i>·</i><span>Share it</span></div>
+          <div class="mini-hero"><div class="sun"></div><div class="date">Mon, June 29</div><div class="cond">🌤️ 72° · Partly cloudy</div>
+            <div class="mini-pick"><div class="pi"></div><div class="pb"><div class="eye">Today's pick</div><div class="ttl">Sunset at the Bowl</div><div class="mt">📍 Milpas</div></div><div class="hh">🤍</div></div>
+          </div>
+          <div class="mini-ctrl"><div class="mini-hseg"><b>Today</b><b class="on">This Week</b><b>This Month</b></div>
+            <div class="mini-crow"><div class="cb">✦ Any vibe<span class="ch">▾</span></div><div class="cb">📍 Near Me</div></div>
+          </div>
+          <div class="mini-lh"><span class="ic">📅</span><span class="l">Happening This Week</span><span class="bd">7</span></div>
+          <div class="mini-day"><div class="dd"><div class="w">TUE</div><div class="n">30</div></div><div class="items">
+            <div class="mini-it"><div><div class="nm">Funk Zone Art Walk</div><div class="m">Funk Zone · Free</div></div><span class="ht">🤍</span></div>
+            <div class="mini-it"><div><div class="nm">Lobero: Live Jazz</div><div class="m">Lobero · $30</div></div><span class="ht">🤍</span></div>
+          </div></div>
+          <div class="mini-day"><div class="dd"><div class="w">WED</div><div class="n">01</div></div><div class="items">
+            <div class="mini-it"><div><div class="nm">Farmers Market</div><div class="m">Sta Barbara St · Free</div></div><span class="ht">🤍</span></div>
+          </div></div>
+          <div class="mini-day"><div class="dd"><div class="w">SAT</div><div class="n">04</div></div><div class="items">
+            <div class="mini-it"><div><div class="nm">4th of July Fireworks</div><div class="m">West Beach · Free</div></div><span class="ht">🤍</span></div>
+          </div></div>
+          <div class="mini-cta"><span class="i">☀️</span><div class="b"><div class="t">Build your day</div><div class="s">Tell us the shape…</div></div><span class="ar">→</span></div>
+          <div class="mini-nav"><b class="on"><i>🌅</i>Explore</b><b><i>❤️</i>Saved</b><b><i>🧭</i>Discover</b></div>
+        </div></div>
+        <div class="ph-cap">Lead = date column + stacked item rows, grouped by day. The original This-Week rail, now inside the live lead.</div>
+      </div>
+      <div class="hdetail">
+        <h4>Lead render (in order)</h4>
+        <ul class="complist">
+          <li><span class="ord">H</span><span><span class="ds">Sticky header — <span class="fn">📅 "Happening This Week"</span> + Tier-1 count badge (live, unchanged)</span></span></li>
+          <li><span class="ord">1</span><span><span class="fn">DayGroup</span> <span class="ds">per distinct SB-local day in the window — a date column (<span class="fn">.dd</span>: weekday + day number) beside…</span></span></li>
+          <li><span class="ord">2</span><span><span class="fn">.it</span> rows <span class="ds">— compact item rows (title, venue · price, inline heart) for that day</span></span></li>
+        </ul>
+        <h4>Proposed render</h4>
+        <pre><span class="c">// week lead: group the SAME Tier-1 query by SB-local day</span>
+<span class="k">const</span> days = <span class="f">groupByDay</span>(tier1, SB_TZ);          <span class="c">// [{day,date,items}]</span>
+<span class="k">return</span> days.<span class="f">map</span>(({day,date,items}) =&gt; (
+  <span class="f">&lt;div</span> className=<span class="s">"sbd-leadday"</span><span class="f">&gt;</span>
+    <span class="f">&lt;div</span> className=<span class="s">"sbd-leadday__dd"</span><span class="f">&gt;</span>{day}{date}<span class="f">&lt;/div&gt;</span>
+    <span class="f">&lt;div</span> className=<span class="s">"sbd-leadday__items"</span><span class="f">&gt;</span>
+      {<span class="f">nearMeSort</span>(items).<span class="f">map</span>(t =&gt; <span class="f">&lt;LeadDayRow</span> t /<span class="f">&gt;</span>)}
+    <span class="f">&lt;/div&gt;</span>
+  <span class="f">&lt;/div&gt;</span>
+));</pre>
+        <div class="rules new">
+          <div class="rt">New — reintroduced principle</div>
+          <ul>
+            <li>Tier-1 items are <b>grouped by day</b> instead of listed flat — the planning-rail reading of the same <code>withinHorizon(...,'week',...)</code> result.</li>
+            <li><b>Near Me sorts within a day</b>, day order preserved (matches the original v9 rule).</li>
+            <li>New classes: <code>.sbd-leadday</code> / <code>.sbd-leadday__dd</code> / <code>.sbd-leadday__items</code> / <code>.sbd-leadday__it</code>.</li>
+            <li>Header label stays the live <b>"Happening This Week"</b> — only the cards below it change.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 04 ============ THIS MONTH ============ -->
+  <div class="kicker">04 — Lead treatment three</div>
+  <h2 class="sec">This Month → big-rock tiles</h2>
+  <div class="hblock">
+    <div class="hbar month">
+      <span class="hn serif">⛰️ This Month</span>
+      <span class="hr">Lead = full-bleed rocks · reintroduced principle</span>
+      <span class="branch">horizon === 'month'</span>
+    </div>
+    <div class="hgrid">
+      <div class="hpreview">
+        <div class="phone"><div class="pscreen">
+          <div class="mini-job"><span>Find it</span><i>·</i><span>Save it</span><i>·</i><span>Share it</span></div>
+          <div class="mini-hero"><div class="sun"></div><div class="date">Mon, June 29</div><div class="cond">🌤️ 72° · Partly cloudy</div>
+            <div class="mini-pick"><div class="pi"></div><div class="pb"><div class="eye">Today's pick</div><div class="ttl">Sunset at the Bowl</div><div class="mt">📍 Milpas</div></div><div class="hh">🤍</div></div>
+          </div>
+          <div class="mini-ctrl"><div class="mini-hseg"><b>Today</b><b>This Week</b><b class="on">This Month</b></div>
+            <div class="mini-crow"><div class="cb">✦ Any vibe<span class="ch">▾</span></div><div class="cb">📍 Near Me</div></div>
+          </div>
+          <div class="mini-lh"><span class="ic">📅</span><span class="l">Happening This Month</span><span class="bd">12</span></div>
+          <div class="mini-rock" style="background:linear-gradient(135deg,#3E7C5A,#16586A);"><div class="ov"></div><div class="hh">🤍</div><div class="c"><div class="when">Jul 2</div><div class="rt">First Thursday Art Walk</div><div class="vn">Downtown</div><div class="nt">Galleries open late, free.</div></div></div>
+          <div class="mini-rock" style="background:linear-gradient(135deg,#9C6B9E,#16586A);"><div class="ov"></div><div class="hh">🤍</div><div class="c"><div class="when">Jul 4</div><div class="rt">4th of July Fireworks</div><div class="vn">West Beach</div><div class="nt">The classic harbor-front show.</div></div></div>
+          <div class="mini-rock" style="background:linear-gradient(135deg,#7E8B6B,#16586A);"><div class="ov"></div><div class="hh">🤍</div><div class="c"><div class="when">Jul 17–18</div><div class="rt">California Wine Festival</div><div class="vn">Chase Palm Park</div><div class="nt">200+ wines on the lawn.</div></div></div>
+          <button style="margin:0 10px 8px;width:calc(100% - 20px);border:1.4px solid var(--forest);background:rgba(62,124,90,.08);color:#2f6347;border-radius:10px;padding:7px 0;font-size:8px;font-weight:800;letter-spacing:.3px;cursor:pointer;">See more this month →</button>
+          <div class="mini-cta"><span class="i">☀️</span><div class="b"><div class="t">Build your day</div><div class="s">Tell us the shape…</div></div><span class="ar">→</span></div>
+          <div class="mini-nav"><b class="on"><i>🌅</i>Explore</b><b><i>❤️</i>Saved</b><b><i>🧭</i>Discover</b></div>
+        </div></div>
+        <div class="ph-cap">Lead = full-bleed tiles, soonest → furthest. First 8 show, then "See more this month" reveals the rest.</div>
+      </div>
+      <div class="hdetail">
+        <h4>Lead render (in order)</h4>
+        <ul class="complist">
+          <li><span class="ord">H</span><span><span class="ds">Sticky header — <span class="fn">📅 "Happening This Month"</span> + Tier-1 count badge (live, unchanged)</span></span></li>
+          <li><span class="ord">1</span><span><span class="fn">RockTile</span> <span class="ds">per Tier-1 item, <b>soonest → furthest</b> — full-bleed photo, gradient overlay, gold <span class="fn">.when</span> date pill, title, venue, one-line note, overlay heart. First <b>8</b> shown.</span></span></li>
+          <li><span class="ord">2</span><span><span class="fn">.sbd-rock-more</span> <span class="ds">— "See N more this month →" button, only when more than 8 remain; reveals the rest on tap</span></span></li>
+        </ul>
+        <h4>Proposed render</h4>
+        <pre><span class="c">// month lead: all Tier-1 in window, soonest → furthest; show 8, then reveal the rest</span>
+<span class="k">const</span> rocks = <span class="f">byDateAsc</span>(tier1);              <span class="c">// soonest start first</span>
+<span class="k">const</span> shown = monthExpanded ? rocks : rocks.<span class="f">slice</span>(<span class="k">0</span>,<span class="k">8</span>);
+<span class="k">return</span> <span class="f">&lt;&gt;</span>
+  {shown.<span class="f">map</span>(t =&gt; <span class="f">&lt;RockTile</span> t /<span class="f">&gt;</span>)}
+  {!monthExpanded &amp;&amp; rocks.length &gt; <span class="k">8</span> &amp;&amp; (
+    <span class="f">&lt;button</span> className=<span class="s">"sbd-rock-more"</span>
+      onClick={() =&gt; <span class="f">setMonthExpanded</span>(<span class="k">true</span>)}<span class="f">&gt;</span>
+      See {rocks.length - <span class="k">8</span>} more this month →
+    <span class="f">&lt;/button&gt;</span>
+  )}
+<span class="f">&lt;/&gt;</span>;</pre>
+        <div class="rules new">
+          <div class="rt">New — reintroduced principle</div>
+          <ul>
+            <li>Tier-1 items render as <b>image-forward marquee tiles</b>, ordered strictly <b>soonest → furthest</b> by start date.</li>
+            <li><b>Shows the first 8</b>; if more remain, a <code>.sbd-rock-more</code> button ("See N more this month →") reveals the rest on tap. State: <code>monthExpanded</code>, default collapsed.</li>
+            <li>Carries a one-line <code>note</code> the other treatments don't, and uses the <b>overlay</b> heart to match the tile.</li>
+            <li>New classes: <code>.sbd-rock</code> / <code>.sbd-rock__ov</code> / <code>.sbd-rock__when</code> / <code>.sbd-rock__ttl|vn|nt</code> / <code>.sbd-rock-more</code>.</li>
+            <li>Header label stays the live <b>"Happening This Month"</b>; only the cards change.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 05 LEAD SWITCH -->
+  <div class="kicker">05 — The single switch</div>
+  <h2 class="sec">One horizon-aware branch in the lead</h2>
+  <p class="lead">The whole change is contained in the Tier-1 lead renderer inside <code>CascadeFeed</code>. The header, the Build-your-day CTA, and Tiers 2 / 3 are untouched — they sit outside this function.</p>
+  <pre><span class="c">// CascadeFeed.tsx — only the LEAD (tier1) becomes horizon-aware.</span>
+<span class="c">// Header, Build CTA, Tier 2, Tier 3 stay exactly as they are today.</span>
+<span class="k">function</span> <span class="f">LeadSection</span>({ tier1, horizon }) {
+  <span class="c">// sticky header unchanged: 📅 HORIZON_LABEL[horizon] + count badge</span>
+  <span class="k">if</span> (horizon === <span class="s">'today'</span>) <span class="k">return</span> tier1.<span class="f">map</span>(t =&gt; <span class="f">&lt;PickCard</span> t /<span class="f">&gt;</span>);   <span class="c">// live</span>
+  <span class="k">if</span> (horizon === <span class="s">'week'</span>)  <span class="k">return</span> <span class="f">&lt;LeadDayRail</span> items={tier1} /<span class="f">&gt;</span>;        <span class="c">// new</span>
+  <span class="k">if</span> (horizon === <span class="s">'month'</span>) <span class="k">return</span> <span class="f">&lt;RockGrid</span> items={tier1} /<span class="f">&gt;</span>;       <span class="c">// new · soonest→furthest, 8 then "See more"</span>
+}</pre>
+  <div class="note"><b>Risk surface is tiny.</b> Two new presentational components (<code>LeadDayRail</code>, <code>RockGrid</code> — the latter wraps <code>RockTile</code> + the "See more" reveal) and a <code>groupByDay</code> helper. The only new state is a local <code>monthExpanded</code> boolean. No change to <code>cascade()</code>, <code>withinHorizon()</code>, <code>filterByLens()</code>, the hero, the controls, or the schema. The lead's data <em>query</em> is identical in all three branches — the 8-card cap is a render concern, not a filter.</div>
+
+  <!-- 06 MATRIX -->
+  <div class="kicker">06 — Lead, compared</div>
+  <h2 class="sec">The three lead treatments at a glance</h2>
+  <table class="matrix">
+    <thead><tr><th style="width:150px;">&nbsp;</th><th>🌅 Today</th><th>🗓️ This Week</th><th>⛰️ This Month</th></tr></thead>
+    <tbody>
+      <tr><th>Source</th><td>Live — unchanged</td><td>Reintroduced principle</td><td>Reintroduced principle</td></tr>
+      <tr><th>Header (live)</th><td>📅 Happening Today</td><td>📅 Happening This Week</td><td>📅 Happening This Month</td></tr>
+      <tr><th>Lead query</th><td colspan="3" style="text-align:center;color:var(--pacific);font-weight:600;">Identical filter — <code>withinHorizon(thing, horizon, nowMs)</code> + active Lens</td></tr>
+      <tr><th>Card</th><td><code>PickCard</code> (editorial)</td><td>Day group → <code>.it</code> rows</td><td><code>.sbd-rock</code> tile</td></tr>
+      <tr><th>Order / cap</th><td>Flat, cascade order · no cap</td><td>By SB-local day · no cap</td><td><b>Soonest → furthest · 8, then "See more"</b></td></tr>
+      <tr><th>Heart</th><td>Overlay on media</td><td>Inline on row</td><td>Overlay on tile</td></tr>
+      <tr><th>Near Me</th><td>Bubbles zone to top</td><td>Sorts within each day</td><td>Order stays chronological*</td></tr>
+      <tr><th>Below the lead</th><td colspan="3" style="text-align:center;color:var(--sageText);font-weight:600;">Identical — Build CTA → Recurring Weekly (Tier 2) → Great any time (Tier 3) → footer</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:11.5px;color:var(--sageText);margin:8px 2px 0;">*Month is a plan-ahead view, so it sorts strictly by date; Near Me's zone-bubbling is intentionally dropped here and still applies on Today &amp; This Week. Say the word if you'd rather Month bubble a selected zone too.</p>
+  <div class="kicker">07 — Delta from pure-live</div>
+  <h2 class="sec">Exactly what this proposal adds</h2>
+  <table class="matrix">
+    <thead><tr><th style="width:150px;">Change</th><th>Detail</th></tr></thead>
+    <tbody>
+      <tr><th style="color:var(--goldText);">Added</th><td><code>LeadDayRail</code> + <code>.sbd-leadday*</code> classes — This Week lead grouped by day.</td></tr>
+      <tr><th style="color:var(--goldText);">Added</th><td><code>RockTile</code> + <code>.sbd-rock*</code> classes — This Month lead as big-rock tiles.</td></tr>
+      <tr><th style="color:var(--goldText);">Added</th><td><code>groupByDay(items, tz)</code> helper in <code>lib/explore.ts</code>.</td></tr>
+      <tr><th style="color:var(--pacific);">Changed</th><td><code>LeadSection</code> switches card layout on <code>horizon</code> (3-line branch). Header, badge, sticky behavior unchanged.</td></tr>
+      <tr><th style="color:var(--pacific);">Changed</th><td>Month lead ordered strictly <b>soonest → furthest</b>; shows the first <b>8</b>, then a <code>.sbd-rock-more</code> "See N more this month →" button reveals the rest (<code>monthExpanded</code> state).</td></tr>
+      <tr><th style="color:var(--pacific);">Changed</th><td>Near Me's zone-bubbling does <b>not</b> reorder Month (kept chronological); it still applies on Today &amp; This Week.</td></tr>
+      <tr><th style="color:var(--sageText);">Untouched</th><td>Job strip, hero, controls, Build CTA, Tier 2, Tier 3, footer, sheets, cascade ranking, schema.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note" style="margin-top:24px;"><b>One judgment call worth your eye:</b> the month tile wants a <code>note</code> line and a <code>when</code> string (e.g. "Jul 17–18"). Today's events already carry a start time; multi-day month events may need a date-range formatter and an optional one-line editorial note. If those fields aren't populated yet, <code>RockTile</code> should degrade gracefully — drop the note line and fall back to a single formatted date — rather than show an empty slot. Flag if you'd like me to spec that fallback explicitly.</div>
+
+  <div class="foot">
+    SB Daymaker · Explore — live frame + three-horizon lead breakout · base = live Explore audit (2026-06-29).
+    Today = PickCards (live) · This Week = day rail (reintroduced) · This Month = big rocks (reintroduced). All else shared.
+  </div>
+
+</div>
+</body>
+</html>

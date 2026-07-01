@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Tag, type TagColor } from "./Chip";
-import { SaveHeart } from "./SaveHeart";
+import type { OccasionKey } from "@/lib/occasions";
+import { Pill, DateEyebrow, PlacePill } from "./Pill";
+import { CardActions } from "./CardActions";
 
 type MediaTone = "gold" | "sage" | "pacific";
 
-/** Title that optionally becomes a stretched link covering the whole card. */
+/** Title as a stretched link covering the whole card. */
 function CardTitle({
   href,
   className,
@@ -28,31 +29,29 @@ function CardTitle({
 }
 
 /**
- * PickCard — the editorial hero card from the wireframe: a media banner with a
- * gold tag (top-left), the save heart (top-right), and a place pill
- * (bottom-left), over a Fraunces title, blurb, and a facts row.
+ * PickCard — editorial feature card: 140px media band, occasion pill (top-left),
+ * CardActions scrim cluster (top-right), optional DateEyebrow above title,
+ * Fraunces 25px title, secondary text blurb, facts row.
  */
 export function PickCard({
+  id,
   title,
   blurb,
-  tag,
+  occasionKey,
   place,
   facts = [],
-  saved,
-  onToggleSave,
-  onShare,
+  when,
   tone = "gold",
   href,
   photo,
 }: {
+  id: string;
   title: string;
   blurb: string;
-  tag?: string;
+  occasionKey?: OccasionKey;
   place?: string;
   facts?: string[];
-  saved: boolean;
-  onToggleSave: () => void;
-  onShare?: () => void;
+  when?: string;
   tone?: MediaTone;
   href?: string;
   photo?: string;
@@ -60,30 +59,31 @@ export function PickCard({
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
       <div className={`sbd-pick__media sbd-media--${tone}`}>
-        {photo ? <img className="sbd-card__img" src={photo} alt="" loading="lazy" /> : null}
-        {tag ? (
+        {photo ? (
+          <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
+        ) : null}
+        {occasionKey ? (
           <span className="sbd-pick__tag">
-            <Tag color="gold">{tag}</Tag>
+            <Pill occasion={occasionKey} />
           </span>
         ) : null}
-        {place ? <span className="sbd-pick__place">📍 {place}</span> : null}
-      </div>
-      {/* Acts outside media so tooltips aren't clipped by overflow:hidden */}
-      <span className="sbd-pick__acts">
-        <SaveHeart overlay saved={saved} onToggle={onToggleSave} title={title} tooltip="Save" />
-        {onShare ? (
-          <button
-            type="button"
-            className="sbd-pick__share"
-            onClick={(e) => { e.preventDefault(); onShare(); }}
-            aria-label={`Share ${title}`}
-            data-tooltip="Share"
-          >
-            ↗
-          </button>
+        {place ? (
+          <span className="sbd-pick__place">
+            <PlacePill neighborhood={place} />
+          </span>
         ) : null}
-      </span>
+      </div>
+      {/* CardActions sits outside media so it isn't clipped by overflow:hidden */}
+      <CardActions
+        id={id}
+        title={title}
+        url={`/thing/${id}`}
+        onImage
+      />
       <div className="sbd-pick__body">
+        {when ? (
+          <DateEyebrow>{when}</DateEyebrow>
+        ) : null}
         <CardTitle href={href} className="sbd-pick__title">
           {title}
         </CardTitle>
@@ -101,69 +101,55 @@ export function PickCard({
 }
 
 /**
- * ListCard — compact horizontal card: media thumb + body with a micro tag,
- * Fraunces title, blurb, and a meta line. Optional save heart on the right.
+ * ListCard — compact horizontal card: optional 52px thumb, occasion pill,
+ * DateEyebrow meta line, Fraunces 20px title, blurb, CardActions right column.
+ * Thumb is omitted (text row) when no photo_url — never shows an empty slot.
  */
 export function ListCard({
+  id,
   title,
   blurb,
-  tag,
-  tagColor = "sage",
-  meta,
+  occasionKey,
+  when,
   tone = "sage",
-  saved,
-  onToggleSave,
-  onShare,
   href,
   photo,
 }: {
+  id: string;
   title: string;
   blurb: string;
-  tag?: string;
-  tagColor?: TagColor;
-  meta?: string;
+  occasionKey?: OccasionKey;
+  when?: string;
   tone?: MediaTone;
-  saved?: boolean;
-  onToggleSave?: () => void;
-  onShare?: () => void;
   href?: string;
   photo?: string;
 }) {
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
-      <div className={`sbd-listcard__thumb sbd-media--${tone}`} aria-hidden="true">
-        {photo ? <img className="sbd-card__img" src={photo} alt="" loading="lazy" /> : null}
-      </div>
+      {photo ? (
+        <div
+          className={`sbd-listcard__thumb sbd-media--${tone}`}
+          aria-hidden="true"
+        >
+          <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
+        </div>
+      ) : null}
       <div className="sbd-listcard__body">
-        {tag ? (
-          <Tag color={tagColor} micro>
-            {tag}
-          </Tag>
-        ) : null}
+        {occasionKey ? <Pill occasion={occasionKey} /> : null}
         <CardTitle href={href} className="sbd-listcard__title">
           {title}
         </CardTitle>
         <p className="sbd-listcard__blurb">{blurb}</p>
-        {meta ? <div className="sbd-listcard__meta">{meta}</div> : null}
+        {when ? (
+          <DateEyebrow>{when}</DateEyebrow>
+        ) : null}
       </div>
-      {(onToggleSave || onShare) ? (
-        <span className="sbd-listcard__acts">
-          {onToggleSave ? (
-            <SaveHeart saved={!!saved} onToggle={onToggleSave} title={title} tooltip="Save" />
-          ) : null}
-          {onShare ? (
-            <button
-              type="button"
-              className="sbd-listcard__share"
-              onClick={(e) => { e.preventDefault(); onShare(); }}
-              aria-label={`Share ${title}`}
-              data-tooltip="Share"
-            >
-              ↗
-            </button>
-          ) : null}
-        </span>
-      ) : null}
+      <CardActions
+        id={id}
+        title={title}
+        url={`/thing/${id}`}
+        onImage={false}
+      />
     </article>
   );
 }

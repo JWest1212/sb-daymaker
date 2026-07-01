@@ -6,16 +6,18 @@ export const metadata: Metadata = { title: "Submit — SB Daymaker" };
 
 export default function SubmitPage() {
   return (
-    <div style={{ paddingTop: "var(--space-4)" }}>
-      <Link href="/" className="sbd-backlink">
-        ‹ Explore
-      </Link>
+    <>
+      <div className="sbd-backrow">
+        <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
+      </div>
+      <div style={{ paddingTop: "var(--space-4)" }}>
       <h1 className="sbd-detail__title">Suggest an event or business</h1>
       <p className="sbd-detail__body">
         Know a happening, show, or spot worth sharing? Add it here — the best
         submissions get featured in the weekend digest.
       </p>
       <SubmitForm />
-    </div>
+      </div>
+    </>
   );
 }

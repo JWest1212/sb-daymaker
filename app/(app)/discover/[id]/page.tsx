@@ -20,9 +20,9 @@ export default async function GuidePage({
   if (!result) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
-        <Link href="/discover" className="sbd-backlink">
-          ‹ Discover SB
-        </Link>
+        <div className="sbd-backrow">
+          <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+        </div>
         <EmptyState
           icon="🧭"
           title="Guide not found"
@@ -40,10 +40,11 @@ export default async function GuidePage({
     : `Happening in ${guide.title}`;
 
   return (
-    <div className="sbd-guide">
-      <Link href="/discover" className="sbd-backlink">
-        ‹ Discover SB
-      </Link>
+    <>
+      <div className="sbd-backrow">
+        <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+      </div>
+      <div className="sbd-guide">
 
       <div className={`sbd-guide-hero sbd-guidecard--${isTheme ? "theme" : "hood"}`}>
         <span className="sbd-guidecard__overlay" aria-hidden="true" />
@@ -90,6 +91,7 @@ export default async function GuidePage({
           />
         )}
       </section>
-    </div>
+      </div>
+    </>
   );
 }

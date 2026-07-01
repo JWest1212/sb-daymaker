@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ListCard, Button } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
 import type { Thing } from "@/lib/things";
-import { cardBlurb, cardFacts, cardTag, cardTone } from "@/components/explore/derive";
+import { cardBlurb, cardFacts, cardTone } from "@/components/explore/derive";
 
 export function SharedListView({ items }: { items: Thing[] }) {
   const { saveMany } = useSaves();
@@ -27,11 +27,14 @@ export function SharedListView({ items }: { items: Thing[] }) {
             {items.map((t, i) => (
               <ListCard
                 key={t.id}
+                id={t.id}
                 tone={cardTone(i)}
-                tag={cardTag(t)}
+                occasionKey={t.tags[0]}
                 title={t.title}
                 blurb={cardBlurb(t)}
-                meta={cardFacts(t).join(" · ")}
+                when={cardFacts(t).join(" · ")}
+                href={`/thing/${t.id}`}
+                photo={t.photo_url ?? undefined}
               />
             ))}
           </div>
