@@ -29,6 +29,14 @@ import { alcazar } from './alcazar';
 import { goletaCivic } from './goletaCivic';
 import { carpinteriaCivic } from './carpinteriaCivic';
 import { downtownSB } from './downtownSB';
+// Wave 3 adapters (§8)
+import { centerstage } from './centerstage';
+import { carpinteriaArts } from './carpinteriaArts';
+import { eventbrite } from './eventbrite';
+import { coastalView } from './coastalView';
+import { nightlifeRhythms } from './nightlifeRhythms';
+import { outdoorsOperators } from './outdoorsOperators';
+import { natureProgramsFree } from './natureProgramsFree';
 
 // Order mirrors SOURCE_PRIORITY in dedupe.ts:
 //   ticketmaster → venue-direct → institution-direct → civic/curated → aggregators
@@ -38,15 +46,18 @@ export const registry: SourceAdapter[] = [
   ticketmaster,
   // venue-direct (authoritative for their own events)
   soho, sbbowl, lobero, granada, arlington,
-  musicacademy, alcazar,
+  musicacademy, alcazar, centerstage, carpinteriaArts,
   // institution-direct
   moxi, naturalHistory, botanicGarden, sbma,
   ucsb, libraries,
   // curated local listings / civic
   independent, citySites,
   goletaCivic, carpinteriaCivic,
-  downtownSB,
+  downtownSB, coastalView,
+  // broad aggregators
+  eventbrite,
   // registry-bound rhythms
   farmersMarkets,
+  nightlifeRhythms, outdoorsOperators, natureProgramsFree,
   recurringRegistry, submissions,
 ];

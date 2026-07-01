@@ -45,6 +45,12 @@ const SOURCE_RANK: Array<[RegExp, number]> = [
   [/alcazartheater\.com|thealcazar\.org/i,            6],
   [/centerstagetheater\.org/i,                        7],
   [/carpinteriaartscenter\.org/i,                     8],
+  // Wave 3 venue/operator-direct
+  [/figmtnbrew\.com/i,                                9],
+  [/darganssb\.com/i,                                 9],
+  [/condorexpress\.com/i,                             9],
+  [/iceinparadise\.org/i,                             9],
+  [/sblandtrust\.org/i,                               9],
   // structured ticketing APIs
   [/ticketmaster\.com|livenation\.com|axs\.com/i,     10],
   // institution-direct

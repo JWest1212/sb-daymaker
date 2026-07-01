@@ -19,6 +19,14 @@ const LABEL: Record<string, string> = {
   goletaCivic: "City of Goleta",
   carpinteriaCivic: "City of Carpinteria",
   downtownSB: "Downtown Santa Barbara",
+  // Wave 3 venues / operators / rhythms
+  centerstage: "Center Stage Theater",
+  carpinteriaArts: "Carpinteria Arts Center",
+  eventbrite: "Eventbrite (SB)",
+  coastalView: "Coastal View",
+  nightlifeRhythms: "Nightlife Rhythms",
+  outdoorsOperators: "Outdoor Operators",
+  natureProgramsFree: "Nature Programs (Free)",
   // pre-Wave 2
   independent: "The Independent",
   citysb: "City of Santa Barbara",
