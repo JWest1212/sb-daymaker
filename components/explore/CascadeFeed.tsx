@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { PickCard, ListCard, EmptyState, SBIcon } from "@/components/ui";
+import { ListCard, EmptyState, SBIcon } from "@/components/ui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { Thing } from "@/lib/things";
 import type { Horizon } from "@/lib/explore";
-import { cardBlurb, cardFacts, cardPlace, cardTone } from "./derive";
-import { formatWhen } from "@/lib/explore";
+import { cardBlurb, cardFacts } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
@@ -26,7 +25,8 @@ function deriveLeadDek(horizon: Horizon, count: number): string | null {
   return "The month worth building a day around.";
 }
 
-// Today: first item = PickCard lead; remaining = ListCard briefs
+// Today opens in the standard left-rail ListCard format — the top-banner
+// feature-lead was retired so the hero pick is the sole marquee (spec §2.1).
 function TodayLead({ tier1 }: { tier1: Thing[] }) {
   return (
     <div className="sbd-feed-section__list">
@@ -36,30 +36,15 @@ function TodayLead({ tier1 }: { tier1: Thing[] }) {
           className="sbd-reveal"
           style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
         >
-          {i === 0 ? (
-            <PickCard
-              id={t.id}
-              href={`/thing/${t.id}`}
-              tone={cardTone(0)}
-              occasionKey={t.tags[0]}
-              place={cardPlace(t)}
-              title={t.title}
-              blurb={cardBlurb(t)}
-              facts={cardFacts(t)}
-              when={formatWhen(t.starts_at, t.ends_at) ?? undefined}
-              photo={t.photo_url ?? undefined}
-            />
-          ) : (
-            <ListCard
-              id={t.id}
-              href={`/thing/${t.id}`}
-              occasionKey={t.tags[0]}
-              title={t.title}
-              blurb={cardBlurb(t)}
-              when={cardFacts(t).join(" · ")}
-              photo={t.photo_url ?? undefined}
-            />
-          )}
+          <ListCard
+            id={t.id}
+            href={`/thing/${t.id}`}
+            occasionKey={t.tags[0]}
+            title={t.title}
+            blurb={cardBlurb(t)}
+            when={cardFacts(t).join(" · ")}
+            photo={t.photo_url ?? undefined}
+          />
         </div>
       ))}
     </div>

@@ -66,3 +66,78 @@ export function cardFacts(t: Thing): string[] {
 export function cardBlurb(t: Thing): string {
   return t.blurb ?? t.reason_to_go ?? "";
 }
+
+// --------------------------------------------------------------------------
+// Hero pick-card dress (Doc "One Front Page" §2.2). Presentation only.
+// --------------------------------------------------------------------------
+
+// Live `happening_category` enum values (lib/enrich.ts) that back each eyebrow
+// bucket — the spec's wireframe shorthand (music/arts/happyhour) mapped onto the
+// real categories the pipeline actually writes.
+const MUSIC_CATS = new Set(["live_music"]);
+const ARTS_CATS = new Set(["arts_theater", "recurring_arts"]);
+
+/**
+ * Context-aware eyebrow for the hero pick. First match wins (spec §2.2.1).
+ * Keys off the site's true enums: `happening_category` for the music/arts
+ * buckets, and the `happyhour` thing `type` (there is no happy-hour category).
+ */
+export function heroEyebrow(t: Thing, grayDay: boolean): string {
+  if (grayDay) return "Gray day move";
+  if (t.type === "place") return "Place to be";
+  if (t.free) return "Free · Today";
+  const cat = t.happening_category ?? "";
+  if (MUSIC_CATS.has(cat)) return "Catch a show";
+  if (ARTS_CATS.has(cat)) return "Arts & culture";
+  if (t.type === "happyhour") return "Happy hour";
+  return "Today’s pick";
+}
+
+const SB_CLOCK = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+function clockParts(iso: string): { time: string; period: string } {
+  const parts = SB_CLOCK.formatToParts(new Date(iso));
+  const val = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "";
+  const hour = val("hour");
+  const minute = val("minute");
+  return {
+    time: minute === "00" ? hour : `${hour}:${minute}`,
+    period: val("dayPeriod"),
+  };
+}
+
+const SB_YMD = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Los_Angeles",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** Hero meta time, e.g. `4–6 PM`. Empty when the pick has no start time
+ *  (evergreen places, recurring items — venue then stands alone). */
+export function heroTime(t: Thing): string {
+  if (!t.starts_at) return "";
+  const s = clockParts(t.starts_at);
+  if (!t.ends_at) return `${s.time} ${s.period}`;
+  // Multi-day span: a clock range would be nonsense — show the start only.
+  if (SB_YMD.format(new Date(t.starts_at)) !== SB_YMD.format(new Date(t.ends_at)))
+    return `${s.time} ${s.period}`;
+  const e = clockParts(t.ends_at);
+  return s.period === e.period
+    ? `${s.time}–${e.time} ${e.period}`
+    : `${s.time} ${s.period}–${e.time} ${e.period}`;
+}
+
+/** Card CTA affordance: ticketing handoffs get "Get tickets", else "See details".
+ *  Rendered as text inside the card's single tap target — never a nested link. */
+export function heroCta(t: Thing): string {
+  const url = (t.buy_url ?? "").toLowerCase();
+  const ticketing = url.includes("axs") || url.includes("ticketmaster");
+  return ticketing ? "Get tickets ↗" : "See details ↗";
+}
