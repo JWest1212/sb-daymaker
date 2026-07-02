@@ -30,8 +30,8 @@ export function ControlRow({
           onChange={(v) => onHorizon(v as Horizon)}
           options={[
             { label: "Today", value: "today" },
-            { label: "This Week", value: "week" },
-            { label: "This Month", value: "month" },
+            { label: "Week", value: "week", ariaLabel: "This Week" },
+            { label: "Month", value: "month", ariaLabel: "This Month" },
           ]}
         />
       </div>

@@ -1,6 +1,8 @@
 interface Option {
   label: string;
   value: string;
+  /** Fuller accessible name when the visible label is abbreviated (Label-in-Name). */
+  ariaLabel?: string;
 }
 
 /** Segmented switch (e.g. Today · This Week · This Month). Controlled. */
@@ -23,6 +25,7 @@ export function SegmentedControl({
           type="button"
           role="tab"
           aria-selected={value === o.value}
+          aria-label={o.ariaLabel}
           className="sbd-seg__btn"
           onClick={() => onChange(o.value)}
         >

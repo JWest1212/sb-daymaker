@@ -25,7 +25,14 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <circle cx="12" cy="10" r="2.4" />
     </>
   ),
-  sliders: <path d="M4 6h16M7 12h10M10 18h4" />,
+  sliders: (
+    <>
+      <path d="M3 8h9M18 8h3" />
+      <circle cx="15" cy="8" r="2.4" />
+      <path d="M3 16h3M12 16h9" />
+      <circle cx="9" cy="16" r="2.4" />
+    </>
+  ),
   sun: (
     <>
       <circle cx="12" cy="12" r="4" />

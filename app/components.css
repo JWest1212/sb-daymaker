@@ -242,6 +242,7 @@
   min-height: 36px;
   border-radius: var(--radius-pill);
   cursor: pointer;
+  white-space: nowrap; /* single-word labels never wrap to a second line */
   transition: background var(--dur-fast) var(--ease-out);
 }
 .sbd-seg__btn[aria-selected="true"] {

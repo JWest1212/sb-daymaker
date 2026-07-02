@@ -6,6 +6,14 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-02 — Explore horizon toggle: de-crowded labels
+
+Shortened the time-range segmented-control labels "This Week" → "Week" and "This Month"
+→ "Month" (label-only; horizon keys `today`/`week`/`month` and all filtering unchanged).
+Fuller phrasing preserved as per-button `aria-label`s (Label-in-Name). Presentation only.
+
+---
+
 ## 2026-07-02 — Explore Hero: "One Front Page" (Phases 1–2)
 
 Source: `docs/hero-visual-update/hero-one-front-page-spec.md` (v3 FINAL). Built and
