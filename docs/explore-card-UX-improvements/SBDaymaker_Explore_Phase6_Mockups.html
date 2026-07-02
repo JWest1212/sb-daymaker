@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Phase 6 reference mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7;--plaster-2:#EFE7D8;--paper:#FCFAF5;--ink:#241C16;--ink-2:#4A4038;
+  --pacific:#16586A;--pacific-dark:#0E3C49;--terracotta:#C0532E;--gold:#E0A82E;--gold-nav:#F5C95B;
+  --sage:#7E8B6B;--line:#D8CDB8;--purple:#9C6B9E;--forest:#3E7C5A;--terra-text:#9E3F20;
+  --fd:'Fraunces',Georgia,serif;--fb:'Inter',system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+  --sh:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased;padding:0 20px 64px}
+.wrap{max-width:960px;margin:0 auto}
+.head{padding:40px 0 22px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--terra-text);font-weight:500}
+h1{font-family:var(--fd);font-weight:900;font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.05;letter-spacing:-.02em;margin:.35em 0 .25em}
+.dek{color:var(--ink-2);max-width:64ch;margin:0;font-size:1.05rem}
+.toc{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
+.toc a{font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.06em;text-decoration:none;color:var(--pacific);background:var(--paper);border:1px solid var(--line);padding:6px 11px;border-radius:999px}
+.sec{margin:52px 0 0;scroll-margin-top:20px}
+.sec-k{font-family:var(--fm);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--terra-text);font-weight:700}
+.sec h2{font-family:var(--fd);font-weight:700;font-size:1.7rem;margin:.15em 0 .1em;letter-spacing:-.01em}
+.sec .rule{width:44px;height:3px;background:var(--terracotta);border-radius:2px;margin:6px 0 14px}
+.sec p.intro{color:var(--ink-2);max-width:64ch;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:minmax(0,380px) 1fr;gap:32px;align-items:start}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.stage{background:var(--plaster);border:1px solid var(--line);border-radius:16px;padding:20px}
+.stage.narrow{max-width:380px}
+.spec{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--sh);font-size:13.5px}
+.spec .h{background:var(--plaster-2);font-family:var(--fm);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);font-weight:700;padding:9px 14px}
+.spec table{width:100%;border-collapse:collapse}
+.spec td{padding:8px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.spec tr:last-child td{border-bottom:none}
+.spec td:first-child{font-family:var(--fm);font-size:11px;color:var(--terra-text);white-space:nowrap;font-weight:700}
+.spec td:last-child{color:var(--ink-2)}
+.spec .tok{font-family:var(--fm);font-size:11px;color:var(--forest);background:#EAF1EA;padding:1px 6px;border-radius:4px}
+.legend2{margin-top:14px}
+.legend2 li{list-style:none;display:flex;gap:9px;align-items:baseline;font-size:13px;color:var(--ink-2);padding:5px 0}
+.legend2 .nb{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:var(--terracotta);color:#fff;font-family:var(--fm);font-size:9px;font-weight:700;flex-shrink:0}
+.legend2 b{color:var(--ink)}
+ul{margin:0;padding:0}
+.pill{display:inline-flex;align-items:center;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 11px;border-radius:999px}
+.pill.sage{background:var(--sage);color:var(--paper)}.pill.purple{background:var(--purple);color:var(--paper)}
+.pill.abs{position:absolute;top:10px;left:10px;z-index:2}
+.eyb{font-family:var(--fm);font-weight:700;text-transform:uppercase;color:var(--terra-text);font-size:11.5px;letter-spacing:.04em;white-space:nowrap}
+.thumb{border-radius:12px;flex-shrink:0;background-size:cover}
+.t-photo{background:linear-gradient(150deg,#c9bcae,#8f7f70 55%,#3a2f28)}
+.t-street{background:linear-gradient(160deg,#7fb0d6,#9ec4e0 38%,#2b2d24)}
+.t-civic{background:linear-gradient(155deg,#9fb2c0,#c5cdae 45%,#7d7256)}
+.acts{display:flex;gap:10px;flex-shrink:0}
+.acts svg{width:19px;height:19px;fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hbtn{display:grid;place-items:center;width:36px;height:36px}.hbtn.saved svg{fill:var(--terracotta);stroke:var(--terracotta)}
+.blurb{color:var(--ink-2);line-height:1.45}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nb-in{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--terracotta);color:#fff;font-family:var(--fm);font-size:9px;font-weight:700;vertical-align:middle;margin-right:5px}
+
+/* Option B row card — actions in bottom meta row */
+.rcB{background:var(--paper);border-radius:16px;box-shadow:var(--sh);padding:12px}
+.rcB .top{display:flex;gap:10px;align-items:flex-start}
+.rcB .thumb{width:44px;height:44px}
+.rcB .hb{flex:1;min-width:0}
+.rcB .pill{margin-bottom:6px}
+.rcB .title{font-family:var(--fd);font-weight:700;font-size:18px;line-height:1.14;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rcB .blurb{font-size:14px;margin-top:8px}
+.rcB .metarow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px}
+.rcB .metarow .eyb{margin:0}
+
+/* day header + spine */
+.dg{position:relative;padding-left:22px}
+.dg::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);border-radius:2px}
+.dg+.dg{margin-top:24px}
+.dh{position:relative;margin:0 0 12px}
+.dh::before{content:"";position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--terracotta);box-shadow:0 0 0 3px var(--plaster)}
+.dh .lbl{font-family:var(--fm);font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--terra-text)}
+.dh .r{width:26px;height:2px;background:var(--terracotta);border-radius:2px;margin-top:6px;opacity:.55}
+.dl{display:flex;flex-direction:column;gap:12px}
+
+/* feature card */
+.feat{background:var(--paper);border-radius:16px;box-shadow:var(--sh);overflow:hidden}
+.feat .media{height:150px;position:relative;background:linear-gradient(150deg,#c9bcae,#8f7f70 55%,#3a2f28)}
+.feat .acts-img{position:absolute;top:10px;right:10px;display:flex;gap:8px}
+.feat .ico{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(20,30,35,.55),rgba(20,30,35,.25) 70%,transparent)}
+.feat .ico svg{stroke:#fff;width:19px;height:19px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feat .body{padding:16px 18px 18px}
+.feat .eyb{display:block}
+.feat .title{font-family:var(--fd);font-weight:700;font-size:24px;line-height:1.08;letter-spacing:-.01em;margin:4px 0 0}
+.feat .blurb{font-size:14.5px;margin-top:8px}
+.feat .time{font-family:var(--fm);font-size:12px;color:var(--pacific);font-weight:700;letter-spacing:.02em;margin-top:12px}
+
+/* phone */
+.phone{width:390px;max-width:100%;height:720px;border-radius:44px;background:#20304a;padding:11px;box-shadow:0 24px 60px rgba(20,28,40,.28);position:relative}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#20304a;border-radius:0 0 16px 16px;z-index:20}
+.screen{position:relative;width:100%;height:100%;background:var(--plaster);border-radius:34px;overflow:hidden;display:flex;flex-direction:column}
+.scroll{flex:1;overflow:hidden;padding:0 16px}
+.mh{display:flex;align-items:center;gap:11px;padding:22px 0 0}
+.mh .logo{width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;background:linear-gradient(180deg,#cfe0e6 0%,#8bb4c2 46%,#0e3c49 47%,#16586a 100%);position:relative}
+.mh .logo::after{content:"";position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#ffe6a3,#e0a82e 70%);box-shadow:0 0 8px 3px rgba(224,168,46,.6)}
+.mh .sb{font-family:var(--fm);font-size:10px;letter-spacing:.3em;color:var(--pacific);font-weight:500}
+.mh .dm{font-family:var(--fd);font-weight:800;font-size:24px;line-height:1}.mh .dm .m{color:var(--terracotta)}
+.mh-rule{height:2.5px;margin:10px 0 0;background:linear-gradient(90deg,var(--pacific),var(--sage),var(--gold),var(--terracotta))}
+.sh{padding:18px 0 0}
+.sh h2{font-family:var(--fd);font-weight:900;font-size:28px;line-height:1;letter-spacing:-.02em;margin:0}
+.sh .rule{width:40px;height:3px;background:var(--terracotta);border-radius:2px;margin:9px 0 0}
+.sh .dek{font-family:var(--fd);font-style:italic;font-size:14px;color:var(--ink-2);margin:10px 0 0}
+.nav{display:flex;background:var(--pacific);padding:12px 0 24px;flex-shrink:0}
+.nav a{flex:1;text-align:center;text-decoration:none;color:rgba(255,255,255,.78);font-size:11px;font-weight:700;position:relative}
+.nav a .ic{display:block;margin:0 auto 5px;width:22px;height:22px}.nav a .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7}
+.nav a.on{color:var(--gold-nav)}.nav a.on::before{content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:34px;height:3px;background:var(--gold);border-radius:2px}
+.nav .badge{position:absolute;top:-8px;left:52%;background:var(--gold);color:var(--ink);font-size:10px;font-weight:800;border-radius:999px;padding:1px 6px}
+.phones{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.pagefoot{margin-top:52px;padding-top:18px;border-top:2px solid var(--ink);font-family:var(--fm);font-size:11px;color:var(--ink-2);letter-spacing:.05em}
+.callout{background:#FBF3E8;border:1px solid var(--gold);border-radius:12px;padding:12px 16px;font-size:13.5px;color:var(--ink-2);margin-top:16px}
+.callout b{color:var(--ink)}
+.change{background:#FBF3E8;border:1px solid var(--gold);border-radius:12px;padding:12px 16px;font-size:13.5px;color:var(--ink-2);margin-top:18px}
+.change b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div class="eyebrow">Phase 6 · reference mockups · rev 2</div>
+    <h1>Explore mobile readability — component reference</h1>
+    <p class="dek">The build spec (<code>SBDaymaker_Explore_Phase6_Build.md</code>) references these by anchor. Sections A–C are the individual components with their pixel specs; D–E show them assembled at phone width. Thumbnails are gradient stand-ins; the spine node is a plain terracotta dot — both use live assets/tokens in the build.</p>
+    <div class="change"><b>Changed in rev 2:</b> the row-card actions moved out of the top-right corner into a bottom meta row beside the date. This removes the empty gap under the title and lets the title use the full card width — no more mid-word truncation, and no need for a “stack actions on mobile” rule.</div>
+    <nav class="toc">
+      <a href="#ref-rowcard">§A Row card (Option B)</a>
+      <a href="#ref-dayspine">§B Day header + spine</a>
+      <a href="#ref-feature">§C Feature card</a>
+      <a href="#screen-week">§D This Week screen</a>
+      <a href="#screen-today">§E Today screen</a>
+    </nav>
+  </header>
+
+  <!-- §A ROW CARD -->
+  <section class="sec" id="ref-rowcard">
+    <div class="sec-k">Reference A · shared component</div>
+    <h2>Row card — full-width description (Option B)</h2>
+    <div class="rule"></div>
+    <p class="intro">The single row card used by <b>This Week rows, Today briefs, and Tier-2/3</b>. Thumbnail + occasion pill + title form a compact header row; the description spans the full card width at 3 lines; the date and the heart/share sit together in a bottom meta row. Change the <code>ListCard</code> component once and all three surfaces inherit it.</p>
+    <div class="grid">
+      <div class="stage narrow">
+        <div class="rcB">
+          <div class="top">
+            <div class="thumb t-photo"></div>
+            <div class="hb"><span class="pill sage">Family Day</span><div class="title"><span class="nb-in">3</span>Memory Café | Louise Lowry Davis Center</div></div>
+          </div>
+          <div class="blurb clamp3"><span class="nb-in">4</span>A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities in a warm, judgment-free room at the Davis Center.</div>
+          <div class="metarow">
+            <span class="eyb"><span class="nb-in">5</span>WED 9 AM</span>
+            <div class="acts"><span class="nb-in" style="margin-right:2px">6</span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div>
+          </div>
+        </div>
+        <ul class="legend2">
+          <li><span class="nb">1</span><span><b>Thumbnail</b> — 44×44, radius 12; shown only if the item has a photo, else omitted.</span></li>
+          <li><span class="nb">2</span><span><b>Occasion pill</b> — occasion token color, paper/ink text.</span></li>
+          <li><span class="nb">3</span><span><b>Title</b> — Fraunces, 20 desktop / 18 ≤480px, 2-line clamp, stretch-link; now uses full width beside the thumb.</span></li>
+          <li><span class="nb">4</span><span><b>Description</b> — full card width, 14px, 3-line clamp. The change.</span></li>
+          <li><span class="nb">5</span><span><b>Date eyebrow</b> — mono, one line, bottom-left of the meta row.</span></li>
+          <li><span class="nb">6</span><span><b>Actions</b> — heart + share, bottom-right of the meta row; each ≥44px tap target.</span></li>
+        </ul>
+      </div>
+      <div class="spec">
+        <div class="h">Row card spec</div>
+        <table>
+          <tr><td>surface</td><td><span class="tok">--surface</span> · radius <span class="tok">--radius-lg 16</span> · <span class="tok">--shadow-card</span></td></tr>
+          <tr><td>padding</td><td><span class="tok">--space-3 12px</span></td></tr>
+          <tr><td>.top</td><td>flex · gap 10 · align flex-start · height = title only</td></tr>
+          <tr><td>thumb</td><td>44×44 · <span class="tok">--radius-md 12</span> · cover · photo-gated</td></tr>
+          <tr><td>pill</td><td>occasion fill + legal text · margin-bottom 6</td></tr>
+          <tr><td>title</td><td>Fraunces 700 · <span class="tok">20</span>→<span class="tok">18 ≤480</span> · lh 1.14 · clamp 2 · full width</td></tr>
+          <tr><td>blurb</td><td>full width · Inter <span class="tok">14</span> · --ink-2 · lh 1.45 · <b>clamp 3</b> · margin-top 8</td></tr>
+          <tr><td>.metarow</td><td>flex · align center · space-between · margin-top 9</td></tr>
+          <tr><td>eyebrow</td><td>mono <span class="tok">--text-xs 12</span> · 700 · .04em · nowrap · --terra-text</td></tr>
+          <tr><td>actions</td><td>side-by-side · glyph 19 · stroke --ink-2 · saved→terracotta fill · <b>44px target</b></td></tr>
+        </table>
+        <div class="callout"><b>Why the gap is gone:</b> the top row now contains only the title, so its height is short and the description sits right beneath it. Actions no longer stretch the top row.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §B DAY SPINE -->
+  <section class="sec" id="ref-dayspine">
+    <div class="sec-k">Reference B · This Week only</div>
+    <h2>Day header + connecting spine</h2>
+    <div class="rule"></div>
+    <p class="intro">Replaces the old left date-column in <code>LeadDayRail</code>. Each day (from <code>groupByDay()</code>, ascending) gets a full-width header — “WEEKDAY · MONTH D” + a short terracotta rule — with a node on a thin spine that runs the height of that day’s cards. Header-node only (one dot per day). Applies at all widths.</p>
+    <div class="grid">
+      <div class="stage narrow">
+        <div class="dg">
+          <div class="dh"><div class="lbl"><span class="nb-in">1</span>Wednesday · July 1</div><div class="r"></div></div>
+          <div class="dl">
+            <div class="rcB">
+              <div class="top"><div class="thumb t-photo"></div><div class="hb"><span class="pill sage">Family Day</span><div class="title">Memory Café | Louise Lowry Davis Center</div></div></div>
+              <div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee and gentle activities.</div>
+              <div class="metarow"><span class="eyb">WED 9 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            </div>
+            <div class="rcB">
+              <div class="top"><div class="thumb t-street"></div><div class="hb"><span class="pill sage">Family Day</span><div class="title">LOTG | Monroe School</div></div></div>
+              <div class="blurb clamp3">Free outdoor concert in the Monroe School neighborhood — bring a blanket into the golden hour.</div>
+              <div class="metarow"><span class="eyb">FREE · WED 10 AM</span><div class="acts"><span class="hbtn saved"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="dg">
+          <div class="dh"><div class="lbl">Thursday · July 2</div><div class="r"></div></div>
+          <div class="dl">
+            <div class="rcB">
+              <div class="top"><div class="thumb t-civic"></div><div class="hb"><span class="pill purple">Arts &amp; Culture</span><div class="title">Historic Landmarks Commission</div></div></div>
+              <div class="blurb clamp3">The city’s consent agenda for landmark properties — a public window into what’s being preserved.</div>
+              <div class="metarow"><span class="eyb">THU 11 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            </div>
+          </div>
+        </div>
+        <ul class="legend2"><li><span class="nb">1</span><span><b>Day header</b> — “Wednesday · July 1”, mono uppercase, terra-text, + a 26px terracotta rule; node sits on the spine at its left.</span></li></ul>
+      </div>
+      <div class="spec">
+        <div class="h">Day group + spine spec</div>
+        <table>
+          <tr><td>group</td><td>position relative · padding-left 22 · group→group margin-top <span class="tok">--space-6 24</span></td></tr>
+          <tr><td>spine</td><td><code>::before</code> · left 6 · top 6 → bottom 6 · width 2 · <span class="tok">--line</span></td></tr>
+          <tr><td>node</td><td>header <code>::before</code> · 9×9 dot · <span class="tok">--terracotta</span> · ring <code>0 0 0 3px --plaster</code></td></tr>
+          <tr><td>label</td><td>mono <span class="tok">--text-xs 12</span> · 700 · .13em · uppercase · --terra-text</td></tr>
+          <tr><td>label fmt</td><td><code>EEEE · MMMM d</code> (SB tz) → uppercase</td></tr>
+          <tr><td>rule</td><td>26×2 · --terracotta · opacity .55 · margin-top 6</td></tr>
+          <tr><td>card gap</td><td>within day <span class="tok">--space-3 12</span></td></tr>
+          <tr><td>items</td><td>the §A row card</td></tr>
+        </table>
+        <div class="callout"><b>Removed:</b> the old left weekday/number date column. The header + spine carry the date now.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §C FEATURE -->
+  <section class="sec" id="ref-feature">
+    <div class="sec-k">Reference C · Today lead</div>
+    <h2>Feature card — description 2 → 3 lines</h2>
+    <div class="rule"></div>
+    <p class="intro">The Today lead card is unchanged except the blurb clamp goes from 2 to 3 lines. Image band, occasion pill, scrim actions, mono date eyebrow, and the pacific time footer stay as-is. Applies at all widths.</p>
+    <div class="grid">
+      <div class="stage narrow">
+        <div class="feat">
+          <div class="media"><span class="pill sage abs">Family Day</span><div class="acts-img"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="ico"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+          <div class="body"><span class="eyb">JUL 1</span><div class="title">Memory Café | Louise Lowry Davis Center</div><div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities in a warm, judgment-free room at the Davis Center.</div><div class="time">Wed 9 AM</div></div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="h">Feature card — the only change</div>
+        <table>
+          <tr><td>blurb</td><td>clamp <span class="tok">2 → 3</span> · Inter 14.5 · --ink-2 · lh 1.45</td></tr>
+          <tr><td>title</td><td>Fraunces <span class="tok">--text-xl 25</span> (unchanged)</td></tr>
+          <tr><td>media</td><td>140–150px band · scrim actions (unchanged)</td></tr>
+          <tr><td>eyebrow</td><td>mono date at top (unchanged)</td></tr>
+          <tr><td>time</td><td>pacific mono time footer (unchanged)</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- §D / §E SCREENS -->
+  <section class="sec" id="screen-week">
+    <div class="sec-k">Reference D & E · assembled</div>
+    <h2>Both screens at phone width</h2>
+    <div class="rule"></div>
+    <p class="intro">Left: This Week with the day header + spine and Option B row cards. Right: Today with the 3-line feature card and briefs on the same row card — no “More today” divider, per decision.</p>
+    <div class="phones">
+      <div id="screen-week-frame"><div class="phone"><div class="notch"></div><div class="screen">
+        <div class="scroll">
+          <div class="mh"><div class="logo"></div><div><div class="sb">SANTA BARBARA</div><div class="dm">Day<span class="m">maker</span></div></div></div><div class="mh-rule"></div>
+          <div class="sh"><h2>Happening This Week</h2><div class="rule"></div><div class="dek">The week ahead in Santa Barbara.</div></div>
+          <div class="dg" style="margin-top:20px">
+            <div class="dh"><div class="lbl">Wednesday · July 1</div><div class="r"></div></div>
+            <div class="dl">
+              <div class="rcB"><div class="top"><div class="thumb t-photo"></div><div class="hb"><span class="pill sage">Family Day</span><div class="title">Memory Café | Louise Lowry Davis Center</div></div></div><div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities at the Davis Center.</div><div class="metarow"><span class="eyb">WED 9 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+              <div class="rcB"><div class="top"><div class="thumb t-street"></div><div class="hb"><span class="pill sage">Family Day</span><div class="title">LOTG | Monroe School</div></div></div><div class="blurb clamp3">Free outdoor concert in the Monroe School neighborhood — bring a blanket and let the kids run while a local band plays into the golden hour.</div><div class="metarow"><span class="eyb">FREE · WED 10 AM</span><div class="acts"><span class="hbtn saved"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+            </div>
+          </div>
+          <div class="dg">
+            <div class="dh"><div class="lbl">Thursday · July 2</div><div class="r"></div></div>
+            <div class="dl">
+              <div class="rcB"><div class="top"><div class="thumb t-civic"></div><div class="hb"><span class="pill purple">Arts &amp; Culture</span><div class="title">Historic Landmarks Commission</div></div></div><div class="blurb clamp3">The city’s consent agenda for landmark properties — a public window into which historic buildings are reviewed this month.</div><div class="metarow"><span class="eyb">THU 11 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+            </div>
+          </div>
+        </div>
+        <nav class="nav"><a class="on"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l6-11 6 11"/><circle cx="12" cy="6" r="2"/></svg></span>Explore</a><a><span class="badge">13</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span>Saved</a><a><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/></svg></span>Discover SB</a></nav>
+      </div></div></div>
+
+      <div id="screen-today"><div class="phone"><div class="notch"></div><div class="screen">
+        <div class="scroll">
+          <div class="mh"><div class="logo"></div><div><div class="sb">SANTA BARBARA</div><div class="dm">Day<span class="m">maker</span></div></div></div><div class="mh-rule"></div>
+          <div class="sh"><h2>Happening Today</h2><div class="rule"></div><div class="dek">Plenty on today.</div></div>
+          <div class="feat" style="margin-top:20px">
+            <div class="media"><span class="pill sage abs">Family Day</span><div class="acts-img"><span class="ico"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="ico"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            <div class="body"><span class="eyb">JUL 1</span><div class="title">Memory Café | Louise Lowry Davis Center</div><div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities in a warm, judgment-free room at the Davis Center.</div><div class="time">Wed 9 AM</div></div>
+          </div>
+          <div class="rcB" style="margin-top:16px"><div class="top"><div class="thumb t-street"></div><div class="hb"><span class="pill sage">Family Day</span><div class="title">LOTG | Monroe School</div></div></div><div class="blurb clamp3">Free outdoor concert in the Monroe School neighborhood — bring a blanket and let the kids run while a local band plays into the golden hour.</div><div class="metarow"><span class="eyb">FREE · WED 10 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+          <div class="rcB" style="margin-top:16px"><div class="top"><div class="thumb t-civic"></div><div class="hb"><span class="pill purple">Arts &amp; Culture</span><div class="title">Historic Landmarks Commission</div></div></div><div class="blurb clamp3">The city’s consent agenda for landmark properties — a quick, public window into which historic buildings are being preserved this month.</div><div class="metarow"><span class="eyb">WED 11 AM</span><div class="acts"><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hbtn"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+        </div>
+        <nav class="nav"><a class="on"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l6-11 6 11"/><circle cx="12" cy="6" r="2"/></svg></span>Explore</a><a><span class="badge">13</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span>Saved</a><a><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/></svg></span>Discover SB</a></nav>
+      </div></div></div>
+    </div>
+  </section>
+
+  <div class="pagefoot">SB Daymaker · Phase 6 reference mockups · rev 2 (actions in bottom meta row) · v9 tokens</div>
+
+</div>
+</body>
+</html>

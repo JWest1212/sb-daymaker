@@ -4,7 +4,9 @@ import { SBIcon } from "./SBIcon";
 // ---- Occasion pill --------------------------------------------------------
 // Fill = occasion color token; text = occasion text token (always --paper or
 // --ink — never accent-on-light). Gold survives only for free_sb (ink text).
-export function Pill({ occasion }: { occasion: OccasionKey }) {
+// short=true → renders pillLabel (e.g. "Arts" instead of "Arts & Culture")
+// for the on-photo pill. All other surfaces use the default full label.
+export function Pill({ occasion, short }: { occasion: OccasionKey; short?: boolean }) {
   const occ = OCCASION_BY_KEY[occasion];
   if (!occ) return null;
   return (
@@ -12,7 +14,7 @@ export function Pill({ occasion }: { occasion: OccasionKey }) {
       className="sbd-pill"
       style={{ background: occ.color, color: occ.text }}
     >
-      {occ.label}
+      {short ? occ.pillLabel : occ.label}
     </span>
   );
 }

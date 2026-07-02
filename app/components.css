@@ -380,35 +380,81 @@
   color: var(--text-link);
 }
 
-/* LIST card — Option B: thumb+head top row, full-width blurb, bottom meta row */
+/* LIST card — left-rail layout: 108px image flush left (full card height),
+   text column (title → blurb → meta row) stacked to the right.
+   Vibe pill sits on the photo top-left over a scrim.
+   No-photo fallback: occasion-color gradient + centered icon + pill.
+   Shared by Today briefs, This Week rows, and Tier-2/3 collapsibles. */
 .sbd-listcard {
-  padding: var(--space-3) var(--space-3) 2px;
   display: flex;
-  flex-direction: column;
+  align-items: stretch;
+  padding: 0; /* card shape from .sbd-card; no internal padding on the shell */
 }
-.sbd-listcard__top {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.sbd-listcard__thumb {
-  width: 44px;
-  height: 44px;
+
+/* ---- Rail (image / fallback) --------------------------------------------- */
+.sbd-listcard__rail {
+  width: 108px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-md);
+  /* Left corners match .sbd-card border-radius; right edge is flush to the side */
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
 }
-.sbd-listcard__head {
+/* No-photo fallback: diagonal gradient light→dark in the occasion color.
+   --occ-color is set inline from the occasion's color token. */
+.sbd-listcard__rail--nophoto {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--occ-color, var(--pacific)) 50%, var(--paper)) 0%,
+    var(--occ-color, var(--pacific)) 100%
+  );
+}
+/* Dark top scrim: keeps pill legible over any photo tone or fallback gradient */
+.sbd-listcard__scrim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(180deg, rgba(20,28,32,.50), transparent);
+  pointer-events: none;
+}
+/* Occasion pill: top-left corner of the rail, above the scrim */
+.sbd-listcard__pill-wrap {
+  position: absolute;
+  top: 9px;
+  left: 9px;
+  max-width: 90px; /* rail 108px − 2×9px inset */
+  pointer-events: none; /* stretch-link handles navigation */
+}
+.sbd-listcard__pill-wrap .sbd-pill {
+  white-space: nowrap; /* always one line; short labels guaranteed by pillLabel map */
+}
+/* Centered icon for no-photo fallback */
+.sbd-listcard__fallmark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ---- Text column ---------------------------------------------------------- */
+.sbd-listcard__side {
   flex: 1;
   min-width: 0;
+  padding: 12px 13px;
+  display: flex;
+  flex-direction: column;
+  min-height: 150px;
 }
-.sbd-listcard__head .sbd-pill {
-  margin-bottom: 6px;
-}
+/* Title is FIRST in the column — no pill/kicker above it */
 .sbd-listcard__title {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: 18px;
   font-weight: var(--weight-bold);
   line-height: 1.14;
   letter-spacing: -0.01em;
@@ -420,40 +466,37 @@
   overflow: hidden;
 }
 .sbd-listcard__blurb {
-  font-size: var(--text-sm);
-  line-height: 1.45;
+  font-size: var(--text-sm); /* 14px */
+  line-height: 1.42;
   color: var(--ink-2);
-  margin: var(--space-2) 0 0;
+  margin-top: 6px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* Bottom meta row: date eyebrow (left) + heart/share (right), pinned to base */
 .sbd-listcard__meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-top: auto;
-  padding-top: 9px;
+  padding-top: 8px;
   position: relative;
-  z-index: 2;
+  z-index: 2; /* above stretch-link ::after (z-index:1) so actions stay tappable */
 }
 .sbd-listcard__meta .sbd-eyebrow-date {
   white-space: nowrap;
   letter-spacing: 0.04em;
 }
+/* Focus ring: stretch-link focus shows as a pacific ring on the card */
 .sbd-listcard:has(.sbd-stretch:focus-visible) {
-  outline: 2px solid var(--pacific);
+  outline: 3px solid var(--pacific);
   outline-offset: 2px;
 }
 .sbd-listcard .sbd-stretch:focus-visible {
   outline: none;
-}
-@media (max-width: 480px) {
-  .sbd-listcard__title {
-    font-size: 18px;
-  }
 }
 
 /* ---- SAVE HEART --------------------------------------------------------- */

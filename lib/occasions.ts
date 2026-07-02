@@ -17,22 +17,23 @@ export type OccasionKey =
 export interface Occasion {
   key: OccasionKey;
   label: string;
+  pillLabel: string; // short label for the on-photo pill (never wraps at 90px max-width)
   icon: string;
   color: string; // token CSS var — fill
   text: string;  // token CSS var — text on that fill (AA-safe)
 }
 
 export const OCCASIONS: Occasion[] = [
-  { key: "date_night",       label: "Date Night",       icon: "🍷",      color: "var(--terracotta)",  text: "var(--paper)" },
-  { key: "family_day",       label: "Family Day",       icon: "👨‍👩‍👧",     color: "var(--sage)",        text: "var(--paper)" },
-  { key: "nightlife",        label: "Nightlife",        icon: "🌃",      color: "var(--ink)",         text: "var(--paper)" },
-  { key: "catch_a_show",     label: "Catch a Show",     icon: "🎭",      color: "var(--pacific)",     text: "var(--paper)" },
-  { key: "arts_culture",     label: "Arts & Culture",   icon: "🎨",      color: "var(--purple)",      text: "var(--paper)" },
-  { key: "outdoors_active",  label: "Outdoors & Active",icon: "⛰️",     color: "var(--forest)",      text: "var(--paper)" },
-  { key: "wine_food",        label: "Wine & Food",      icon: "🍇",      color: "var(--pacific-dark)",text: "var(--paper)" },
-  { key: "free_sb",          label: "Free in SB",       icon: "🏷️",     color: "var(--gold)",        text: "var(--ink)"   },
-  { key: "hosting_visitors", label: "Hosting Visitors", icon: "🧑‍🤝‍🧑",    color: "var(--pacific)",     text: "var(--paper)" },
-  { key: "solo",             label: "Solo",             icon: "🚶",      color: "var(--ink-2)",       text: "var(--paper)" },
+  { key: "date_night",       label: "Date Night",       pillLabel: "Date Night",    icon: "🍷",   color: "var(--terracotta)",  text: "var(--paper)" },
+  { key: "family_day",       label: "Family Day",       pillLabel: "Family Day",    icon: "👨‍👩‍👧",  color: "var(--sage)",        text: "var(--paper)" },
+  { key: "nightlife",        label: "Nightlife",        pillLabel: "Nightlife",     icon: "🌃",   color: "var(--ink)",         text: "var(--paper)" },
+  { key: "catch_a_show",     label: "Catch a Show",     pillLabel: "Catch a Show",  icon: "🎭",   color: "var(--pacific)",     text: "var(--paper)" },
+  { key: "arts_culture",     label: "Arts & Culture",   pillLabel: "Arts",          icon: "🎨",   color: "var(--purple)",      text: "var(--paper)" },
+  { key: "outdoors_active",  label: "Outdoors & Active",pillLabel: "Outdoors",      icon: "⛰️",  color: "var(--forest)",      text: "var(--paper)" },
+  { key: "wine_food",        label: "Wine & Food",      pillLabel: "Wine & Food",   icon: "🍇",   color: "var(--pacific-dark)",text: "var(--paper)" },
+  { key: "free_sb",          label: "Free in SB",       pillLabel: "Free in SB",    icon: "🏷️",  color: "var(--gold)",        text: "var(--ink)"   },
+  { key: "hosting_visitors", label: "Hosting Visitors", pillLabel: "Hosting",       icon: "🧑‍🤝‍🧑", color: "var(--pacific)",     text: "var(--paper)" },
+  { key: "solo",             label: "Solo",             pillLabel: "Solo",          icon: "🚶",   color: "var(--ink-2)",       text: "var(--paper)" },
 ];
 
 export const OCCASION_BY_KEY: Record<OccasionKey, Occasion> = Object.fromEntries(

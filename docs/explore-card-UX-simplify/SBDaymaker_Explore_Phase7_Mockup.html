@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Explore final (Today + This Week)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7;--plaster-2:#EFE7D8;--paper:#FCFAF5;--ink:#241C16;--ink-2:#4A4038;
+  --pacific:#16586A;--pacific-dark:#0E3C49;--terracotta:#C0532E;--gold:#E0A82E;--gold-nav:#F5C95B;
+  --sage:#7E8B6B;--line:#D8CDB8;--purple:#9C6B9E;--forest:#3E7C5A;--terra-text:#9E3F20;
+  --sage-text:#566049;--gold-text:#7A5E13;--purple-text:#6E4470;--forest-text:#2E5B43;
+  --fd:'Fraunces',Georgia,serif;--fb:'Inter',system-ui,sans-serif;--fm:'JetBrains Mono',monospace;
+  --sh:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased;padding:0 20px 64px}
+.wrap{max-width:960px;margin:0 auto}
+.head{padding:40px 0 22px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--terra-text);font-weight:500}
+h1{font-family:var(--fd);font-weight:900;font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.05;letter-spacing:-.02em;margin:.35em 0 .25em}
+.dek{color:var(--ink-2);max-width:64ch;margin:0;font-size:1.05rem}
+.sec-k{font-family:var(--fm);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--terra-text);font-weight:700;margin-top:44px}
+.sec-h{font-family:var(--fd);font-weight:700;font-size:1.5rem;margin:.15em 0 .1em;letter-spacing:-.01em}
+.sec-rule{width:44px;height:3px;background:var(--terracotta);border-radius:2px;margin:6px 0 16px}
+.sec-p{color:var(--ink-2);max-width:64ch;margin:0 0 18px}
+
+/* atoms */
+.pill{display:inline-flex;align-items:center;font-size:9.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;padding:3px 9px;border-radius:999px;line-height:1.15}
+.pill{white-space:nowrap}
+.pill.sage{background:var(--sage);color:#fff}.pill.purple{background:var(--purple);color:#fff}.pill.pacific{background:var(--pacific);color:#fff}.pill.terra{background:var(--terracotta);color:#fff}.pill.forest{background:var(--forest);color:#fff}
+.eyb{font-family:var(--fm);font-weight:700;text-transform:uppercase;color:var(--terra-text);font-size:11px;letter-spacing:.04em;white-space:nowrap;margin:0}
+.acts{display:flex;gap:11px;flex-shrink:0}
+.acts svg{width:18px;height:18px;fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.acts.onimg svg{stroke:#fff}
+.hb{display:grid;place-items:center;width:32px;height:32px}
+.hb.scrim{border-radius:50%;background:radial-gradient(circle,rgba(20,30,35,.55),rgba(20,30,35,.25) 70%,transparent)}
+.hb.saved svg{fill:var(--terracotta);stroke:var(--terracotta)}
+.img-street{background:linear-gradient(160deg,#7fb0d6,#9ec4e0 40%,#2f3a2c)}
+.img-civic{background:linear-gradient(155deg,#9fb2c0,#c8cdb0 45%,#8a8266)}
+.img-warm{background:linear-gradient(150deg,#cdbfb0,#9a8a78 55%,#3f342c)}
+.img-park{background:linear-gradient(155deg,#8fb98a,#5f7d4e 50%,#33421f)}
+.blurb{color:var(--ink-2);line-height:1.42;font-size:13.5px}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ===== RECOMMENDED RAIL CARD (vibe pill on image) ===== */
+.rc{background:var(--paper);border-radius:16px;box-shadow:var(--sh);overflow:hidden;display:flex;align-items:stretch}
+.rc .rail{width:108px;flex-shrink:0;background-size:cover;background-position:center;position:relative}
+.rc .rail .scrim{position:absolute;top:0;left:0;right:0;height:52px;background:linear-gradient(180deg,rgba(20,28,32,.5),transparent)}
+.rc .rail .pill{position:absolute;top:9px;left:9px;z-index:2;max-width:92px}
+.rc .rail .fallmark{position:absolute;inset:0;display:grid;place-items:center;color:rgba(255,255,255,.9)}
+.rc .rail .fallmark svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.6}
+.rc .side{flex:1;min-width:0;padding:12px 13px;display:flex;flex-direction:column;min-height:150px}
+.rc .title{font-family:var(--fd);font-weight:700;font-size:18px;line-height:1.14;letter-spacing:-.01em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc .blurb{margin-top:6px}
+.rc .metarow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:8px}
+
+/* ===== options strip (mini samples) ===== */
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+.opt{background:var(--plaster-2);border:1px solid var(--line);border-radius:14px;padding:14px}
+.opt .lab{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.opt .lab .n{font-family:var(--fd);font-weight:700;font-size:14px}
+.opt .lab .rec{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--terracotta);color:#fff;padding:2px 7px;border-radius:999px}
+.opt .desc{font-size:12px;color:var(--ink-2);line-height:1.45;margin-top:10px}
+.mini{background:var(--paper);border-radius:12px;box-shadow:var(--sh);overflow:hidden;display:flex;align-items:stretch;height:96px}
+.mini .m-rail{width:74px;flex-shrink:0;position:relative;background-size:cover}
+.mini .m-rail .scrim{position:absolute;top:0;left:0;right:0;height:38px;background:linear-gradient(180deg,rgba(20,28,32,.5),transparent)}
+.mini .m-side{flex:1;min-width:0;padding:9px 10px;display:flex;flex-direction:column;justify-content:center}
+.mini .m-title{font-family:var(--fd);font-weight:700;font-size:14px;line-height:1.1}
+.mini .kicker{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.mini .m-meta{font-family:var(--fm);font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--terra-text);text-transform:uppercase;margin-top:5px}
+.mini .pill.oimg{position:absolute;top:7px;left:7px;z-index:2}
+.mini .tab{position:absolute;left:66px;top:12px;z-index:3;font-family:var(--fm);font-size:8px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;color:#fff;padding:3px 7px 3px 6px;border-radius:0 6px 6px 0}
+
+/* ===== Today feature (lead) ===== */
+.feat{background:var(--paper);border-radius:16px;box-shadow:var(--sh);overflow:hidden;margin-top:18px}
+.feat .band{height:142px;position:relative}
+.feat .band .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,28,32,.35),transparent 40%)}
+.feat .band .pill{position:absolute;top:11px;left:11px;z-index:2}
+.feat .band .a{position:absolute;top:10px;right:10px}
+.feat .body{padding:14px 16px 15px}
+.feat .eyb{display:block;margin-bottom:3px}
+.feat .title{font-family:var(--fd);font-weight:700;font-size:23px;line-height:1.08;letter-spacing:-.01em}
+.feat .blurb{font-size:14px;margin-top:7px}
+.feat .time{font-family:var(--fm);font-size:12px;color:var(--pacific);font-weight:700;letter-spacing:.02em;margin-top:11px}
+
+/* day spine */
+.dg{position:relative;padding-left:22px}
+.dg::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);border-radius:2px}
+.dg+.dg{margin-top:22px}
+.dh{position:relative;margin:0 0 12px}
+.dh::before{content:"";position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--terracotta);box-shadow:0 0 0 3px var(--plaster)}
+.dh .lbl{font-family:var(--fm);font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--terra-text)}
+.dh .r{width:26px;height:2px;background:var(--terracotta);border-radius:2px;margin-top:6px;opacity:.55}
+.dl{display:flex;flex-direction:column;gap:12px}
+
+/* phone */
+.phones{display:flex;gap:44px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.col-k{text-align:center;margin-bottom:12px}
+.col-k .t{font-family:var(--fm);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+.phone{width:390px;max-width:100%;height:800px;border-radius:44px;background:#20304a;padding:11px;box-shadow:0 24px 60px rgba(20,28,40,.28);position:relative}
+.notch{position:absolute;top:11px;left:50%;transform:translateX(-50%);width:120px;height:26px;background:#20304a;border-radius:0 0 16px 16px;z-index:20}
+.screen{position:relative;width:100%;height:100%;background:var(--plaster);border-radius:34px;overflow:hidden;display:flex;flex-direction:column}
+.scroll{flex:1;overflow:hidden;padding:0 16px}
+.mh{display:flex;align-items:center;gap:11px;padding:22px 0 0}
+.mh .logo{width:42px;height:42px;border-radius:11px;overflow:hidden;flex-shrink:0;background:linear-gradient(180deg,#cfe0e6 0%,#8bb4c2 46%,#0e3c49 47%,#16586a 100%);position:relative}
+.mh .logo::after{content:"";position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:radial-gradient(circle,#ffe6a3,#e0a82e 70%);box-shadow:0 0 8px 3px rgba(224,168,46,.6)}
+.mh .sb{font-family:var(--fm);font-size:10px;letter-spacing:.3em;color:var(--pacific);font-weight:500}
+.mh .dm{font-family:var(--fd);font-weight:800;font-size:24px;line-height:1}.mh .dm .m{color:var(--terracotta)}
+.mh-rule{height:2.5px;margin:10px 0 0;background:linear-gradient(90deg,var(--pacific),var(--sage),var(--gold),var(--terracotta))}
+.sh{padding:18px 0 0}
+.sh h2{font-family:var(--fd);font-weight:900;font-size:28px;line-height:1;letter-spacing:-.02em;margin:0}
+.sh .rule{width:40px;height:3px;background:var(--terracotta);border-radius:2px;margin:9px 0 0}
+.sh .dek{font-family:var(--fd);font-style:italic;font-size:14px;color:var(--ink-2);margin:10px 0 0}
+.section-top{margin-top:20px}
+.nav{display:flex;background:var(--pacific);padding:12px 0 24px;flex-shrink:0}
+.nav a{flex:1;text-align:center;text-decoration:none;color:rgba(255,255,255,.78);font-size:11px;font-weight:700;position:relative}
+.nav a .ic{display:block;margin:0 auto 5px;width:22px;height:22px}.nav a .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7}
+.nav a.on{color:var(--gold-nav)}.nav a.on::before{content:"";position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:34px;height:3px;background:var(--gold);border-radius:2px}
+.nav .badge{position:absolute;top:-8px;left:52%;background:var(--gold);color:var(--ink);font-size:10px;font-weight:800;border-radius:999px;padding:1px 6px}
+.pagefoot{margin-top:44px;padding-top:18px;border-top:2px solid var(--ink);font-family:var(--fm);font-size:11px;color:var(--ink-2);letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <div class="eyebrow">Explore · final direction</div>
+    <h1>Today &amp; This Week, finished</h1>
+    <p class="dek">Left-rail list cards with a top-banner feature lead on Today, the day spine on This Week, the vibe pill on the photo (short labels, always one line), and a 3-line description on every card. No-photo cards show a vibe-color gradient with a small icon. Placeholders are gradient stand-ins for photos.</p>
+  </header>
+
+  <!-- OPTIONS STRIP -->
+  <div class="sec-k">Vibe placement — the four options</div>
+  <h2 class="sec-h">Where the vibe tag sits</h2>
+  <div class="sec-rule"></div>
+  <p class="sec-p">Each moves the headline up by getting the vibe off the top of the text column. The final screens below use Option 1.</p>
+  <div class="opts">
+    <div class="opt">
+      <div class="lab"><span class="n">1 · On the photo</span><span class="rec">Recommended</span></div>
+      <div class="mini">
+        <div class="m-rail img-park"><div class="scrim"></div><span class="pill sage oimg">Family Day</span></div>
+        <div class="m-side"><div class="m-title">LOTG | Lookout Park</div><div class="m-meta">FREE · WED 10 AM</div></div>
+      </div>
+      <div class="desc">Pill on the image; headline at the very top. Matches the feature card, AA-safe on any photo.</div>
+    </div>
+    <div class="opt">
+      <div class="lab"><span class="n">2 · Editorial kicker</span></div>
+      <div class="mini">
+        <div class="m-rail img-park"></div>
+        <div class="m-side"><div class="kicker" style="color:var(--sage-text)">Family Day</div><div class="m-title">LOTG | Lookout Park</div><div class="m-meta">FREE · WED 10 AM</div></div>
+      </div>
+      <div class="desc">Colored kicker above the headline. Keeps the vibe leading; needs AA-safe text colors per occasion.</div>
+    </div>
+    <div class="opt">
+      <div class="lab"><span class="n">3 · Merged with date</span></div>
+      <div class="mini">
+        <div class="m-rail img-park"></div>
+        <div class="m-side"><div class="m-title">LOTG | Lookout Park</div><div class="m-meta"><span style="color:var(--sage-text)">FAMILY DAY</span> · WED 10 AM</div></div>
+      </div>
+      <div class="desc">Vibe joins the bottom date line. Headline at the absolute top; vibe de-emphasized.</div>
+    </div>
+    <div class="opt">
+      <div class="lab"><span class="n">4 · Index tab</span></div>
+      <div class="mini">
+        <div class="m-rail img-park"><span class="tab" style="background:var(--sage)">Family</span></div>
+        <div class="m-side" style="padding-left:16px"><div class="m-title">LOTG | Lookout Park</div><div class="m-meta">FREE · WED 10 AM</div></div>
+      </div>
+      <div class="desc">A colored tab on the seam — a scannable color-ladder down the feed. Distinctive; fussier to build.</div>
+    </div>
+  </div>
+
+  <!-- FINAL SCREENS -->
+  <div class="sec-k">The final screens</div>
+  <h2 class="sec-h">Today &amp; This Week</h2>
+  <div class="sec-rule"></div>
+
+  <div class="phones">
+
+    <!-- TODAY -->
+    <div>
+      <div class="col-k"><span class="t">Today</span></div>
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="scroll">
+          <div class="mh"><div class="logo"></div><div><div class="sb">SANTA BARBARA</div><div class="dm">Day<span class="m">maker</span></div></div></div><div class="mh-rule"></div>
+          <div class="sh"><h2>Happening Today</h2><div class="rule"></div><div class="dek">Plenty on today.</div></div>
+
+          <div class="feat">
+            <div class="band img-warm"><div class="scrim"></div><span class="pill sage">Family Day</span><div class="a"><div class="acts onimg"><span class="hb scrim"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb scrim"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div></div>
+            <div class="body"><span class="eyb">JUL 1</span><div class="title">Memory Café | Louise Lowry Davis Center</div><div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities in a warm, judgment-free room.</div><div class="time">Wed 9 AM</div></div>
+          </div>
+
+          <div class="rc section-top">
+            <div class="rail img-street"><div class="scrim"></div><span class="pill sage">Family Day</span></div>
+            <div class="side">
+              <div class="title">LOTG | Monroe School</div>
+              <div class="blurb clamp3">Free outdoor concert in the Monroe School neighborhood — bring a blanket, let the kids run, and catch a local band as the evening cools.</div>
+              <div class="metarow"><p class="eyb">FREE · WED 10 AM</p><div class="acts"><span class="hb saved"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            </div>
+          </div>
+
+          <div class="rc" style="margin-top:12px">
+            <div class="rail img-park"><div class="scrim"></div><span class="pill forest">Outdoors</span></div>
+            <div class="side">
+              <div class="title">Sunset Hike | Inspiration Point</div>
+              <div class="blurb clamp3">A 3.5-mile out-and-back up into the foothills, timed for golden hour — sweeping views over the city and the Channel Islands from the top.</div>
+              <div class="metarow"><p class="eyb">WED 6 PM</p><div class="acts"><span class="hb"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+            </div>
+          </div>
+        </div>
+        <nav class="nav"><a class="on"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l6-11 6 11"/><circle cx="12" cy="6" r="2"/></svg></span>Explore</a><a><span class="badge">13</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span>Saved</a><a><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/></svg></span>Discover SB</a></nav>
+      </div></div>
+    </div>
+
+    <!-- THIS WEEK -->
+    <div>
+      <div class="col-k"><span class="t">This Week · with spine</span></div>
+      <div class="phone"><div class="notch"></div><div class="screen">
+        <div class="scroll">
+          <div class="mh"><div class="logo"></div><div><div class="sb">SANTA BARBARA</div><div class="dm">Day<span class="m">maker</span></div></div></div><div class="mh-rule"></div>
+          <div class="sh"><h2>Happening This Week</h2><div class="rule"></div><div class="dek">The week ahead in Santa Barbara.</div></div>
+
+          <div class="dg section-top">
+            <div class="dh"><div class="lbl">Wednesday · July 1</div><div class="r"></div></div>
+            <div class="dl">
+              <div class="rc">
+                <div class="rail img-warm"><div class="scrim"></div><span class="pill sage">Family Day</span></div>
+                <div class="side">
+                  <div class="title">Memory Café | Louise Lowry Davis Center</div>
+                  <div class="blurb clamp3">A monthly gathering for people living with memory loss and their care partners — coffee, conversation, and gentle activities.</div>
+                  <div class="metarow"><p class="eyb">WED 9 AM</p><div class="acts"><span class="hb"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+                </div>
+              </div>
+              <div class="rc">
+                <div class="rail img-park"><div class="scrim"></div><span class="pill sage">Family Day</span></div>
+                <div class="side">
+                  <div class="title">LOTG | Lookout Park</div>
+                  <div class="blurb clamp3">Free summer music by the light — room for kids to run, a blanket to spread out, and golden-hour views over the park.</div>
+                  <div class="metarow"><p class="eyb">FREE · WED 10 AM</p><div class="acts"><span class="hb saved"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dg">
+            <div class="dh"><div class="lbl">Thursday · July 2</div><div class="r"></div></div>
+            <div class="dl">
+              <div class="rc">
+                <div class="rail img-civic"><div class="scrim"></div><span class="pill purple">Arts</span></div>
+                <div class="side">
+                  <div class="title">Historic Landmarks Commission</div>
+                  <div class="blurb clamp3">The city's consent agenda for landmark properties — a public window into which historic buildings are reviewed and preserved this month.</div>
+                  <div class="metarow"><p class="eyb">THU 11 AM</p><div class="acts"><span class="hb"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+                </div>
+              </div>
+              <div class="rc">
+                <div class="rail" style="background:linear-gradient(150deg,#3f8699,#16586a 55%,#0e3c49)"><div class="fallmark"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l6-11 6 11"/><circle cx="12" cy="6" r="2"/></svg></div><span class="pill pacific">Place</span></div>
+                <div class="side">
+                  <div class="title">Funk Zone Walk</div>
+                  <div class="blurb clamp3">A self-guided loop past the murals, tasting rooms, and makers of the Funk Zone — an easy hour on foot, any time of day.</div>
+                  <div class="metarow"><p class="eyb">FUNK ZONE · FREE</p><div class="acts"><span class="hb"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span><span class="hb"><svg viewBox="0 0 24 24"><path d="M7 17 17 7M17 7H9M17 7v8"/></svg></span></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <nav class="nav"><a class="on"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 20l6-11 6 11"/><circle cx="12" cy="6" r="2"/></svg></span>Explore</a><a><span class="badge">13</span><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z"/></svg></span>Saved</a><a><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-4 1 2-5z"/></svg></span>Discover SB</a></nav>
+      </div></div>
+    </div>
+
+  </div>
+
+  <p class="pagefoot">SB Daymaker · Explore final direction · rail list cards + feature lead · vibe pill on photo (short labels, one line) · 3-line descriptions · vibe-color + icon fallback · v9 tokens</p>
+
+</div>
+</body>
+</html>

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import type { OccasionKey } from "@/lib/occasions";
+import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { Pill, DateEyebrow, PlacePill } from "./Pill";
 import { CardActions } from "./CardActions";
+import { SBIcon } from "./SBIcon";
 
 type MediaTone = "gold" | "sage" | "pacific";
 
@@ -64,7 +66,7 @@ export function PickCard({
         ) : null}
         {occasionKey ? (
           <span className="sbd-pick__tag">
-            <Pill occasion={occasionKey} />
+            <Pill occasion={occasionKey} short />
           </span>
         ) : null}
         {place ? (
@@ -101,9 +103,10 @@ export function PickCard({
 }
 
 /**
- * ListCard — Option B: thumb+pill+title in a top row; blurb spans full width
- * below; date eyebrow + actions share a bottom meta row. Thumb omitted when
- * no photo_url — never shows an empty slot.
+ * ListCard — left-rail card: 108px image rail running the full card height,
+ * text column (title → blurb → meta) to its right. Vibe pill sits on the
+ * photo top-left over a scrim. No-photo fallback: occasion-color gradient +
+ * centered icon. Used by Today briefs, This Week rows, and Tier-2/3.
  */
 export function ListCard({
   id,
@@ -120,32 +123,58 @@ export function ListCard({
   blurb: string;
   occasionKey?: OccasionKey;
   when?: string;
-  tone?: MediaTone;
+  tone?: MediaTone; // kept for API compat; occasion color takes precedence in fallback
   href?: string;
   photo?: string;
 }) {
+  const occ = occasionKey ? OCCASION_BY_KEY[occasionKey] : null;
+  const nophoto = !photo;
+
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
-      <div className="sbd-listcard__top">
-        {photo ? (
-          <div
-            className={`sbd-listcard__thumb sbd-media--${tone}`}
-            aria-hidden="true"
-          >
-            <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
-          </div>
-        ) : null}
-        <div className="sbd-listcard__head">
-          {occasionKey ? <Pill occasion={occasionKey} /> : null}
-          <CardTitle href={href} className="sbd-listcard__title">
-            {title}
-          </CardTitle>
-        </div>
+      {/* Rail: 108px image (or fallback gradient) running the full card height */}
+      <div
+        className={`sbd-listcard__rail${nophoto ? " sbd-listcard__rail--nophoto" : ""}`}
+        style={
+          nophoto && occ
+            ? ({ "--occ-color": occ.color } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {photo && (
+          <img
+            className="sbd-card__img"
+            src={photo}
+            alt=""
+            loading="lazy"
+          />
+        )}
+        {/* Centered icon for no-photo cards */}
+        {nophoto && (
+          <span className="sbd-listcard__fallmark" aria-hidden="true">
+            {occ ? occ.icon : <SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
+          </span>
+        )}
+        {/* Dark top gradient — pill legibility on any photo or gradient bg */}
+        <div className="sbd-listcard__scrim" aria-hidden="true" />
+        {/* Occasion pill, top-left, over scrim */}
+        {occasionKey && (
+          <span className="sbd-listcard__pill-wrap">
+            <Pill occasion={occasionKey} short />
+          </span>
+        )}
       </div>
-      <p className="sbd-listcard__blurb">{blurb}</p>
-      <div className="sbd-listcard__meta">
-        {when ? <DateEyebrow>{when}</DateEyebrow> : null}
-        <CardActions id={id} title={title} url={`/thing/${id}`} onImage={false} />
+
+      {/* Text column: title (first) → blurb → meta row pinned to base */}
+      <div className="sbd-listcard__side">
+        <CardTitle href={href} className="sbd-listcard__title">
+          {title}
+        </CardTitle>
+        <p className="sbd-listcard__blurb">{blurb}</p>
+        <div className="sbd-listcard__meta">
+          {when ? <DateEyebrow>{when}</DateEyebrow> : null}
+          <CardActions id={id} title={title} url={`/thing/${id}`} onImage={false} />
+        </div>
       </div>
     </article>
   );
