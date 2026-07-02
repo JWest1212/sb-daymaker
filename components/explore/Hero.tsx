@@ -56,6 +56,11 @@ export function Hero({
         <span className="sbd-hero__cloud" aria-hidden="true" />
       ) : null}
 
+      {/* Marine-layer fog band (gray days only). Rendered BEFORE the skyline so
+          the opaque golden buildings paint on top of it — the fog reads as haze
+          in the sky gaps, never a white wash over the city (spec §3.4). */}
+      <div className="sbd-hero__fog" aria-hidden="true" />
+
       {/* H2: hand-styled Santa Barbara skyline (Riviera hillside, Mission,
           Courthouse, wharf, Lil' Toot). Golden-hour buildings under a changing
           sky — scene colors are baked into the asset by design (spec §3.4). The
@@ -66,7 +71,6 @@ export function Hero({
         alt=""
         aria-hidden="true"
       />
-      <div className="sbd-hero__fog" aria-hidden="true" />
 
       <div className="sbd-hero__sky">
         <div className="sbd-hero__date">
