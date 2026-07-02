@@ -62,6 +62,14 @@
   --sev-med:     #9A8A3E;
   --sev-low:     #3E7C5A;
 
+  /* RAG heatmap tints (Cockpit v2 Coverage) — background fills only; the count
+     text is always Ink (a11y usage rule). Derived from the sev colors above. */
+  --rag-red:     rgba(178, 58, 46, .15);
+  --rag-red-2:   rgba(178, 58, 46, .28);
+  --rag-amber:   rgba(199, 125, 30, .16);
+  --rag-green:   rgba(62, 124, 90, .16);
+  --rag-green-2: rgba(62, 124, 90, .30);
+
   /* ---- TYPE -------------------------------------------------------------- */
   --font-display: 'Fraunces', Georgia, serif;     /* headlines, with restraint */
   --font-body:    'Inter', system-ui, sans-serif; /* body + UI                  */

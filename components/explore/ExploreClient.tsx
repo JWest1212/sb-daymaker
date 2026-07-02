@@ -26,12 +26,16 @@ export function ExploreClient({
   dateLabel,
   weather,
   nowMs,
+  pinnedHeroId = null,
 }: {
   things: Thing[];
   tod: TimeOfDay;
   dateLabel: string;
   weather: Weather | null;
   nowMs: number;
+  /** Founder's hero pin for today (server-resolved). Overrides the ranker when the
+   *  pinned thing is present in the current view; otherwise the ranker picks. */
+  pinnedHeroId?: string | null;
 }) {
   const { isSaved, toggle } = useSaves();
   const [lens, setLens] = useState<OccasionKey | null>(null);
@@ -45,8 +49,17 @@ export function ExploreClient({
     return nearMeSort(cascade(lensed), zone);
   }, [things, horizon, lens, zone, nowMs]);
 
-  const hero = ordered[0] ?? null;
-  const feed = useMemo(() => ordered.slice(1), [ordered]);
+  // A valid founder pin for today wins the hero slot — but only when it's actually
+  // in the current view (survives the horizon/lens/zone filters); otherwise the
+  // sponsor-blind ranker picks. The pin reads no sponsor status.
+  const hero = useMemo(() => {
+    if (pinnedHeroId) {
+      const pinned = ordered.find((t) => t.id === pinnedHeroId);
+      if (pinned) return pinned;
+    }
+    return ordered[0] ?? null;
+  }, [ordered, pinnedHeroId]);
+  const feed = useMemo(() => (hero ? ordered.filter((t) => t.id !== hero.id) : ordered), [ordered, hero]);
 
   return (
     <div className="sbd-explore">

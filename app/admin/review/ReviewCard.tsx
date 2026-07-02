@@ -64,18 +64,20 @@ function provenance(item: QueueRow): { text: string; href: string | null } {
 }
 
 const priceLabel = (b: string | null) => (b == null ? "price n/a" : b === "free" ? "free" : b);
+const norm = (s: string | null | undefined) => (s ?? "").trim();
 
 export function ReviewCard({
-  item, active, editing, pickIndex, fetching, draft,
+  item, active, editing, hero, pickIndex, fetching, draft,
   onAct, onCycle, onTryFetch, onSelect, onDraftChange, onToggleTag, leaving,
 }: {
   item: QueueRow;
   active: boolean;
   editing: boolean;
+  hero: boolean;
   pickIndex: number;
   fetching: boolean;
   draft: ReviewDraft | null;
-  onAct: (kind: "approve" | "edit" | "reject") => void;
+  onAct: (kind: "approve" | "edit" | "reject" | "hero") => void;
   onCycle: (dir: "prev" | "next") => void;
   onTryFetch: () => void;
   onSelect: () => void;
@@ -85,13 +87,39 @@ export function ReviewCard({
 }) {
   const prov = provenance(item);
   const chip: ChipKind = item.chip;
-  const thumbCls = item.photo_url ? (SOURCE_CLASS[item.photo_source ?? "placeholder"] ?? "") : "placeholder";
+  const isOverlay = !!item.overlay_id;
+
+  // Render the pending draft (if any) so an edited-but-not-yet-approved card shows
+  // its pending state; fall back to the stored row otherwise.
+  const d = draft;
+  const dispTitle = d && norm(d.title) ? norm(d.title) : item.title;
+  const dispBlurb = d ? (norm(d.blurb) || null) : item.blurb;
+  const dispNeighborhood = d ? (d.neighborhood || null) : item.neighborhood;
+  const dispTags = d ? d.tags : item.tags;
+  const usePick = pickIndex > 0 || editing;
+  const pickedOpt = item.photo_options[pickIndex];
+  const dispPhotoUrl = usePick && pickedOpt?.url ? pickedOpt.url : item.photo_url;
+  const dispPhotoSource = (usePick && pickedOpt?.source ? pickedOpt.source : item.photo_source) ?? "placeholder";
+  const thumbCls = dispPhotoUrl ? (SOURCE_CLASS[dispPhotoSource] ?? "") : "placeholder";
+
+  // What changed vs the stored row (drives the gold "Edited:" banner).
+  const changes: string[] = [];
+  if (d) {
+    if (norm(d.title) && norm(d.title) !== item.title) changes.push("title");
+    if (norm(d.blurb) !== norm(item.blurb)) changes.push("blurb");
+    if (norm(d.blurb_long) !== norm(item.blurb_long)) changes.push("long blurb");
+    if ((d.neighborhood || "") !== (item.neighborhood || "")) changes.push("neighborhood");
+    const sameTags = d.tags.length === item.tags.length && d.tags.every((t) => item.tags.includes(t));
+    if (!sameTags) changes.push("tags");
+  }
+  if (pickIndex > 0) changes.push("photo");
 
   return (
     <article
-      className={`card${active ? " is-active" : ""}${editing ? " is-editing" : ""}${leaving ? " leaving" : ""}`}
+      className={`card${active ? " is-active" : ""}${editing ? " is-editing" : ""}${leaving ? " leaving" : ""}${isOverlay ? " is-overlay" : ""}`}
       onClick={onSelect}
     >
+      {isOverlay ? <div className="overlay-kicker">✎ Founder edit of a live thing — the live version stays up until you approve</div> : null}
       <div className="card-grid">
         {editing ? (
           <ImagePicker
@@ -102,19 +130,38 @@ export function ReviewCard({
             fetching={fetching}
           />
         ) : (
-          <div className={`thumb ${item.photo_url ? "" : "placeholder"} ${thumbCls}`}>
-            {item.photo_url ? <img src={item.photo_url} alt="" className="thumb-img" /> : null}
-            <span className="src-pill">{item.photo_source ?? "placeholder"}</span>
+          <div className={`thumb ${dispPhotoUrl ? "" : "placeholder"} ${thumbCls}`}>
+            {dispPhotoUrl ? <img src={dispPhotoUrl} alt="" className="thumb-img" /> : null}
+            <span className="src-pill">{dispPhotoSource}</span>
           </div>
         )}
 
         <div className="body">
           <div className="row1">
             <span className={`tier t${item.happening_tier}`}>{TIER_LABEL[item.happening_tier]}</span>
-            <div style={{ flex: 1 }}>
-              <h2 className="title">{item.title}</h2>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {editing ? (
+                <input
+                  className="title-edit"
+                  value={d?.title ?? item.title}
+                  onChange={(e) => onDraftChange({ title: e.target.value })}
+                  onClick={(e) => e.stopPropagation()}
+                  aria-label="Title"
+                />
+              ) : (
+                <h2 className="title">{dispTitle}</h2>
+              )}
               <div className="cat">{item.happening_category}</div>
             </div>
+            <button
+              type="button"
+              className={`herostar${hero ? " is-on" : ""}`}
+              aria-pressed={hero}
+              onClick={(e) => { e.stopPropagation(); onAct("hero"); }}
+              title="Toggle hero eligibility (H)"
+            >
+              <span className="st">{hero ? "★" : "☆"}</span> Hero <span className="k">H</span>
+            </button>
           </div>
 
           {editing && draft ? (
@@ -128,8 +175,8 @@ export function ReviewCard({
                   onChange={(e) => onDraftChange({ blurb_long: e.target.value })} />
               </label>
             </div>
-          ) : item.blurb ? (
-            <p className="blurb">{item.blurb}</p>
+          ) : dispBlurb ? (
+            <p className="blurb">{dispBlurb}</p>
           ) : null}
 
           <div className="timeblock">
@@ -163,6 +210,7 @@ export function ReviewCard({
                     (t === "free_sb" && item.price_band != null && item.price_band !== "free");
                   return (
                     <button key={t} type="button" className="tagtoggle" aria-pressed={on} disabled={disabled}
+                      title={disabled ? "Not allowed for this item" : undefined}
                       onClick={(e) => { e.stopPropagation(); onToggleTag(t); }}>
                       {t.replace(/_/g, " ")}
                     </button>
@@ -172,11 +220,15 @@ export function ReviewCard({
             </div>
           ) : (
             <div className="meta">
-              {item.neighborhood ? <span className="hood">{item.neighborhood.replace(/_/g, " ")}</span> : null}
-              {item.tags.map((t) => <span key={t} className="tag">{t.replace(/_/g, " ")}</span>)}
+              {dispNeighborhood ? <span className="hood">{dispNeighborhood.replace(/_/g, " ")}</span> : null}
+              {dispTags.map((t) => <span key={t} className="tag">{t.replace(/_/g, " ")}</span>)}
               <span className="price">{priceLabel(item.price_band)}</span>
             </div>
           )}
+
+          {changes.length ? (
+            <div className="editnote">Edited: {changes.join(", ")} · press <b>A</b> to commit &amp; publish</div>
+          ) : null}
 
           {item.registrySnippet ? (
             <RegistrySnippetPanel
@@ -186,13 +238,13 @@ export function ReviewCard({
           ) : (
             <div className="actions pt">
               <button className="btn btn-approve" onClick={(e) => { e.stopPropagation(); onAct("approve"); }}>
-                Approve &amp; publish <span className="k">A</span>
+                {isOverlay ? "Approve & replace live" : "Approve & publish"} <span className="k">A</span>
               </button>
               <button className="btn btn-edit" onClick={(e) => { e.stopPropagation(); onAct("edit"); }}>
-                {editing ? "Save changes" : "Edit"} <span className="k">E</span>
+                {editing ? "Done editing" : "Edit"} <span className="k">E</span>
               </button>
               <button className="btn btn-reject" onClick={(e) => { e.stopPropagation(); onAct("reject"); }}>
-                Reject <span className="k">R</span>
+                {isOverlay ? "Discard edit" : "Reject"} <span className="k">R</span>
               </button>
               <span className="right">
                 {editing ? "◂ ▸ cycle images" : chip === "green" ? "✓ trusted source" : chip === "amber" ? "⚠ needs a glance" : "place"}

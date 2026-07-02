@@ -24,6 +24,29 @@ export const ZONE_LABEL: Record<Zone, string> = Object.fromEntries(
   ZONES.map((z) => [z.zone, z.label]),
 ) as Record<Zone, string>;
 
+// The 11 granular `neighborhood` values collapse into the 6 coarse `nearby_zone`
+// anchors. Each mapping matches what nearestZone() returns for that neighborhood's
+// coordinates (Riviera/Mission Canyon/Upper State sit nearest Downtown; Carpinteria
+// sits nearest Montecito). `other` has no meaningful zone.
+export const NEIGHBORHOOD_ZONE: Record<string, Zone | null> = {
+  funk_zone: "funk",
+  downtown: "downtown",
+  upper_state: "downtown",
+  riviera: "downtown",
+  mission_canyon: "downtown",
+  waterfront: "waterfront",
+  mesa: "mesa",
+  montecito: "montecito",
+  carpinteria: "montecito",
+  goleta: "goleta",
+  other: null,
+};
+
+/** Coarse zone for a granular neighborhood value, or null (unknown / 'other'). */
+export function zoneForNeighborhood(neighborhood: string | null | undefined): Zone | null {
+  return neighborhood ? (NEIGHBORHOOD_ZONE[neighborhood] ?? null) : null;
+}
+
 /** Nearest anchor zone to a device location (simple squared-distance). */
 export function nearestZone(lat: number, lng: number): Zone {
   let best = ZONES[0];

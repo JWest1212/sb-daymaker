@@ -12,7 +12,10 @@ const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
-function sbDay(ms: number): string {
+/** The SB (America/Los_Angeles) calendar day for an instant, as "YYYY-MM-DD".
+ *  The single source of truth for day-keying — reused by the coverage math so
+ *  cockpit occurrence counts and the public feed can never disagree. */
+export function sbDay(ms: number): string {
   return SB_DATE_FMT.format(ms);
 }
 

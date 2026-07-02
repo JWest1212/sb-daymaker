@@ -43,10 +43,12 @@ export interface QueueRow {
   happening_category: string | null;
   happening_tier: number;
   neighborhood: string | null;
+  nearby_zone: string | null; // coarse zone (Coverage/Near Me); carried for v2 §A6
   address: string | null;
   price_band: string | null;
   free: boolean | null;
   is_21_plus: boolean | null;
+  hero_eligible: boolean; // ⭑ hero-plan shortlist flag (Cockpit v2 §1.7)
   starts_at: string | null;
   source: string | null; // the source URL (provenance + uuid5 key)
   photo_url: string | null;
@@ -58,14 +60,51 @@ export interface QueueRow {
   /** Set when this is a registry-candidate rhythm (§3.5). Contains the ready-to-paste
    *  TypeScript snippet the founder adds to recurringRegistry.ts. Never auto-published. */
   registrySnippet?: string;
+  /** Set when this queue card is a pending edit of a LIVE thing (thing_edits overlay).
+   *  overlay_id = the thing_edits row; edit_of = the live thing_id. The card shows a
+   *  merged preview (live row + payload) and approve applies it to the live row. */
+  overlay_id?: string;
+  edit_of?: string;
 }
 
-/** The editable draft held while a card is in Edit mode. */
+/** A row in the Live catalog (published things). Carries the editable fields so
+ *  the edit sheet can pre-fill without a second fetch. */
+export interface CatalogRow {
+  id: string;
+  title: string;
+  blurb: string | null;
+  blurb_long: string | null;
+  neighborhood: string | null;
+  is_21_plus: boolean | null;
+  happening_tier: number;
+  nearby_zone: string | null;
+  price_band: string | null;
+  hero_eligible: boolean;
+  photo_url: string | null;
+  photo_source: string | null;
+  tags: string[];
+  when: string;
+  pending_edit: boolean; // an edit is awaiting review in the queue
+}
+
+/** The editable draft held while a card is in Edit mode. Title is editable in v2
+ *  (start time is not — reject & re-ingest to change a time). */
 export interface ReviewDraft {
+  title: string;
   blurb: string;
   blurb_long: string;
   neighborhood: string;
   tags: string[];
+}
+
+/** The optional edit payload the approve route applies before publishing (v2 §A5).
+ *  Only the fields the founder changed need be present. */
+export interface EditPayload {
+  title?: string;
+  blurb?: string | null;
+  blurb_long?: string | null;
+  neighborhood?: string | null;
+  tags?: string[];
 }
 
 export interface DropRow {

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { getAdminUser, loadCockpitData } from "@/lib/reviewServer";
+import { loadCockpitData } from "@/lib/reviewServer";
 import { ReviewQueue } from "./ReviewQueue";
-import "./cockpit.css";
 
 export const metadata: Metadata = {
   title: "Review cockpit — SB Daymaker",
@@ -10,9 +8,8 @@ export const metadata: Metadata = {
 };
 export const dynamic = "force-dynamic";
 
+// Auth + cockpit chrome live in app/admin/layout.tsx; this page renders the Queue view.
 export default async function ReviewPage() {
-  const user = await getAdminUser();
-  if (!user) redirect("/cockpit/login");
   const data = await loadCockpitData();
   return <ReviewQueue initial={data} />;
 }

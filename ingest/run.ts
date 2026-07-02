@@ -17,6 +17,7 @@ import {
 import { enrich } from './enrich';
 import { resolveImages, type ResolveStats } from './images';
 import { detectClosures } from './adapters/googlePlaces';
+import { consumeDirectives } from './restock';
 import { sendDigest } from './digest';
 import { getDb } from './db';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
@@ -255,6 +256,15 @@ async function main() {
 
   // ---- CLOSURES + DIGEST (live runs only) ----
   if (sb) {
+    // Consume any queued restock directives against tonight's pool (informational;
+    // never touches source, lands nothing extra). Isolated so it can't sink the run.
+    try {
+      const handled = await consumeDirectives(sb, toLand);
+      if (handled) console.log(`  restock              consumed ${handled} queued directive(s)`);
+    } catch (err) {
+      console.log(`  restock              skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     const closed = await detectClosures(sb);
     if (closed) console.log(`  closures             archived ${closed} permanently-closed place(s)`);
     await sendDigest(sb, {

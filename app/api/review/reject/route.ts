@@ -11,7 +11,20 @@ export async function POST(req: Request) {
   const sb = getAdminSupabase();
   if (!sb) return NextResponse.json({ error: "not configured" }, { status: 500 });
 
-  const { id, reason } = (await req.json()) as { id?: string; reason?: string };
+  const { id, reason, overlay_id } = (await req.json()) as { id?: string; reason?: string; overlay_id?: string };
+
+  // ---- overlay rejection: discard the pending edit; the live row is untouched ----
+  if (overlay_id) {
+    const { data: overlay } = await sb.from("thing_edits").select("thing_id, status").eq("id", overlay_id).single();
+    if (!overlay || overlay.status !== "pending") return NextResponse.json({ error: "overlay not pending" }, { status: 400 });
+    await sb.from("thing_edits").update({ status: "discarded", resolved_at: new Date().toISOString() }).eq("id", overlay_id);
+    await sb.from("audit_log").insert({
+      entity_type: "thing", entity_id: overlay.thing_id, action: "edit_discarded", actor: "founder",
+      payload: { overlay_id, reason: reason ?? null },
+    });
+    return NextResponse.json({ ok: true, discarded: overlay_id });
+  }
+
   if (!id) return NextResponse.json({ error: "no id" }, { status: 400 });
 
   const { error } = await sb.from("things").update({ status: "archived" }).eq("id", id);

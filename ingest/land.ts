@@ -11,10 +11,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Candidate } from '../packages/shared/types';
 import type { DropRecord } from './dedupe';
+import { nearestZone, zoneForNeighborhood } from '../lib/zones';
 
 /** Map a gated Candidate to a `things` row. `source` stores the URL — the seed
  *  convention, and the same string the uuid5 id is keyed on. */
 function toThingRow(c: Candidate): Record<string, unknown> {
+  // Coarse Near-Me / Coverage zone: prefer coordinates, else fall back to the
+  // neighborhood mapping so rows without lat/lng still get a zone.
+  const nearby_zone = c.lat != null && c.lng != null
+    ? nearestZone(c.lat, c.lng)
+    : zoneForNeighborhood(c.neighborhood ?? null);
   return {
     id: c.id,
     type: c.type,
@@ -26,6 +32,7 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     happening_category: c.happening_category,
     reason_to_go: c.reason_to_go ?? null,
     neighborhood: c.neighborhood ?? null,
+    nearby_zone,
     address: c.address,
     lat: c.lat ?? null,
     lng: c.lng ?? null,

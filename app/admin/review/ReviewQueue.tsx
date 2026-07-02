@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CockpitData } from "@/lib/reviewServer";
-import { filterTags, type QueueRow, type ReviewDraft } from "@/lib/review";
+import { filterTags, type EditPayload, type QueueRow, type ReviewDraft } from "@/lib/review";
 import { ReviewCard } from "./ReviewCard";
 import { DroppedPanel } from "./DroppedPanel";
 import { SourceHealth } from "./SourceHealth";
@@ -19,6 +19,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, ReviewDraft>>({});
   const [picks, setPicks] = useState<Record<string, number>>({});
+  const [heroOverride, setHeroOverride] = useState<Record<string, boolean>>({});
   const [fetchingId, setFetchingId] = useState<string | null>(null);
   const [leavingId, setLeavingId] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -28,6 +29,11 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
   const visible = useMemo(
     () => queue.filter((c) => filter === "all" || String(c.happening_tier) === filter),
     [queue, filter],
+  );
+
+  const isHero = useCallback(
+    (item: QueueRow) => heroOverride[item.id] ?? item.hero_eligible,
+    [heroOverride],
   );
 
   const showToast = useCallback((msg: string, undo?: () => void) => {
@@ -71,32 +77,71 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     [showToast],
   );
 
+  /** Build the edit payload from a card's pending draft (only if one exists). */
+  const editPayloadFor = useCallback((item: QueueRow): EditPayload | undefined => {
+    const d = edits[item.id];
+    if (!d) return undefined;
+    const tags = filterTags(d.tags, { is_21_plus: item.is_21_plus, price_band: item.price_band });
+    return {
+      title: d.title.trim() || item.title,
+      blurb: d.blurb.trim() || null,
+      blurb_long: d.blurb_long.trim() || null,
+      neighborhood: d.neighborhood || null,
+      tags,
+    };
+  }, [edits]);
+
+  // A single press: commit any pending edits + hero flag + chosen photo, then publish.
+  // For a thing_edits overlay card, approve applies the edit to the LIVE row.
   const approve = useCallback((item: QueueRow) => {
     const index = queue.findIndex((c) => c.id === item.id);
     const opt = item.photo_options[picks[item.id] ?? 0];
     const photo = opt?.url ? { url: opt.url, source: opt.source } : undefined;
+    const edits_ = editPayloadFor(item);
+    if (item.overlay_id) {
+      commitAction([item.id], [{ item, index }], "Replaced live", () =>
+        post("/api/review/approve", { overlay_id: item.overlay_id, edits: edits_, photo, hero_eligible: isHero(item) }));
+      return;
+    }
     commitAction([item.id], [{ item, index }], "Published", () =>
-      post("/api/review/approve", { ids: [item.id], photo }));
-  }, [queue, picks, commitAction]);
+      post("/api/review/approve", {
+        ids: [item.id], photo, edits: edits_, hero_eligible: isHero(item),
+      }));
+  }, [queue, picks, commitAction, editPayloadFor, isHero]);
 
+  // For an overlay card, reject discards the pending edit (live row untouched).
   const reject = useCallback((item: QueueRow) => {
     const index = queue.findIndex((c) => c.id === item.id);
+    if (item.overlay_id) {
+      commitAction([item.id], [{ item, index }], "Discarded edit", () =>
+        post("/api/review/reject", { overlay_id: item.overlay_id, id: item.edit_of, reason: "founder discard" }));
+      return;
+    }
     commitAction([item.id], [{ item, index }], "Rejected", () =>
       post("/api/review/reject", { id: item.id, reason: "founder reject" }));
   }, [queue, commitAction]);
 
   const bulkGreen = useCallback(() => {
-    const greens = visible.filter((c) => c.chip === "green");
+    const greens = visible.filter((c) => c.chip === "green" && !c.overlay_id);
     if (!greens.length) { showToast("No green-chip items in this view"); return; }
     const removed = greens.map((item) => ({ item, index: queue.findIndex((c) => c.id === item.id) }));
     const ids = greens.map((g) => g.id);
     commitAction(ids, removed, "Published", () => post("/api/review/approve", { ids }));
   }, [visible, queue, showToast, commitAction]);
 
+  // Hero flag is metadata-only and applies immediately (no re-review, §1.7).
+  const toggleHero = useCallback((item: QueueRow) => {
+    const next = !isHero(item);
+    setHeroOverride((h) => ({ ...h, [item.id]: next }));
+    post("/api/admin/hero-eligible", { thing_id: item.id, hero_eligible: next });
+    showToast(next ? `★ Hero-flagged ${item.title}` : `Removed hero flag`);
+  }, [isHero, showToast]);
+
   const startEdit = useCallback((item: QueueRow) => {
     setEdits((e) => (e[item.id] ? e : {
       ...e,
       [item.id]: {
+        title: item.title,
         blurb: item.blurb ?? "", blurb_long: item.blurb_long ?? "",
         neighborhood: item.neighborhood ?? "", tags: [...item.tags],
       },
@@ -104,24 +149,9 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     setEditingId(item.id);
   }, []);
 
-  const saveEdit = useCallback((item: QueueRow) => {
-    setEditingId(null);
-    const d = edits[item.id];
-    if (!d) return;
-    const tags = filterTags(d.tags, { is_21_plus: item.is_21_plus, price_band: item.price_band });
-    // Persist the image alternate the founder arrowed to, if any.
-    const opt = item.photo_options[picks[item.id] ?? 0];
-    const photo = opt?.url ? { url: opt.url, source: opt.source } : undefined;
-    setQueue((q) => q.map((c) => (c.id === item.id ? {
-      ...c, blurb: d.blurb.trim() || null, blurb_long: d.blurb_long.trim() || null,
-      neighborhood: d.neighborhood || null, tags,
-      ...(photo ? { photo_url: photo.url, photo_source: photo.source } : {}),
-    } : c)));
-    post("/api/review/update", {
-      id: item.id, blurb: d.blurb, blurb_long: d.blurb_long, neighborhood: d.neighborhood || null, tags, photo,
-    });
-    showToast(`Saved ${item.title}`);
-  }, [edits, picks, showToast]);
+  // Leaving edit mode keeps the pending draft in state — nothing is saved to the
+  // server until Approve. There is no separate save step (§1.5).
+  const exitEdit = useCallback(() => setEditingId(null), []);
 
   const updateDraft = useCallback((id: string, patch: Partial<ReviewDraft>) => {
     setEdits((e) => ({ ...e, [id]: { ...e[id], ...patch } }));
@@ -165,12 +195,18 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     const onKey = (e: KeyboardEvent) => {
       const tag = (document.activeElement?.tagName ?? "").toUpperCase();
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      // While a card is being edited, swallow the action shortcuts (so typing-
-      // adjacent keys can't approve/reject); only image cycling + save/close stay.
+      // While a card is being edited: the focus guard above already blocks keys
+      // typed into fields, so out-of-field shortcuts stay live. A commits the
+      // pending edits + publishes in one press (mockup), H toggles hero, ←/→
+      // cycle the photo, E/Esc leave edit mode (keeping the draft). R is withheld
+      // so a mis-key can't reject a card you're actively editing.
       if (editingId) {
         const ed = queue.find((c) => c.id === editingId);
+        const k = e.key.toLowerCase();
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); cycle(editingId, e.key === "ArrowRight" ? "next" : "prev"); }
-        else if ((e.key === "Escape" || e.key.toLowerCase() === "e") && ed) { e.preventDefault(); saveEdit(ed); }
+        else if (e.key === "Escape" || k === "e") { e.preventDefault(); exitEdit(); }
+        else if (k === "a" && ed) { e.preventDefault(); approve(ed); }
+        else if (k === "h" && ed) { e.preventDefault(); toggleHero(ed); }
         return;
       }
       const cur = visible[active];
@@ -179,12 +215,13 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
       else if (k === "arrowup") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
       else if (k === "a" && cur) { e.preventDefault(); approve(cur); }
       else if (k === "e" && cur) { e.preventDefault(); startEdit(cur); }
+      else if (k === "h" && cur) { e.preventDefault(); toggleHero(cur); }
       else if (k === "r" && cur) { e.preventDefault(); reject(cur); }
       else if (k === "b") { e.preventDefault(); bulkGreen(); }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visible, active, editingId, queue, approve, reject, bulkGreen, cycle, startEdit, saveEdit]);
+  }, [visible, active, editingId, queue, approve, reject, bulkGreen, cycle, startEdit, exitEdit, toggleHero]);
 
   useEffect(() => { if (active >= visible.length) setActive(Math.max(0, visible.length - 1)); }, [visible.length, active]);
 
@@ -198,18 +235,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
   const down = initial.sources.filter((s) => s.status === "fail");
 
   return (
-    <div className="sbd-cockpit">
-      <div className="topbar">
-        <div className="topbar-inner">
-          <div className="brand"><span><span className="sb">SB</span> Daymaker</span><span className="kicker">Review Cockpit</span></div>
-          <div className="topbar-stats">
-            <div className="tstat"><b>{queue.length}</b><span>In queue</span></div>
-            <div className="tstat dropped"><b>{initial.drops.length}</b><span>Dropped</span></div>
-            <div className="tstat broken"><b>{down.length}</b><span>Source down</span></div>
-          </div>
-        </div>
-      </div>
-
+    <>
       <div className="digest">
         <div className="digest-card">
           <span className="stamp">Latest run</span>
@@ -246,10 +272,11 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
           ) : (
             visible.map((item, i) => (
               <ReviewCard
-                key={item.id}
+                key={item.overlay_id ?? item.id}
                 item={item}
                 active={i === active}
                 editing={editingId === item.id}
+                hero={isHero(item)}
                 pickIndex={picks[item.id] ?? 0}
                 fetching={fetchingId === item.id}
                 leaving={leavingId === item.id}
@@ -257,7 +284,8 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
                 onAct={(kind) => {
                   if (kind === "approve") approve(item);
                   else if (kind === "reject") reject(item);
-                  else if (editingId === item.id) saveEdit(item);
+                  else if (kind === "hero") toggleHero(item);
+                  else if (editingId === item.id) exitEdit();
                   else startEdit(item);
                 }}
                 onCycle={(dir) => cycle(item.id, dir)}
@@ -276,8 +304,9 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
           <div className="panel">
             <h3>Shortcuts</h3>
             <div className="keys">
-              <div className="kr"><span className="kk">A</span> Approve &amp; publish</div>
-              <div className="kr"><span className="kk">E</span> Edit inline, then approve</div>
+              <div className="kr"><span className="kk">A</span> Approve — commits edits + publishes</div>
+              <div className="kr"><span className="kk">E</span> Edit in place (title · blurb · tags · photo)</div>
+              <div className="kr"><span className="kk">H</span> Toggle ★ Hero flag</div>
               <div className="kr"><span className="kk">R</span> Reject</div>
               <div className="kr"><span className="kk">↑↓</span> Move between cards</div>
               <div className="kr"><span className="kk">B</span> Bulk-approve green chips</div>
@@ -292,6 +321,6 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
           {toast.undo ? <span className="undo" onClick={toast.undo} role="button" tabIndex={0}>Undo</span> : null}
         </div>
       ) : null}
-    </div>
+    </>
   );
 }

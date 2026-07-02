@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Cockpit v2 (redesign mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+  --ink:#241C16; --ink-2:#4A4038;
+  --pacific:#16586A; --pacific-dark:#0E3C49;
+  --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+  --line:#D8CDB8; --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  --sev-blocker:#B23A2E; --sev-high:#C77D1E; --sev-med:#9A8A3E; --sev-low:#3E7C5A;
+  --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  --shadow-sheet:0 -8px 40px rgba(36,28,22,.18);
+  --tap-min:44px;
+  --ease-out:cubic-bezier(0.16,1,0.3,1); --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  /* RAG fills — background tints only; text always Ink (a11y usage rule) */
+  --rag-red:rgba(178,58,46,.15); --rag-red-2:rgba(178,58,46,.28);
+  --rag-amber:rgba(199,125,30,.16); --rag-green:rgba(62,124,90,.16); --rag-green-2:rgba(62,124,90,.30);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--plaster);color:var(--ink);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--pacific);outline-offset:2px;border-radius:4px}
+
+/* ---------- top bar + tabs ---------- */
+.topbar{position:sticky;top:0;z-index:40;background:var(--pacific-dark);color:var(--paper);border-bottom:1px solid rgba(0,0,0,.2)}
+.topbar-inner{max-width:1220px;margin:0 auto;padding:12px 24px 0;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;font-family:var(--font-display);font-weight:900;font-size:1.25rem;letter-spacing:-.01em}
+.brand .sb{color:var(--gold)}
+.brand .kicker{font-family:var(--font-mono);font-weight:500;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;opacity:.7;align-self:center}
+.topbar-stats{margin-left:auto;display:flex;gap:22px;align-items:center}
+.tstat{display:flex;flex-direction:column;line-height:1.1}
+.tstat b{font-family:var(--font-mono);font-size:1.05rem;font-weight:600}
+.tstat span{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;opacity:.65}
+.tstat.dropped b{color:var(--gold)} .tstat.broken b{color:var(--tile-light)}
+.tabs{max-width:1220px;margin:6px auto 0;padding:0 24px;display:flex;gap:2px}
+.tab{background:transparent;border:none;color:var(--paper);opacity:.62;font-weight:600;font-size:.9rem;padding:10px 16px 12px;border-radius:10px 10px 0 0;min-height:var(--tap-min);position:relative;display:inline-flex;align-items:center;gap:8px}
+.tab .tn{font-family:var(--font-mono);font-size:.68rem;background:rgba(252,250,245,.14);padding:1px 7px;border-radius:var(--radius-pill)}
+.tab:hover{opacity:.85}
+.tab[aria-selected="true"]{opacity:1;background:var(--plaster);color:var(--ink)}
+.tab[aria-selected="true"] .tn{background:var(--plaster-2);color:var(--ink-2)}
+
+/* ---------- run banner ---------- */
+.runline{max-width:1220px;margin:16px auto 0;padding:0 24px}
+.run-card{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--pacific);border-radius:var(--radius-md);padding:12px 18px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-card);flex-wrap:wrap}
+.run-card .stamp{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.run-card .msg{font-size:.92rem}
+.run-card b{font-weight:600}
+.run-card .down{color:var(--terra-text);font-weight:600}
+
+/* ---------- layout ---------- */
+.wrap{max-width:1220px;margin:18px auto 90px;padding:0 24px}
+.wrap.two{display:grid;grid-template-columns:1fr 300px;gap:24px}
+@media(max-width:940px){.wrap.two{grid-template-columns:1fr}}
+.view{display:none}
+.view.is-active{display:block}
+.vhead{display:flex;align-items:baseline;gap:14px;margin:2px 0 14px;flex-wrap:wrap}
+.vtitle{font-family:var(--font-display);font-weight:600;font-size:1.563rem;letter-spacing:-.01em;margin:0}
+.vtitle .count{font-family:var(--font-mono);font-size:1rem;color:var(--ink-2);font-weight:500;margin-left:8px}
+.vsub{font-size:.85rem;color:var(--ink-2);margin:0}
+.spacer{flex:1}
+
+/* pills / segmented */
+.segbar{display:flex;gap:6px;background:var(--plaster-2);padding:4px;border-radius:var(--radius-pill)}
+.seg{border:none;background:transparent;padding:7px 14px;border-radius:var(--radius-pill);font-size:.82rem;font-weight:500;color:var(--ink-2);min-height:36px}
+.seg[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(36,28,22,.08)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:var(--radius-pill);font-weight:600;font-size:.85rem;padding:9px 16px;min-height:40px}
+.btn .k{font-family:var(--font-mono);font-size:.66rem;opacity:.8;border:1px solid currentColor;border-radius:4px;padding:0 4px;line-height:1.4}
+.btn-primary{background:var(--pacific);color:var(--paper)}
+.btn-primary:hover{background:var(--pacific-dark)}
+.btn-secondary{background:transparent;color:var(--pacific);border:1.5px solid var(--pacific)}
+.btn-secondary:hover{background:rgba(22,88,106,.06)}
+.btn-quiet{background:transparent;color:var(--terra-text);border:1.5px solid var(--tile-light)}
+.btn-quiet:hover{background:rgba(192,83,46,.06)}
+.btn-sm{padding:5px 12px;min-height:32px;font-size:.78rem}
+
+/* ---------- QUEUE cards ---------- */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin-bottom:16px;overflow:hidden;transition:opacity .24s var(--ease-out),transform .24s var(--ease-out)}
+.card.is-active{border-color:var(--pacific);box-shadow:0 0 0 2px rgba(22,88,106,.25),var(--shadow-card)}
+.card.is-editing{border-color:var(--gold);box-shadow:0 0 0 2px rgba(224,168,46,.3),var(--shadow-card)}
+.card.leaving{opacity:0;transform:translateY(-8px) scale(.99)}
+.card-grid{display:grid;grid-template-columns:168px 1fr}
+@media(max-width:640px){.card-grid{grid-template-columns:1fr}}
+.thumb{position:relative;min-height:168px;display:flex;align-items:center;justify-content:center}
+.thumb .src-pill{position:absolute;left:8px;bottom:8px;background:rgba(36,28,22,.78);color:var(--paper);font-family:var(--font-mono);font-size:.6rem;letter-spacing:.06em;padding:3px 7px;border-radius:var(--radius-pill)}
+.imgnav{position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:none;background:rgba(252,250,245,.92);color:var(--ink);font-size:1.2rem;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.imgnav.prev{left:8px}.imgnav.next{right:8px}
+.imgcount{position:absolute;top:8px;right:8px;background:rgba(36,28,22,.78);color:var(--paper);font-family:var(--font-mono);font-size:.6rem;padding:3px 7px;border-radius:var(--radius-pill)}
+.card.is-editing .thumb::before{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 2px var(--gold);pointer-events:none;z-index:1}
+.body{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.row1{display:flex;align-items:flex-start;gap:10px}
+.tier{font-family:var(--font-mono);font-size:.6rem;font-weight:600;letter-spacing:.08em;padding:3px 7px;border-radius:5px;white-space:nowrap;margin-top:4px}
+.tier.t1{background:rgba(192,83,46,.13);color:var(--terra-text)}
+.tier.t2{background:rgba(224,168,46,.18);color:var(--gold-text)}
+.tier.t3{background:rgba(126,139,107,.18);color:var(--sage-text)}
+.title{font-family:var(--font-display);font-weight:600;font-size:1.25rem;line-height:1.2;letter-spacing:-.01em;margin:0;border-radius:4px}
+.cat{font-family:var(--font-mono);font-size:.66rem;color:var(--ink-2);letter-spacing:.04em;margin-top:2px}
+.blurb{font-size:.92rem;color:var(--ink-2);line-height:1.5;margin:0;border-radius:4px}
+[contenteditable="true"]{background:rgba(224,168,46,.10);box-shadow:inset 0 0 0 1.5px var(--gold);padding:1px 6px;cursor:text}
+[contenteditable="true"]:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.herostar{margin-left:auto;background:transparent;border:1.5px solid var(--line);color:var(--ink-2);border-radius:var(--radius-pill);font-size:.76rem;font-weight:600;padding:5px 12px;min-height:32px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.herostar.is-on{border-color:var(--gold);background:rgba(224,168,46,.16);color:var(--gold-text)}
+.herostar .st{font-size:.95rem;line-height:1}
+.timeblock{display:flex;flex-direction:column;gap:3px;padding:10px 12px;background:var(--plaster);border-radius:var(--radius-sm);border:1px solid var(--line)}
+.timeline{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:var(--radius-pill)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.chip.green{background:rgba(62,124,90,.15);color:var(--sev-low)}.chip.green .dot{background:var(--sev-low)}
+.chip.amber{background:rgba(199,125,30,.16);color:var(--sev-high)}.chip.amber .dot{background:var(--sev-high)}
+.chip.evergreen{background:rgba(22,88,106,.1);color:var(--pacific)}.chip.evergreen .dot{background:var(--pacific)}
+.whenstr{font-family:var(--font-mono);font-size:.92rem;font-weight:500;color:var(--ink)}
+.prov{font-size:.72rem;color:var(--ink-2)}
+.prov a{color:var(--pacific);text-decoration:none;border-bottom:1px dotted var(--pacific)}
+.meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{font-size:.72rem;padding:3px 9px;border-radius:var(--radius-pill);background:var(--plaster-2);color:var(--ink-2);font-weight:500;border:1px solid transparent}
+.tag.is-editable{cursor:pointer}
+.tag.is-off{opacity:.4;text-decoration:line-through}
+.tag.is-editable:not(.is-off){border-color:var(--gold)}
+.hood{font-size:.72rem;padding:3px 9px;border-radius:var(--radius-pill);border:1px solid var(--line);color:var(--ink-2);font-weight:500}
+.price{font-family:var(--font-mono);font-size:.74rem;color:var(--ink-2)}
+.actions{display:flex;gap:8px;align-items:center;padding-top:12px;border-top:1px dashed var(--line);margin-top:2px;flex-wrap:wrap}
+.actions .right{margin-left:auto;font-family:var(--font-mono);font-size:.68rem;color:var(--ink-2)}
+.editnote{font-size:.74rem;color:var(--gold-text);background:rgba(224,168,46,.12);border:1px dashed var(--gold);border-radius:var(--radius-sm);padding:6px 10px}
+
+/* ---------- sidebar panels ---------- */
+.side{position:sticky;top:118px;align-self:start;display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);overflow:hidden}
+.panel h3{margin:0;font-family:var(--font-display);font-weight:600;font-size:1rem;padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+.panel h3 .n{font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2);margin-left:auto;font-weight:500}
+.plist{max-height:300px;overflow:auto}
+.prow{padding:10px 16px;border-bottom:1px solid var(--plaster-2);display:flex;flex-direction:column;gap:3px}
+.prow:last-child{border-bottom:none}
+.prow .pt{font-size:.82rem;font-weight:500}
+.prow .pr{font-family:var(--font-mono);font-size:.68rem;color:var(--terra-text)}
+.prow .ps{font-size:.7rem;color:var(--ink-2)}
+.keys{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.kr{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--ink-2)}
+.kk{font-family:var(--font-mono);font-size:.7rem;font-weight:600;background:var(--plaster-2);color:var(--ink);border-radius:5px;padding:2px 8px;min-width:26px;text-align:center}
+.srcrow{display:flex;align-items:center;gap:10px;padding:8px 16px;font-size:.8rem}
+.srcrow .sdot{width:8px;height:8px;border-radius:50%;flex:none}
+.srcrow.ok .sdot{background:var(--sev-low)}.srcrow.warn .sdot{background:var(--sev-high)}.srcrow.fail .sdot{background:var(--sev-blocker)}
+.srcrow .sname{font-weight:500}
+.srcrow .scount{margin-left:auto;font-family:var(--font-mono);font-size:.7rem;color:var(--ink-2)}
+
+/* ---------- COVERAGE heatmap (the signature) ---------- */
+.covwrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);padding:18px 18px 8px;overflow-x:auto}
+.covgrid{display:grid;grid-template-columns:minmax(150px,1.2fr) repeat(4,minmax(96px,1fr)) 118px;gap:6px;min-width:720px}
+.cov-h{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);padding:6px 8px;align-self:end}
+.cov-h.win{text-align:center}
+.cov-row-label{display:flex;flex-direction:column;justify-content:center;gap:1px;padding:8px 10px;border-top:1px solid var(--plaster-2)}
+.cov-row-label .rl{font-weight:600;font-size:.9rem}
+.cov-row-label .rs{font-family:var(--font-mono);font-size:.64rem;color:var(--ink-2)}
+.cell{border:none;border-radius:var(--radius-sm);margin-top:6px;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--plaster);position:relative;transition:transform var(--ease-out) .14s}
+.cell:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(36,28,22,.12)}
+.cell .cn{font-family:var(--font-mono);font-weight:600;font-size:1.15rem;color:var(--ink);line-height:1}
+.cell .cd{width:7px;height:7px;border-radius:50%;position:absolute;top:7px;right:7px}
+.cell.r{background:var(--rag-red)}.cell.r.deep{background:var(--rag-red-2)}.cell.r .cd{background:var(--sev-blocker)}
+.cell.a{background:var(--rag-amber)}.cell.a .cd{background:var(--sev-high)}
+.cell.g{background:var(--rag-green)}.cell.g.deep{background:var(--rag-green-2)}.cell.g .cd{background:var(--sev-low)}
+.cell.is-picked{box-shadow:0 0 0 2px var(--pacific)}
+.restockcell{display:flex;align-items:center;justify-content:center;margin-top:6px}
+.restock{background:transparent;border:1.5px solid var(--terracotta);color:var(--terra-text);font-weight:600;font-size:.74rem;padding:6px 12px;border-radius:var(--radius-pill);min-height:36px;white-space:nowrap}
+.restock:hover{background:rgba(192,83,46,.07)}
+.covlegend{display:flex;gap:16px;align-items:center;padding:12px 4px 8px;font-size:.74rem;color:var(--ink-2);flex-wrap:wrap}
+.lg{display:inline-flex;align-items:center;gap:6px}
+.lg .sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.floorchk{margin-left:auto;display:inline-flex;align-items:center;gap:8px;font-size:.78rem;color:var(--ink)}
+.floorchk input{width:18px;height:18px;accent-color:var(--pacific)}
+
+/* drilldown drawer */
+.drill{margin-top:16px;background:var(--paper);border:1px solid var(--pacific);border-radius:var(--radius-md);box-shadow:var(--shadow-card);display:none}
+.drill.show{display:block}
+.drill h3{margin:0;padding:13px 16px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:600;font-size:1.05rem;display:flex;align-items:center;gap:10px}
+.drill h3 .x{margin-left:auto;background:transparent;border:none;font-size:1.1rem;color:var(--ink-2);padding:4px 8px}
+.drow{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--plaster-2);font-size:.86rem;flex-wrap:wrap}
+.drow:last-child{border-bottom:none}
+.drow .dw{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-2);margin-left:auto}
+.drill .empty{padding:18px 16px;font-size:.85rem;color:var(--ink-2)}
+
+/* ---------- LIVE CATALOG ---------- */
+.filters{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.search{flex:1;min-width:180px;max-width:320px;display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-pill);padding:0 14px;min-height:40px}
+.search input{border:none;background:transparent;font:inherit;font-size:.88rem;width:100%;outline:none;color:var(--ink)}
+select.fsel{font:inherit;font-size:.82rem;font-weight:500;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-pill);padding:8px 12px;min-height:40px}
+.lrow{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin-bottom:10px;padding:12px 16px;display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center}
+.lrow.pending{border-style:dashed;border-color:var(--gold)}
+.lthumb{width:44px;height:44px;border-radius:var(--radius-sm);flex:none}
+.lmain{min-width:0}
+.lt{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.lt .ttl{font-family:var(--font-display);font-weight:600;font-size:1.02rem;letter-spacing:-.01em}
+.lmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--ink-2);margin-top:2px}
+.lmeta .mono{font-family:var(--font-mono)}
+.lacts{display:flex;gap:8px;align-items:center}
+.pendpill{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.06em;background:rgba(224,168,46,.18);color:var(--gold-text);border-radius:var(--radius-pill);padding:3px 8px}
+
+/* ---------- HERO PLAN ---------- */
+.herorail{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:14px}
+.hday{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:14px;display:flex;flex-direction:column;gap:8px;min-height:150px}
+.hday.today{border-color:var(--gold);box-shadow:0 0 0 2px rgba(224,168,46,.28),var(--shadow-card)}
+.hd-date{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.hd-date .tdy{background:rgba(224,168,46,.2);color:var(--gold-text);padding:1px 7px;border-radius:var(--radius-pill);font-size:.6rem}
+.hd-pick{flex:1;display:flex;flex-direction:column;gap:4px}
+.hd-pick .ht{font-family:var(--font-display);font-weight:600;font-size:1rem;line-height:1.25}
+.hd-pick .hm{font-size:.72rem;color:var(--ink-2)}
+.hd-auto{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;color:var(--ink-2);font-size:.8rem;border:1px dashed var(--line);border-radius:var(--radius-sm);padding:10px;background:var(--plaster)}
+.hd-auto b{font-size:.72rem;font-family:var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--pacific);font-weight:600}
+.pinned-pill{align-self:flex-start;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.06em;background:rgba(22,88,106,.12);color:var(--pacific);padding:2px 8px;border-radius:var(--radius-pill)}
+
+/* picker sheet + restock modal */
+.scrim{position:fixed;inset:0;background:rgba(36,28,22,.4);z-index:70;display:none}
+.scrim.show{display:block}
+.sheet{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,92vw);max-height:82vh;overflow:auto;background:var(--paper);border-radius:var(--radius-lg);box-shadow:var(--shadow-sheet);z-index:80;display:none}
+.sheet.show{display:block}
+.sheet h3{margin:0;padding:16px 20px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-weight:600;font-size:1.15rem;display:flex;align-items:center}
+.sheet h3 .x{margin-left:auto;background:transparent;border:none;font-size:1.2rem;color:var(--ink-2);padding:4px 10px}
+.sheet .sbody{padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.pickrow{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--plaster)}
+.pickrow .pm{font-size:.72rem;color:var(--ink-2)}
+.pickrow .ttl{font-weight:600;font-size:.92rem}
+.pickrow .pickbtn{margin-left:auto}
+.radio{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1.5px solid var(--line);border-radius:var(--radius-md);cursor:pointer}
+.radio input{margin-top:4px;width:18px;height:18px;accent-color:var(--pacific)}
+.radio.sel{border-color:var(--pacific);background:rgba(22,88,106,.05)}
+.radio .rt{font-weight:600;font-size:.9rem}
+.radio .rd{font-size:.78rem;color:var(--ink-2)}
+.gatebox{font-size:.78rem;color:var(--ink-2);background:var(--plaster);border:1px dashed var(--line);border-radius:var(--radius-sm);padding:10px 12px}
+.sfoot{display:flex;gap:10px;padding:14px 20px;border-top:1px solid var(--line);justify-content:flex-end}
+
+/* directives rail */
+.dirrow{padding:10px 16px;border-bottom:1px solid var(--plaster-2);display:flex;flex-direction:column;gap:3px}
+.dirrow:last-child{border-bottom:none}
+.dirrow .dt{font-size:.82rem;font-weight:600}
+.dirstat{font-family:var(--font-mono);font-size:.66rem;letter-spacing:.05em;align-self:flex-start;padding:2px 8px;border-radius:var(--radius-pill)}
+.dirstat.q{background:rgba(22,88,106,.12);color:var(--pacific)}
+.dirstat.run{background:rgba(224,168,46,.2);color:var(--gold-text)}
+.dirstat.done{background:rgba(62,124,90,.16);color:var(--sage-text)}
+
+/* design notes accordion */
+.notes{margin-top:26px;border:1px solid var(--line);border-left:4px solid var(--pacific);border-radius:var(--radius-md);background:var(--paper);overflow:hidden}
+.notes summary{cursor:pointer;padding:13px 18px;font-family:var(--font-display);font-weight:600;font-size:1rem;list-style:none;display:flex;align-items:center;gap:10px}
+.notes summary::before{content:"▸";font-size:.8rem;color:var(--pacific);transition:transform .14s var(--ease-out)}
+.notes[open] summary::before{transform:rotate(90deg)}
+.notes .nb{padding:2px 20px 16px;font-size:.88rem;color:var(--ink-2);line-height:1.65}
+.notes .nb p{margin:10px 0}
+.notes .nb b{color:var(--ink)}
+.notes .nb .rec{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;background:rgba(62,124,90,.16);color:var(--sage-text);padding:2px 7px;border-radius:var(--radius-pill);margin-right:6px;vertical-align:1px}
+.notes .nb .opt{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.08em;background:var(--plaster-2);color:var(--ink-2);padding:2px 7px;border-radius:var(--radius-pill);margin-right:6px;vertical-align:1px}
+
+/* toast + done */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:var(--radius-pill);font-size:.85rem;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.3);pointer-events:none;z-index:90;transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);display:flex;align-items:center;gap:10px;max-width:88vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast b{color:var(--gold)}
+.toast .undo{color:var(--gold);text-decoration:underline;cursor:pointer;pointer-events:auto}
+.done{display:none;text-align:center;padding:60px 24px;background:var(--paper);border:1px dashed var(--line);border-radius:var(--radius-lg)}
+.done.show{display:block}
+.done h2{font-family:var(--font-display);font-weight:900;font-size:1.953rem;margin:8px 0 6px}
+.done p{color:var(--ink-2);margin:0}
+.note{max-width:1220px;margin:0 auto;padding:8px 24px 0;font-size:.74rem;color:var(--ink-2);font-style:italic}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span><span class="sb">SB</span> Daymaker</span><span class="kicker">Cockpit v2</span></div>
+    <div class="topbar-stats">
+      <div class="tstat"><b id="stat-queue">9</b><span>In queue</span></div>
+      <div class="tstat dropped"><b>40</b><span>Dropped</span></div>
+      <div class="tstat broken"><b>1</b><span>Source down</span></div>
+    </div>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Cockpit views">
+    <button class="tab" role="tab" aria-selected="true" data-view="queue">Queue <span class="tn" id="tab-qn">9</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-view="coverage">Coverage</button>
+    <button class="tab" role="tab" aria-selected="false" data-view="catalog">Live catalog <span class="tn" id="tab-cn">—</span></button>
+    <button class="tab" role="tab" aria-selected="false" data-view="hero">Hero plan</button>
+  </div>
+</div>
+
+<div class="runline">
+  <div class="run-card">
+    <span class="stamp">Latest run · Wed Jul 1 · 02:14</span>
+    <span class="msg"><b>9</b> in queue · <b>40</b> dropped (40 duplicate) · <span class="down">ucsb down</span> · 2 restock directives queued for tonight</span>
+  </div>
+</div>
+<p class="note">Redesign mockup — sample data. Keyboard on Queue: <b>A</b> approve (commits edits + publishes) · <b>E</b> edit · <b>H</b> hero flag · <b>R</b> reject · <b>↑/↓</b> move · <b>B</b> bulk-approve green.</p>
+
+<!-- ================= QUEUE ================= -->
+<div class="wrap two view is-active" id="view-queue">
+  <main>
+    <div class="vhead">
+      <h1 class="vtitle">Review queue<span class="count" id="qcount">9 items</span></h1>
+      <span class="spacer"></span>
+      <div class="segbar" role="group" aria-label="Filter queue">
+        <button class="seg qfilt" aria-pressed="true" data-filter="all">All</button>
+        <button class="seg qfilt" aria-pressed="false" data-filter="1">Events</button>
+        <button class="seg qfilt" aria-pressed="false" data-filter="2">Recurring</button>
+        <button class="seg qfilt" aria-pressed="false" data-filter="3">Places</button>
+      </div>
+      <button class="btn btn-secondary" id="bulkbtn">▣ Bulk-approve green <span class="k">B</span></button>
+    </div>
+    <div id="queue"></div>
+    <div class="done" id="qdone"><div style="font-size:2.4rem">☀️</div><h2>Queue cleared</h2><p>Nothing left to review. The next batch lands tomorrow at 2 a.m.</p></div>
+
+    <details class="notes">
+      <summary>Design notes &amp; recommendations — Queue</summary>
+      <div class="nb">
+        <p><span class="rec">REC</span><b>One-press approve.</b> Edit mode no longer has a separate save. Press <b>E</b>, fix the title/blurb in place (gold fields), toggle tags on/off, cycle the photo — then press <b>A</b> once. Approve commits every pending edit and publishes in the same action. A small gold banner on an edited card lists what changed so you can see the diff before committing.</p>
+        <p><span class="rec">REC</span><b>Hero flag from the queue (H).</b> The ⭑ Hero pill marks <code>hero_eligible</code> and drops the item into the Hero plan shortlist at the moment you first see it — cheaper than hunting it down later in the catalog. It rides along with Approve; no extra step.</p>
+        <p><span class="rec">REC</span><b>Restocked items carry a provenance pill.</b> Anything that arrived via a Restock directive shows a small terracotta "restock · date_night" pill, so you know why it's in your queue and can judge it against the gap it was fetched to fill.</p>
+        <p><span class="opt">OPT</span><b>Reject reasons.</b> R currently rejects instantly (cheap, reversible via Undo). If you later want rejection analytics ("what does the pipeline keep getting wrong?"), a two-key variant — R then 1/2/3 for off-brand / wrong facts / duplicate — is a small add. Deferred by default: it costs a keystroke on every reject.</p>
+      </div>
+    </details>
+  </main>
+  <aside class="side">
+    <div class="panel">
+      <h3>Restock directives <span class="n" id="dirn">2</span></h3>
+      <div id="dirlist"></div>
+    </div>
+    <div class="panel">
+      <h3>Dropped tonight <span class="n">40</span></h3>
+      <div class="plist">
+        <div class="prow"><span class="pt">Bilingual Music &amp; Movement</span><span class="pr">DROP · duplicate</span><span class="ps">exact id already in DB</span></div>
+        <div class="prow"><span class="pt">Lunch at the Library: Wordsmith Wednesday</span><span class="pr">DROP · duplicate</span><span class="ps">exact id already in DB</span></div>
+        <div class="prow"><span class="pt">Read to a Dog</span><span class="pr">DROP · duplicate</span><span class="ps">exact id already in DB</span></div>
+        <div class="prow"><span class="pt">Sister Cities Board</span><span class="pr">DROP · duplicate</span><span class="ps">exact id already in DB</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Source health</h3>
+      <div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">Outdoor Operators</span><span class="scount">11 new</span></div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">Nightlife Rhythms</span><span class="scount">5 new</span></div>
+        <div class="srcrow ok"><span class="sdot"></span><span class="sname">SB Farmers Markets</span><span class="scount">5 new</span></div>
+        <div class="srcrow warn"><span class="sdot"></span><span class="sname">SeatGeek (SB)</span><span class="scount">refresh</span></div>
+        <div class="srcrow fail"><span class="sdot"></span><span class="sname">UCSB Arts &amp; Lectures</span><span class="scount">0 — down</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Shortcuts</h3>
+      <div class="keys">
+        <div class="kr"><span class="kk">A</span> Approve — commits edits + publishes</div>
+        <div class="kr"><span class="kk">E</span> Edit in place (title · blurb · tags · photo)</div>
+        <div class="kr"><span class="kk">H</span> Toggle ⭑ Hero flag</div>
+        <div class="kr"><span class="kk">R</span> Reject</div>
+        <div class="kr"><span class="kk">↑↓</span> Move between cards</div>
+        <div class="kr"><span class="kk">B</span> Bulk-approve green chips</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ================= COVERAGE ================= -->
+<div class="wrap view" id="view-coverage">
+  <div class="vhead">
+    <h1 class="vtitle">Coverage</h1>
+    <p class="vsub">Published Tier 1 + Tier 2 occurrences per window, from today. Click a cell to see what's in it.</p>
+    <span class="spacer"></span>
+    <div class="segbar" role="group" aria-label="Coverage dimension">
+      <button class="seg covdim" aria-pressed="true" data-dim="vibe">By vibe</button>
+      <button class="seg covdim" aria-pressed="false" data-dim="hood">By neighborhood</button>
+    </div>
+  </div>
+  <div class="covwrap">
+    <div class="covgrid" id="covgrid"></div>
+    <div class="covlegend">
+      <span class="lg"><span class="sw" style="background:var(--rag-red)"></span>thin — restock</span>
+      <span class="lg"><span class="sw" style="background:var(--rag-amber)"></span>okay</span>
+      <span class="lg"><span class="sw" style="background:var(--rag-green)"></span>stocked</span>
+      <span style="font-family:var(--font-mono);font-size:.66rem">shading is relative within each column</span>
+      <label class="floorchk"><input type="checkbox" id="floorchk" checked> Absolute floor (7d&lt;3 · 14d&lt;5 · 30d&lt;8 · 45d&lt;10 always red) — recommended</label>
+    </div>
+  </div>
+  <div class="drill" id="drill">
+    <h3 id="drilltitle">Cell<button class="x" id="drillclose" aria-label="Close details">✕</button></h3>
+    <div id="drillbody"></div>
+  </div>
+
+  <details class="notes">
+    <summary>Design notes &amp; recommendations — Coverage</summary>
+    <div class="nb">
+      <p><span class="rec">REC</span><b>Relative shading + an absolute floor.</b> You chose relative shading; the risk is a uniformly thin week where the "best" cell is 2 items and still shades green. The floor checkbox (on by default) forces any cell under a hard minimum to red regardless of rank. Pure relative is one click away if you prefer the cleaner read.</p>
+      <p><span class="rec">REC</span><b>Windows are cumulative</b> (45d contains 30d contains 14d…), so shading is computed <i>within each column</i>, never across the row — otherwise 45d would always out-green 7d and the grid would tell you nothing.</p>
+      <p><span class="rec">REC</span><b>Neighborhood view uses the six <code>nearby_zone</code>s</b>, not the 11 granular neighborhoods — the zones are what actually power Near Me and the Discover SB guides, so they're the units worth stocking. Carpinteria/Riviera etc. roll up into the drilldown rows.</p>
+      <p><b>Restock &amp; the batch-AI rule (§2.3).</b> <span class="rec">REC</span> Default is a <b>queued directive</b>: pressing Restock writes a row ("find date_night things in the next 14 days") that tonight's existing pipeline picks up, runs through the exact same source catalogue → drop-gate → dedupe path, and lands results in tomorrow's queue. Zero new infrastructure, zero constraint bend. <span class="opt">OPT</span> "Run now" fires the same job on demand via a GitHub Action (~10–20 min); it's in the modal for genuinely urgent gaps, but every press is real API spend — the queued path should be your habit.</p>
+      <p><span class="opt">OPT</span>A Tier-3 "depth" column (evergreen count per vibe/zone) could sit at the far left as a small grey number — it never changes week to week, which is why it's excluded from the RAG math, but it shows your fallback cushion. Say the word and I'll add it.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ================= LIVE CATALOG ================= -->
+<div class="wrap view" id="view-catalog">
+  <div class="vhead">
+    <h1 class="vtitle">Live catalog<span class="count" id="ccount"></span></h1>
+    <p class="vsub">Everything currently published. Edits go back through the queue; the live version stays up until you re-approve.</p>
+  </div>
+  <div class="filters">
+    <div class="segbar" role="group" aria-label="Filter by tier">
+      <button class="seg cfilt" aria-pressed="true" data-tier="all">All</button>
+      <button class="seg cfilt" aria-pressed="false" data-tier="1">Tier 1 · Events</button>
+      <button class="seg cfilt" aria-pressed="false" data-tier="2">Tier 2 · Recurring</button>
+      <button class="seg cfilt" aria-pressed="false" data-tier="3">Tier 3 · Evergreen</button>
+    </div>
+    <select class="fsel" id="cvibe" aria-label="Filter by vibe"><option value="">All vibes</option></select>
+    <select class="fsel" id="chood" aria-label="Filter by zone"><option value="">All zones</option></select>
+    <div class="search"><span aria-hidden="true">⌕</span><input id="csearch" type="search" placeholder="Search titles…" aria-label="Search live things"></div>
+  </div>
+  <div id="catlist"></div>
+
+  <details class="notes">
+    <summary>Design notes &amp; recommendations — Live catalog</summary>
+    <div class="nb">
+      <p><span class="rec">REC</span><b>Edit → second look, without a gap on the site.</b> You chose "edited card returns to the review queue." The important nuance: the <i>previous approved version stays live</i> while the edit waits — the site never shows a hole or an unreviewed draft. The row here gets a dashed gold border + "edit pending review" pill until you re-approve it in the Queue.</p>
+      <p><span class="rec">REC</span><b>Rows, not cards.</b> The catalog can hold hundreds of things, so it's a dense scannable list (thumb chip · title · tier · when · vibes · zone), with the same ⭑ Hero toggle inline. Hero toggling is metadata-only, so it applies instantly — it doesn't round-trip through the queue.</p>
+      <p><span class="opt">OPT</span><b>Unpublish.</b> Each row's Edit sheet could carry an "Archive (remove from site)" action for closures and cancellations — one click, undoable. Recommended; cheap to add in the build.</p>
+    </div>
+  </details>
+</div>
+
+<!-- ================= HERO PLAN ================= -->
+<div class="wrap view" id="view-hero">
+  <div class="vhead">
+    <h1 class="vtitle">Hero plan<span class="count">next 14 days</span></h1>
+    <p class="vsub">Pin the marquee card for any day. Unpinned days fall back to the ranker's pick from the ⭑ hero-eligible pool. The ranker never reads sponsor status.</p>
+  </div>
+  <div class="herorail" id="herorail"></div>
+
+  <details class="notes">
+    <summary>Design notes &amp; recommendations — Hero plan</summary>
+    <div class="nb">
+      <p><span class="rec">REC</span><b>Pin is an override, not a requirement.</b> Most days should stay on <b>Auto</b> — the ranker already picks well from the ⭑ pool, and hand-pinning 14 days is a time-budget trap. Pin the days that matter (a festival, a marquee show) and let Auto carry the rest. The dashed "Auto" tile shows tonight's projected pick so you can sanity-check without pinning.</p>
+      <p><span class="rec">REC</span><b>The picker only offers valid heroes:</b> ⭑-flagged things that actually occur that day (or evergreens). It can't produce a hero pinned to a day its event doesn't exist — that class of error is designed out.</p>
+      <p><span class="opt">OPT</span>If a pinned event is cancelled or edited, the pin auto-clears back to Auto and the day flags amber in this rail — safer than a stale pin. This is the behavior the build should implement.</p>
+    </div>
+  </details>
+</div>
+
+<!-- shared overlays -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="restockSheet" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+  <h3 id="rsTitle">Restock<button class="x" data-close aria-label="Close">✕</button></h3>
+  <div class="sbody">
+    <div id="rsScope" style="font-size:.92rem"></div>
+    <label class="radio sel" id="rOptQ"><input type="radio" name="rswhen" value="queue" checked><span><span class="rt">Queue for tonight's run</span><br><span class="rd">The 2 a.m. pipeline targets this gap across the 23-source catalogue. Results land in tomorrow morning's queue. No new cost path.</span></span></label>
+    <label class="radio" id="rOptN"><input type="radio" name="rswhen" value="now"><span><span class="rt">Run now</span><br><span class="rd">Fires the same job on demand (~10–20 min). Use for urgent gaps — each press is real API spend.</span></span></label>
+    <div class="gatebox">Everything found passes the same gate as the nightly run — deterministic start-time required, dedupe against the DB, category + zone checks — and arrives in your <b>review queue</b>. Nothing goes live without your approval.</div>
+  </div>
+  <div class="sfoot">
+    <button class="btn btn-secondary" data-close>Cancel</button>
+    <button class="btn btn-primary" id="rsConfirm">Restock</button>
+  </div>
+</div>
+
+<div class="sheet" id="heroSheet" role="dialog" aria-modal="true" aria-labelledby="hsTitle">
+  <h3 id="hsTitle">Pin a hero<button class="x" data-close aria-label="Close">✕</button></h3>
+  <div class="sbody" id="hsBody"></div>
+  <div class="sfoot">
+    <button class="btn btn-secondary" id="hsUnpin">Clear pin (back to Auto)</button>
+    <button class="btn btn-secondary" data-close>Done</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* =============== shared data =============== */
+const TODAY = new Date(2026,6,1); // Wed Jul 1 2026
+const VIBES = [
+  ['date_night','Date Night'],['family_day','Family Day'],['nightlife','Nightlife'],
+  ['catch_a_show','Catch A Show'],['arts_culture','Arts & Culture'],['outdoors_active','Outdoors Active'],
+  ['wine_food','Wine & Food'],['free_sb','Free SB'],['hosting_visitors','Hosting Visitors'],['solo','Solo']
+];
+const ZONES = [
+  ['funk','Funk Zone'],['downtown','Downtown'],['waterfront','Waterfront'],
+  ['montecito','Montecito'],['mesa','Mesa'],['goleta','Goleta']
+];
+const WINDOWS = [7,14,30,45];
+const FLOORS = {7:3,14:5,30:8,45:10};
+const vibeLabel = Object.fromEntries(VIBES), zoneLabel = Object.fromEntries(ZONES);
+const tierLabel = {1:'TIER 1 · EVENT',2:'TIER 2 · RECURRING',3:'TIER 3 · EVERGREEN'};
+const thumbGrads = {a:'linear-gradient(135deg,#1e5a6b,#0e3c49)',b:'linear-gradient(135deg,#7a3a23,#c0532e)',c:'linear-gradient(135deg,#5a6049,#7e8b6b)',d:'linear-gradient(135deg,#b5893a,#e0a82e)'};
+function d(offset){const x=new Date(TODAY);x.setDate(x.getDate()+offset);return x;}
+function fmt(dt){return dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function mulberry(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;}}
+const rnd = mulberry(9);
+
+/* ---- published things (live catalog) ---- */
+let LIVE = [
+  // hand-named anchors
+  {t:1,title:'Every Brilliant Thing',off:2,time:'7:00 PM',vibes:['date_night','catch_a_show','arts_culture'],zone:'downtown',price:'$$',grad:'b',hero:true},
+  {t:1,title:'Carpinteria Chalk Walk',off:10,time:'10:00 AM',vibes:['family_day','arts_culture','hosting_visitors'],zone:'mesa',price:'free',grad:'c',hero:true},
+  {t:1,title:'Royel Otis at the Bowl',off:8,time:'7:00 PM',vibes:['catch_a_show','date_night'],zone:'downtown',price:'$$$',grad:'a',hero:true},
+  {t:1,title:'Semana Nautica 5K Trail Run',off:3,time:'8:30 AM',vibes:['outdoors_active','family_day','free_sb'],zone:'mesa',price:'$',grad:'c',hero:true},
+  {t:1,title:'Sunday Polo: Robert Skene Trophy',off:11,time:'3:30 PM',vibes:['outdoors_active','hosting_visitors'],zone:'montecito',price:'$$',grad:'d',hero:true},
+  {t:1,title:'Salsa Night at SOhO (Jul 4)',off:3,time:'9:00 PM',vibes:['nightlife','date_night'],zone:'downtown',price:'$$',grad:'b',hero:false},
+  {t:1,title:'James McMurtry at SOhO',off:20,time:'8:00 PM',vibes:['catch_a_show'],zone:'downtown',price:'$$',grad:'b',hero:true},
+  {t:1,title:'Funk Zone Art Crawl',off:16,time:'5:00 PM',vibes:['arts_culture','free_sb','date_night'],zone:'funk',price:'free',grad:'d',hero:true},
+  {t:2,title:'Public Skate — Ice in Paradise (Sat PM)',cad:'weekly',time:'Sat · 1:30p',vibes:['family_day','date_night','outdoors_active'],zone:'goleta',price:'$',grad:'a',hero:false},
+  {t:2,title:'College Night — Ice in Paradise',cad:'weekly',time:'Tue · 8:00p',vibes:['nightlife','solo','date_night'],zone:'goleta',price:'$',grad:'d',hero:false},
+  {t:2,title:'Tuesday Farmers Market (State St)',cad:'weekly',time:'Tue · 3:00p',vibes:['wine_food','free_sb','family_day'],zone:'downtown',price:'free',grad:'c',hero:false},
+  {t:2,title:'Nite Moves Sunset 5K + Swim',cad:'weekly',time:'Wed · 6:35p',vibes:['outdoors_active','family_day'],zone:'mesa',price:'$',grad:'c',hero:false},
+  {t:2,title:'1st Thursday Art Walk',cad:'monthly',time:'1st Thu · 5–8p',vibes:['arts_culture','free_sb','date_night'],zone:'downtown',price:'free',grad:'d',hero:true},
+  {t:2,title:'Trivia at Draughtsmen',cad:'weekly',time:'Thu · 7:00p',vibes:['nightlife','solo','wine_food'],zone:'goleta',price:'free',grad:'b',hero:false},
+  {t:2,title:'Jazz at the Red Piano',cad:'weekly',time:'Fri · 8:00p',vibes:['nightlife','catch_a_show','date_night'],zone:'downtown',price:'$$',grad:'a',hero:false},
+  {t:3,title:'Stearns Wharf at sunset',vibes:['hosting_visitors','family_day','free_sb'],zone:'waterfront',price:'free',grad:'a',hero:true},
+  {t:3,title:'SB Courthouse tower view',vibes:['arts_culture','free_sb','hosting_visitors'],zone:'downtown',price:'free',grad:'d',hero:true},
+  {t:3,title:'Lotusland gardens',vibes:['arts_culture','hosting_visitors','solo'],zone:'montecito',price:'$$$',grad:'c',hero:false},
+  {t:3,title:'Douglas Preserve bluff walk',vibes:['outdoors_active','solo','free_sb'],zone:'mesa',price:'free',grad:'c',hero:false},
+  {t:3,title:'Funk Zone wine loop',vibes:['wine_food','date_night','hosting_visitors'],zone:'funk',price:'$$',grad:'b',hero:false},
+];
+// filler tier-1 events, unevenly distributed so the grid shows real gaps
+const FILL = [
+  ['catch_a_show','downtown','Live at SOhO: ',8],['catch_a_show','downtown','Lobero presents ',4],
+  ['wine_food','funk','Tasting flight: ',5],['wine_food','downtown','Chef pop-up: ',3],
+  ['outdoors_active','goleta','Trail day: ',5],['outdoors_active','mesa','Coastal run: ',3],
+  ['family_day','goleta','Kids workshop: ',3],['arts_culture','downtown','Gallery opening: ',4],
+  ['nightlife','downtown','DJ set: ',4],['free_sb','waterfront','Community day: ',2],
+  ['hosting_visitors','waterfront','Harbor tour: ',2],['solo','downtown','Author talk: ',1],
+  ['date_night','waterfront','Sunset sail: ',2]
+];
+FILL.forEach(([v,z,prefix,n])=>{
+  for(let i=0;i<n;i++){
+    LIVE.push({t:1,title:prefix+['Vol. I','Vol. II','the Series','No. '+(i+3),'Summer Ed.'][i%5],
+      off:Math.floor(rnd()*45),time:(5+Math.floor(rnd()*5))+':00 PM',
+      vibes:[v].concat(rnd()>.6?[VIBES[Math.floor(rnd()*10)][0]]:[]),
+      zone:z,price:['free','$','$$'][Math.floor(rnd()*3)],grad:'abcd'[Math.floor(rnd()*4)],hero:rnd()>.75});
+  }
+});
+LIVE.forEach((x,i)=>{x.id='L'+i;x.pending=false;});
+
+/* occurrences of a thing within the next N days (tier1 + tier2 only) */
+function occ(x,N){
+  if(x.t===1) return (x.off>=0&&x.off<N)?1:0;
+  if(x.t===2) return x.cad==='weekly'?Math.round(N/7):Math.max(1,Math.round(N/30));
+  return 0;
+}
+
+/* ---- review queue (pending) ---- */
+let QUEUE = [
+  {id:'q1',t:1,title:'Every Brilliant Thing — opening night',cat:'arts_theater',blurb:'A darkly funny play about finding reasons to live. Opening tonight.',when:'Fri Jul 31 · 1:00 PM',chip:'green',prov:'Start from etcsb.org',zone:'downtown',price:'free',vibes:['date_night','catch_a_show','arts_culture'],grad:'b',hero:false},
+  {id:'q2',t:1,title:'Carpinteria Chalk Walk',cat:'arts_theater',blurb:'Street artists, community, small-town charm. Morning well spent.',when:'Sat Aug 15 · 9:00 AM',chip:'green',prov:'Start from calendar.google.com',zone:'mesa',price:'price n/a',vibes:['family_day','arts_culture','hosting_visitors'],grad:'c',hero:false},
+  {id:'q3',t:2,title:'Public Skate — Ice in Paradise (Saturday PM)',cat:'recurring_outdoors',blurb:'Saturday afternoon ice skating at Ice in Paradise: casual, reliable, no pretense.',when:'Sat · 1:30p–4:30p',chip:'amber',prov:'Recurring — confirm cadence',zone:'goleta',price:'price n/a',vibes:['date_night','family_day','outdoors_active'],grad:'a',hero:false},
+  {id:'q4',t:2,title:'College Night — Ice in Paradise',cat:'recurring_outdoors',blurb:'College Night at Ice in Paradise: discounted skating for the student crowd.',when:'Tue · 8:00p–10:15p',chip:'amber',prov:'Recurring — confirm cadence',zone:'goleta',price:'price n/a',vibes:['nightlife','solo','date_night'],grad:'d',hero:false},
+  {id:'q5',t:1,title:'Twilight Concert: The Coral Casino Sessions',cat:'live_music',blurb:'A breezy oceanfront set as the sun drops behind the harbor.',when:'Thu Jul 9 · 6:30 PM',chip:'green',prov:'Start from venue ticketing',zone:'waterfront',price:'$$',vibes:['date_night','catch_a_show'],grad:'a',hero:false,restock:'date_night'},
+  {id:'q6',t:1,title:'Paella on the Pier: Loquita pop-up',cat:'food_drink_event',blurb:'Loquita takes the wharf for one night of wood-fired paella and albariño.',when:'Sat Jul 11 · 5:00 PM',chip:'green',prov:'Start from OpenTable event page',zone:'waterfront',price:'$$$',vibes:['wine_food','date_night'],grad:'b',hero:false,restock:'date_night'},
+  {id:'q7',t:1,title:'Goleta Butterfly Grove twilight walk',cat:'sports_outdoors_event',blurb:'A docent-led dusk walk under the eucalyptus canopy.',when:'Fri Jul 10 · 7:15 PM',chip:'green',prov:'Start from Nature Programs feed',zone:'goleta',price:'free',vibes:['outdoors_active','free_sb','solo'],grad:'c',hero:false},
+  {id:'q8',t:3,title:'Hendry\u2019s Beach tidepools',cat:'scenic_chill',blurb:'Low-tide pools, dog-friendly sand, and the Boathouse for after.',when:'Evergreen · open daily',chip:'evergreen',prov:'Place record — no start time',zone:'mesa',price:'free',vibes:['family_day','free_sb','hosting_visitors'],grad:'c',hero:false},
+  {id:'q9',t:1,title:'Reggae Sundays at the Mercury',cat:'live_music',blurb:'A homegrown reggae bill for an easy Sunday skank.',when:'Sun Jul 5 · 4:00 PM',chip:'green',prov:'Start from venue ticketing',zone:'goleta',price:'$',vibes:['nightlife','catch_a_show'],grad:'b',hero:false},
+];
+QUEUE.forEach(c=>{c.photoOptions=['Pexels','Wikimedia','Google Places','placeholder'];c.pick=0;c.editing=false;c.edited=[];});
+
+/* ---- restock directives ---- */
+let DIRECTIVES = [
+  {label:'date_night · next 14d',status:'done',note:'done · 2 new in queue'},
+  {label:'Goleta · next 30d',status:'q',note:'queued · tonight 2:00a'},
+];
+
+/* ---- hero plan ---- */
+let PINS = {2:'L0'}; // dayOffset -> live id (Every Brilliant Thing pinned Jul 3)
+
+/* =============== plumbing =============== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const toast=$('#toast');
+function showToast(html,undoFn){
+  toast.innerHTML=html+(undoFn?' <span class="undo" id="undo">Undo</span>':'');
+  toast.classList.add('show');
+  if(undoFn) document.getElementById('undo').onclick=()=>{undoFn();toast.classList.remove('show');};
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>toast.classList.remove('show'),3200);
+}
+/* tabs */
+$$('.tab').forEach(t=>t.addEventListener('click',()=>{
+  $$('.tab').forEach(x=>x.setAttribute('aria-selected','false'));
+  t.setAttribute('aria-selected','true');
+  $$('.view').forEach(v=>v.classList.remove('is-active'));
+  $('#view-'+t.dataset.view).classList.add('is-active');
+  if(t.dataset.view==='coverage') renderCoverage();
+  if(t.dataset.view==='catalog') renderCatalog();
+  if(t.dataset.view==='hero') renderHero();
+}));
+/* =============== QUEUE =============== */
+let qFilter='all', qActive=0;
+const qEl=$('#queue');
+function qVisible(){return QUEUE.filter(c=>qFilter==='all'||String(c.t)===qFilter);}
+function renderQueue(){
+  const items=qVisible();
+  qEl.innerHTML='';
+  $('#qdone').classList.toggle('show',QUEUE.length===0);
+  $('#qcount').textContent=items.length+' item'+(items.length===1?'':'s');
+  $('#stat-queue').textContent=QUEUE.length; $('#tab-qn').textContent=QUEUE.length;
+  if(qActive>=items.length)qActive=Math.max(0,items.length-1);
+  items.forEach((c,i)=>{
+    const el=document.createElement('article');
+    el.className='card'+(i===qActive?' is-active':'')+(c.editing?' is-editing':'');
+    el.dataset.id=c.id;
+    const ed=c.editing;
+    el.innerHTML=`
+      <div class="card-grid">
+        <div class="thumb" style="background:${thumbGrads[c.grad]}">
+          <span class="src-pill">${c.photoOptions[c.pick]}</span>
+          ${ed?`<button class="imgnav prev" data-imgnav="prev" data-id="${c.id}" aria-label="Previous image">‹</button>
+               <button class="imgnav next" data-imgnav="next" data-id="${c.id}" aria-label="Next image">›</button>
+               <span class="imgcount">${c.pick+1}/${c.photoOptions.length}</span>`:''}
+        </div>
+        <div class="body">
+          <div class="row1">
+            <span class="tier t${c.t}">${tierLabel[c.t]}</span>
+            <div style="flex:1;min-width:0">
+              <h2 class="title" ${ed?'contenteditable="true" data-field="title"':''} data-id="${c.id}">${c.title}</h2>
+              <div class="cat">${c.cat}${c.restock?` &nbsp;<span style="background:rgba(192,83,46,.13);color:var(--terra-text);padding:1px 7px;border-radius:999px;font-size:.6rem">restock · ${c.restock}</span>`:''}</div>
+            </div>
+            <button class="herostar ${c.hero?'is-on':''}" data-hero="${c.id}" aria-pressed="${c.hero}" aria-label="Toggle hero eligibility for ${c.title}"><span class="st">${c.hero?'⭑':'☆'}</span> Hero</button>
+          </div>
+          ${c.edited.length?`<div class="editnote">Edited: ${c.edited.join(' · ')} — <b>Approve commits these and publishes.</b></div>`:''}
+          <p class="blurb" ${ed?'contenteditable="true" data-field="blurb"':''} data-id="${c.id}">${c.blurb}</p>
+          <div class="timeblock">
+            <div class="timeline">
+              <span class="chip ${c.chip}"><span class="dot"></span>${c.chip==='green'?'Deterministic start':c.chip==='amber'?'Confirm cadence':'Evergreen'}</span>
+              <span class="whenstr">${c.when}</span>
+            </div>
+            <span class="prov">${c.prov} · <a href="#" onclick="return false">view source ↗</a></span>
+          </div>
+          <div class="meta">
+            <span class="hood">${zoneLabel[c.zone]}</span>
+            ${VIBES.filter(([k])=>ed||c.vibes.includes(k)).map(([k,lb])=>
+              `<span class="tag ${ed?'is-editable':''} ${ed&&!c.vibes.includes(k)?'is-off':''}" ${ed?`data-tagtoggle="${k}" data-id="${c.id}" role="button" tabindex="0"`:''}>${lb}</span>`).join('')}
+            <span class="price">${c.price}</span>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" data-act="approve" data-id="${c.id}">Approve &amp; publish <span class="k">A</span></button>
+            <button class="btn btn-secondary" data-act="edit" data-id="${c.id}">${ed?'Stop editing':'Edit'} <span class="k">E</span></button>
+            <button class="btn btn-quiet" data-act="reject" data-id="${c.id}">Reject <span class="k">R</span></button>
+            <span class="right">${ed?'A approves with edits · ◂ ▸ photo':(c.chip==='green'?'✓ trusted source':c.chip==='amber'?'⚠ needs a glance':'place')}</span>
+          </div>
+        </div>
+      </div>`;
+    qEl.appendChild(el);
+  });
+  renderDirectives();
+}
+function commitFields(c){
+  $$(`[data-field][data-id="${c.id}"]`).forEach(n=>{
+    const f=n.dataset.field, v=n.textContent.trim();
+    if(v && v!==c[f]){c[f]=v; if(!c.edited.includes(f))c.edited.push(f);}
+  });
+}
+function qAct(kind,id){
+  const c=QUEUE.find(x=>x.id===id); if(!c)return;
+  const cardEl=qEl.querySelector(`.card[data-id="${id}"]`);
+  if(kind==='edit'){
+    if(c.editing)commitFields(c);
+    c.editing=!c.editing; renderQueue();
+    if(c.editing)showToast(`Editing <b>${c.title}</b> — fix fields in place, then press A once`);
+    return;
+  }
+  if(c.editing)commitFields(c);
+  if(cardEl)cardEl.classList.add('leaving');
+  setTimeout(()=>{
+    const idx=QUEUE.findIndex(x=>x.id===id); const [item]=QUEUE.splice(idx,1);
+    if(kind==='approve'){
+      const nid='L'+LIVE.length;
+      LIVE.push({id:nid,t:item.t,title:item.title,off:item.t===1?5+Math.floor(rnd()*20):undefined,cad:item.t===2?'weekly':undefined,time:item.when,vibes:item.vibes,zone:item.zone,price:item.price,grad:item.grad,hero:item.hero,pending:false});
+      showToast(`Published <b>${item.title}</b>${item.edited.length?' with your edits':''}${item.hero?' · ⭑ hero-eligible':''}`,()=>{LIVE.pop();QUEUE.splice(idx,0,item);renderQueue();});
+    }
+    if(kind==='reject')showToast(`Rejected <b>${item.title}</b>`,()=>{QUEUE.splice(idx,0,item);renderQueue();});
+    renderQueue();
+  },200);
+}
+qEl.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-imgnav]');
+  if(nav){const c=QUEUE.find(x=>x.id===nav.dataset.id);const n=c.photoOptions.length;c.pick=(c.pick+(nav.dataset.imgnav==='next'?1:-1)+n)%n;if(!c.edited.includes('photo'))c.edited.push('photo');renderQueue();return;}
+  const tg=e.target.closest('[data-tagtoggle]');
+  if(tg){const c=QUEUE.find(x=>x.id===tg.dataset.id);const k=tg.dataset.tagtoggle;
+    c.vibes=c.vibes.includes(k)?c.vibes.filter(v=>v!==k):[...c.vibes,k];
+    if(!c.edited.includes('tags'))c.edited.push('tags');renderQueue();return;}
+  const hs=e.target.closest('[data-hero]');
+  if(hs){const c=QUEUE.find(x=>x.id===hs.dataset.hero);c.hero=!c.hero;renderQueue();
+    showToast(c.hero?`⭑ <b>${c.title}</b> added to the hero pool`:`Removed <b>${c.title}</b> from the hero pool`);return;}
+  const b=e.target.closest('[data-act]');
+  if(b){qAct(b.dataset.act,b.dataset.id);return;}
+  const card=e.target.closest('.card');
+  if(card&&!e.target.closest('[contenteditable]')){qActive=qVisible().findIndex(c=>c.id===card.dataset.id);renderQueue();}
+});
+$$('.qfilt').forEach(f=>f.addEventListener('click',()=>{
+  $$('.qfilt').forEach(x=>x.setAttribute('aria-pressed','false'));
+  f.setAttribute('aria-pressed','true');qFilter=f.dataset.filter;qActive=0;renderQueue();
+}));
+$('#bulkbtn').addEventListener('click',bulkGreen);
+function bulkGreen(){
+  const greens=qVisible().filter(c=>c.chip==='green');
+  if(!greens.length){showToast('No green-chip items in this view');return;}
+  const backup=QUEUE.slice();
+  greens.forEach(g=>{const i=QUEUE.findIndex(x=>x.id===g.id);if(i>-1)QUEUE.splice(i,1);});
+  renderQueue();
+  showToast(`Published <b>${greens.length}</b> green-chip items`,()=>{QUEUE=backup;renderQueue();});
+}
+document.addEventListener('keydown',e=>{
+  if(!$('#view-queue').classList.contains('is-active'))return;
+  if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)||document.activeElement.isContentEditable)return;
+  const items=qVisible(),cur=items[qActive],k=e.key.toLowerCase();
+  if(cur&&cur.editing&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){e.preventDefault();const n=cur.photoOptions.length;cur.pick=(cur.pick+(e.key==='ArrowRight'?1:-1)+n)%n;if(!cur.edited.includes('photo'))cur.edited.push('photo');renderQueue();return;}
+  if(k==='arrowdown'){e.preventDefault();qActive=Math.min(items.length-1,qActive+1);renderQueue();scrollActive();}
+  else if(k==='arrowup'){e.preventDefault();qActive=Math.max(0,qActive-1);renderQueue();scrollActive();}
+  else if(k==='a'&&cur){e.preventDefault();qAct('approve',cur.id);}
+  else if(k==='e'&&cur){e.preventDefault();qAct('edit',cur.id);}
+  else if(k==='r'&&cur){e.preventDefault();qAct('reject',cur.id);}
+  else if(k==='h'&&cur){e.preventDefault();cur.hero=!cur.hero;renderQueue();showToast(cur.hero?`⭑ <b>${cur.title}</b> added to the hero pool`:`Removed <b>${cur.title}</b> from the hero pool`);}
+  else if(k==='b'){e.preventDefault();bulkGreen();}
+});
+function scrollActive(){const el=qEl.querySelector('.card.is-active');if(el)el.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function renderDirectives(){
+  $('#dirn').textContent=DIRECTIVES.length;
+  $('#dirlist').innerHTML=DIRECTIVES.map(x=>`
+    <div class="dirrow"><span class="dt">Restock · ${x.label}</span>
+    <span class="dirstat ${x.status}">${x.note}</span></div>`).join('')||'<div class="dirrow"><span class="ps">No restocks queued.</span></div>';
+}
+/* =============== COVERAGE =============== */
+let covDim='vibe', picked=null, restockCtx=null;
+function covRows(){return covDim==='vibe'?VIBES:ZONES;}
+function cellCount(key,N){
+  return LIVE.filter(x=>!x.pending&&(covDim==='vibe'?x.vibes.includes(key):x.zone===key))
+             .reduce((s,x)=>s+occ(x,N),0);
+}
+function renderCoverage(){
+  const rows=covRows(), floor=$('#floorchk').checked;
+  // per-column relative thresholds (33rd/67th percentile)
+  const colCounts={}; WINDOWS.forEach(N=>{colCounts[N]=rows.map(([k])=>cellCount(k,N)).sort((a,b)=>a-b);});
+  const pct=(arr,p)=>arr[Math.min(arr.length-1,Math.floor(p*arr.length))];
+  let h=`<div class="cov-h">${covDim==='vibe'?'Vibe':'Zone'}</div>`+
+        WINDOWS.map(N=>`<div class="cov-h win">Next ${N}d</div>`).join('')+
+        `<div class="cov-h win">Restock</div>`;
+  rows.forEach(([k,lb])=>{
+    const t3=LIVE.filter(x=>!x.pending&&x.t===3&&(covDim==='vibe'?x.vibes.includes(k):x.zone===k)).length;
+    h+=`<div class="cov-row-label"><span class="rl">${lb}</span><span class="rs">${t3} evergreen behind it</span></div>`;
+    WINDOWS.forEach(N=>{
+      const c=cellCount(k,N), arr=colCounts[N];
+      let cls;
+      if(floor&&c<FLOORS[N])cls='r';
+      else if(c<=pct(arr,.33))cls='r';
+      else if(c>=pct(arr,.67))cls='g';
+      else cls='a';
+      const deep=(cls==='g'&&c>=arr[arr.length-1])?' deep':(cls==='r'&&c<=arr[0]?' deep':'');
+      const isPicked=picked&&picked.k===k&&picked.N===N;
+      h+=`<button class="cell ${cls}${deep} ${isPicked?'is-picked':''}" data-cell="${k}|${N}" aria-label="${lb}, next ${N} days: ${c} things"><span class="cd"></span><span class="cn">${c}</span></button>`;
+    });
+    h+=`<div class="restockcell"><button class="restock" data-restock="${k}">↻ Restock</button></div>`;
+  });
+  $('#covgrid').innerHTML=h;
+}
+$('#floorchk').addEventListener('change',renderCoverage);
+$$('.covdim').forEach(b=>b.addEventListener('click',()=>{
+  $$('.covdim').forEach(x=>x.setAttribute('aria-pressed','false'));
+  b.setAttribute('aria-pressed','true');covDim=b.dataset.dim;picked=null;$('#drill').classList.remove('show');renderCoverage();
+}));
+$('#covgrid').addEventListener('click',e=>{
+  const cell=e.target.closest('[data-cell]');
+  if(cell){const [k,N]=cell.dataset.cell.split('|');openDrill(k,+N);return;}
+  const rs=e.target.closest('[data-restock]');
+  if(rs){openRestock(rs.dataset.restock);}
+});
+function openDrill(k,N){
+  picked={k,N};renderCoverage();
+  const lb=(covDim==='vibe'?vibeLabel:zoneLabel)[k];
+  const items=LIVE.filter(x=>!x.pending&&x.t<3&&(covDim==='vibe'?x.vibes.includes(k):x.zone===k)&&occ(x,N)>0)
+                  .sort((a,b)=>(a.off??0)-(b.off??0));
+  $('#drilltitle').innerHTML=`${lb} · next ${N} days <span style="font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2)">${items.reduce((s,x)=>s+occ(x,N),0)} occurrences</span><button class="x" id="drillclose" aria-label="Close details">✕</button>`;
+  $('#drillbody').innerHTML=items.length?items.map(x=>`
+    <div class="drow"><span class="tier t${x.t}">${x.t===1?'T1':'T2'}</span>
+      <span style="font-weight:600">${x.title}</span>
+      <span class="dw">${x.t===1?fmt(d(x.off))+' · '+x.time:x.time+' · ×'+occ(x,N)+' in window'}</span></div>`).join('')
+    :`<div class="empty">Nothing published here yet — this is exactly what Restock is for.</div>`;
+  $('#drill').classList.add('show');
+  $('#drillclose').onclick=()=>{picked=null;$('#drill').classList.remove('show');renderCoverage();};
+  if($('#drill').scrollIntoView)$('#drill').scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+/* restock modal */
+function openRestock(k){
+  restockCtx=k;
+  const lb=(covDim==='vibe'?vibeLabel:zoneLabel)[k];
+  $('#rsScope').innerHTML=`Target the thinnest window for <b>${lb}</b>. Claude sweeps the 23-source catalogue for new ${covDim==='vibe'?'“'+lb+'” things':'things in '+lb} in the next 30 days.`;
+  $('#scrim').classList.add('show');$('#restockSheet').classList.add('show');
+}
+$$('input[name="rswhen"]').forEach(r=>r.addEventListener('change',()=>{
+  $('#rOptQ').classList.toggle('sel',r.value==='queue'&&r.checked||$('#rOptQ input').checked);
+  $('#rOptN').classList.toggle('sel',$('#rOptN input').checked);
+}));
+$('#rsConfirm').addEventListener('click',()=>{
+  const now=$('#rOptN input').checked;
+  const lb=(covDim==='vibe'?vibeLabel:zoneLabel)[restockCtx];
+  closeSheets();
+  if(now){
+    const dir={label:lb+' · next 30d',status:'run',note:'running · ~15 min'};
+    DIRECTIVES.unshift(dir);renderDirectives();
+    showToast(`Restock running for <b>${lb}</b> — results land in your queue shortly`);
+    setTimeout(()=>{dir.status='done';dir.note='done · 3 new in queue';renderDirectives();
+      showToast(`Restock done: <b>3</b> new ${lb} candidates in your queue`);},4000);
+  }else{
+    DIRECTIVES.unshift({label:lb+' · next 30d',status:'q',note:'queued · tonight 2:00a'});renderDirectives();
+    showToast(`Queued for tonight: restock <b>${lb}</b>. Results in tomorrow's queue.`);
+  }
+});
+
+/* =============== LIVE CATALOG =============== */
+let cTier='all';
+VIBES.forEach(([k,lb])=>$('#cvibe').insertAdjacentHTML('beforeend',`<option value="${k}">${lb}</option>`));
+ZONES.forEach(([k,lb])=>$('#chood').insertAdjacentHTML('beforeend',`<option value="${k}">${lb}</option>`));
+$$('.cfilt').forEach(f=>f.addEventListener('click',()=>{
+  $$('.cfilt').forEach(x=>x.setAttribute('aria-pressed','false'));
+  f.setAttribute('aria-pressed','true');cTier=f.dataset.tier;renderCatalog();
+}));
+['cvibe','chood'].forEach(id=>$('#'+id).addEventListener('change',renderCatalog));
+$('#csearch').addEventListener('input',renderCatalog);
+function renderCatalog(){
+  const v=$('#cvibe').value,z=$('#chood').value,s=$('#csearch').value.toLowerCase();
+  const items=LIVE.filter(x=>
+    (cTier==='all'||String(x.t)===cTier)&&(!v||x.vibes.includes(v))&&(!z||x.zone===z)&&(!s||x.title.toLowerCase().includes(s)))
+    .sort((a,b)=>a.t-b.t||(a.off??99)-(b.off??99));
+  $('#ccount').textContent=items.length+' of '+LIVE.length+' live';
+  $('#tab-cn').textContent=LIVE.length;
+  $('#catlist').innerHTML=items.map(x=>`
+    <div class="lrow ${x.pending?'pending':''}">
+      <div class="lthumb" style="background:${thumbGrads[x.grad]}"></div>
+      <div class="lmain">
+        <div class="lt"><span class="ttl">${x.title}</span><span class="tier t${x.t}">${['','T1 · EVENT','T2 · RECURRING','T3 · EVERGREEN'][x.t]}</span>${x.pending?'<span class="pendpill">edit pending review</span>':''}</div>
+        <div class="lmeta"><span class="mono">${x.t===1?fmt(d(x.off))+' · '+x.time:x.t===2?x.time:'evergreen'}</span>
+          <span>·</span><span>${zoneLabel[x.zone]}</span><span>·</span>
+          <span>${x.vibes.map(k=>vibeLabel[k]).join(', ')}</span><span class="mono">· ${x.price}</span></div>
+      </div>
+      <div class="lacts">
+        <button class="herostar ${x.hero?'is-on':''}" data-chero="${x.id}" aria-pressed="${x.hero}" aria-label="Toggle hero eligibility for ${x.title}"><span class="st">${x.hero?'⭑':'☆'}</span></button>
+        <button class="btn btn-secondary btn-sm" data-cedit="${x.id}" ${x.pending?'disabled':''}>Edit</button>
+      </div>
+    </div>`).join('')||'<div class="done show"><h2>No matches</h2><p>Loosen a filter or clear the search.</p></div>';
+}
+$('#catlist').addEventListener('click',e=>{
+  const hs=e.target.closest('[data-chero]');
+  if(hs){const x=LIVE.find(i=>i.id===hs.dataset.chero);x.hero=!x.hero;renderCatalog();
+    showToast(x.hero?`⭑ <b>${x.title}</b> is now hero-eligible (applies immediately)`:`<b>${x.title}</b> removed from the hero pool`);return;}
+  const ed=e.target.closest('[data-cedit]');
+  if(ed){const x=LIVE.find(i=>i.id===ed.dataset.cedit);
+    x.pending=true;
+    QUEUE.unshift({id:'q'+Date.now(),t:x.t,title:x.title+' (edit)',cat:'edit_of_live',blurb:'Your edit of the live card — adjust in place, then Approve once to replace the live version.',when:x.t===1?fmt(d(x.off))+' · '+x.time:x.time||'evergreen',chip:x.t===2?'amber':x.t===3?'evergreen':'green',prov:'Founder edit of a live thing',zone:x.zone,price:x.price,vibes:[...x.vibes],grad:x.grad,hero:x.hero,photoOptions:['Current','Pexels','Wikimedia','placeholder'],pick:0,editing:true,edited:[]});
+    renderCatalog();renderQueue();
+    showToast(`<b>${x.title}</b> opened for edit — it's at the top of your Queue. The live version stays up until you re-approve.`);
+  }
+});
+
+/* =============== HERO PLAN =============== */
+let heroDayCtx=null;
+function heroCandidates(off){
+  return LIVE.filter(x=>!x.pending&&x.hero&&(x.t===3||x.t===2||(x.t===1&&x.off===off)));
+}
+function renderHero(){
+  let h='';
+  for(let off=0;off<14;off++){
+    const pin=PINS[off]!==undefined?LIVE.find(x=>x.id===PINS[off]):null;
+    const auto=heroCandidates(off).find(x=>x.t===1)||heroCandidates(off)[0];
+    h+=`<div class="hday ${off===0?'today':''}">
+      <span class="hd-date">${fmt(d(off))}${off===0?'<span class="tdy">today</span>':''}</span>
+      ${pin?`<div class="hd-pick"><span class="pinned-pill">⭑ pinned</span><span class="ht">${pin.title}</span><span class="hm">${zoneLabel[pin.zone]} · ${pin.t===1?pin.time:pin.t===2?'recurring':'evergreen'}</span></div>`
+           :`<div class="hd-auto"><b>Auto</b><span>Ranker's projected pick:<br><span style="color:var(--ink);font-weight:600">${auto?auto.title:'— evergreen fallback —'}</span></span></div>`}
+      <button class="btn ${pin?'btn-secondary':'btn-primary'} btn-sm" data-heroday="${off}">${pin?'Change pin':'Pin a hero'}</button>
+    </div>`;
+  }
+  $('#herorail').innerHTML=h;
+}
+$('#herorail').addEventListener('click',e=>{
+  const b=e.target.closest('[data-heroday]');if(!b)return;
+  heroDayCtx=+b.dataset.heroday;
+  const cands=heroCandidates(heroDayCtx);
+  $('#hsTitle').innerHTML=`Pin a hero — ${fmt(d(heroDayCtx))}<button class="x" data-close aria-label="Close">✕</button>`;
+  $('#hsBody').innerHTML=(cands.length?cands:[]).map(x=>`
+    <div class="pickrow"><span class="tier t${x.t}">${['','T1','T2','T3'][x.t]}</span>
+      <span><span class="ttl">${x.title}</span><br><span class="pm">${zoneLabel[x.zone]} · ${x.t===1?x.time:x.t===2?'recurring':'evergreen'}</span></span>
+      <button class="btn btn-primary btn-sm pickbtn" data-pick="${x.id}">Pin</button></div>`).join('')
+    ||'<p style="font-size:.88rem;color:var(--ink-2)">No ⭑ hero-eligible things occur this day. Flag candidates in the Queue or Live catalog (the ⭑ button), or leave the day on Auto — the ranker falls back to an evergreen hero.</p>';
+  bindClose();$('#scrim').classList.add('show');$('#heroSheet').classList.add('show');
+});
+$('#hsBody').addEventListener('click',e=>{
+  const p=e.target.closest('[data-pick]');if(!p)return;
+  PINS[heroDayCtx]=p.dataset.pick;closeSheets();renderHero();
+  showToast(`⭑ Pinned <b>${LIVE.find(x=>x.id===p.dataset.pick).title}</b> as the hero for ${fmt(d(heroDayCtx))}`);
+});
+$('#hsUnpin').addEventListener('click',()=>{
+  delete PINS[heroDayCtx];closeSheets();renderHero();
+  showToast(`Back to <b>Auto</b> for ${fmt(d(heroDayCtx))}`);
+});
+function closeSheets(){$('#scrim').classList.remove('show');$$('.sheet').forEach(s=>s.classList.remove('show'));}
+function bindClose(){$$('[data-close]').forEach(b=>b.onclick=closeSheets);}
+bindClose();
+$('#scrim').addEventListener('click',closeSheets);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheets();});
+
+/* init */
+renderQueue();renderCoverage();renderCatalog();renderHero();
+</script>
+</body>
+</html>
