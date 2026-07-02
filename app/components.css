@@ -475,11 +475,14 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* Bottom meta row: date eyebrow (left) + heart/share (right), pinned to base */
+/* Bottom meta row: date eyebrow (left) + heart/share (right), pinned to base.
+   justify-content:flex-end keeps the button cluster locked to the right edge
+   whether or not a date renders. margin-right:auto on the date pushes it left
+   and lets it shrink gracefully when both date + buttons are wide. */
 .sbd-listcard__meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 12px;
   margin-top: auto;
   padding-top: 8px;
@@ -487,8 +490,15 @@
   z-index: 2; /* above stretch-link ::after (z-index:1) so actions stay tappable */
 }
 .sbd-listcard__meta .sbd-eyebrow-date {
+  margin-right: auto; /* date anchors left; shrinks before buttons ever move */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   letter-spacing: 0.04em;
+}
+.sbd-listcard__meta .sbd-cardact {
+  flex-shrink: 0; /* buttons never shrink or move regardless of date width */
 }
 /* Focus ring: stretch-link focus shows as a pacific ring on the card */
 .sbd-listcard:has(.sbd-stretch:focus-visible) {
