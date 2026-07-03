@@ -5,6 +5,7 @@ import { PlanSetup } from "./PlanSetup";
 import { PlanResults } from "./PlanResults";
 import { buildDraft } from "@/lib/plan/buildDraft";
 import { useSaves } from "@/components/saves/SavesProvider";
+import { trackEvent } from "@/lib/analytics";
 import type { PlanAnswers, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
@@ -18,6 +19,8 @@ export function PlanClient({ things }: { things: Thing[] }) {
 
   function showDay(a: PlanAnswers) {
     const draft = buildDraft(a, things, (id) => (state(id) as "want" | "been" | null) ?? null);
+    // Event 6: the draft spine is first produced from the questionnaire.
+    trackEvent("plan_built", { stops: draft.length });
     setAnswers(a);
     setInitialStops(draft);
     setPlanKey((k) => k + 1);

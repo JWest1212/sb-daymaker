@@ -3,6 +3,7 @@ import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SavesProvider } from "@/components/saves/SavesProvider";
 import { ItinerariesProvider } from "@/components/plan/ItinerariesProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { Analytics } from "@vercel/analytics/react";
 // CSS load order is the cascade order: tokens first, then Tailwind + token-var
 // overrides (globals), then the component layer.
 import "./sbdaymaker_tokens.css";
@@ -79,6 +80,7 @@ export default function RootLayout({
           <ItinerariesProvider>{children}</ItinerariesProvider>
         </SavesProvider>
         <ServiceWorkerRegister />
+        <Analytics />
       </body>
     </html>
   );

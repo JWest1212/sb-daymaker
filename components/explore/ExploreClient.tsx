@@ -8,12 +8,15 @@ import {
   cascade,
   filterByLens,
   nearMeSort,
+  pickEvergreenFallback,
+  sbDay,
   withinHorizon,
   type Horizon,
 } from "@/lib/explore";
 import type { OccasionKey } from "@/lib/occasions";
 import type { Zone } from "@/lib/zones";
 import { useSaves } from "@/components/saves/SavesProvider";
+import { trackEvent } from "@/lib/analytics";
 import { Hero } from "./Hero";
 import { ControlRow } from "./ControlRow";
 import { TuneSheet } from "./TuneSheet";
@@ -52,14 +55,37 @@ export function ExploreClient({
   // A valid founder pin for today wins the hero slot — but only when it's actually
   // in the current view (survives the horizon/lens/zone filters); otherwise the
   // sponsor-blind ranker picks. The pin reads no sponsor status.
-  const hero = useMemo(() => {
+  const rankedHero = useMemo(() => {
     if (pinnedHeroId) {
       const pinned = ordered.find((t) => t.id === pinnedHeroId);
       if (pinned) return pinned;
     }
     return ordered[0] ?? null;
   }, [ordered, pinnedHeroId]);
-  const feed = useMemo(() => (hero ? ordered.filter((t) => t.id !== hero.id) : ordered), [ordered, hero]);
+
+  // W1.3b (constraint C5): the hero is never blank. When nothing survives the
+  // filters, Layer 1 shows a deterministic evergreen from the FULL pool; if the
+  // pool has no evergreen at all, Layer 2 (a hardcoded static card in Hero) shows.
+  const fallbackHero = useMemo(
+    () => (rankedHero ? null : pickEvergreenFallback(things, sbDay(nowMs))),
+    [rankedHero, things, nowMs],
+  );
+  const hero = rankedHero ?? fallbackHero;
+  const isFallback = !rankedHero && hero != null; // Layer 1: real evergreen, show the note
+  const showStatic = !rankedHero && hero == null; // Layer 2: static parachute card
+
+  // Feed excludes only a ranked hero (fallbacks aren't in `ordered`); when a
+  // fallback shows, `ordered` is empty and CascadeFeed's clear-filters state renders.
+  const feed = useMemo(
+    () => ordered.filter((t) => t.id !== rankedHero?.id),
+    [ordered, rankedHero],
+  );
+
+  // Event 5: fire only when a lens (occasion tag) is actively selected, not when cleared.
+  const handleLens = (tag: OccasionKey | null) => {
+    setLens(tag);
+    if (tag) trackEvent("lens_select", { tag });
+  };
 
   return (
     <div className="sbd-explore">
@@ -70,6 +96,8 @@ export function ExploreClient({
         pick={hero}
         saved={hero ? isSaved(hero.id) : false}
         onToggleSave={() => hero && toggle(hero.id)}
+        fallbackNote={isFallback}
+        staticFallback={showStatic}
       />
 
       <div className="sbd-explore__body">
@@ -103,7 +131,7 @@ export function ExploreClient({
         currentLens={lens}
         currentZone={zone}
         onClose={() => setTuneOpen(false)}
-        onLens={setLens}
+        onLens={handleLens}
         onZone={setZone}
       />
     </div>

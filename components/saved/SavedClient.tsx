@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import { nearMeSort } from "@/lib/explore";
+import { filterByState, splitPast, beenList } from "@/lib/savedView";
 import { groupSaved } from "@/lib/savedGroups";
 import type { Zone } from "@/lib/zones";
 import { ZONE_LABEL } from "@/lib/zones";
@@ -12,6 +13,7 @@ import { EmptyState } from "@/components/ui";
 import { SavedToggle } from "./SavedToggle";
 import { NearMeSheet } from "@/components/explore/NearMeSheet";
 import { createSharedList } from "@/lib/shares";
+import { trackEvent } from "@/lib/analytics";
 import { SavedCard } from "./SavedCard";
 import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
@@ -46,7 +48,7 @@ function persistDismissed(ids: Set<string>) {
 }
 
 export function SavedClient({ things }: { things: Thing[] }) {
-  const { ids, state, setState, remove, counts } = useSaves();
+  const { ids, saves, state, setState, remove, counts } = useSaves();
 
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
   const [zone, setZone] = useState<Zone | null>(null);
@@ -69,54 +71,31 @@ export function SavedClient({ things }: { things: Thing[] }) {
     return () => clearTimeout(id);
   }, [beenAck]);
 
-  const savedSet = useMemo(() => new Set(ids), [ids]);
-
   // Remove ghost saves that no longer exist in the data pool.
   useEffect(() => {
     if (things.length === 0 || things.length >= 1000) return;
     const live = new Set(things.map((t) => t.id));
     for (const id of ids) if (!live.has(id)) remove(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [things, ids]);
+  }, [things, ids, remove]);
 
-  const viewItems = useMemo(() => {
-    const inView = things.filter(
-      (t) => savedSet.has(t.id) && (state(t.id) ?? "want") === stateFilter,
-    );
-    return nearMeSort(inView, zone);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [things, savedSet, stateFilter, zone]);
-
-  // Stable mount-time snapshot — captured once so isPastEvent is consistent.
-  const [nowMs] = useState(() => Date.now());
-  const isPastEvent = (t: Thing) =>
-    t.type === "event" && t.starts_at != null && new Date(t.starts_at).getTime() < nowMs;
-
-  const splitPast = stateFilter === "want";
-  const mainItems = useMemo(
-    () => splitPast ? viewItems.filter((t) => !isPastEvent(t)) : viewItems,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [viewItems, splitPast],
+  // Value-sensitive: keying on the `saves` map (not just its keys) means a
+  // want→been flip re-derives immediately. See lib/savedView.ts.
+  const viewItems = useMemo(
+    () => nearMeSort(filterByState(things, saves, stateFilter), zone),
+    [things, saves, stateFilter, zone],
   );
-  const pastItems = useMemo(
-    () => splitPast ? viewItems.filter(isPastEvent) : [],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [viewItems, splitPast],
+
+  // Stable mount-time snapshot — captured once so the past/current split is consistent.
+  const [nowMs] = useState(() => Date.now());
+
+  const doSplitPast = stateFilter === "want";
+  const { current: mainItems, past: pastItems } = useMemo(
+    () => (doSplitPast ? splitPast(viewItems, nowMs) : { current: viewItems, past: [] as Thing[] }),
+    [viewItems, doSplitPast, nowMs],
   );
   const groups = useMemo(() => groupSaved(mainItems), [mainItems]);
 
-  const beenItems = useMemo(() => {
-    const byId = new Map(things.map((t) => [t.id, t]));
-    const out: Thing[] = [];
-    for (const id of ids) {
-      if (state(id) === "been") {
-        const t = byId.get(id);
-        if (t) out.push(t);
-      }
-    }
-    return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [things, ids]);
+  const beenItems = useMemo(() => beenList(things, saves), [things, saves]);
 
   // B3: count of want items whose starts_at falls in the upcoming Sat 00:00 → Sun 23:59.
   const weekendCount = useMemo(() => {
@@ -174,13 +153,15 @@ export function SavedClient({ things }: { things: Thing[] }) {
       return next;
     });
 
-  const makeLinkAndShare = async (shareIds: string[]) => {
+  const makeLinkAndShare = async (shareIds: string[], kind: "list" | "single") => {
     if (shareIds.length === 0) return;
     const token = await createSharedList(shareIds);
     if (!token) {
       setToast("Couldn't create a link. Try again.");
       return;
     }
+    // Event 3: a shared list link was created (token never sent to analytics).
+    trackEvent("share_create", { kind, count: shareIds.length });
     const url = `${window.location.origin}/s/${token}`;
     const result = await shareUrl(url, "My Santa Barbara picks");
     setToast(
@@ -193,7 +174,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
   };
 
   const shareSelected = async () => {
-    await makeLinkAndShare([...selected]);
+    await makeLinkAndShare([...selected], "list");
     setSelectMode(false);
     setSelected(new Set());
   };
@@ -328,7 +309,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
                   onToggleSelect={() => toggleSelect(t.id)}
                   onSetState={(s) => handleSetState(t.id, s)}
                   onRemove={() => remove(t.id)}
-                  onShareOne={() => makeLinkAndShare([t.id])}
+                  onShareOne={() => makeLinkAndShare([t.id], "single")}
                 />
               ))}
             </div>
@@ -357,7 +338,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
                 onToggleSelect={() => toggleSelect(t.id)}
                 onSetState={(s) => handleSetState(t.id, s)}
                 onRemove={() => remove(t.id)}
-                onShareOne={() => makeLinkAndShare([t.id])}
+                onShareOne={() => makeLinkAndShare([t.id], "single")}
               />
             ))}
           </div>

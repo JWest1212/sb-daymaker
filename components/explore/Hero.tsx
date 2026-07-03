@@ -12,6 +12,17 @@ const TOD_LABEL: Record<TimeOfDay, string> = {
   night: "After dark",
 };
 
+// W1.3b Layer 2 — the hero's last-resort parachute when the published pool has
+// zero evergreen things (cold DB / upstream fetch failure). Hardcoded because
+// it's the safety net, not content; renders CTA-only (no save heart — not a DB row).
+const COURTHOUSE_FALLBACK = {
+  eyebrow: "Always worth it",
+  title: "The Courthouse clock tower",
+  line: "The best free view in town — hand-painted ceilings on the way up, the whole city and the sea at the top.",
+  cta: "Find your way there →",
+  href: "/discover",
+};
+
 function isGrayDay(weather: Weather | null): boolean {
   if (!weather || weather.isClear) return false;
   const c = weather.condition.toLowerCase();
@@ -29,6 +40,8 @@ export function Hero({
   pick,
   saved,
   onToggleSave,
+  fallbackNote = false,
+  staticFallback = false,
 }: {
   tod: TimeOfDay;
   dateLabel: string;
@@ -36,6 +49,10 @@ export function Hero({
   pick: Thing | null;
   saved: boolean;
   onToggleSave: () => void;
+  /** Layer 1: `pick` is a deterministic evergreen fallback — show the soft note. */
+  fallbackNote?: boolean;
+  /** Layer 2: no thing at all — render the hardcoded static parachute card. */
+  staticFallback?: boolean;
 }) {
   const gray = isGrayDay(weather);
   const v = variant(tod, weather);
@@ -96,6 +113,12 @@ export function Hero({
             </span>
           </div>
           <div className="sbd-hero__pick-body">
+            {/* W1.3b Layer 1: shown only when this pick is an evergreen fallback. */}
+            {fallbackNote ? (
+              <p className="sbd-hero__pick-note">
+                Nothing matches that exactly today — but this is always worth it.
+              </p>
+            ) : null}
             <div className="sbd-hero__pick-eyebrow">{heroEyebrow(pick, gray)}</div>
             <div className="sbd-hero__pick-title">
               <Link href={`/thing/${pick.id}`} className="sbd-stretch">
@@ -104,6 +127,20 @@ export function Hero({
             </div>
             {meta ? <div className="sbd-hero__pick-meta">{meta}</div> : null}
             <div className="sbd-hero__pick-cta">{heroCta(pick)}</div>
+          </div>
+        </div>
+      ) : staticFallback ? (
+        // W1.3b Layer 2: hardcoded parachute — CTA to Discover, no save heart.
+        <div className="sbd-hero__pick">
+          <div className="sbd-hero__pick-body">
+            <div className="sbd-hero__pick-eyebrow">{COURTHOUSE_FALLBACK.eyebrow}</div>
+            <div className="sbd-hero__pick-title">
+              <Link href={COURTHOUSE_FALLBACK.href} className="sbd-stretch">
+                {COURTHOUSE_FALLBACK.title}
+              </Link>
+            </div>
+            <div className="sbd-hero__pick-meta">{COURTHOUSE_FALLBACK.line}</div>
+            <div className="sbd-hero__pick-cta">{COURTHOUSE_FALLBACK.cta}</div>
           </div>
         </div>
       ) : null}

@@ -1,15 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListCard, Button } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
+import { trackEvent } from "@/lib/analytics";
 import type { Thing } from "@/lib/things";
 import { cardBlurb, cardFacts, cardTone } from "@/components/explore/derive";
 
 export function SharedListView({ items }: { items: Thing[] }) {
   const { saveMany } = useSaves();
   const [saved, setSaved] = useState(false);
+
+  // Event 4: a shared list was opened (fires on mount; count is stable on this
+  // static view, so this is effectively once).
+  useEffect(() => {
+    trackEvent("share_open", { kind: "list", count: items.length });
+  }, [items.length]);
 
   return (
     <main className="sbd-public">

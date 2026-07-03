@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 type Status = "idle" | "busy" | "done" | "already" | "error";
 
@@ -20,7 +21,12 @@ export function EmailSignup() {
       });
       const data = await res.json();
       if (!res.ok) setStatus("error");
-      else setStatus(data.status === "already" ? "already" : "done");
+      else {
+        const already = data.status === "already";
+        setStatus(already ? "already" : "done");
+        // Event 7: a subscribe succeeded. Status only — never the email.
+        trackEvent("subscribe_submit", { status: already ? "already" : "pending" });
+      }
     } catch {
       setStatus("error");
     }

@@ -2455,6 +2455,14 @@
   text-transform: uppercase;
   color: var(--terra-text);
 }
+/* W1.3b — soft note shown only when the hero pick is an evergreen fallback
+   (empty filtered view). Small text → ink-2 per the accessibility usage rule. */
+.sbd-hero__pick-note {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  color: var(--ink-2);
+  margin-bottom: 2px;
+}
 .sbd-hero__pick-title {
   font-family: var(--font-display);
   font-size: var(--text-lg);

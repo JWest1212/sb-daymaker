@@ -19,6 +19,33 @@ export function sbDay(ms: number): string {
   return SB_DATE_FMT.format(ms);
 }
 
+/** Today's SB-local weekday as 0=Sun … 6=Sat (schema convention). Derived from
+ *  the SB calendar date — NOT the browser's local `getDay()` — so a late-night
+ *  user in another timezone still sees SB's day. Reuses `sbDay` (single source
+ *  of truth) and reads the weekday off a UTC-anchored date to dodge DST drift,
+ *  mirroring lib/occurrences.ts. */
+export function sbDayOfWeek(now: number = Date.now()): number {
+  const [y, m, d] = sbDay(now).split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+}
+
+/** Does a Tier-2 (recurring / happy-hour) thing land on today's SB weekday?
+ *  A thing with NO schedule rows passes (we can't prove it's off-day — don't
+ *  invent one). biweekly/monthly frequency is a deliberate approximation: a
+ *  "1st Thursday" item shows on every Thursday. We do NOT expand occurrences
+ *  here (that math is approximate too, and the feed must stay cheap +
+ *  deterministic) — same feed-vs-coverage divergence lib/occurrences.ts notes. */
+function tier2OccursToday(thing: Thing, now: number): boolean {
+  const dow = sbDayOfWeek(now);
+  const scheduleDows = [
+    // Happy-hour windows only apply to happyhour things (empty otherwise).
+    ...(thing.type === "happyhour" ? thing.happyHours.map((w) => w.day_of_week) : []),
+    ...thing.recurring.map((s) => s.day_of_week),
+  ];
+  if (scheduleDows.length === 0) return true;
+  return scheduleDows.includes(dow);
+}
+
 /** Happenings-first order: Tier 1 (dated) → 2 (recurring/HH) → 3 (evergreen).
  *  Within Tier 1, soonest first; otherwise keep input order (already tier-sorted). */
 export function cascade(things: Thing[]): Thing[] {
@@ -39,6 +66,11 @@ export function withinHorizon(
   horizon: Horizon,
   now: number = Date.now(),
 ): boolean {
+  // W1.3a: on Today only, a recurring Tier-2 thing must actually occur today
+  // (by SB weekday). Week/Month keep pass-all; Tier-3 is untouched everywhere.
+  if (horizon === "today" && thing.happening_tier === 2) {
+    return tier2OccursToday(thing, now);
+  }
   if (thing.happening_tier !== 1 || !thing.starts_at) return true;
   const start = new Date(thing.starts_at).getTime();
   const todayKey = sbDay(now);
@@ -48,6 +80,25 @@ export function withinHorizon(
   const days = (start - now) / 86_400_000;
   if (horizon === "week") return days < 7;
   return days < 31;
+}
+
+/** Days elapsed since Jan 1 of that year for an SB "YYYY-MM-DD" key (0-based). */
+function dayOfYear(sbDateKey: string): number {
+  const [y, m, d] = sbDateKey.split("-").map(Number);
+  return Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86_400_000);
+}
+
+/** W1.3b Layer-1 — the hero's evergreen parachute (constraint C5). When the
+ *  filtered view is empty, deterministically pick a Tier-3 thing from the full
+ *  published pool, rotated by the SB calendar date: same day → same pick,
+ *  tomorrow → the next one. No AI, no randomness. Returns null when the pool has
+ *  no Tier-3 things — the caller then renders the hardcoded Layer-2 card. */
+export function pickEvergreenFallback(things: Thing[], sbDateKey: string): Thing | null {
+  const candidates = things
+    .filter((t) => t.happening_tier === 3)
+    .sort((a, b) => a.id.localeCompare(b.id));
+  if (candidates.length === 0) return null;
+  return candidates[dayOfYear(sbDateKey) % candidates.length];
 }
 
 export function filterByLens(things: Thing[], tag: OccasionKey | null): Thing[] {

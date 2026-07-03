@@ -11,6 +11,7 @@ import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
 import { shareUrl } from "@/components/saved/share";
+import { trackEvent } from "@/lib/analytics";
 
 function genStopId(): string {
   return Math.random().toString(36).slice(2, 9);
@@ -131,6 +132,8 @@ export function PlanResults({
       setTimeout(() => setShareState("idle"), 2200);
       return;
     }
+    // Event 3: a shared plan link was created (token never sent to analytics).
+    trackEvent("share_create", { kind: "plan", count: stops.length });
     const url = `${window.location.origin}/p/${token}`;
     const result = await shareUrl(url, title);
     setShareState(result === "shared" ? "shared" : result === "copied" ? "copied" : "failed");
