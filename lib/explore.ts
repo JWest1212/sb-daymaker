@@ -47,15 +47,71 @@ function tier2OccursToday(thing: Thing, now: number): boolean {
 }
 
 /** Happenings-first order: Tier 1 (dated) → 2 (recurring/HH) → 3 (evergreen).
- *  Within Tier 1, soonest first; otherwise keep input order (already tier-sorted). */
+ *
+ *  W2.1a — the ranker now consumes `editorial_weight` (founder curation), the FIRST
+ *  time cascade() reads a curation field. TRUST RULE (schema §A7, wave §0.3): this is
+ *  explicitly-permitted founder curation. The sort key must NEVER read `is_featured`
+ *  or `sponsor_id` — paid placement can never buy rank here. (A regression test in
+ *  explore.test.ts sorts a fixture with those fields set adversarially and asserts the
+ *  order is unchanged; keep it green.)
+ *
+ *  Per-tier deterministic key (no AI, no randomness):
+ *   • All tiers: `editorial_weight < 0` sinks to the BOTTOM of its tier section —
+ *     downweighted, never hidden (still visible + findable).
+ *   • Tier-1, non-negative: starts_at asc (soonest-first legibility) → editorial_weight
+ *     desc (same-start ties break toward founder-boosted) → stable input order.
+ *   • Tier-2/3, non-negative: editorial_weight desc → stable input order (DB/alpha). */
 export function cascade(things: Thing[]): Thing[] {
-  return [...things].sort((a, b) => {
-    if (a.happening_tier !== b.happening_tier)
-      return a.happening_tier - b.happening_tier;
-    if (a.happening_tier === 1 && a.starts_at && b.starts_at)
-      return a.starts_at.localeCompare(b.starts_at);
-    return 0;
-  });
+  return things
+    .map((t, i) => [t, i] as const)
+    .sort(([a, ia], [b, ib]) => {
+      if (a.happening_tier !== b.happening_tier)
+        return a.happening_tier - b.happening_tier;
+
+      // Negatives sink within their tier section (both negative → keep relative order).
+      const aNeg = a.editorial_weight < 0;
+      const bNeg = b.editorial_weight < 0;
+      if (aNeg !== bNeg) return aNeg ? 1 : -1;
+
+      if (a.happening_tier === 1) {
+        if (a.starts_at && b.starts_at && a.starts_at !== b.starts_at)
+          return a.starts_at.localeCompare(b.starts_at);
+        if (a.editorial_weight !== b.editorial_weight)
+          return b.editorial_weight - a.editorial_weight; // secondary tie-break
+      } else if (a.editorial_weight !== b.editorial_weight) {
+        return b.editorial_weight - a.editorial_weight; // Tier-2/3 primary
+      }
+
+      return ia - ib; // stable input order
+    })
+    .map(([t]) => t);
+}
+
+/** W2.1a — the auto-hero pick, shared verbatim by BOTH the public ExploreClient hero
+ *  memo and heroServer.ts's projected "Auto" rail so the two can never diverge. Pure,
+ *  deterministic, sponsor-blind (reads only tier / starts_at / editorial_weight).
+ *
+ *  Rule: among Tier-1 items occurring TODAY (their SB starts_at day === sbTodayKey)
+ *  with `editorial_weight > 0`, pick the highest weight; ties break to the soonest
+ *  starts_at. If none qualify, fall back to `ordered[0]` (the pre-W2.1 behavior).
+ *  `ordered` must already be cascade()-sorted. */
+export function pickAutoHero(ordered: Thing[], sbTodayKey: string): Thing | null {
+  const boostedToday = ordered.filter(
+    (t) =>
+      t.happening_tier === 1 &&
+      t.editorial_weight > 0 &&
+      t.starts_at != null &&
+      sbDay(new Date(t.starts_at).getTime()) === sbTodayKey,
+  );
+  if (boostedToday.length > 0) {
+    return boostedToday.reduce((best, t) => {
+      if (t.editorial_weight !== best.editorial_weight)
+        return t.editorial_weight > best.editorial_weight ? t : best;
+      // tie on weight → soonest starts_at wins
+      return (t.starts_at ?? "") < (best.starts_at ?? "") ? t : best;
+    });
+  }
+  return ordered[0] ?? null;
 }
 
 /** Dated (Tier-1) events are bound by the horizon; ongoing items always pass.

@@ -14,7 +14,8 @@
 // bytes) keyed by place so a place is never paid for twice.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Candidate, PhotoSource } from '../packages/shared/types';
+import type { Candidate, PhotoSource, HappeningCategory } from '../packages/shared/types';
+import { classifyWeight } from './weight';
 
 const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 1400); // ~$10 at $0.007/call
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
@@ -36,10 +37,48 @@ export function cacheKey(c: Pick<Candidate, 'place_id' | 'title' | 'neighborhood
   return `${t}|${c.neighborhood ?? ''}`;
 }
 
-/** Free-source search query — concrete and SB-scoped. */
-export function imageQuery(c: Pick<Candidate, 'title' | 'neighborhood'>): string {
+/** W2.3 — category-keyed query phrases so a community_gathering doesn't draw the same
+ *  generic stock as a live_music. Appended to the title so per-title variety survives
+ *  while the imagery gains thematic relevance. This is a BRIDGE: the motif SVG library
+ *  (separate design track) will supersede most of these. Civic-meeting items are handled
+ *  separately (isCivicImage → straight to placeholder), not here. */
+export const CATEGORY_QUERY: Partial<Record<HappeningCategory, string>> = {
+  // Tier 1 — dated events
+  live_music: 'live band small venue stage',
+  festival_fair: 'outdoor street festival crowd',
+  arts_theater: 'theater stage performance',
+  community_gathering: 'community gathering people outdoors',
+  food_drink_event: 'food festival tasting table',
+  sports_outdoors_event: 'outdoor sports race coast',
+  // Tier 2 — recurring
+  weekly_special: 'restaurant bar drinks',
+  recurring_nightlife: 'nightlife bar lounge evening',
+  recurring_market: 'farmers market produce stall california',
+  recurring_arts: 'art gallery exhibit',
+  recurring_outdoors: 'coastal trail nature walk',
+  // Tier 3 — evergreen places
+  outdoor_activity: 'coastal trail outdoors california',
+  food_drink_spot: 'restaurant food plating',
+  culture_spot: 'museum gallery interior',
+  shopping_browse: 'boutique storefront shopping',
+  scenic_chill: 'ocean coastline scenic view',
+};
+
+/** True when an item is a civic/government meeting (by title, via the W2.1b classifier).
+ *  W2.3: for these, a neutral branded placeholder beats a misleading stock photo — we
+ *  skip the network sources entirely (a fake "council chamber" photo is worse than none). */
+export function isCivicImage(c: Pick<Candidate, 'title'>): boolean {
+  return classifyWeight({ title: c.title }) < 0;
+}
+
+/** Free-source search query — concrete and SB-scoped, category-aware (W2.3). */
+export function imageQuery(
+  c: Pick<Candidate, 'title' | 'neighborhood'> & { happening_category?: HappeningCategory | string | null },
+): string {
   const hood = c.neighborhood ? ` ${c.neighborhood.replace(/_/g, ' ')}` : '';
-  return `${c.title}${hood} Santa Barbara`;
+  const cat = c.happening_category ? CATEGORY_QUERY[c.happening_category as HappeningCategory] : undefined;
+  const catPart = cat ? ` ${cat}` : '';
+  return `${c.title}${hood}${catPart} Santa Barbara`;
 }
 
 /** Rank found options and always append the placeholder as the final alternate. */
@@ -47,6 +86,21 @@ export function rankOptions(found: ImageOption[]): ImageOption[] {
   const order: PhotoSource[] = ['owned', 'pexels', 'wikimedia', 'google'];
   const real = found.filter((o) => o.url).sort((a, b) => order.indexOf(a.source) - order.indexOf(b.source));
   return [...real, { url: '', source: 'placeholder' as const }];
+}
+
+/** W2.3 per-batch dedupe (PURE). Given ranked options and the set of photo_urls already
+ *  assigned in this run, reorder so the FIRST real option is one not-yet-used — only
+ *  falling back to an already-used url when every option is taken. Placeholder stays last.
+ *  This spreads a shared stock photo across the batch instead of repeating it. */
+export function pickUnused(options: ImageOption[], used: Set<string>): ImageOption[] {
+  const real = options.filter((o) => o.url);
+  const placeholder = options.filter((o) => !o.url);
+  const firstUnused = real.findIndex((o) => !used.has(o.url));
+  if (firstUnused > 0) {
+    const [fresh] = real.splice(firstUnused, 1);
+    real.unshift(fresh);
+  }
+  return [...real, ...placeholder];
 }
 
 // ---- network sources (isolated; each returns null on miss/error) -----------
@@ -129,6 +183,19 @@ async function saveSpend(sb: SupabaseClient, month: string, google_calls: number
   );
 }
 
+/** W2.3 — cheap image_cache scan: the photo_urls already assigned to MORE than `threshold`
+ *  places. We seed the per-batch dedupe set with these so a fresh resolution steers away
+ *  from photos that are already everywhere. Read-only; cost-free. */
+async function loadOverusedUrls(sb: SupabaseClient, threshold = 3): Promise<string[]> {
+  const { data } = await sb.from('image_cache').select('photo_url').not('photo_url', 'is', null);
+  const counts = new Map<string, number>();
+  for (const r of data ?? []) {
+    const u = r.photo_url as string;
+    if (u) counts.set(u, (counts.get(u) ?? 0) + 1);
+  }
+  return [...counts].filter(([, n]) => n > threshold).map(([u]) => u);
+}
+
 // ---- the resolver ----------------------------------------------------------
 
 export async function resolveImages(
@@ -151,37 +218,46 @@ export async function resolveImages(
     .in('place_key', [...new Set(keys)]);
   const cache = new Map((cacheRows ?? []).map((r) => [r.place_key as string, r]));
 
+  // W2.3 per-batch dedupe: photo_urls already assigned this run, seeded with the
+  // already-overused ones so fresh picks steer away from photos that are everywhere.
+  const used = new Set<string>(await loadOverusedUrls(sb));
+
   const out: Candidate[] = [];
   for (const c of cands) {
     const key = cacheKey(c);
     const cached = cache.get(key);
     if (!opts.force && cached && cached.photo_source && cached.photo_source !== 'placeholder') {
+      if (cached.photo_url) used.add(cached.photo_url as string);
       out.push({ ...c, photo_url: cached.photo_url ?? undefined, photo_source: cached.photo_source as PhotoSource,
         photo_options: (cached.photo_options as ImageOption[]) ?? [] });
       stats.resolved++;
       continue;
     }
 
-    // Gather ALL free alternates first (the picker arrows through them).
+    // Gather ALL free alternates first (the picker arrows through them). W2.3: civic
+    // meetings skip the network entirely — a neutral placeholder beats a misleading
+    // stock photo (found stays empty → rankOptions yields the placeholder).
     const found: ImageOption[] = [];
-    const q = imageQuery(c);
-    found.push(...await pexelsMany(q, 3));
-    const wm = await wikimedia(q); if (wm) found.push(wm);
-    // Paid fallback — only when every free tier missed.
-    if (!found.length && c.place_id && GOOGLE_KEY) {
-      if (calls < CAP) {
-        const g = await googlePhoto(c.place_id, () => { calls++; });
-        if (g) found.push(g);
-      } else {
-        stats.overCap++; // free missed, would have paid, but the cap is hit
+    if (!isCivicImage(c)) {
+      const q = imageQuery(c);
+      found.push(...await pexelsMany(q, 3));
+      const wm = await wikimedia(q); if (wm) found.push(wm);
+      // Paid fallback — only when every free tier missed.
+      if (!found.length && c.place_id && GOOGLE_KEY) {
+        if (calls < CAP) {
+          const g = await googlePhoto(c.place_id, () => { calls++; });
+          if (g) found.push(g);
+        } else {
+          stats.overCap++; // free missed, would have paid, but the cap is hit
+        }
       }
     }
 
-    const options = rankOptions(found);
+    // W2.3: prefer a not-yet-used url; only repeat when every option is taken.
+    const options = pickUnused(rankOptions(found), used);
     const chosen = options[0];
     if (!chosen.url) stats.placeholder++;
-    else if (chosen.source === 'google') stats.google++;
-    else stats.free++;
+    else { if (chosen.source === 'google') stats.google++; else stats.free++; used.add(chosen.url); }
     stats.resolved++;
 
     const resolved: Candidate = {

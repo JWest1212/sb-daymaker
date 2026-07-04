@@ -32,6 +32,17 @@ For each item return:
 - blurb: ONE line, ≤ ~24 words, the hook a local would text a friend.
 - blurb_long: 2–4 sentences for the detail screen, same voice.
 - tags: 1–3 occasion tags chosen ONLY from the allowed list, each with a confidence 0–1.
+
+Tagging rubric (a tag is a promise about the occasion, not a "maybe" — be selective):
+- Alcohol-primary venues — breweries, taprooms, wine tasting rooms, bars, cocktail
+  lounges — default to wine_food and/or nightlife. Do NOT tag them family_day, even
+  if kids could technically tag along.
+- Civic services and government meetings (city councils, commissions, committees,
+  public hearings, advisory boards) are not leisure occasions — give them FEW or NO
+  tags rather than forcing a fit.
+- family_day means genuinely family-oriented programming (kids' activities, all-ages
+  by design) — not merely "a family could attend." When in doubt, leave it off.
+
 Respond by calling the enrich_batch tool with one entry per item id. Nothing else.`;
 
 /** What we send the model: facts only — NO starts_at/ends_at (the trust guarantee). */
@@ -61,9 +72,14 @@ export function buildItems(cands: Candidate[]): EnrichItem[] {
   }));
 }
 
-/** Code-side negative rules (Doc 11 §7 / schema B4), applied AFTER the model. */
+/** W2.2 — alcohol-primary venue titles, for the AI-only family_day guard below. */
+const ALCOHOL_VENUE_RE = /\b(brewer|brewing|taproom|winery|wine bar|tasting room|distiller|cocktail|pub)\b/i;
+
+/** Code-side negative rules (Doc 11 §7 / schema B4), applied AFTER the model — so they
+ *  scrub the AI's PROPOSED tags only. These are NOT publish-time hard rules (that's
+ *  review.filterTags, which the founder's own edits pass through). */
 export function applyNegativeRules(
-  cand: Pick<Candidate, 'is_21_plus' | 'price_band'>,
+  cand: Pick<Candidate, 'is_21_plus' | 'price_band'> & { title?: string },
   tags: { tag: OccasionTag; confidence: number }[],
 ): { tag: OccasionTag; confidence: number }[] {
   let out = tags.filter((t) => OCCASION_TAGS.includes(t.tag)); // drop anything off-enum
@@ -74,6 +90,14 @@ export function applyNegativeRules(
   if (cand.is_21_plus) out = out.filter((t) => t.tag !== 'family_day');
   if (cand.price_band != null && cand.price_band !== 'free') {
     out = out.filter((t) => t.tag !== 'free_sb');
+  }
+  // W2.2 — strip family_day the AI proposed for alcohol-primary venues (brewery/
+  // taproom/winery/…). Deliberately AI-ONLY: the founder can still add family_day in
+  // the cockpit for the genuinely family-friendly cases (M Special, with its cornhole
+  // and food trucks, is the canonical example) — so this must NOT become a hard
+  // publish-time rule like the 21+/free rules in review.filterTags.
+  if (cand.title && ALCOHOL_VENUE_RE.test(cand.title)) {
+    out = out.filter((t) => t.tag !== 'family_day');
   }
   return out;
 }

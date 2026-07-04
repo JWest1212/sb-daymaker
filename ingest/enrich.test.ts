@@ -72,4 +72,37 @@ describe('applyNegativeRules', () => {
     ]);
     expect(tags).toEqual([{ tag: 'solo', confidence: 0.9 }]);
   });
+
+  // W2.2 — the AI-only family_day guard for alcohol-primary venue titles.
+  it('strips AI family_day from a brewery/taproom/winery title (not 21+ flagged)', () => {
+    for (const title of ['Figueroa Mountain Brewing', 'Third Window Taproom', 'Sunstone Winery', 'The Good Lion cocktail bar']) {
+      const tags = applyNegativeRules({ is_21_plus: false, price_band: '$$', title }, [
+        { tag: 'family_day', confidence: 0.7 }, { tag: 'wine_food', confidence: 0.9 },
+      ]);
+      expect(tags.map((t) => t.tag)).toEqual(['wine_food']);
+    }
+  });
+  it('leaves family_day alone for a non-alcohol title', () => {
+    const tags = applyNegativeRules({ is_21_plus: false, price_band: null, title: 'Saturday Library Craft Hour' }, [
+      { tag: 'family_day', confidence: 0.9 },
+    ]);
+    expect(tags.map((t) => t.tag)).toEqual(['family_day']);
+  });
+  it('is AI-only: a founder-sourced family_day is untouched (rule sits inside applyNegativeRules, not the publish path)', () => {
+    // applyNegativeRules runs solely in mergeEnrichment on the model's proposed tags;
+    // the founder's cockpit edits flow through review.filterTags, which has no such rule.
+    // We assert the boundary by confirming this function is what strips it — so a tag the
+    // founder adds later (never routed here) can survive. Sanity: same title, no family_day
+    // proposed → nothing stripped, other tags intact.
+    const tags = applyNegativeRules({ is_21_plus: false, price_band: '$$', title: 'M Special Brewing' }, [
+      { tag: 'wine_food', confidence: 0.8 }, { tag: 'outdoors_active', confidence: 0.6 },
+    ]);
+    expect(tags.map((t) => t.tag).sort()).toEqual(['outdoors_active', 'wine_food']);
+  });
+  it('title is optional — omitting it skips the alcohol rule (back-compat)', () => {
+    const tags = applyNegativeRules({ is_21_plus: false, price_band: null }, [
+      { tag: 'family_day', confidence: 0.9 },
+    ]);
+    expect(tags.map((t) => t.tag)).toEqual(['family_day']);
+  });
 });

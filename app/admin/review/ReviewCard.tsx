@@ -6,6 +6,7 @@ import {
   type ChipKind, type QueueRow, type ReviewDraft,
 } from "@/lib/review";
 import { ImagePicker } from "./ImagePicker";
+import { WeightNudge } from "../WeightNudge";
 
 const TIER_LABEL: Record<number, string> = {
   1: "TIER 1 · EVENT", 2: "TIER 2 · RECURRING", 3: "TIER 3 · PLACE",
@@ -68,7 +69,7 @@ const norm = (s: string | null | undefined) => (s ?? "").trim();
 
 export function ReviewCard({
   item, active, editing, hero, pickIndex, fetching, draft,
-  onAct, onCycle, onTryFetch, onSelect, onDraftChange, onToggleTag, leaving,
+  onAct, onCycle, onTryFetch, onSelect, onDraftChange, onToggleTag, onToast, leaving,
 }: {
   item: QueueRow;
   active: boolean;
@@ -83,6 +84,7 @@ export function ReviewCard({
   onSelect: () => void;
   onDraftChange: (patch: Partial<ReviewDraft>) => void;
   onToggleTag: (tag: string) => void;
+  onToast?: (msg: string) => void;
   leaving: boolean;
 }) {
   const prov = provenance(item);
@@ -153,6 +155,7 @@ export function ReviewCard({
               )}
               <div className="cat">{item.happening_category}</div>
             </div>
+            <WeightNudge thingId={item.id} title={item.title} weight={item.editorial_weight} onToast={onToast} />
             <button
               type="button"
               className={`herostar${hero ? " is-on" : ""}`}

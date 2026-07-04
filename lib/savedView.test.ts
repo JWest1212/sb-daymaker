@@ -13,6 +13,7 @@ function thing(id: string, over: Partial<Thing> = {}): Thing {
     local_note: null,
     reason_to_go: null,
     happening_tier: 3,
+    editorial_weight: 0,
     happening_category: null,
     neighborhood: null,
     nearby_zone: null,

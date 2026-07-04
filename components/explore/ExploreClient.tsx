@@ -8,6 +8,7 @@ import {
   cascade,
   filterByLens,
   nearMeSort,
+  pickAutoHero,
   pickEvergreenFallback,
   sbDay,
   withinHorizon,
@@ -54,14 +55,16 @@ export function ExploreClient({
 
   // A valid founder pin for today wins the hero slot — but only when it's actually
   // in the current view (survives the horizon/lens/zone filters); otherwise the
-  // sponsor-blind ranker picks. The pin reads no sponsor status.
+  // sponsor-blind ranker picks via the shared pickAutoHero helper (W2.1a): a founder-
+  // boosted item happening today is preferred over the plain soonest card. The pin
+  // reads no sponsor status.
   const rankedHero = useMemo(() => {
     if (pinnedHeroId) {
       const pinned = ordered.find((t) => t.id === pinnedHeroId);
       if (pinned) return pinned;
     }
-    return ordered[0] ?? null;
-  }, [ordered, pinnedHeroId]);
+    return pickAutoHero(ordered, sbDay(nowMs));
+  }, [ordered, pinnedHeroId, nowMs]);
 
   // W1.3b (constraint C5): the hero is never blank. When nothing survives the
   // filters, Layer 1 shows a deterministic evergreen from the FULL pool; if the

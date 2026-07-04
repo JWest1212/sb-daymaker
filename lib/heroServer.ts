@@ -11,7 +11,7 @@
 
 import "server-only";
 import { getAdminSupabase } from "./supabaseAdmin";
-import { cascade, sbDay } from "./explore";
+import { cascade, pickAutoHero, sbDay } from "./explore";
 import { occursOnDate } from "./occurrences";
 import { whenString } from "./review";
 import type { Thing } from "./things";
@@ -29,11 +29,11 @@ export interface HeroPlan { days: HeroDay[]; generatedAt: string }
 
 const LABEL_FMT = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "short", month: "short", day: "numeric" });
 const STAR_SELECT =
-  `id, title, happening_tier, starts_at, status, hero_eligible, photo_url,
+  `id, title, happening_tier, editorial_weight, starts_at, status, hero_eligible, photo_url,
    recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
 
 interface StarRow {
-  id: string; title: string; happening_tier: number; starts_at: string | null;
+  id: string; title: string; happening_tier: number; editorial_weight: number; starts_at: string | null;
   status: string; hero_eligible: boolean; photo_url: string | null;
   recurring_schedules: { day_of_week: number | null; start_time: string | null; end_time: string | null; frequency: string | null; label: string | null }[] | null;
 }
@@ -81,9 +81,14 @@ export async function loadHeroPlan(now: number = Date.now()): Promise<HeroPlan> 
 
   const out: HeroDay[] = days.map(({ date, label, isToday }) => {
     const dayCands = stars.filter((s) => occursOnDate(occThing(s), date));
-    const ordered = cascade(dayCands as unknown as Thing[]) as unknown as StarRow[];
+    const orderedThings = cascade(dayCands as unknown as Thing[]);
+    const ordered = orderedThings as unknown as StarRow[];
     const candidates = ordered.map(toCandidate);
-    const autoPick = candidates[0] ?? null;
+    // W2.1a: the projected "Auto" pick imports the site's own hero picker (never
+    // forked) so the cockpit rail shows exactly what the public hero will choose —
+    // a founder-boosted Tier-1 item on this date wins over the plain soonest card.
+    const picked = pickAutoHero(orderedThings, date);
+    const autoPick = picked ? toCandidate(picked as unknown as StarRow) : null;
 
     let pin: HeroDay["pin"] = null;
     const pinnedId = pinByDate.get(date);

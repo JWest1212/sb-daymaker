@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Thing, RecurringSchedule, HappyHourWindow } from "./things";
-import { withinHorizon, sbDayOfWeek, pickEvergreenFallback } from "./explore";
+import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero } from "./explore";
 
 // SB weekday reference instants (SB = America/Los_Angeles):
 const THU = new Date("2026-07-02T19:00:00Z").getTime(); // Thu noon SB
@@ -17,6 +17,7 @@ function thing(over: Partial<Thing> = {}): Thing {
     local_note: null,
     reason_to_go: null,
     happening_tier: 3,
+    editorial_weight: 0,
     happening_category: null,
     neighborhood: null,
     nearby_zone: null,
@@ -122,5 +123,116 @@ describe("pickEvergreenFallback — W1.3b deterministic parachute", () => {
   it("returns null when the pool has no Tier-3 things (signals Layer 2)", () => {
     const noEvergreen = [thing({ id: "t1", happening_tier: 1 }), thing({ id: "t2", happening_tier: 2 })];
     expect(pickEvergreenFallback(noEvergreen, "2026-07-02")).toBeNull();
+  });
+});
+
+describe("cascade — W2.1a editorial_weight consumption", () => {
+  const ev = (id: string, over: Partial<Thing> = {}) =>
+    thing({ id, ...over });
+
+  it("negative weight sinks to the bottom of its tier section but stays present", () => {
+    const civic = ev("civic", { happening_tier: 3, editorial_weight: -3 });
+    const plain = ev("plain", { happening_tier: 3, editorial_weight: 0 });
+    const boosted = ev("boost", { happening_tier: 3, editorial_weight: 2 });
+    const out = cascade([civic, plain, boosted]).map((t) => t.id);
+    expect(out).toEqual(["boost", "plain", "civic"]); // boosted first, negative last
+    expect(out).toContain("civic"); // never hidden
+  });
+
+  it("Tier-1 chronological order preserved among zero-weight items", () => {
+    const later = ev("later", { happening_tier: 1, type: "event", starts_at: "2026-07-03T20:00:00Z" });
+    const sooner = ev("sooner", { happening_tier: 1, type: "event", starts_at: "2026-07-03T18:00:00Z" });
+    expect(cascade([later, sooner]).map((t) => t.id)).toEqual(["sooner", "later"]);
+  });
+
+  it("Tier-1 same-start tie breaks toward the founder-boosted item", () => {
+    const plain = ev("plain", { happening_tier: 1, type: "event", starts_at: "2026-07-03T18:00:00Z", editorial_weight: 0 });
+    const boosted = ev("boost", { happening_tier: 1, type: "event", starts_at: "2026-07-03T18:00:00Z", editorial_weight: 4 });
+    expect(cascade([plain, boosted]).map((t) => t.id)).toEqual(["boost", "plain"]);
+  });
+
+  it("Tier-1 soonest-first still wins over weight (chronology is primary)", () => {
+    const soonPlain = ev("soon", { happening_tier: 1, type: "event", starts_at: "2026-07-03T18:00:00Z", editorial_weight: 0 });
+    const laterBoost = ev("late", { happening_tier: 1, type: "event", starts_at: "2026-07-03T21:00:00Z", editorial_weight: 5 });
+    expect(cascade([laterBoost, soonPlain]).map((t) => t.id)).toEqual(["soon", "late"]);
+  });
+
+  it("Tier-2/3 order primarily by weight desc", () => {
+    const a = ev("a", { happening_tier: 2, editorial_weight: 1 });
+    const b = ev("b", { happening_tier: 2, editorial_weight: 3 });
+    const c = ev("c", { happening_tier: 2, editorial_weight: 0 });
+    expect(cascade([a, b, c]).map((t) => t.id)).toEqual(["b", "a", "c"]);
+  });
+
+  it("tiers always sort before weight (Tier-1 zero-weight beats Tier-3 boosted)", () => {
+    const t1 = ev("t1", { happening_tier: 1, type: "event", starts_at: "2026-07-03T20:00:00Z" });
+    const t3 = ev("t3", { happening_tier: 3, editorial_weight: 5 });
+    expect(cascade([t3, t1]).map((t) => t.id)).toEqual(["t1", "t3"]);
+  });
+
+  it("is a stable sort: equal keys keep input order", () => {
+    const a = ev("a", { happening_tier: 3, editorial_weight: 0 });
+    const b = ev("b", { happening_tier: 3, editorial_weight: 0 });
+    expect(cascade([a, b]).map((t) => t.id)).toEqual(["a", "b"]);
+    expect(cascade([b, a]).map((t) => t.id)).toEqual(["b", "a"]);
+  });
+
+  // TRUST RULE regression (schema §A7 / wave §0.3): the ranker must never read
+  // is_featured / sponsor_id. We set those adversarially on a fixture and assert the
+  // order is identical to the same fixture without them. Cast through unknown because
+  // those fields aren't on the Thing type at all — proving the sort can't consume them.
+  it("never reads is_featured / sponsor_id (order unchanged when set adversarially)", () => {
+    const base = [
+      ev("z", { happening_tier: 1, type: "event", starts_at: "2026-07-03T21:00:00Z" }),
+      ev("y", { happening_tier: 1, type: "event", starts_at: "2026-07-03T18:00:00Z" }),
+      ev("x", { happening_tier: 3, editorial_weight: 2 }),
+    ];
+    const spiked = base.map((t) =>
+      ({ ...t, is_featured: true, sponsor_id: "paid-placement-123" }) as unknown as Thing,
+    );
+    expect(cascade(spiked).map((t) => t.id)).toEqual(cascade(base).map((t) => t.id));
+  });
+});
+
+describe("pickAutoHero — W2.1a shared hero picker", () => {
+  const TODAY = "2026-07-03";
+  const todayEvent = (id: string, weight: number, hhmm: string) =>
+    thing({ id, happening_tier: 1, type: "event", editorial_weight: weight, starts_at: `2026-07-03T${hhmm}:00Z` });
+
+  it("prefers today's highest positive-weight Tier-1 item", () => {
+    const ordered = cascade([
+      todayEvent("plain", 0, "18:00"),
+      todayEvent("boost", 3, "20:00"),
+    ]);
+    expect(pickAutoHero(ordered, TODAY)?.id).toBe("boost");
+  });
+
+  it("breaks weight ties toward the soonest start", () => {
+    const ordered = cascade([
+      todayEvent("late", 2, "21:00"),
+      todayEvent("early", 2, "17:00"),
+    ]);
+    expect(pickAutoHero(ordered, TODAY)?.id).toBe("early");
+  });
+
+  it("ignores positive weight that isn't happening today", () => {
+    const ordered = cascade([
+      thing({ id: "tmrw", happening_tier: 1, type: "event", editorial_weight: 5, starts_at: "2026-07-04T20:00:00Z" }),
+      thing({ id: "todayPlain", happening_tier: 1, type: "event", editorial_weight: 0, starts_at: "2026-07-03T18:00:00Z" }),
+    ]);
+    // no positive-weight item TODAY → falls back to ordered[0] (soonest today).
+    expect(pickAutoHero(ordered, TODAY)?.id).toBe("todayPlain");
+  });
+
+  it("falls back to ordered[0] when no Tier-1 item today is boosted", () => {
+    const ordered = cascade([
+      thing({ id: "t3", happening_tier: 3, editorial_weight: 4 }),
+      todayEvent("t1", 0, "18:00"),
+    ]);
+    expect(pickAutoHero(ordered, TODAY)?.id).toBe("t1");
+  });
+
+  it("returns null on an empty pool", () => {
+    expect(pickAutoHero([], TODAY)).toBeNull();
   });
 });
