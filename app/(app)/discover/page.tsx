@@ -17,7 +17,7 @@ export default async function DiscoverPage() {
         <EmptyState
           icon="🧭"
           title="Discover SB"
-          message="Guides are on the way — neighborhood wanders and themed lineups, each surfacing what's happening around town."
+          message="Guides are on the way: neighborhood wanders and themed lineups, each surfacing what's happening around town."
         />
       </div>
     );
