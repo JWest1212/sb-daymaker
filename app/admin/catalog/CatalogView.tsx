@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { NEIGHBORHOODS, OCCASION_TAGS, type CatalogRow } from "@/lib/review";
 import { OCCASIONS, OCCASION_BY_KEY } from "@/lib/occasions";
 import { ZONES, ZONE_LABEL } from "@/lib/zones";
+import { WeightNudge } from "../WeightNudge";
 
 interface CatalogResult { rows: CatalogRow[]; total: number; page: number; pageSize: number; }
 type Tier = "all" | "1" | "2" | "3";
@@ -73,6 +74,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const toggleDraftTag = (tag: string) =>
     setDraft((d) => d ? { ...d, tags: d.tags.includes(tag) ? d.tags.filter((t) => t !== tag) : [...d.tags, tag] } : d);
 
+  // Admin edits apply directly to the live row — no review queue.
   const submitEdit = useCallback(async () => {
     if (!editing || !draft) return;
     const payload = {
@@ -84,13 +86,29 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
       body: JSON.stringify({ thing_id: editing.id, payload }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
-      setRows((rs) => rs.map((r) => (r.id === editing.id ? { ...r, pending_edit: true } : r)));
+      setRows((rs) => rs.map((r) => (r.id === editing.id ? {
+        ...r,
+        title: draft.title.trim() || r.title,
+        blurb: draft.blurb || null, blurb_long: draft.blurb_long || null,
+        neighborhood: draft.neighborhood || null, tags: draft.tags,
+      } : r)));
       setEditing(null); setDraft(null);
-      showToast("Edit queued — it's at the top of the Queue. The live version stays up until you re-approve it.");
+      showToast("Saved — live on the site now.");
     } else {
       showToast(res?.error ?? "Edit failed");
     }
   }, [editing, draft, showToast]);
+
+  // Delete = unpublish/archive (reversible). Removes from the live site immediately.
+  const del = useCallback((r: CatalogRow) => {
+    if (!window.confirm(`Remove "${r.title}" from the live site?\n\nIt will be unpublished (reversible), not permanently deleted.`)) return;
+    fetch("/api/admin/catalog/delete", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ thing_id: r.id }),
+    }).then((res) => res.json()).then((res) => {
+      if (res?.ok) { setRows((rs) => rs.filter((x) => x.id !== r.id)); setTotal((t) => Math.max(0, t - 1)); showToast(`Removed "${r.title}" from the site`); }
+      else showToast(res?.error ?? "Delete failed");
+    }).catch(() => showToast("Delete failed"));
+  }, [showToast]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -126,14 +144,20 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
 
       {rows.length === 0 ? (
         <div className="covempty">{loading ? "Loading…" : "No published things match these filters."}</div>
-      ) : rows.map((r) => (
-        <div className={`lrow${r.pending_edit ? " pending" : ""}`} key={r.id}>
+      ) : (() => {
+        let prevGroup = "";
+        return rows.map((r) => {
+          const showHeader = r.groupKey !== prevGroup;
+          prevGroup = r.groupKey;
+          return (
+        <Fragment key={r.id}>
+          {showHeader ? <div className="lgroup">{r.groupLabel}</div> : null}
+        <div className="lrow">
           {r.photo_url ? <img className="lthumb" src={r.photo_url} alt="" /> : <div className="lthumb" />}
           <div className="lmain">
             <div className="lt">
               <span className="ttl">{r.title}</span>
               <span className={`tier t${r.happening_tier}`}>{TIER_CHIP[r.happening_tier]}</span>
-              {r.pending_edit ? <span className="pendpill">edit pending review</span> : null}
             </div>
             <div className="lmeta">
               <span className="mono">{r.when}</span>
@@ -143,16 +167,22 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
             </div>
           </div>
           <div className="lacts">
+            <WeightNudge thingId={r.id} title={r.title} weight={r.editorial_weight} onToast={showToast} />
             <button className={`herostar${isHero(r) ? " is-on" : ""}`} aria-pressed={isHero(r)} onClick={() => toggleHero(r)} title="Toggle hero eligibility">
               <span className="st">{isHero(r) ? "★" : "☆"}</span> Hero
             </button>
-            <button className="btn btn-edit btn-sm" disabled={r.pending_edit} onClick={() => openEdit(r)}
-              title={r.pending_edit ? "An edit is already awaiting review" : "Edit"}>
+            <button className="btn btn-edit btn-sm" onClick={() => openEdit(r)} title="Edit — applies to the live site">
               Edit
+            </button>
+            <button className="btn btn-reject btn-sm" onClick={() => del(r)} aria-label={`Delete ${r.title}`} title="Remove from the live site (unpublish)">
+              Delete
             </button>
           </div>
         </div>
-      ))}
+        </Fragment>
+          );
+        });
+      })()}
 
       {totalPages > 1 ? (
         <div className="pager">
@@ -195,11 +225,11 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
                   );
                 })}
               </div>
-              <div className="gatebox">This creates an edit that goes to the top of the review Queue. The live version stays up untouched until you approve it there. (Start time isn&apos;t editable — reject &amp; re-ingest to change one.)</div>
+              <div className="gatebox">Changes apply to the live site immediately — no review step. (Start time isn&apos;t editable here; to change one, reject &amp; re-ingest in the Queue.)</div>
             </div>
             <div className="sfoot">
               <button className="btn btn-edit" onClick={() => { setEditing(null); setDraft(null); }}>Cancel</button>
-              <button className="btn btn-approve" onClick={submitEdit}>Submit edit for review</button>
+              <button className="btn btn-approve" onClick={submitEdit}>Save changes</button>
             </div>
           </div>
         </>

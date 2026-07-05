@@ -2,6 +2,8 @@
 
 `Status: v9 canon · last updated 2026-06-21 · the front door to the whole project`
 
+> **v10 note:** the app is **four sections** — Explore · Saved · Discover SB · Plan — but the bottom nav still has **three tabs**; Plan is reached via the "Build your day" CTA, **not a nav tab**. **One Perfect SB Day / "Make My Day" was scrapped (2026-07-04).** **CLAUDE.md v10 is authoritative**; see Doc 14 (`14_SBDaymaker_Build_Deltas.md`). The "three sections" phrasing and any One-Perfect-Day mention below are stale.
+
 You're building **SB Daymaker** — a mobile-first local-discovery app for Santa Barbara, with three sections: **Explore · Saved · Discover SB.** This file is the map to all the other files: what each one is, and the order to use them. If you're ever lost, come back here.
 
 ---

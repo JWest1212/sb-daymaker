@@ -292,6 +292,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
                 onTryFetch={() => tryFetch(item.id)}
                 onDraftChange={(patch) => updateDraft(item.id, patch)}
                 onToggleTag={(t) => toggleTag(item.id, t)}
+                onToast={showToast}
                 onSelect={() => setActive(i)}
               />
             ))

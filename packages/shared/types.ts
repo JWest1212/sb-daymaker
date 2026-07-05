@@ -110,6 +110,10 @@ export interface Candidate {
   recurring?: RecurringSpec[];    // Tier-2 schedule rows to write at land time
   last_confirmed: string;         // run date
   start_strategy: StartStrategy;  // carried through for the cockpit trust chip
+  /** W2.1b founder-curation nudge (−5..+5). Set by classifyWeight() at gate time
+   *  (−3 for civic filler, else 0); a founder ▲/▼ overrides it later. Never a
+   *  sponsor/placement field — the ranker stays sponsor-blind. */
+  editorial_weight?: number;
   // image fields (set by resolveImages, pre-landing — see Doc 11 §7b):
   photo_url?: string;             // current pick = photo_options[0] at land time
   photo_source?: PhotoSource;     // provenance shown as the card's source-pill

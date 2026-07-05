@@ -15,6 +15,7 @@ import {
   startRun, finishRun, landCandidates, landTags, landRecurring, recordDrops, toThingRow, type RunRow,
 } from './land';
 import { enrich } from './enrich';
+import { classifyWeight } from './weight';
 import { resolveImages, type ResolveStats } from './images';
 import { detectClosures } from './adapters/googlePlaces';
 import { consumeDirectives } from './restock';
@@ -26,6 +27,8 @@ const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
+const WEIGHT_BACKFILL = process.env.WEIGHT_BACKFILL === '1';
+const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -44,19 +47,29 @@ function gateDrop(sourceKey: string, r: RawCandidate, reason: DropRecord['reason
   };
 }
 
-/** One-time / on-demand: enrich existing needs_review rows that have no blurb yet
- *  (e.g. the rows landed before Phase 11 existed). Updates blurb/blurb_long + tags;
- *  starts_at is never written. */
+/** One-time / on-demand: enrich existing published/needs_review rows that are MISSING
+ *  something — no blurb OR zero occasion tags (W2.2: backfill the untagged ~179).
+ *  starts_at is never written; and a blurb is written ONLY when the row had none, so
+ *  founder-edited blurbs are never overwritten (tags-only enrich for already-blurbed
+ *  rows). Idempotent: landTags ignores duplicates. */
 async function backfillEnrich() {
   const sb = getDb();
   const { data, error } = await sb
     .from('things')
-    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed')
-    .eq('status', 'needs_review')
-    .is('blurb', null);
+    .select('id, type, title, blurb, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed, status, thing_tags ( tag )')
+    .in('status', ['published', 'needs_review']);
   if (error) throw new Error(`backfill select: ${error.message}`);
-  const rows = data ?? [];
-  console.log(`\n[enrich-backfill] ${rows.length} needs_review rows with no blurb\n`);
+  const all = data ?? [];
+
+  // A row needs enrichment if it has no blurb OR no occasion tags yet.
+  const tagCount = (r: Record<string, unknown>) => ((r.thing_tags as unknown[]) ?? []).length;
+  const rows = all.filter((r) => r.blurb == null || tagCount(r) === 0);
+  // Rows that already have a blurb: enrich for TAGS only — never overwrite their blurb.
+  const hadBlurb = new Set(rows.filter((r) => r.blurb != null).map((r) => r.id as string));
+  console.log(
+    `\n[enrich-backfill] ${all.length} published/needs_review rows · ${rows.length} missing blurb or tags ` +
+      `(${rows.length - hadBlurb.size} need a blurb, ${hadBlurb.size} tags-only)\n`,
+  );
   if (!rows.length) return;
 
   const cands: Candidate[] = rows.map((r) => ({
@@ -83,7 +96,7 @@ async function backfillEnrich() {
   const enriched = await enrich(cands, { sb });
   let updated = 0;
   for (const c of enriched) {
-    if (!c.blurb) continue;
+    if (!c.blurb || hadBlurb.has(c.id)) continue; // only fill a MISSING blurb
     const { error: upErr } = await sb
       .from('things')
       .update({ blurb: c.blurb, blurb_long: c.blurb_long ?? null }) // NOT starts_at
@@ -92,7 +105,7 @@ async function backfillEnrich() {
     updated++;
   }
   const tagged = await landTags(sb, enriched);
-  console.log(`\n[enrich-backfill] updated ${updated} blurbs · inserted ${tagged} tags`);
+  console.log(`\n[enrich-backfill] wrote ${updated} missing blurbs · inserted ${tagged} tags`);
 }
 
 /** One-time / on-demand: resolve images for existing needs_review rows still on the
@@ -134,9 +147,111 @@ async function backfillImages() {
   console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`);
 }
 
+/** W2.3 one-time / on-demand: re-resolve the "repeat offenders" — a photo_url shared by
+ *  MORE than 3 published things — through the resolver with force + the new variety logic
+ *  (category-aware queries + per-batch dedupe), so an over-repeated stock photo gets spread
+ *  across distinct images. Free-tier only in practice: the resolver's Google gate/cap code
+ *  is untouched, and we print image_spend before/after so any (capped) Google use is visible. */
+async function backfillRepeatImages() {
+  const sb = getDb();
+  // Share-count above which a photo is an "offender" (spec default 3 = shared by 4+).
+  // REPEAT_THRESHOLD=1 spreads even pairs — used after the first run left adjacent
+  // duplicates (two library events on one State St photo) on the Month view.
+  const threshold = Math.max(1, Number(process.env.REPEAT_THRESHOLD ?? 3));
+  const month = new Date().toISOString().slice(0, 7);
+  const spendBefore = (await sb.from('image_spend').select('google_calls').eq('month', month).maybeSingle()).data?.google_calls ?? 0;
+
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_url, photo_source')
+    .eq('status', 'published')
+    .not('photo_url', 'is', null);
+  if (error) throw new Error(`repeat-backfill select: ${error.message}`);
+  const rows = data ?? [];
+
+  // Count photo_urls across published things; an "offender" is shared by > threshold.
+  const counts = new Map<string, number>();
+  for (const r of rows) counts.set(r.photo_url as string, (counts.get(r.photo_url as string) ?? 0) + 1);
+  const offenders = new Set([...counts].filter(([, n]) => n > threshold).map(([u]) => u));
+  const victims = rows.filter((r) => offenders.has(r.photo_url as string));
+
+  console.log(`\n[repeat-backfill] ${offenders.size} photo_url(s) shared by >${threshold} published things · ${victims.length} rows to re-resolve`);
+  for (const [u, n] of [...counts].filter(([, n]) => n > threshold).sort((a, b) => b[1] - a[1])) {
+    console.log(`  ×${n}  ${String(u).slice(0, 90)}`);
+  }
+  const distinctBefore = new Set(victims.map((r) => r.photo_url as string)).size;
+  if (!victims.length) { console.log('[repeat-backfill] nothing to do'); return; }
+
+  const cands: Candidate[] = victims.map((r) => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
+    source_url: '', place_id: (r.place_id as string) ?? undefined,
+    last_confirmed: '', start_strategy: 'none',
+  }));
+
+  const { cands: resolved, stats } = await resolveImages(cands, sb, { force: true });
+  let updated = 0;
+  for (const c of resolved) {
+    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`repeat-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+  const distinctAfter = new Set(resolved.map((c) => c.photo_url ?? '(placeholder)')).size;
+  const spendAfter = (await sb.from('image_spend').select('google_calls').eq('month', month).maybeSingle()).data?.google_calls ?? 0;
+  console.log(
+    `\n[repeat-backfill] re-resolved ${updated} rows · distinct photos ${distinctBefore} → ${distinctAfter} ` +
+      `· free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`,
+  );
+  console.log(`[repeat-backfill] image_spend google_calls: ${spendBefore} → ${spendAfter} (${spendAfter === spendBefore ? 'unchanged — free tier only' : 'within-cap Google use'})`);
+}
+
+/** W2.1b one-time / on-demand: apply the civic-filler classifier to EXISTING rows.
+ *  Scans published/needs_review things still at editorial_weight 0, downweights the
+ *  civic-meeting matches to −3, and writes one audit_log row per change. Data update
+ *  only (no DDL); rerunnable (already-nudged rows are excluded by the `eq 0` filter). */
+async function backfillWeights() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, title')
+    .in('status', ['published', 'needs_review'])
+    .eq('editorial_weight', 0);
+  if (error) throw new Error(`weight-backfill select: ${error.message}`);
+  const rows = data ?? [];
+  const matches = rows.filter((r) => classifyWeight({ title: (r.title as string) ?? '' }) < 0);
+  console.log(`\n[weight-backfill] scanned ${rows.length} weight-0 rows · ${matches.length} civic matches\n`);
+
+  let updated = 0;
+  for (const r of matches) {
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ editorial_weight: -3 })
+      .eq('id', r.id)
+      .eq('editorial_weight', 0); // guard: never stomp a founder's manual weight
+    if (upErr) throw new Error(`weight-backfill update ${r.id}: ${upErr.message}`);
+    await sb.from('audit_log').insert({
+      entity_type: 'thing',
+      entity_id: r.id,
+      action: 'weight_auto',
+      actor: 'rule',
+      payload: { editorial_weight: -3, title: r.title },
+    });
+    updated++;
+  }
+  console.log(`[weight-backfill] downweighted ${updated} civic item(s) to −3 (audit rows written)`);
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
+  if (WEIGHT_BACKFILL) return backfillWeights();
+  if (REPEAT_BACKFILL) return backfillRepeatImages();
 
   const win = window();
   const sb = DRY ? null : getDb();

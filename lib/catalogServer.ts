@@ -6,7 +6,24 @@
 import "server-only";
 import { getAdminSupabase } from "./supabaseAdmin";
 import { whenString } from "./review";
+import { sbDay } from "./explore";
 import type { CatalogRow } from "./review";
+
+const DAY_FMT = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "short", month: "short", day: "numeric" });
+
+/** Sort bucket + day-group for a catalog row. Order: today+future dated (chrono),
+ *  then recurring, then evergreen, then past dated (bottom). */
+function bucketAndGroup(tier: number, starts_at: string | null, title: string, today: string) {
+  if (tier === 1 && starts_at) {
+    const day = sbDay(new Date(starts_at).getTime());
+    const label = DAY_FMT.format(new Date(starts_at));
+    if (day === today) return { bucket: 0, sortVal: starts_at, groupKey: day, groupLabel: `Today · ${label}` };
+    if (day > today) return { bucket: 0, sortVal: starts_at, groupKey: day, groupLabel: label };
+    return { bucket: 3, sortVal: starts_at, groupKey: `past_${day}`, groupLabel: `${label} · past` };
+  }
+  if (tier === 2) return { bucket: 1, sortVal: title.toLowerCase(), groupKey: "recurring", groupLabel: "Recurring — every week" };
+  return { bucket: 2, sortVal: title.toLowerCase(), groupKey: "evergreen", groupLabel: "Anytime in SB" };
+}
 
 export interface CatalogFilters {
   tier?: number;   // 1|2|3
@@ -26,15 +43,16 @@ export interface CatalogResult {
 const PAGE_SIZE = 50;
 const SELECT =
   `id, title, blurb, blurb_long, neighborhood, is_21_plus, happening_tier, nearby_zone, price_band,
-   hero_eligible, photo_url, photo_source, starts_at, thing_tags ( tag ),
+   hero_eligible, editorial_weight, photo_url, photo_source, starts_at, thing_tags ( tag ),
    recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
 
 export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult> {
   const sb = getAdminSupabase();
   const page = Math.max(1, f.page ?? 1);
   if (!sb) return { rows: [], total: 0, page, pageSize: PAGE_SIZE };
+  const today = sbDay(Date.now());
 
-  // Vibe filter is a tag join — resolve matching ids first so paging/counts stay exact.
+  // Vibe filter is a tag join — resolve matching ids first.
   let vibeIds: string[] | null = null;
   if (f.vibe) {
     const { data } = await sb.from("thing_tags").select("thing_id").eq("tag", f.vibe);
@@ -42,46 +60,62 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
     if (!vibeIds.length) return { rows: [], total: 0, page, pageSize: PAGE_SIZE };
   }
 
-  let q = sb.from("things").select(SELECT, { count: "exact" }).eq("status", "published");
+  // Fetch the full matching set (admin scale, ~hundreds) so the chronological
+  // day-bucketed ordering is global, then paginate in-process.
+  let q = sb.from("things").select(SELECT).eq("status", "published");
   if (f.tier) q = q.eq("happening_tier", f.tier);
   if (f.zone) q = q.eq("nearby_zone", f.zone);
   if (f.q) q = q.ilike("title", `%${f.q}%`);
   if (vibeIds) q = q.in("id", vibeIds);
-  q = q.order("title", { ascending: true }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+  q = q.range(0, 1999);
 
-  const { data, count, error } = await q;
+  const { data, error } = await q;
   if (error) { console.error("[catalog] read failed:", error.message); return { rows: [], total: 0, page, pageSize: PAGE_SIZE }; }
-  const rows = (data ?? []) as Record<string, unknown>[];
+  const raw = (data ?? []) as Record<string, unknown>[];
 
-  // Which of these have a pending edit awaiting review?
-  const ids = rows.map((r) => r.id as string);
+  // Attach the sort bucket + group, then order: bucket asc; within a bucket by
+  // start time (past bucket newest-first), recurring/evergreen alphabetical.
+  const enriched = raw.map((t) => {
+    const tier = Number(t.happening_tier);
+    const starts_at = (t.starts_at as string) ?? null;
+    const bg = bucketAndGroup(tier, starts_at, (t.title as string) ?? "", today);
+    return { t, tier, starts_at, ...bg };
+  });
+  enriched.sort((a, b) =>
+    a.bucket - b.bucket || (a.bucket === 3 ? b.sortVal.localeCompare(a.sortVal) : a.sortVal.localeCompare(b.sortVal)),
+  );
+
+  const total = enriched.length;
+  const pageSlice = enriched.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // pending-edit flags for just this page's ids
+  const ids = pageSlice.map((e) => e.t.id as string);
   const pending = new Set<string>();
   if (ids.length) {
     const { data: edits } = await sb.from("thing_edits").select("thing_id").eq("status", "pending").in("thing_id", ids);
     for (const e of edits ?? []) pending.add(e.thing_id as string);
   }
 
-  const mapped: CatalogRow[] = rows.map((t) => {
-    const tier = Number(t.happening_tier);
-    const scheds = (t.recurring_schedules as []) ?? [];
-    return {
-      id: t.id as string,
-      title: t.title as string,
-      blurb: (t.blurb as string) ?? null,
-      blurb_long: (t.blurb_long as string) ?? null,
-      neighborhood: (t.neighborhood as string) ?? null,
-      is_21_plus: (t.is_21_plus as boolean) ?? null,
-      happening_tier: tier,
-      nearby_zone: (t.nearby_zone as string) ?? null,
-      price_band: (t.price_band as string) ?? null,
-      hero_eligible: (t.hero_eligible as boolean) ?? false,
-      photo_url: (t.photo_url as string) ?? null,
-      photo_source: (t.photo_source as string) ?? "placeholder",
-      tags: ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag),
-      when: whenString(tier, (t.starts_at as string) ?? null, scheds),
-      pending_edit: pending.has(t.id as string),
-    };
-  });
+  const rows: CatalogRow[] = pageSlice.map(({ t, tier, starts_at, groupKey, groupLabel }) => ({
+    id: t.id as string,
+    title: t.title as string,
+    blurb: (t.blurb as string) ?? null,
+    blurb_long: (t.blurb_long as string) ?? null,
+    neighborhood: (t.neighborhood as string) ?? null,
+    is_21_plus: (t.is_21_plus as boolean) ?? null,
+    happening_tier: tier,
+    nearby_zone: (t.nearby_zone as string) ?? null,
+    price_band: (t.price_band as string) ?? null,
+    hero_eligible: (t.hero_eligible as boolean) ?? false,
+    editorial_weight: (t.editorial_weight as number) ?? 0,
+    photo_url: (t.photo_url as string) ?? null,
+    photo_source: (t.photo_source as string) ?? "placeholder",
+    tags: ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag),
+    when: whenString(tier, starts_at, (t.recurring_schedules as []) ?? []),
+    pending_edit: pending.has(t.id as string),
+    groupKey,
+    groupLabel,
+  }));
 
-  return { rows: mapped, total: count ?? mapped.length, page, pageSize: PAGE_SIZE };
+  return { rows, total, page, pageSize: PAGE_SIZE };
 }

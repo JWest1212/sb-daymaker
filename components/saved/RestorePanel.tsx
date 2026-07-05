@@ -3,15 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { createSaveRestore } from "@/lib/shares";
 
-/** Magic-link save-restore: writes a snapshot keyed by the user's own email and
- *  returns a restore link. (Email delivery is wired up in Phase 7 — for now the
- *  link is shown to copy / open on another device.) */
+/** Magic-link save-restore: POSTs a snapshot keyed by the user's own email; the
+ *  server stores it (SECURITY DEFINER RPC) and emails back the restore link,
+ *  keeping the on-screen link as a copy/paste fallback. Degrades gracefully when
+ *  Resend isn't domain-verified yet (sent:false → copy-the-link experience). */
 export function RestorePanel() {
   const { asMap, counts } = useSaves();
   const [email, setEmail] = useState("");
   const [link, setLink] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,13 +20,24 @@ export function RestorePanel() {
     if (!email.trim()) return;
     setBusy(true);
     setError(null);
-    const token = await createSaveRestore(email.trim(), asMap());
-    setBusy(false);
-    if (!token) {
-      setError("Couldn't create your link. Please try again.");
-      return;
+    try {
+      const res = await fetch("/api/restore-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), saves: asMap() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) {
+        setError("Couldn't create your link. Please try again.");
+        return;
+      }
+      setLink(`${window.location.origin}/r/${data.token}`);
+      setSent(Boolean(data.sent));
+    } catch {
+      setError("Couldn't reach the server. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setLink(`${window.location.origin}/r/${token}`);
   };
 
   if (counts.total === 0) return null;
@@ -39,10 +51,11 @@ export function RestorePanel() {
       </p>
 
       {link ? (
-        <div className="sbd-restore__result">
+        <div className="sbd-restore__result" aria-live="polite">
           <p className="sbd-restore__note">
-            Your restore link is ready. Open it on another device to bring your
-            saves over. (Emailing it to you arrives in a later step.)
+            {sent
+              ? "Check your inbox — we sent your restore link. Open it on any device to bring your saves back, or copy it now."
+              : "Email isn't set up yet — copy your link instead. Open it on another device to bring your saves over."}
           </p>
           <code className="sbd-restore__link">{link}</code>
           <Button
@@ -63,9 +76,11 @@ export function RestorePanel() {
             aria-label="Your email"
           />
           <Button variant="primary" onClick={submit} disabled={busy}>
-            {busy ? "Creating…" : "Email me a link to restore"}
+            {busy ? "Sending…" : "Email me a link to restore"}
           </Button>
-          {error ? <p className="sbd-restore__error">{error}</p> : null}
+          {error ? (
+            <p className="sbd-restore__error" aria-live="polite">{error}</p>
+          ) : null}
         </div>
       )}
     </section>

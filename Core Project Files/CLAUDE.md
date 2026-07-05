@@ -1,16 +1,16 @@
 # CLAUDE.md — SB Daymaker
 
-`Status: v9 canon · last updated 2026-06-21 · supersedes all earlier pre-rename material`
+`Status: v10 canon · last updated 2026-07-04 · supersedes all earlier pre-rename material`
 
 > **What this file is.** The always-loaded context for building **SB Daymaker**. Claude Code reads this at the start of every session. It encodes the product, the constraints, the stack, and the rules of engagement so I don't have to re-explain them each time. **Read this before doing anything.** When a detail here conflicts with your training instincts, this file wins. When this file conflicts with the canonical documents, the documents win (see "Source of truth" below).
 >
-> **Current build target: v9.1 — a three-section app (Explore · Saved · Discover SB) plus the Plan surface (a single-day planner reached via the "Build your day" CTA on Explore and a "Build a day from your saved →" entry atop Saved — NOT a bottom-nav tab).** The Map screen was removed in v9; the My Plan removal is superseded by the v9.1 Plan surface — see §3 ("v9 note"), §9, and `docs/plan-feature/`. Where any older document still shows five tabs, a Map screen, or My Plan, the wireframe v9 and this file supersede it.
+> **Current build target: v10 — a four-section app: Explore · Saved · Discover SB · Plan.** The first three are the **bottom-nav browse tabs**; **Plan** is a live single-day planner reached via the "Build your day" CTA on Explore and a "Build a day from your saved →" entry atop Saved — a full section, but **not a bottom-nav tab** (the nav bar stays three tabs; a dormant Plan icon exists in `BottomNav` but isn't wired into the tab list). The Map screen remains removed; the old My Plan removal is now **fully superseded** — the *simplified* Plan surface shipped and is canon (see §3 "v10 note", §9, and `docs/plan-feature/` → `docs/plan-simplification/` → `docs/revert back to simple plan/`). Where any older document still shows five tabs, a Map screen, or forbids the planner, this file (v10) supersedes it.
 
 ---
 
 ## 1. What we're building (one paragraph)
 
-SB Daymaker is a **mobile-first daily companion for Santa Barbara, CA** that you open like you check the weather. It answers one question — *"what's worth doing in Santa Barbara today?"* — then helps you **find it, save it, and share it**, with the warmth of a knowing local friend. It is **happenings-first** (the spine is a three-tier cascade of what's actually happening, so the screen is never empty), **tunable** (occasion tags retune the feed), and **frictionless** (no end-user accounts; saving lives on-device with an optional magic-link backup). It is a **two-sided** product: a public installable PWA *and* a private admin cockpit. It must be operable by **one person in ~15 minutes a day** and run on a **~$45/month platform floor**.
+SB Daymaker is a **mobile-first daily companion for Santa Barbara, CA** that you open like you check the weather. It answers one question — *"what's worth doing in Santa Barbara today?"* — then helps you **find it, save it, and share it**, with the warmth of a knowing local friend. It is **happenings-first** (the spine is a three-tier cascade of what's actually happening, so the screen is never empty), **tunable** (occasion tags retune the feed), and **frictionless** (no end-user accounts; saving lives on-device with an optional magic-link backup). It is a **two-sided** product: a public installable PWA *and* a private admin cockpit. The public app has **four sections — Explore · Saved · Discover SB · Plan** (the first three are the bottom-nav tabs; **Plan** is reached by the "Build your day" CTA, not a tab). It must be operable by **one person in ~15 minutes a day** and run on a **~$45/month platform floor**.
 
 **Positioning line:** *Find what's worth doing in Santa Barbara today — find it, save it, share it.*
 
@@ -39,7 +39,7 @@ The thinking is already done. Build *from* these, don't reinvent them.
 |---|---|---|
 | `sbdaymaker_schema.sql` | **The data contract.** Runnable Postgres schema. | Every table, enum, and relationship. Run it as-is into Supabase; don't redesign it. |
 | `sbdaymaker_tokens.css` | **The design system.** Single source of truth for color, type, space, motion. | Every color, font, spacing, and radius. Mirror into the Tailwind config; never hardcode a hex. |
-| `02b_SBDaymaker_Wireframe.html` | **The interactive prototype — canonical for UI layout and flow.** Three sections (Explore · Saved · Discover SB). | What every screen looks like and how it behaves. This is the visual target and the tiebreaker on any UI question. |
+| `02b_SBDaymaker_Wireframe.html` | **The interactive prototype — canonical for UI layout and flow** of the three browse sections (Explore · Saved · Discover SB). The **Plan** surface postdates it — its visual target is the `docs/plan-feature/` mockup. | What every browse screen looks like and how it behaves. The visual tiebreaker on any UI question except Plan (which defers to the Plan mockup). |
 | `03_SBDaymaker_Platform_Architecture.html` | The technical/data architecture. | The nightly pipeline, the image resolver, the cron design, infra decisions. |
 | `02_SBDaymaker_Product_Bible.html` | Every screen + annotations, IA, content model, flows, the cockpit. | Screen-level detail, edge cases, empty/error states, the six cockpit surfaces. **See the v9 note below — parts of this doc predate v9.** |
 | `01_SBDaymaker_Business_Plan.html` | Product overview, positioning, GTM, cost/revenue, roadmap. | The "why," the audience, what's in V1 vs Phase 2. |
@@ -58,14 +58,15 @@ The thinking is already done. Build *from* these, don't reinvent them.
 
 **Precedence when they disagree:** the wireframe v9 wins on any UI/flow question. Then the locked UX decisions + follow-on decisions (in `00_SBDaymaker_Project_Context.md` and Document 6), then Document 5, then the rest. The schema and tokens files are authoritative for their domains.
 
-> **v9 note (current build target — this resolves all stale-surface conflicts):**
-> - The app has **three browse tabs (Explore · Saved · Discover SB)** in the bottom nav. **No Plan tab, no Map tab.** The planner is reached via the "Build your day" CTA on Explore and "Build a day from your saved →" atop Saved. (See `docs/plan-feature/` and `docs/revert back to simple plan/SBDaymaker_Plan_Drafted_Spine_Fix.md`.)
+> **v10 note (current build target — this resolves all stale-surface conflicts):**
+> - The app has **four sections: Explore · Saved · Discover SB · Plan.** The first three are the **bottom-nav browse tabs**; **Plan** is reached via the "Build your day" CTA on Explore and "Build a day from your saved →" atop Saved — a full section, but **not a bottom-nav tab** (the nav bar stays three tabs; a dormant Plan icon exists in `BottomNav` but isn't in the tab list). **No Map tab.** (See `docs/plan-feature/` → `docs/plan-simplification/` → `docs/revert back to simple plan/`.)
+> - **Plan (as shipped — the simplified planner):** a short questionnaire (`PlanSetup`: When / Where / Time-of-day, plus fine-tune Who / Vibe) → a **deterministic ranked, editable day spine** (`PlanResults` / `ItinerarySpine`, seeded by `buildDraft` calling the pure `rankCandidates`) → a **Share + Clear** go-bar (the plan is ephemeral; no Save button). Shared plans ride the `shared_states` mechanism at `/p/[token]` (`kind='shared_plan'`). **No AI at tap time** — `lib/plan/rankCandidates.ts` and `buildDraft.ts` are pure. Still genuinely dead in code (do **not** revive): the swap sheet (`SwapSheet`), pin-picker (`PinPickerSheet`), day-shape selector (`DayShapeSelector`), the drum-roll time picker, and **`.ics` calendar export.**
 > - **Near Me** is an in-view **sort** (by neighborhood), available on Explore and Saved. It is *not* a map. It needs geolocation + a neighborhood lookup, nothing more.
 > - **Sharing** is a **view-only saved-list link** (Option A): a friend opens the link, sees the picks, and can save their own copy. Single items or a multi-select batch. No recipient PII is stored.
-> - **One Perfect SB Day** is a hand-curated lineup on Explore that seeds the saved list (deterministic; no AI at tap time).
+> - **One Perfect SB Day / "Make My Day" — SCRAPPED (removed from the product, 2026-07-04).** Do **not** build it on Explore or Plan. `OnePerfectDayCard` is orphaned dead code and there is no "Make My Day" button — hand-curated day-seeding is not a V1 feature.
 > - **Discover SB** holds two guide groups — **neighborhood** guides and **theme** guides — each surfacing the live happenings scoped to it.
-> - **Removed in v9 — do NOT build, even if an older doc describes it:** the Map screen, the My Plan itinerary builder, timed/sequenced plans, the drum-roll time picker, and **`.ics` calendar export.**
-> - Where the Product Bible, Business Plan, Audit, or UX Assessment still describe five tabs / a Map screen / My Plan, treat that content as superseded by this note and the wireframe v9.
+> - **Removed — do NOT build, even if an older doc describes it:** the Map screen, the drum-roll time picker, and **`.ics` calendar export.** (The **My Plan itinerary builder is no longer on this list** — the simplified Plan surface above shipped and is canon.)
+> - Where the Product Bible, Business Plan, Audit, or UX Assessment still describe five tabs / a Map screen / a forbidden planner, treat that content as superseded by this note, the wireframe v9 (for the three browse sections), and `docs/plan-feature/` (for Plan).
 
 ---
 
@@ -77,15 +78,17 @@ The thinking is already done. Build *from* these, don't reinvent them.
 | UI | **React + Tailwind**, tokens from `sbdaymaker_tokens.css` |
 | Hosting / edge | **Vercel Pro** (precise cron + Fluid Compute) |
 | Database | **Supabase (Postgres)** — free in dev, Pro by launch |
-| Admin auth | **Supabase Auth + 2FA** (admin cockpit only — there is no end-user auth) |
-| Intelligence | **Claude API** — nightly batch only (tiered: Haiku for blurbs/tagging/parsing, Sonnet for ranking) |
+| Admin auth | **Supabase Auth + 2FA** (admin cockpit only — there is no end-user auth). Live console is **`/admin/*`** (Queue · Coverage · Live catalog · Hero plan); **`/cockpit/login`** is the current login page and **`/cockpit`** redirects to `/admin/review`. *(Current, not final — Wave 4 relocates login.)* |
+| Intelligence | **Claude API** — nightly batch only (tiered: Haiku for blurbs/tagging/parsing, Sonnet for ranking). **Pinned nightly enrich model: `claude-haiku-4-5`** (`ingest/enrich.ts` — exact ID, never `"latest"`). |
 | Location | **Browser Geolocation API** (free, native) + a static neighborhood lookup — powers the Near Me sort. **No map tiles in V1.** |
 | Weather | **OpenWeather** |
 | Email | **Resend** (the 2×/week edition) |
-| Analytics | **Vercel Web Analytics** (cookieless — no consent banner) |
-| Scheduling | **Vercel Cron** — one nightly orchestrator + one weekly digest cron |
+| Analytics | **Vercel Web Analytics** — **installed** (Wave 1): `@vercel/analytics` mounted in `app/layout.tsx`, cookieless (no consent banner), firing **seven** custom events via `lib/analytics.ts`. Stays inert until the Vercel dashboard toggle is enabled (a human step). |
+| Scheduling | **GitHub Actions** for the nightly ingest (`.github/workflows/ingest.yml`, 09:00 UTC, `npx tsx ingest/run.ts`); **Vercel Cron** runs only the **weekly reaper** (`/api/cron/reaper`, Mon 08:00 UTC). `/api/cron/nightly` is a deprecated no-op. |
 
 **Deliberately NOT in the stack:** a separate backend server, Kubernetes, Redis, a queue, microservices, end-user auth, an ORM that fights the schema, **and — as of v9 — Mapbox** (the full map moved entirely to Phase 2; Near Me is a sort, so V1 needs no map SDK or token). If you think we need one of these, flag it — the answer is almost always no.
+
+**Why the nightly ingest lives on GitHub Actions (not Vercel Cron):** the worker needs process isolation, a ~20-minute timeout, and its own GitHub secrets — all awkward inside a Vercel function. Leave it there; don't "helpfully" migrate it back into a Vercel cron.
 
 **Model pinning:** always use exact model IDs, never `"latest"`. Every AI call gets a timeout + one retry + a graceful fallback (skip and flag; the hero falls back to the evergreen card).
 
@@ -136,14 +139,15 @@ WCAG 2.2 AA is a floor we build *to*, not a pass we do at the end. On every comp
 6. **Keep the two PII boundaries clean.** Subscriber email + magic-link address are the *only* end-user PII. **Saved-list share-links store no recipient contact info.** Don't introduce new PII.
 7. **When unsure, ask — don't assume.** A wrong assumption costs more than a question. Especially on anything touching the eight constraints in §2.
 8. **No secrets in the repo.** API keys go in environment variables (`.env.local`, Vercel project settings), never committed.
+9. **`react-hooks/exhaustive-deps` is never disabled without a comment proving the omitted dependency is inert.** (Five silent disables in one file shipped the been-marking regression — Wave 1 W1.1.)
 
 ---
 
 ## 9. What's in V1 vs deferred (don't build deferred work)
 
-**V1 (launch) — three sections:**
+**V1 (launch) — four sections (Explore · Saved · Discover SB · Plan):**
 
-- **Explore** (the front door): the daily golden-hour hero · the happenings cascade feed (dated → recurring → evergreen) · occasion tags (the Lens) · Today / This Week / This Month horizons · the **Near Me** sort · (**One Perfect SB Day** has moved to the Plan surface as the **"Make My Day"** express button — it is no longer on Explore) · First Looks + New This Week · light Happy Hour (a "last confirmed" list, no live countdowns).
+- **Explore** (the front door): the daily golden-hour hero · the happenings cascade feed (dated → recurring → evergreen) · occasion tags (the Lens) · Today / This Week / This Month horizons · the **Near Me** sort · First Looks + New This Week · light Happy Hour (a "last confirmed" list, no live countdowns). *(**One Perfect SB Day / "Make My Day" was scrapped 2026-07-04** — see the Removed list below.)*
 - **Saved**: two-state on-device saves (**want / been**) · the **Near Me** sort · **share** — one item or a multi-select batch → a view-only link a friend opens and can save their own copy · magic-link backup (no account).
 - **Discover SB**: the city guides — **neighborhood** guides + **theme** guides, each surfacing the live happenings scoped to it (ISR).
 - **Plan** (reached from "Build your day" on Explore and "Build a day from your saved →" atop Saved — **NOT a bottom-nav tab**): lands on an **editable recommended draft** — `buildDraft` seeds one ranked pick per selected part-of-day (saved-first, each marked *Suggested*); the user then edits, Regenerates for fresh picks, or Starts blank. Bottom bar is **Share + Clear** (no Save; plan is ephemeral). **This is NOT the retired auto-day** — no "Make My Day" button, no day-shape pills, no locked magic day; every stop is individually removable/replaceable. `rankCandidates` / `buildDraft` are pure/deterministic (no AI at tap time). `lib/plan/buildDay.ts` and `lib/plan/dayShapes.ts` were removed — do not reintroduce them. **Distinction:** `rankCandidates` orders the picker; `buildDraft` seeds the spine (calls `rankCandidates` once per period, places the top pick as a *Suggested* stop); `DEFAULT_PRIOR` is a soft category boost inside `buildDraft` used only when no vibes are selected.
@@ -151,13 +155,26 @@ WCAG 2.2 AA is a floor we build *to*, not a pass we do at the end. On every comp
 
 **Phase 2 (committed, sequenced — do NOT build in V1):** web push for installed users · the **full Mapbox map** (clustering, sub-tabs, filter-sync) · live Happy Hour countdowns · the full Spanish-language layer · operator-submitted photos · account-based cross-device sync.
 
-**Removed in v9 (retired — do NOT build):** the Map screen · the drum-roll time picker · `.ics` calendar export. Near Me replaced the Map (as a sort).
+**Removed (retired — do NOT build):** the Map screen · the drum-roll time picker · `.ics` calendar export · **One Perfect SB Day / the "Make My Day" express button** (scrapped 2026-07-04). Near Me replaced the Map (as a sort).
 
 **v9.1 — the Plan surface (a single-day planner) supersedes the My Plan removal; see `docs/plan-feature/`.** It revives a deliberately narrower planner — timed/sequenced plans on a time-of-day spine — and stays no-accounts (localStorage), batch-AI-only (deterministic slotting from hand-authored day-shapes + pre-computed `things`), no transactions, no `.ics`, no map. The saved-list share remains; the Plan view-only share rides the same `shared_states` mechanism.
 
 **Never:** in-app ticketing/payment · reviews/ratings · separate Visitor/Local modes · a full account system · AI-written digest *synthesis* (editions assemble pre-approved content only).
 
 If an idea is in the Phase-2, Removed, or Never list, don't build it as a surprise. Flag it and let me decide.
+
+---
+
+## 10. Known open items (do not silently "fix" — see Doc 19)
+
+These are **known and tracked**, not bugs to surprise-fix. If your work touches one, flag it; don't quietly resolve it out of scope. Remove an item here once the wave that owns it closes it.
+
+- **The public 2×/week subscriber edition** — the reader-facing **send path is unbuilt.** (`ingest/digest.ts` sends an *operator* run-summary, not the subscriber edition.)
+- **Discover SB guides** — the surface is built but **no guides are seeded**; it shows the empty state.
+- **Happy-hour windows** — no per-venue time-window data yet, so Happy Hour is a "last confirmed" list, not live.
+- **Legacy `lib/pipeline.ts` + `lib/enrich.ts`** — the retired duplicate of the GitHub-Action worker (`ingest/`) still sits in the tree, dead. Removal is a **Wave 4** cleanup.
+- **Migrations tree is incomplete** — not every applied change has a checked-in migration. Reconciling this is **Wave 4**.
+- **Itineraries-store collision** — both `components/plan/ItinerariesProvider.tsx` and `lib/plan/itineraries.ts` write the same `sbd.itineraries.v1` key. **Wave 4** picks one.
 
 ---
 

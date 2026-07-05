@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useItineraries } from "@/lib/plan/itineraries";
 import { shortStamp } from "@/lib/plan/dates";
 import { BLOCK_LABEL } from "@/lib/plan/labels";
+import { trackEvent } from "@/lib/analytics";
 import type { SharedPlanPayload, Block } from "@/lib/plan/types";
 
 const BLOCK_NODE: Record<Block, { glyph: string; color: string }> = {
@@ -26,6 +27,11 @@ function formatClockTime(iso: string): string {
 export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
   const { save } = useItineraries();
   const [saved, setSaved] = useState(false);
+
+  // Event 4: a shared plan was opened (fires on mount; count is stable here).
+  useEffect(() => {
+    trackEvent("share_open", { kind: "plan", count: payload.stops.length });
+  }, [payload.stops.length]);
 
   function handleSave() {
     if (saved) return;

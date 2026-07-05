@@ -49,6 +49,7 @@ export interface QueueRow {
   free: boolean | null;
   is_21_plus: boolean | null;
   hero_eligible: boolean; // ⭑ hero-plan shortlist flag (Cockpit v2 §1.7)
+  editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   starts_at: string | null;
   source: string | null; // the source URL (provenance + uuid5 key)
   photo_url: string | null;
@@ -80,11 +81,14 @@ export interface CatalogRow {
   nearby_zone: string | null;
   price_band: string | null;
   hero_eligible: boolean;
+  editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   photo_url: string | null;
   photo_source: string | null;
   tags: string[];
   when: string;
   pending_edit: boolean; // an edit is awaiting review in the queue
+  groupKey: string;      // day/bucket this row belongs to (for the divider grouping)
+  groupLabel: string;    // header shown when the group changes ("Today · Thu, Jul 3", "Recurring…")
 }
 
 /** The editable draft held while a card is in Edit mode. Title is editable in v2

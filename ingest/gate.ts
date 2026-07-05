@@ -19,6 +19,7 @@
 
 import { v5 as uuidv5 } from 'uuid';
 import type { RawCandidate, Candidate, GateResult, Tod, PriceBand } from '../packages/shared/types';
+import { classifyWeight } from './weight';
 
 const NS = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'; // same namespace as the seed
 
@@ -133,6 +134,9 @@ export function gate(c: RawCandidate): GateResult {
     recurring: c.recurring,
     last_confirmed: new Date().toISOString().slice(0, 10),
     start_strategy: c.startStrategy,
+    // W2.1b: auto-downweight civic/admin filler by title before it lands (0 when
+    // unmatched, exactly as today). A founder ▲ in the cockpit overrides it.
+    editorial_weight: classifyWeight({ title: c.title.trim(), sourceKey: c.source }),
   };
   return { ok: true, candidate };
 }

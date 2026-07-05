@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { getAdminUser } from "@/lib/reviewServer";
+import { getAdminUser, revalidatePublic } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { NEIGHBORHOODS, OCCASION_TAGS, filterTags, type EditPayload } from "@/lib/review";
 
 export const dynamic = "force-dynamic";
 
-// POST { thing_id, payload } -> insert a pending thing_edits overlay for a LIVE thing.
-// The live row is untouched; the edit goes to the top of the review queue. The
-// unique-pending index means only one edit can await review per thing.
+// POST { thing_id, payload } -> apply a founder edit DIRECTLY to the live published
+// row (no review queue). The admin trusts their own edits, so changes go live
+// immediately (revalidatePublic). Start time is never editable here.
 export async function POST(req: Request) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -22,34 +22,38 @@ export async function POST(req: Request) {
   if (!row) return NextResponse.json({ error: "thing not found" }, { status: 404 });
   if (row.status !== "published") return NextResponse.json({ error: "only published things are editable here" }, { status: 400 });
 
-  // Sanitize the payload to the allowed fields + enforce the negative tag rules.
-  const clean: EditPayload = {};
-  if (typeof payload.title === "string" && payload.title.trim()) clean.title = payload.title.trim();
-  if (payload.blurb !== undefined) clean.blurb = (payload.blurb ?? "").toString().trim() || null;
-  if (payload.blurb_long !== undefined) clean.blurb_long = (payload.blurb_long ?? "").toString().trim() || null;
+  const today = new Date().toISOString().slice(0, 10);
+  const patch: Record<string, unknown> = { last_confirmed: today };
+  const changed: Record<string, unknown> = {};
+  if (typeof payload.title === "string" && payload.title.trim()) { patch.title = payload.title.trim(); changed.title = patch.title; }
+  if (payload.blurb !== undefined) { patch.blurb = (payload.blurb ?? "").toString().trim() || null; changed.blurb = patch.blurb; }
+  if (payload.blurb_long !== undefined) { patch.blurb_long = (payload.blurb_long ?? "").toString().trim() || null; changed.blurb_long = patch.blurb_long; }
   if (payload.neighborhood !== undefined) {
-    clean.neighborhood = payload.neighborhood && (NEIGHBORHOODS as readonly string[]).includes(payload.neighborhood)
-      ? payload.neighborhood : null;
-  }
-  if (payload.tags !== undefined) {
-    const tags = filterTags(payload.tags, { is_21_plus: row.is_21_plus, price_band: row.price_band });
-    const illegal = payload.tags.filter((t) => (OCCASION_TAGS as readonly string[]).includes(t) && !tags.includes(t));
-    if (illegal.length) return NextResponse.json({ error: `Tag not allowed for this item: ${illegal.join(", ")}` }, { status: 400 });
-    clean.tags = tags;
+    patch.neighborhood = payload.neighborhood && (NEIGHBORHOODS as readonly string[]).includes(payload.neighborhood) ? payload.neighborhood : null;
+    changed.neighborhood = patch.neighborhood;
   }
 
-  const { data: ins, error } = await sb
-    .from("thing_edits").insert({ thing_id, payload: clean, status: "pending" }).select("id").single();
-  if (error) {
-    // unique_violation on the one-pending index
-    if (error.code === "23505") return NextResponse.json({ error: "an edit is already awaiting review" }, { status: 409 });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  let tags: string[] | undefined;
+  if (payload.tags !== undefined) {
+    tags = filterTags(payload.tags, { is_21_plus: row.is_21_plus, price_band: row.price_band });
+    const illegal = payload.tags.filter((t) => (OCCASION_TAGS as readonly string[]).includes(t) && !tags!.includes(t));
+    if (illegal.length) return NextResponse.json({ error: `Tag not allowed for this item: ${illegal.join(", ")}` }, { status: 400 });
+    changed.tags = tags;
+  }
+
+  const { error } = await sb.from("things").update(patch).eq("id", thing_id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (tags !== undefined) {
+    await sb.from("thing_tags").delete().eq("thing_id", thing_id);
+    if (tags.length) {
+      await sb.from("thing_tags").insert(tags.map((tag) => ({ thing_id, tag, confidence: 1.0, tag_source: "founder" })));
+    }
   }
 
   await sb.from("audit_log").insert({
-    entity_type: "thing", entity_id: thing_id, action: "edit_submitted", actor: "founder",
-    payload: { overlay_id: ins.id, edits: clean },
+    entity_type: "thing", entity_id: thing_id, action: "catalog_edit", actor: "founder", payload: { edits: changed },
   });
-
-  return NextResponse.json({ ok: true, overlay_id: ins.id });
+  revalidatePublic(); // live immediately
+  return NextResponse.json({ ok: true, applied: thing_id });
 }

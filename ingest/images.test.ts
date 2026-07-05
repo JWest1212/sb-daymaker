@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cacheKey, imageQuery, rankOptions, type ImageOption } from './images';
+import { cacheKey, imageQuery, rankOptions, pickUnused, isCivicImage, CATEGORY_QUERY, type ImageOption } from './images';
 
 describe('cacheKey', () => {
   it('prefers the Google place_id', () => {
@@ -15,6 +15,76 @@ describe('imageQuery', () => {
   it('is concrete and SB-scoped', () => {
     expect(imageQuery({ title: 'Stearns Wharf', neighborhood: 'waterfront' }))
       .toBe('Stearns Wharf waterfront Santa Barbara');
+  });
+
+  // W2.3 — category-aware templates so distinct categories don't draw the same stock.
+  it('appends the category template when the happening_category has one', () => {
+    expect(imageQuery({ title: 'Jason Libs Band', neighborhood: undefined, happening_category: 'live_music' }))
+      .toBe(`Jason Libs Band ${CATEGORY_QUERY.live_music} Santa Barbara`);
+    expect(imageQuery({ title: 'Saturday Market', neighborhood: 'downtown', happening_category: 'recurring_market' }))
+      .toBe(`Saturday Market downtown ${CATEGORY_QUERY.recurring_market} Santa Barbara`);
+  });
+  it('differentiates categories: live_music and community_gathering get different queries', () => {
+    const a = imageQuery({ title: 'X', neighborhood: undefined, happening_category: 'live_music' });
+    const b = imageQuery({ title: 'X', neighborhood: undefined, happening_category: 'community_gathering' });
+    expect(a).not.toBe(b);
+  });
+  it('falls back to the plain title query when the category is unknown/absent', () => {
+    expect(imageQuery({ title: 'Some Place', neighborhood: undefined, happening_category: 'not_a_real_category' }))
+      .toBe('Some Place Santa Barbara');
+  });
+});
+
+describe('isCivicImage — W2.3 civic items skip stock, go to placeholder', () => {
+  it('flags civic-meeting titles (reuses the W2.1b classifier)', () => {
+    expect(isCivicImage({ title: 'Street Tree Advisory Committee' })).toBe(true);
+    expect(isCivicImage({ title: 'City Council' })).toBe(true);
+  });
+  it('leaves genuine leisure titles alone', () => {
+    expect(isCivicImage({ title: 'Friday Night Live Music' })).toBe(false);
+  });
+});
+
+describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
+  const ranked: ImageOption[] = [
+    { url: 'a', source: 'pexels' },
+    { url: 'b', source: 'pexels' },
+    { url: 'c', source: 'wikimedia' },
+    { url: '', source: 'placeholder' },
+  ];
+  const counts = (o: Record<string, number>) => new Map(Object.entries(o));
+
+  it('keeps the top pick when nothing is used yet', () => {
+    expect(pickUnused(ranked, counts({})).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
+  });
+  it('bumps the first unused option to the front when the top pick is taken', () => {
+    expect(pickUnused(ranked, counts({ a: 1 })).map((o) => o.url)).toEqual(['b', 'c', 'a', '']);
+  });
+  it('skips multiple used urls to the first free one', () => {
+    expect(pickUnused(ranked, counts({ a: 1, b: 1 })).map((o) => o.url)).toEqual(['c', 'a', 'b', '']);
+  });
+  it('spreads repeats evenly when the whole pool is used (least-used leads, not first)', () => {
+    // a used 3×, b 1×, c 2× → b leads. This is the ×93 pile-up fix: repeats rotate
+    // across the pool instead of collapsing back onto option a.
+    expect(pickUnused(ranked, counts({ a: 3, b: 1, c: 2 })).map((o) => o.url)).toEqual(['b', 'c', 'a', '']);
+  });
+  it('breaks equal-count ties by the original source ranking', () => {
+    expect(pickUnused(ranked, counts({ a: 2, b: 2, c: 2 })).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
+  });
+  it('simulated cluster: 9 similar events over a 3-photo pool land 3-3-3, never 7-1-1', () => {
+    const used = counts({});
+    const picks: string[] = [];
+    for (let i = 0; i < 9; i++) {
+      const top = pickUnused(ranked, used)[0];
+      picks.push(top.url);
+      used.set(top.url, (used.get(top.url) ?? 0) + 1);
+    }
+    expect(picks.filter((u) => u === 'a')).toHaveLength(3);
+    expect(picks.filter((u) => u === 'b')).toHaveLength(3);
+    expect(picks.filter((u) => u === 'c')).toHaveLength(3);
+  });
+  it('placeholder-only input is unchanged', () => {
+    expect(pickUnused([{ url: '', source: 'placeholder' }], counts({ a: 1 })).map((o) => o.source)).toEqual(['placeholder']);
   });
 });
 

@@ -28,6 +28,10 @@ export interface Thing {
   local_note: string | null;
   reason_to_go: string | null;
   happening_tier: number;
+  /** Founder curation nudge (−5..+5, default 0). Consumed by cascade()/pickAutoHero.
+   *  This is explicitly-permitted editorial curation — NOT sponsor status. The ranker
+   *  must never read is_featured/sponsor_id (schema §A7). */
+  editorial_weight: number;
   happening_category: string | null;
   neighborhood: string | null;
   nearby_zone: Zone | null;
@@ -49,7 +53,7 @@ export interface Thing {
 // Base columns used by the feeds. local_note is added only for the detail
 // query (getThing), so the feeds keep working before phase7.sql runs.
 const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go,
-  happening_tier, happening_category, neighborhood, nearby_zone, price_band, free,
+  happening_tier, editorial_weight, happening_category, neighborhood, nearby_zone, price_band, free,
   starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor, photo_url, photo_source`;
 const RELATIONS = `thing_tags ( tag ),
   happy_hour_windows ( day_of_week, starts_local, ends_local, deal_text ),
@@ -67,6 +71,7 @@ function mapThing(row: Record<string, unknown>): Thing {
     local_note: (row.local_note as string) ?? null,
     reason_to_go: (row.reason_to_go as string) ?? null,
     happening_tier: (row.happening_tier as number) ?? 3,
+    editorial_weight: (row.editorial_weight as number) ?? 0,
     happening_category: (row.happening_category as string) ?? null,
     neighborhood: (row.neighborhood as string) ?? null,
     nearby_zone: (row.nearby_zone as Zone) ?? null,

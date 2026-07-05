@@ -29,6 +29,7 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     blurb: c.blurb ?? null,
     blurb_long: c.blurb_long ?? null,
     happening_tier: c.tier,
+    editorial_weight: c.editorial_weight ?? 0, // W2.1b civic-filler nudge (0 unless matched)
     happening_category: c.happening_category,
     reason_to_go: c.reason_to_go ?? null,
     neighborhood: c.neighborhood ?? null,
