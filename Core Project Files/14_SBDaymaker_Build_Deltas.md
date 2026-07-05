@@ -6,6 +6,94 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-04 — Living Postcard Phase 2 (Funk Zone guide seeded, full rich-guide page built, published)
+
+Source: `docs/discover-sb/` spec + approved content-model paper (Phase 1 foundation).
+The Funk Zone is the first Living Postcard guide: 9 stops (7 thing-backed, 2 label-only),
+sketch art, chapter accordion, passport slab, take card, know-before section, secret tease.
+Jim approved at stop-and-show 2026-07-04.
+
+- **Seeded:** `seed_funk_zone_guide.mjs` — guide row (ID `852bc0ee-bf50-5312-8588-1a57a3903ea7`,
+  `stamp_code='FZ'`, `refreshed_on='2026-07-01'`, `status='published'`) + 9 `guide_stops`
+  (positions 1-9; stops 3 + 9 are label-only with `maps_query` set; stops 1,2,4-8 are
+  thing-backed). Also `seed_funk_zone_things.mjs` for the 3 things that weren't in the
+  catalog (Helena Avenue Bakery, Lucky Penny, The Lark).
+- **`components/discover/FunkZoneSketch.tsx`** (new) — base SVG sketch (360×330 viewBox):
+  train tracks, 5 vertical streets + 3 horizontal streets + labels, coastline + Pacific
+  label, STEARNS WHARF → siding, terracotta dashed route, ✵ gold glyph, THE FUNK ZONE
+  rotated plate, compass rose. No marker circles (those are the overlay layer).
+- **`lib/guide-art.ts`** (new) — sketch/emblem asset registry. `GuideArt` interface with
+  `Component` + `markers` (raw SVG x/y in 360×330 viewBox) + `secretMark`. `funk-zone`
+  entry populated with 9 marker coordinates. `getGuideArt(id)` lookup.
+- **`components/discover/GuideWalkSection.tsx`** (new, `"use client"`) — full walk UI:
+  sketch plate + marker overlay SVG (terracotta circles, tap-to-jump-to-chapter);
+  chapter accordion (all closed by default, first chapter gets a floating "CLICK TO
+  DISCOVER THESE STOPS" hint pill that dismisses on first tap); stop cards (label, sub-line,
+  ⌖ DIRECTIONS link, note, ✓ Been button disabled/static, heart save); "From a local"
+  asides between chapters; floating ⌖ Sketch pill. `artId: string | null` prop (not
+  `GuideArt`) — functions cannot cross the RSC/client boundary.
+- **`app/(app)/discover/[id]/page.tsx`** rebuilt — rich branch renders: sketch plate +
+  walk section (`GuideWalkSection`), title block with meta chips, sticky bar, passport
+  slab (zero-state, `stamp_code` gated), take card, know-before section, colophon.
+  Plain-guide branch (no `content.chapters`) preserved unchanged. `getStopThingMap()`
+  called server-side to derive `StopDisplay[]` (sub-line + directions URL per stop).
+- **House copy rule applied:** zero em dashes in any rendered user-facing string
+  (commas, colons, or periods used instead). DB content was already clean.
+- **UX:** first chapter band gets a floating tooltip hint on initial render, dismissed
+  on first chapter tap. Walk description gets `margin-bottom: 44px` to clear the hint
+  at all viewport widths.
+- **`supabase/migrations/20260704_guides_content_model.sql` +
+  `supabase/migrations/20260704_rainy_day_tag.sql`** — Phase 1 DDL (applied to DB
+  2026-07-04, now checked in).
+
+---
+
+## 2026-07-04 — Living Postcard Phase 1 (guides content model — code + migrations, DDL pending Jim)
+
+Source: `docs/discover-sb/Phase1_Spec_Guides_Content_Model.md` (authority chain:
+CLAUDE.md v10 → the approved Funk-Zone content-model paper). Additive-only, no UI
+this phase; the phase gate is a byte-identical `/discover` render after migration.
+
+- **Two migration files written (▶ Jim pastes — no DDL run from code):**
+  `supabase/migrations/20260704_rainy_day_tag.sql` adds the `rainy_day` value to
+  the `occasion_tag` enum, isolated in its own file (a new enum value can't share
+  a transaction with statements that use it). `supabase/migrations/20260704_guides_content_model.sql`
+  adds 5 columns to `guides` (`stamp_code` + `[A-Z]{2}` check + partial unique
+  index, `refreshed_on`, `now_note`, `now_note_on`, `content jsonb not null default
+  '{}'`) and 3 to `guide_stops` (`chapter smallint default 1` + `>=1` check, `sub`,
+  `maps_query`). Idempotent throughout; new columns ride existing RLS.
+- **`lib/guides.ts` — types + pure helpers (no query/UI wiring):** `GuideContent`
+  type encoding the approved jsonb model **verbatim** (paper §A3: `meta.{distance_mi,
+  plan_hrs}`, `chapters[].{k,name,sum,tod}`, `asides[].{after_chapter,text}`,
+  `take.{h,items[].{b,rest},landing}`, `know_before[].{k,v}`, `postcard_captions`
+  buckets, `secret_tease`, `sketch.{kind,asset,no}`) + tolerant `parseGuideContent`
+  (empty `{}` → plain v1 guide, unknown keys ignored, wrong types coerced, `tod`
+  validated against morning|afternoon|golden|evening, never throws);
+  `deriveStopSub` (thing-backed → street·category·price with null segments omitted;
+  label-only → stored `sub` verbatim); `directionsUrl` (maps_query → coords → null).
+  Existing `getPublishedGuides`/`getGuide`/`matchGuideThings` left **byte-identical**
+  — selects deliberately NOT widened, so the render is provably additive.
+- **`lib/guide-art.ts` — sketch registry scaffold:** types + `getGuideArt(id)` lookup
+  that returns null for every id (registry ships empty; the funk-zone SVG is Phase 2).
+- **Tests:** `lib/guides.test.ts` — 14/14 green (parseGuideContent empty / full Funk-Zone
+  §A3 content / emblem kind / malformed / tod validation; deriveStopSub five cases;
+  directionsUrl three branches). `tsc --noEmit` clean for the touched files.
+
+**Settled-call note:** the paper's Part A prose calls stop `sub` "authored, not derived,"
+but the spec header records this as a settled judgment call resolved the **other** way —
+"sub-lines auto-derive from thing data (`sub` column = label-only-stop fallback ONLY)."
+`deriveStopSub` implements the spec's settled call. Derived category uses `things.category`
+verbatim (e.g. "food"), not the mockup's editorial forms ("Science museum") — those are
+[P2] authoring, out of scope here.
+
+**Open (not blockers):** (1) §5 render proof (seed one plain guide, screenshot 390/1280px)
+needs the migration applied + dev server → **pending Jim**; structurally the render is
+unchanged (no page or query touched). (2) DDL pasted by Jim: **[pending]**. (3) Provenance:
+paper committed at `docs/discover-sb/Phase1_Content_Model_FunkZone_Paper.md` (alongside the
+spec); note spec §6 named `docs/discover-living-postcard/` — kept in the arc's actual folder.
+
+---
+
 ## 2026-07-04 — W2.3 Image variety (Feed Quality, phase 3 of 3 — closes the wave)
 
 Source: `docs/platform-enhancements-july4/W2_SBDaymaker_Feed_Quality_Build_Spec.md`
