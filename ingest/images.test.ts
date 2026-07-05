@@ -45,28 +45,46 @@ describe('isCivicImage — W2.3 civic items skip stock, go to placeholder', () =
   });
 });
 
-describe('pickUnused — W2.3 per-batch dedupe', () => {
+describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
   const ranked: ImageOption[] = [
     { url: 'a', source: 'pexels' },
     { url: 'b', source: 'pexels' },
     { url: 'c', source: 'wikimedia' },
     { url: '', source: 'placeholder' },
   ];
-  it('keeps the top pick when it is not yet used', () => {
-    expect(pickUnused(ranked, new Set()).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
+  const counts = (o: Record<string, number>) => new Map(Object.entries(o));
+
+  it('keeps the top pick when nothing is used yet', () => {
+    expect(pickUnused(ranked, counts({})).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
   });
-  it('bumps the first not-yet-used option to the front when the top pick is taken', () => {
-    // 'a' already used → 'b' (first unused) leads; placeholder stays last.
-    expect(pickUnused(ranked, new Set(['a'])).map((o) => o.url)).toEqual(['b', 'a', 'c', '']);
+  it('bumps the first unused option to the front when the top pick is taken', () => {
+    expect(pickUnused(ranked, counts({ a: 1 })).map((o) => o.url)).toEqual(['b', 'c', 'a', '']);
   });
   it('skips multiple used urls to the first free one', () => {
-    expect(pickUnused(ranked, new Set(['a', 'b'])).map((o) => o.url)).toEqual(['c', 'a', 'b', '']);
+    expect(pickUnused(ranked, counts({ a: 1, b: 1 })).map((o) => o.url)).toEqual(['c', 'a', 'b', '']);
   });
-  it('falls back to the top pick when every real option is used (repeat only as last resort)', () => {
-    expect(pickUnused(ranked, new Set(['a', 'b', 'c'])).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
+  it('spreads repeats evenly when the whole pool is used (least-used leads, not first)', () => {
+    // a used 3×, b 1×, c 2× → b leads. This is the ×93 pile-up fix: repeats rotate
+    // across the pool instead of collapsing back onto option a.
+    expect(pickUnused(ranked, counts({ a: 3, b: 1, c: 2 })).map((o) => o.url)).toEqual(['b', 'c', 'a', '']);
+  });
+  it('breaks equal-count ties by the original source ranking', () => {
+    expect(pickUnused(ranked, counts({ a: 2, b: 2, c: 2 })).map((o) => o.url)).toEqual(['a', 'b', 'c', '']);
+  });
+  it('simulated cluster: 9 similar events over a 3-photo pool land 3-3-3, never 7-1-1', () => {
+    const used = counts({});
+    const picks: string[] = [];
+    for (let i = 0; i < 9; i++) {
+      const top = pickUnused(ranked, used)[0];
+      picks.push(top.url);
+      used.set(top.url, (used.get(top.url) ?? 0) + 1);
+    }
+    expect(picks.filter((u) => u === 'a')).toHaveLength(3);
+    expect(picks.filter((u) => u === 'b')).toHaveLength(3);
+    expect(picks.filter((u) => u === 'c')).toHaveLength(3);
   });
   it('placeholder-only input is unchanged', () => {
-    expect(pickUnused([{ url: '', source: 'placeholder' }], new Set(['a'])).map((o) => o.source)).toEqual(['placeholder']);
+    expect(pickUnused([{ url: '', source: 'placeholder' }], counts({ a: 1 })).map((o) => o.source)).toEqual(['placeholder']);
   });
 });
 

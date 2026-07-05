@@ -88,19 +88,22 @@ export function rankOptions(found: ImageOption[]): ImageOption[] {
   return [...real, { url: '', source: 'placeholder' as const }];
 }
 
-/** W2.3 per-batch dedupe (PURE). Given ranked options and the set of photo_urls already
- *  assigned in this run, reorder so the FIRST real option is one not-yet-used — only
- *  falling back to an already-used url when every option is taken. Placeholder stays last.
- *  This spreads a shared stock photo across the batch instead of repeating it. */
-export function pickUnused(options: ImageOption[], used: Set<string>): ImageOption[] {
+/** W2.3 per-batch dedupe (PURE). Given ranked options and per-url usage COUNTS from
+ *  this run (seeded with the catalog's existing counts), reorder so the LEAST-used real
+ *  option leads; source rank breaks ties. Placeholder stays last. Count-based (not a
+ *  yes/no set) so that when a cluster of similar events exhausts its shared option pool,
+ *  repeats spread evenly across the pool instead of piling back onto the first option —
+ *  the threshold-1 run showed ~90 library events collapsing onto one photo without this. */
+export function pickUnused(options: ImageOption[], used: Map<string, number>): ImageOption[] {
   const real = options.filter((o) => o.url);
   const placeholder = options.filter((o) => !o.url);
-  const firstUnused = real.findIndex((o) => !used.has(o.url));
-  if (firstUnused > 0) {
-    const [fresh] = real.splice(firstUnused, 1);
-    real.unshift(fresh);
-  }
-  return [...real, ...placeholder];
+  // Stable sort by usage count asc — unused (0) first, then least-used; original
+  // source ranking (pexels > wikimedia > google) breaks ties.
+  const sorted = real
+    .map((o, i) => [o, i] as const)
+    .sort(([a, ia], [b, ib]) => (used.get(a.url) ?? 0) - (used.get(b.url) ?? 0) || ia - ib)
+    .map(([o]) => o);
+  return [...sorted, ...placeholder];
 }
 
 // ---- network sources (isolated; each returns null on miss/error) -----------
@@ -183,17 +186,17 @@ async function saveSpend(sb: SupabaseClient, month: string, google_calls: number
   );
 }
 
-/** W2.3 — cheap image_cache scan: the photo_urls already assigned to MORE than `threshold`
- *  places. We seed the per-batch dedupe set with these so a fresh resolution steers away
- *  from photos that are already everywhere. Read-only; cost-free. */
-async function loadOverusedUrls(sb: SupabaseClient, threshold = 3): Promise<string[]> {
+/** W2.3 — cheap image_cache scan: per-url usage counts across the catalog. Seeds the
+ *  per-batch dedupe so fresh resolutions steer away from already-popular photos (and
+ *  spread evenly when a shared pool is exhausted). Read-only; cost-free. */
+async function loadUrlCounts(sb: SupabaseClient): Promise<Map<string, number>> {
   const { data } = await sb.from('image_cache').select('photo_url').not('photo_url', 'is', null);
   const counts = new Map<string, number>();
   for (const r of data ?? []) {
     const u = r.photo_url as string;
     if (u) counts.set(u, (counts.get(u) ?? 0) + 1);
   }
-  return [...counts].filter(([, n]) => n > threshold).map(([u]) => u);
+  return counts;
 }
 
 // ---- the resolver ----------------------------------------------------------
@@ -218,16 +221,17 @@ export async function resolveImages(
     .in('place_key', [...new Set(keys)]);
   const cache = new Map((cacheRows ?? []).map((r) => [r.place_key as string, r]));
 
-  // W2.3 per-batch dedupe: photo_urls already assigned this run, seeded with the
-  // already-overused ones so fresh picks steer away from photos that are everywhere.
-  const used = new Set<string>(await loadOverusedUrls(sb));
+  // W2.3 per-batch dedupe: per-url usage counts (this run + the existing catalog) so
+  // fresh picks prefer the least-used photo and shared pools spread evenly.
+  const used = await loadUrlCounts(sb);
+  const bump = (u: string) => used.set(u, (used.get(u) ?? 0) + 1);
 
   const out: Candidate[] = [];
   for (const c of cands) {
     const key = cacheKey(c);
     const cached = cache.get(key);
     if (!opts.force && cached && cached.photo_source && cached.photo_source !== 'placeholder') {
-      if (cached.photo_url) used.add(cached.photo_url as string);
+      if (cached.photo_url) bump(cached.photo_url as string);
       out.push({ ...c, photo_url: cached.photo_url ?? undefined, photo_source: cached.photo_source as PhotoSource,
         photo_options: (cached.photo_options as ImageOption[]) ?? [] });
       stats.resolved++;
@@ -240,7 +244,9 @@ export async function resolveImages(
     const found: ImageOption[] = [];
     if (!isCivicImage(c)) {
       const q = imageQuery(c);
-      found.push(...await pexelsMany(q, 3));
+      // 8 options (not 3): clusters of similar events (90+ library programs) share one
+      // result pool — a deeper pool is what lets the dedupe actually spread them.
+      found.push(...await pexelsMany(q, 8));
       const wm = await wikimedia(q); if (wm) found.push(wm);
       // Paid fallback — only when every free tier missed.
       if (!found.length && c.place_id && GOOGLE_KEY) {
@@ -253,11 +259,11 @@ export async function resolveImages(
       }
     }
 
-    // W2.3: prefer a not-yet-used url; only repeat when every option is taken.
+    // W2.3: least-used option leads; repeats spread evenly when the pool is exhausted.
     const options = pickUnused(rankOptions(found), used);
     const chosen = options[0];
     if (!chosen.url) stats.placeholder++;
-    else { if (chosen.source === 'google') stats.google++; else stats.free++; used.add(chosen.url); }
+    else { if (chosen.source === 'google') stats.google++; else stats.free++; bump(chosen.url); }
     stats.resolved++;
 
     const resolved: Candidate = {
