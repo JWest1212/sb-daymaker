@@ -4585,8 +4585,14 @@
   left: calc(var(--space-4) + 13px);
   top: 0;
   bottom: 10px;
-  width: 0;
-  border-left: 1.5px dashed rgba(192, 83, 46, 0.32);
+  width: 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(192, 83, 46, 0.32) 0px,
+    rgba(192, 83, 46, 0.32) 4px,
+    transparent 4px,
+    transparent 8px
+  );
   pointer-events: none;
 }
 .sbd-gd-stop {
