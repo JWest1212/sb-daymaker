@@ -177,6 +177,17 @@ export default async function GuidePage({
         <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
       </div>
 
+      {/* guide identity header */}
+      <div className="sbd-gd-tophead">
+        <p className="sbd-gd-tophead__eyebrow">
+          {isTheme ? "Theme guide" : "Neighborhood guide"}
+        </p>
+        <h1 className="sbd-gd-tophead__title">{guide.title}</h1>
+        {guide.kicker && (
+          <p className="sbd-gd-tophead__kicker">{guide.kicker}</p>
+        )}
+      </div>
+
       {/* sketch plate + markers + walk section (client) */}
       <GuideWalkSection
         artId={content.sketch.asset}
@@ -307,7 +318,6 @@ export default async function GuidePage({
         <span className="sbd-gd-colophon__text">
           WRITTEN BY A LOCAL
           {refreshedLabel ? ` · REFRESHED ${refreshedLabel}` : ""}
-          {content.sketch.no != null ? ` · SKETCH Nº ${content.sketch.no}` : ""}
         </span>
       </div>
     </>
