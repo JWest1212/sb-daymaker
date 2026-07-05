@@ -154,6 +154,10 @@ async function backfillImages() {
  *  is untouched, and we print image_spend before/after so any (capped) Google use is visible. */
 async function backfillRepeatImages() {
   const sb = getDb();
+  // Share-count above which a photo is an "offender" (spec default 3 = shared by 4+).
+  // REPEAT_THRESHOLD=1 spreads even pairs — used after the first run left adjacent
+  // duplicates (two library events on one State St photo) on the Month view.
+  const threshold = Math.max(1, Number(process.env.REPEAT_THRESHOLD ?? 3));
   const month = new Date().toISOString().slice(0, 7);
   const spendBefore = (await sb.from('image_spend').select('google_calls').eq('month', month).maybeSingle()).data?.google_calls ?? 0;
 
@@ -165,14 +169,14 @@ async function backfillRepeatImages() {
   if (error) throw new Error(`repeat-backfill select: ${error.message}`);
   const rows = data ?? [];
 
-  // Count photo_urls across published things; an "offender" is shared by > 3 of them.
+  // Count photo_urls across published things; an "offender" is shared by > threshold.
   const counts = new Map<string, number>();
   for (const r of rows) counts.set(r.photo_url as string, (counts.get(r.photo_url as string) ?? 0) + 1);
-  const offenders = new Set([...counts].filter(([, n]) => n > 3).map(([u]) => u));
+  const offenders = new Set([...counts].filter(([, n]) => n > threshold).map(([u]) => u));
   const victims = rows.filter((r) => offenders.has(r.photo_url as string));
 
-  console.log(`\n[repeat-backfill] ${offenders.size} photo_url(s) shared by >3 published things · ${victims.length} rows to re-resolve`);
-  for (const [u, n] of [...counts].filter(([, n]) => n > 3).sort((a, b) => b[1] - a[1])) {
+  console.log(`\n[repeat-backfill] ${offenders.size} photo_url(s) shared by >${threshold} published things · ${victims.length} rows to re-resolve`);
+  for (const [u, n] of [...counts].filter(([, n]) => n > threshold).sort((a, b) => b[1] - a[1])) {
     console.log(`  ×${n}  ${String(u).slice(0, 90)}`);
   }
   const distinctBefore = new Set(victims.map((r) => r.photo_url as string)).size;
