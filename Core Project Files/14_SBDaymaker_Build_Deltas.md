@@ -6,6 +6,47 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-05 — Welcome Tour (first-run onboarding carousel)
+
+Source: `docs/intro-tutorial/01_welcome_tour_build_spec.md`. Built the 3-panel welcome
+carousel (what it is → save (want) → remember (been)), gated on `sbd.tour.v1` +
+`useSaves().hydrated` + saves/itineraries emptiness (the existing-user launch guard),
+plus two replay entries and two copy alignments. All five stop-and-show gates verified
+at 390px and 1280px (screenshots, Playwright-driven gating/keyboard/reduced-motion
+checks), tsc + eslint clean.
+
+- **New:** `components/tour/TourProvider.tsx`, `WelcomeTour.tsx`, `useTour.ts`.
+- **Modified:** `components/ui/BottomSheet.tsx` (added an optional `ariaLabel` prop),
+  `app/(app)/layout.tsx` (mounts `TourProvider` inside the existing `SavesProvider`
+  tree), `app/components.css` (`.sbd-tour*` block, tokens only), `components/explore/
+  ExploreClient.tsx` (footer replay link), `components/saved/SavedClient.tsx`
+  (empty-Saved replay link, em dash removed from the empty message, new C2 supporting
+  line).
+
+**Reconciliations (repo is truth for paths — spec drift, not a design change):**
+- Spec named `CascadeFeed.tsx` for the footer replay link; the real Explore footer
+  (signup + trust line + submit link) lives in `ExploreClient.tsx`. Built there.
+- Spec's mockup joined "Submit a happening · How SB Daymaker works" in one row with a
+  dot separator; the live copy is longer ("＋ Submit an event or business"), so a forced
+  single row wrapped and orphaned the dot at both 390px and 1280px. Stacked the two
+  links using the footer's existing vertical rhythm instead — no separator needed.
+- `BottomSheet` only exposed `title`/`kicker` (and `aria-label` was hardwired to
+  `title`, which also renders a visible `<h2>`); the tour sheet has no heading, per the
+  mockup. Added the optional `ariaLabel` prop so the accessible name doesn't force a
+  visible title — every other `BottomSheet` caller is unaffected.
+- Spec's own §10 CSS sizes the carousel dots at 7px (20px active) to match the mockup,
+  which conflicts with its own §12/Gate-5 44px tap-target floor. Kept the visual dot
+  exactly as spec'd and added an invisible 44×44px `::before` hit area, so the
+  pixel-accurate look and the a11y floor both hold.
+
+**Known, not fixed:** `TourProvider`'s auto-open effect trips
+`react-hooks/set-state-in-effect` (setState called synchronously in a mount effect
+that hydrates from `localStorage`). `SavesProvider.tsx`'s own hydration effect has the
+identical, already-shipping warning — matched existing precedent rather than
+restructuring around it.
+
+---
+
 ## 2026-07-04 — Living Postcard Phase 2 (Funk Zone guide seeded, full rich-guide page built, published)
 
 Source: `docs/discover-sb/` spec + approved content-model paper (Phase 1 foundation).

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker · First-Run Tutorial · Options Mockup</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap');
+
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+    --line:#D8CDB8; --gold-text:#7A5E13; --terra-text:#9E3F20;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+    --shadow-sheet:0 -8px 40px rgba(36,28,22,.18);
+    --ease-out:cubic-bezier(0.16,1,0.3,1);
+    --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;}
+  body{
+    font-family:var(--font-body);color:#EAF2F3;
+    background:radial-gradient(1200px 800px at 50% -10%,#1d5f6e 0%,#134c5b 40%,#0b333f 100%);
+    min-height:100vh;padding:0 0 80px;
+  }
+  .serif{font-family:var(--font-display);}
+  .mono{font-family:var(--font-mono);}
+
+  /* ---- harness chrome ---- */
+  .wrap{max-width:1200px;margin:0 auto;padding:28px 22px 0;}
+  .masthead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .masthead h1{font-family:var(--font-display);font-weight:600;font-size:26px;margin:0;color:#fff;letter-spacing:-.3px;}
+  .masthead .tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.5px;color:#8fc0cb;text-transform:uppercase;}
+  .lede{max-width:760px;color:#cfe3e7;font-size:14.5px;line-height:1.6;margin:2px 0 20px;}
+  .lede b{color:#fff;font-weight:600;}
+
+  .decisions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 30px;}
+  .dchip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:var(--radius-pill);
+    padding:7px 14px;font-size:12px;color:#dcecef;display:flex;align-items:center;gap:8px;}
+  .dchip .k{font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:#7fb3bf;}
+  .dchip.locked .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px 1px rgba(224,168,46,.6);}
+  .dchip.open{border-style:dashed;border-color:rgba(224,138,91,.5);}
+  .dchip.open .dot{width:7px;height:7px;border-radius:50%;background:var(--tile-light);}
+
+  .sec{margin:0 0 14px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;border-top:1px solid rgba(255,255,255,.14);padding-top:22px;margin-top:30px;}
+  .sec-num{font-family:var(--font-mono);font-size:12px;color:#7fb3bf;}
+  .sec-head h2{font-family:var(--font-display);font-weight:600;font-size:20px;color:#fff;margin:0;}
+  .sec-note{color:#bcd6db;font-size:13.5px;line-height:1.55;max-width:820px;margin:8px 0 20px;}
+
+  .rack{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;}
+  .rack--intro{justify-content:center;align-items:center;}
+  .rack--intro .unit{width:360px;}
+  .unit{display:flex;flex-direction:column;gap:10px;width:340px;max-width:100%;}
+  .unit-cap{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .unit-cap .name{font-weight:600;font-size:14px;color:#fff;}
+  .pill{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:var(--radius-pill);letter-spacing:.2px;}
+  .pill.rec{background:var(--gold);color:#3a2c07;}
+  .pill.cost{background:rgba(255,255,255,.1);color:#cfe3e7;border:1px solid rgba(255,255,255,.16);}
+  .pill.new{background:rgba(224,138,91,.18);color:#f0c3a8;border:1px solid rgba(224,138,91,.4);}
+  .unit-sub{color:#a9c8ce;font-size:12.5px;line-height:1.5;margin:-2px 0 2px;}
+
+  /* ---- phone device ---- */
+  .device{width:340px;max-width:100%;background:#120d09;border-radius:34px;padding:9px;
+    box-shadow:0 30px 70px -28px rgba(0,0,0,.75),0 0 0 1.5px rgba(255,255,255,.05);position:relative;}
+  .screen{position:relative;width:100%;height:600px;background:var(--plaster);border-radius:26px;overflow:hidden;}
+  .screen.tall{height:640px;}
+  .app{position:absolute;inset:0 0 54px 0;overflow-y:auto;overflow-x:hidden;}
+  .app::-webkit-scrollbar{width:0;}
+
+  /* header */
+  .bhdr{display:flex;align-items:center;justify-content:space-between;padding:20px 16px 10px;background:var(--plaster);position:sticky;top:0;z-index:6;}
+  .bhdr .lock{display:flex;align-items:center;gap:9px;}
+  .bhdr .mk{width:30px;height:30px;border-radius:9px;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,#2c6b78,#16586A 60%,#0E3C49);flex-shrink:0;}
+  .bhdr .mk::after{content:"";position:absolute;width:13px;height:13px;border-radius:50%;right:5px;bottom:5px;
+    background:radial-gradient(circle,#FFF3D0,var(--gold) 62%,rgba(224,168,46,0) 74%);box-shadow:0 0 10px 3px rgba(224,168,46,.55);}
+  .bhdr .wm{line-height:1.05;}
+  .bhdr .wm .a{font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--ink);}
+  .bhdr .wm .b{font-size:8.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-2);font-weight:600;}
+
+  /* hero */
+  .hero{position:relative;overflow:hidden;padding:12px 16px 0;min-height:216px;
+    background:linear-gradient(180deg,#1b4a5a,#2c6b78 34%,#d98a4a 82%,#e6b45a);}
+  .hero .sun{position:absolute;width:46px;height:46px;border-radius:50%;right:34px;top:96px;
+    background:radial-gradient(circle,#FFF6DE,var(--gold) 58%,rgba(224,168,46,0) 72%);
+    box-shadow:0 0 44px 14px rgba(224,168,46,.5);animation:sunPulse 3.4s ease-in-out infinite;}
+  .hero .range{position:absolute;left:0;bottom:0;width:100%;height:74px;}
+  .hero-sky{position:relative;z-index:2;color:#fff;padding-bottom:14px;}
+  .hero .date{font-size:9px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;opacity:.94;text-shadow:0 1px 6px rgba(0,0,0,.35);}
+  .hero .daypart{font-family:var(--font-display);font-weight:600;font-size:19px;margin-top:3px;text-shadow:0 1px 8px rgba(0,0,0,.3);}
+  .hero .cond{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+  .hero .cond span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);padding:4px 9px;border-radius:14px;font-size:10px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.3);backdrop-filter:blur(3px);}
+
+  .pick{position:relative;z-index:3;margin:0 0 -22px;background:rgba(252,250,245,.98);border-radius:var(--radius-lg);overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,.26);display:flex;align-items:stretch;}
+  .pick-img{width:92px;flex-shrink:0;position:relative;background:linear-gradient(150deg,#3a6b57,#7E8B6B);}
+  .pick-img.bowl{background:linear-gradient(150deg,#7a3f2a,#C0532E 70%,#e0a25b);}
+  .pick-tag{position:absolute;top:7px;left:7px;background:var(--gold);color:#3a2c07;font-size:8px;font-weight:800;padding:3px 7px;border-radius:8px;letter-spacing:.3px;}
+  .heart{position:absolute;top:7px;right:7px;width:30px;height:30px;border-radius:50%;background:rgba(18,26,30,.42);
+    display:grid;place-items:center;color:#fff;font-size:14px;backdrop-filter:blur(4px);border:none;cursor:pointer;}
+  .pick-body{padding:10px 12px 11px;flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;}
+  .eyebrow{font-size:8.5px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--terra-text);}
+  .pick-title{font-family:var(--font-display);font-weight:700;font-size:15px;line-height:1.12;letter-spacing:-.3px;color:var(--ink);}
+  .pick-meta{font-size:10.5px;font-weight:600;color:var(--pacific);}
+
+  /* feed */
+  .feed{padding:32px 16px 20px;}
+  .horizon{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .seg{display:flex;gap:2px;background:var(--plaster-2);border-radius:9px;padding:3px;}
+  .seg b{font-size:11px;font-weight:700;padding:6px 11px;border-radius:6px;color:var(--ink-2);}
+  .seg b.on{background:var(--paper);color:var(--pacific);box-shadow:0 1px 2px rgba(36,28,22,.08);}
+  .tune{margin-left:auto;font-size:11px;font-weight:600;color:var(--pacific);border:1px solid var(--line);background:var(--paper);border-radius:var(--radius-pill);padding:6px 12px;display:flex;gap:6px;align-items:center;}
+  .kick{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-2);margin:2px 0 10px;}
+
+  .card{background:var(--paper);border-radius:var(--radius-md);box-shadow:var(--shadow-card);display:flex;overflow:hidden;margin-bottom:11px;position:relative;}
+  .card-img{width:98px;flex-shrink:0;background:linear-gradient(150deg,#3a6b57,#7E8B6B);}
+  .card-img.funk{background:linear-gradient(150deg,#8a5a86,#9C6B9E 70%,#c79ac2);}
+  .card-img.lobero{background:linear-gradient(150deg,#134c5b,#16586A 70%,#3a8296);}
+  .card-body{padding:10px 12px;flex:1;min-width:0;}
+  .card-eye{font-size:8px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--terra-text);}
+  .card-title{font-family:var(--font-display);font-weight:600;font-size:14px;line-height:1.15;color:var(--ink);margin:2px 0 3px;letter-spacing:-.2px;}
+  .card-meta{font-size:10.5px;color:var(--pacific);font-weight:600;}
+  .card-blurb{font-size:10.5px;color:var(--ink-2);line-height:1.4;margin-top:4px;}
+  .card-act{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;}
+  .card-act .b{width:30px;height:30px;border-radius:50%;background:var(--plaster);border:1px solid var(--line);display:grid;place-items:center;color:var(--pacific);font-size:13px;}
+
+  .footer{border-top:1px solid var(--line);margin-top:8px;padding:16px;text-align:center;}
+  .footer .rep{font-size:11.5px;color:var(--pacific);font-weight:600;text-decoration:underline;text-underline-offset:2px;}
+  .footer .rep .i{text-decoration:none;}
+
+  /* bottom nav */
+  .nav{position:absolute;bottom:0;left:0;right:0;height:54px;display:flex;border-top:1px solid var(--line);background:rgba(246,241,231,.97);backdrop-filter:blur(10px);z-index:6;}
+  .nav .t{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#9a8f80;position:relative;padding-top:6px;}
+  .nav .t.on{color:var(--pacific);}
+  .nav .t .i{font-size:16px;}
+  .nav .t .l{font-size:8.5px;font-weight:600;}
+  .nav .badge{position:absolute;top:5px;right:calc(50% - 18px);background:var(--terracotta);color:#fff;font-size:8px;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:grid;place-items:center;padding:0 4px;}
+
+  /* ============ CAROUSEL SHEET ============ */
+  .scrim{position:absolute;inset:0;background:rgba(14,26,31,.5);backdrop-filter:blur(2px);z-index:20;opacity:1;transition:opacity var(--ease-out) .24s;}
+  .sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--paper);
+    border-radius:22px 22px 0 0;box-shadow:var(--shadow-sheet);padding:16px 20px 20px;
+    transform:translateY(0);transition:transform .3s var(--ease-out);}
+  .sheet-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+  .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 6px;}
+  .skip{border:none;background:none;font-size:12px;font-weight:600;color:var(--ink-2);cursor:pointer;padding:6px 4px;}
+
+  .panel{display:none;}
+  .panel.on{display:block;animation:panelIn .32s var(--ease-out);}
+  .panel-art{height:150px;border-radius:var(--radius-md);position:relative;overflow:hidden;margin:2px 0 16px;display:grid;place-items:center;}
+
+  /* P1 art */
+  .art-daily{background:linear-gradient(180deg,#1b4a5a,#2c6b78 36%,#d98a4a 84%,#e6b45a);}
+  .art-daily .s{position:absolute;width:56px;height:56px;border-radius:50%;top:34px;right:70px;
+    background:radial-gradient(circle,#FFF6DE,var(--gold) 58%,rgba(224,168,46,0) 74%);box-shadow:0 0 46px 14px rgba(224,168,46,.5);animation:sunPulse 3.4s ease-in-out infinite;}
+  /* P2 art (save card) */
+  .art-save{background:linear-gradient(160deg,#EFE7D8,#F6F1E7);}
+  .mini{width:74%;background:var(--paper);border-radius:var(--radius-md);box-shadow:var(--shadow-card);display:flex;overflow:hidden;position:relative;}
+  .mini .mi{width:52px;background:linear-gradient(150deg,#7a3f2a,#C0532E 70%,#e0a25b);}
+  .mini .mb{padding:9px 10px;flex:1;}
+  .mini .mt{font-family:var(--font-display);font-weight:600;font-size:12px;color:var(--ink);line-height:1.1;}
+  .mini .mm{font-size:9px;color:var(--pacific);font-weight:600;margin-top:3px;}
+  .mini .mh{position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:50%;background:var(--terracotta);color:#fff;display:grid;place-items:center;font-size:13px;animation:heartPop 2.6s var(--ease-spring) infinite;}
+  /* P3 art (want to been) */
+  .art-been{background:linear-gradient(160deg,#0E3C49,#16586A);}
+  .flow{display:flex;align-items:center;gap:16px;color:#fff;}
+  .flow .chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:var(--radius-pill);padding:8px 15px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;}
+  .flow .chip.been{background:var(--sage);border-color:transparent;color:#1c2416;}
+  .flow .arw{color:#8fc0cb;font-size:18px;}
+
+  .p-kick{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--terra-text);}
+  .p-title{font-family:var(--font-display);font-weight:600;font-size:24px;line-height:1.08;letter-spacing:-.4px;color:var(--ink);margin:5px 0 8px;}
+  .p-body{font-size:14px;line-height:1.55;color:var(--ink-2);max-width:32ch;}
+  .p-body b{color:var(--ink);font-weight:600;}
+
+  .sheet-foot{display:flex;align-items:center;justify-content:space-between;margin-top:18px;gap:12px;}
+  .dots{display:flex;gap:6px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:all .2s;}
+  .dot.on{background:var(--pacific);width:20px;border-radius:4px;}
+  .btn{border:none;border-radius:var(--radius-pill);font-family:var(--font-body);font-weight:600;font-size:14px;cursor:pointer;min-height:44px;padding:0 20px;}
+  .btn-p{background:var(--pacific);color:#fff;}
+  .btn-cta{background:var(--terracotta);color:#fff;padding:0 22px;}
+  .btn-ghost{background:none;color:var(--pacific);padding:0 8px;}
+  .replay-note{font-size:11px;color:var(--ink-2);margin-top:10px;text-align:center;}
+
+  /* ====== OPTION A (native states) ====== */
+  .empty{padding:60px 26px;text-align:center;}
+  .empty .ico{width:58px;height:58px;border-radius:50%;background:var(--plaster-2);display:grid;place-items:center;font-size:26px;margin:0 auto 16px;}
+  .empty h3{font-family:var(--font-display);font-weight:600;font-size:20px;color:var(--ink);margin:0 0 8px;}
+  .empty p{font-size:13.5px;line-height:1.55;color:var(--ink-2);max-width:30ch;margin:0 auto;}
+  .empty .hl{color:var(--terra-text);font-weight:600;}
+
+  .saved-head{padding:18px 16px 6px;}
+  .saved-head .t{font-family:var(--font-display);font-weight:600;font-size:22px;color:var(--ink);}
+  .stog{display:flex;gap:3px;background:var(--plaster-2);border-radius:10px;padding:3px;margin:12px 0 4px;}
+  .stog b{flex:1;text-align:center;font-size:12px;font-weight:700;padding:8px;border-radius:7px;color:var(--ink-2);}
+  .stog b.on{background:var(--paper);color:var(--pacific);box-shadow:0 1px 2px rgba(36,28,22,.08);}
+
+  .c2{margin:12px 16px 6px;background:linear-gradient(150deg,#fff,#F6F1E7);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius-md);padding:13px 14px;}
+  .c2 .q{font-family:var(--font-display);font-weight:600;font-size:14.5px;color:var(--ink);line-height:1.25;}
+  .c2 .sub{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.4;}
+  .c2 .row{display:flex;gap:8px;margin-top:11px;}
+  .c2 .yes{background:var(--sage);color:#1c2416;border:none;border-radius:var(--radius-pill);font-weight:600;font-size:12.5px;padding:9px 16px;min-height:40px;}
+  .c2 .no{background:none;border:1px solid var(--line);color:var(--ink-2);border-radius:var(--radius-pill);font-weight:600;font-size:12.5px;padding:9px 16px;min-height:40px;}
+
+  .svcard{background:var(--paper);border-radius:var(--radius-md);box-shadow:var(--shadow-card);margin:8px 16px;padding:11px 12px;display:flex;gap:10px;align-items:center;}
+  .svcard .si{width:44px;height:44px;border-radius:9px;flex-shrink:0;background:linear-gradient(150deg,#7a3f2a,#C0532E);}
+  .svcard .st{font-family:var(--font-display);font-weight:600;font-size:13.5px;color:var(--ink);}
+  .svcard .sm{font-size:10.5px;color:var(--pacific);font-weight:600;margin-top:2px;}
+
+  /* ====== OPTION B (inline heart hint) ====== */
+  .hinttip{position:absolute;z-index:9;background:var(--ink);color:#fff;font-size:11.5px;font-weight:500;line-height:1.35;
+    padding:9px 12px;border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.28);width:186px;
+    animation:tipIn .4s var(--ease-out);}
+  .hinttip b{color:#FFE8B0;font-weight:600;}
+  .hinttip .x{position:absolute;top:5px;right:7px;color:rgba(255,255,255,.5);font-size:13px;}
+  .hinttip::after{content:"";position:absolute;width:12px;height:12px;background:var(--ink);transform:rotate(45deg);}
+  .hinttip.up::after{top:-5px;right:22px;}
+  .hinttip .heartglow{position:absolute;}
+
+  /* ============ EXIT NUDGE ============ */
+  .nudge{margin:0 0 12px;background:rgba(224,168,46,.14);border:1px solid rgba(224,168,46,.4);border-radius:var(--radius-md);
+    padding:11px 12px;display:flex;align-items:center;gap:10px;animation:panelIn .4s var(--ease-out);}
+  .nudge .nh{width:26px;height:26px;border-radius:50%;background:var(--gold);color:#3a2c07;display:grid;place-items:center;font-size:13px;flex-shrink:0;}
+  .nudge .nt{font-size:12px;color:var(--ink);line-height:1.4;flex:1;}
+  .nudge .nt b{font-weight:600;}
+  .nudge .nx{color:var(--ink-2);font-size:15px;padding:2px;}
+
+  /* annotations */
+  .anno{margin-top:2px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 14px;}
+  .anno li{font-size:12px;color:#cfe3e7;line-height:1.5;margin:0 0 6px;list-style:none;position:relative;padding-left:16px;}
+  .anno li:last-child{margin-bottom:0;}
+  .anno li::before{content:"→";position:absolute;left:0;color:#7fb3bf;}
+  .anno li b{color:#fff;font-weight:600;}
+
+  /* keyframes */
+  @keyframes sunPulse{0%,100%{box-shadow:0 0 44px 14px rgba(224,168,46,.5);}50%{box-shadow:0 0 62px 20px rgba(224,168,46,.34);}}
+  @keyframes heartPop{0%,88%,100%{transform:scale(1);}92%{transform:scale(1.28);}}
+  @keyframes panelIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes tipIn{from{opacity:0;transform:translateY(-6px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+  @media (prefers-reduced-motion: reduce){
+    .hero .sun,.art-daily .s,.mini .mh{animation:none!important;}
+    .panel.on,.nudge,.hinttip,.sheet{animation:none!important;transition:none!important;}
+  }
+  @media (max-width:760px){
+    .unit,.device{width:100%;max-width:360px;}
+    .rack{justify-content:center;}
+  }
+
+  /* ---- final exhibit: footer + empty-see ---- */
+  .empty-see{margin-top:18px;display:inline-flex;gap:6px;align-items:center;background:none;border:none;cursor:pointer;
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;color:var(--pacific);text-decoration:underline;text-underline-offset:2px;}
+  .signup{margin:10px 16px 0;background:var(--plaster-2);border-radius:14px;padding:14px;text-align:center;}
+  .signup h4{font-family:'Fraunces',serif;font-weight:600;font-size:14px;color:var(--ink);margin:0 0 8px;}
+  .signup .r{display:flex;gap:6px;}
+  .signup input{flex:1;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:11px;background:var(--paper);color:#a99;}
+  .signup .sbtn{background:var(--pacific);color:#fff;border:none;border-radius:999px;font-weight:600;font-size:11px;padding:0 14px;}
+  .foot{padding:14px;text-align:center;}
+  .foot .links{display:flex;justify-content:center;gap:9px;align-items:center;flex-wrap:wrap;}
+  .foot a,.foot .replaybtn{font-size:11.5px;color:var(--pacific);font-weight:600;text-decoration:none;background:none;border:none;cursor:pointer;display:inline-flex;gap:5px;align-items:center;font-family:'Inter',sans-serif;}
+  .foot .u{text-decoration:underline;text-underline-offset:2px;}
+  .foot .dot{color:var(--line);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1 class="serif">First-run tutorial</h1>
+    <span class="tag">final · v2 · all decisions locked</span>
+  </div>
+  <p class="lede">The welcome carousel (clickable below), the reinforcement that carries the loop after it closes (Approach A), and the footer button that lets anyone see it again. Drawn in the locked v9 design system on the real screens. <b>The two replay links are live, try them.</b></p>
+
+  <div class="decisions">
+    <span class="dchip locked"><span class="dot"></span><span class="k">shape</span> Welcome carousel</span>
+    <span class="dchip locked"><span class="dot"></span><span class="k">launch</span> Auto-open · skippable · footer replay</span>
+    <span class="dchip locked"><span class="dot"></span><span class="k">reinforce</span> Approach A + empty-Saved link</span>
+  </div>
+
+  <!-- ============================ PART 1 ============================ -->
+  <div class="sec-head"><span class="sec-num">01</span><h2 class="serif">The welcome carousel</h2></div>
+  <p class="sec-note">Fires once on a true first visit (gated on saves hydrating, `sbd.tour.v1` unset). One <b>BottomSheet</b>, the app's only overlay primitive, so this reuses existing focus-trap / Escape / scroll-lock. Three panels, skippable at every step. Click <b>Next / Back / the dots</b>.</p>
+
+  <div class="rack rack--intro">
+    <div class="unit">
+      <div class="device">
+        <div class="screen tall">
+          <div class="app" id="c-app"></div>
+          <!-- carousel overlay -->
+          <div class="scrim" id="c-scrim"></div>
+          <div class="sheet" id="c-sheet">
+            <div class="grab"></div>
+            <div class="sheet-top">
+              <div class="dots" id="c-dots"></div>
+              <button class="skip" id="c-skip">Skip</button>
+            </div>
+
+            <div class="panel on" data-p="0">
+              <div class="p-kick">Welcome</div>
+              <div class="p-title serif">Santa Barbara, daily.</div>
+              <div class="p-body">Open it like you check the weather. Here's what one pick looks like:</div>
+              <div style="margin:14px 0 2px">
+                <svg viewBox="0 0 300 172" width="100%" role="img" aria-label="A feed card, annotated: the title shows what is happening and where; the meta shows when it is scheduled; the description is a local's take on what is happening.">
+                  <defs>
+                    <linearGradient id="artsG" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#7a4e7c"/><stop offset=".65" stop-color="#9C6B9E"/><stop offset="1" stop-color="#c79ac2"/>
+                    </linearGradient>
+                  </defs>
+
+                  <!-- section label -->
+                  <text x="14" y="16" font-family="'JetBrains Mono',monospace" font-size="8" letter-spacing="1.5" fill="#4A4038">HAPPENING TODAY</text>
+
+                  <!-- card -->
+                  <rect x="15" y="33" width="270" height="100" rx="18" fill="#241C16" opacity="0.06"/>
+                  <rect x="14" y="30" width="272" height="100" rx="18" fill="#FCFAF5" stroke="#DED3BE" stroke-width="1"/>
+                  <!-- image (left, rounded on the left to match card) -->
+                  <path d="M32,30 H92 V130 H32 A18,18 0 0 1 14,112 V48 A18,18 0 0 1 32,30 Z" fill="url(#artsG)"/>
+                  <rect x="28" y="66" width="14" height="28" rx="2" fill="#fff" opacity="0.20" stroke="#fff" stroke-opacity="0.28"/>
+                  <rect x="50" y="72" width="14" height="28" rx="2" fill="#fff" opacity="0.14" stroke="#fff" stroke-opacity="0.22"/>
+                  <!-- vibe pill on the image -->
+                  <rect x="22" y="38" width="44" height="15" rx="7.5" fill="#7A4E7C"/>
+                  <text x="44" y="48.4" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="6.6" font-weight="700" letter-spacing="1" fill="#FCFAF5">ARTS</text>
+
+                  <!-- title (what is happening) -->
+                  <text x="104" y="54" font-family="'Fraunces',serif" font-size="13.5" font-weight="700" fill="#241C16">First Thursday</text>
+                  <text x="104" y="69" font-family="'Fraunces',serif" font-size="13.5" font-weight="700" fill="#241C16">Art Walk</text>
+                  <!-- description (local's take) -->
+                  <text x="104" y="85" font-family="'Inter',sans-serif" font-size="8" fill="#4A4038">Galleries stay open late and pour free</text>
+                  <text x="104" y="95" font-family="'Inter',sans-serif" font-size="8" fill="#4A4038">wine. The art is technically the point.</text>
+                  <!-- meta (when + where) -->
+                  <text x="104" y="118" font-family="'JetBrains Mono',monospace" font-size="7.5" font-weight="600" letter-spacing="0.6" fill="#9E3F20">TONIGHT · 5 PM · FUNK ZONE</text>
+                  <!-- heart + share icons -->
+                  <path d="M251,120 C247,116.5 244,114.5 244,111.5 C244,109 246,108 248,109 C249.4,109.7 251,111.6 251,111.6 C251,111.6 252.6,109.7 254,109 C256,108 258,109 258,111.5 C258,114.5 255,116.5 251,120 Z" fill="none" stroke="#241C16" stroke-width="1.2" stroke-linejoin="round"/>
+                  <path d="M268,120 L277,111" fill="none" stroke="#241C16" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M277,111 l-6,0 M277,111 l0,6" fill="none" stroke="#241C16" stroke-width="1.2" stroke-linecap="round"/>
+
+                  <!-- ARROW 1 -> title -->
+                  <text x="170" y="19" font-family="'JetBrains Mono',monospace" font-size="10" font-weight="700" fill="#2b2119">what's happening</text>
+                  <path d="M185.6,25.1 L184.2,25.6 L182.8,26.2 L181.3,26.3 L179.8,26.6 L178.5,27.4 L177.1,27.6 L175.6,27.9 L174.4,28.6 L173.1,29.1 L171.6,29.3 L170.4,30.0 L169.2,30.7 L167.8,31.0 L166.6,31.5 L165.5,32.4 L164.3,32.9 L163.0,33.3 L162.0,34.2 L160.9,34.9 L159.7,35.2 L158.7,36.1 L157.8,36.9 L156.6,37.3 L155.6,38.0 L154.8,38.9 L153.7,39.3 L152.3,36.1 L147.1,43.0 L155.7,43.9 L154.3,40.6 L155.5,40.5 L156.5,40.0 L157.7,39.6 L159.0,39.6 L160.1,39.1 L161.2,38.6 L162.5,38.5 L163.8,38.1 L164.9,37.4 L166.2,37.1 L167.5,36.9 L168.6,36.1 L169.8,35.6 L171.2,35.3 L172.4,34.5 L173.6,33.8 L174.9,33.4 L176.2,32.7 L177.3,31.8 L178.7,31.3 L180.0,30.7 L181.1,29.7 L182.4,29.0 L183.8,28.5 L185.0,27.5 L186.2,26.6 Z" fill="#2b2119" stroke="#2b2119" stroke-width="0.5" stroke-linejoin="round"/>
+
+                  <!-- ARROW 2 -> meta (when) -->
+                  <text x="14" y="162" font-family="'JetBrains Mono',monospace" font-size="10" font-weight="700" fill="#2b2119">when it's happening</text>
+                  <path d="M86.3,150.9 L87.8,150.5 L89.2,149.9 L90.8,149.7 L92.3,149.3 L93.6,148.4 L95.1,147.9 L96.7,147.4 L97.9,146.3 L99.3,145.5 L100.8,144.9 L102.0,143.8 L103.1,142.7 L104.4,141.9 L105.6,140.8 L106.4,139.5 L107.5,138.5 L108.5,137.5 L109.1,136.2 L109.8,135.0 L110.8,134.0 L111.2,132.7 L111.5,131.5 L112.2,130.5 L112.4,129.3 L112.4,128.1 L112.7,127.2 L115.9,128.0 L113.6,120.4 L108.1,126.0 L111.4,126.8 L110.7,127.6 L110.5,128.5 L109.9,129.4 L109.0,130.1 L108.4,131.0 L107.9,132.0 L106.8,132.7 L105.9,133.6 L105.3,134.7 L104.2,135.5 L103.1,136.2 L102.3,137.4 L101.2,138.3 L99.9,139.0 L99.0,140.1 L98.0,141.1 L96.7,141.8 L95.5,142.7 L94.5,143.9 L93.2,144.5 L91.9,145.3 L90.9,146.4 L89.6,147.1 L88.2,147.6 L87.0,148.6 L85.8,149.4 Z" fill="#2b2119" stroke="#2b2119" stroke-width="0.5" stroke-linejoin="round"/>
+
+                  <!-- ARROW 3 -> description -->
+                  <text x="160" y="162" font-family="'JetBrains Mono',monospace" font-size="10" font-weight="700" fill="#2b2119">a local's description</text>
+                  <path d="M191.0,150.1 L191.3,147.6 L191.4,145.0 L191.8,142.5 L191.9,140.0 L191.4,137.5 L191.2,135.1 L191.0,132.6 L190.1,130.3 L189.4,128.0 L188.8,125.6 L187.8,123.5 L186.5,121.5 L185.7,119.3 L184.5,117.3 L183.0,115.5 L181.9,113.6 L180.7,111.7 L179.1,110.2 L177.7,108.6 L176.6,106.9 L175.0,105.6 L173.5,104.4 L172.4,102.9 L171.1,101.7 L169.6,100.7 L168.5,99.5 L171.2,97.1 L163.0,94.4 L164.8,102.9 L167.5,100.4 L168.3,101.9 L169.5,103.1 L170.5,104.5 L171.3,106.2 L172.5,107.7 L173.8,109.1 L174.7,111.0 L175.8,112.7 L177.2,114.2 L178.1,116.1 L179.1,118.0 L180.5,119.7 L181.5,121.6 L182.2,123.7 L183.4,125.5 L184.5,127.5 L185.1,129.6 L186.0,131.6 L187.0,133.7 L187.4,135.9 L187.9,138.1 L188.7,140.3 L189.0,142.6 L188.9,145.0 L189.3,147.4 L189.4,149.9 Z" fill="#2b2119" stroke="#2b2119" stroke-width="0.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="panel" data-p="1">
+              <div class="panel-art art-save">
+                <div class="mini">
+                  <div class="mi"></div>
+                  <div class="mb"><div class="mt serif">Trombone Shorty</div><div class="mm">SB Bowl · 6:30 PM</div></div>
+                  <div class="mh">♥</div>
+                </div>
+              </div>
+              <div class="p-kick">Save</div>
+              <div class="p-title serif">Tap the heart.</div>
+              <div class="p-body">See something good? Save it. It lives <b>right here on your device</b>. No account, no login, ever.</div>
+            </div>
+
+            <div class="panel" data-p="2">
+              <div class="panel-art art-been">
+                <div class="flow">
+                  <span class="chip">♥ Want</span>
+                  <span class="arw">→</span>
+                  <span class="chip been">✓ Been</span>
+                </div>
+              </div>
+              <div class="p-kick">Remember</div>
+              <div class="p-title serif">Then mark what you did.</div>
+              <div class="p-body">Come back and check off the places you made it to. Over time, SB Daymaker <b>learns your Santa Barbara</b>.</div>
+            </div>
+
+            <div class="sheet-foot">
+              <button class="btn btn-ghost" id="c-back" style="visibility:hidden">Back</button>
+              <button class="btn btn-p" id="c-next">Next</button>
+            </div>
+            <div class="replay-note" id="c-repnote" style="display:none">You can replay this anytime from the footer.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="unit" style="width:380px">
+      <div class="anno">
+        <ul style="margin:0;padding:0">
+          <li><b>3 panels, in narrative order:</b> what it is → save (want) → remember (been). Panel 3 plants "been" before the user can do it, so the native "Did you make it?" prompt lands later instead of confusing.</li>
+          <li><b>The heart-pop and glowing sun</b> are the existing signature micro-interactions, reused, not new decoration.</li>
+          <li><b>Skip is always visible.</b> Panel 3's primary action becomes <b>Show me today →</b> and drops them straight into the feed.</li>
+          <li><b>Replayable:</b> a quiet "Replay the intro" link sits in the Explore footer (shown in the phones below), so it's never a dead end.</li>
+          <li><b>Reduced motion:</b> toggle it on and the sheet, sun-pulse, heart-pop and panel fades all go static; swipe/dots still work.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 02 REINFORCEMENT (APPROACH A) ===== -->
+  <div class="sec-head"><span class="sec-num">02</span><h2 class="serif">After the welcome · reinforcement</h2></div>
+  <p class="sec-note">The carousel plants the loop; the app's own screens carry it home, reworded to rhyme with the tutorial. <b>No new floating UI</b> (Approach A). The empty Saved screen also carries a "New here?" link that reopens the tour.</p>
+
+  <div class="rack rack--intro">
+    <div class="unit">
+      <div class="unit-cap"><span class="name">Empty Saved</span><span class="pill cost">reworded + replay link</span></div>
+      <div class="device"><div class="screen">
+        <div class="app">
+          <div class="bhdr"><div class="lock"><div class="mk"></div><div class="wm"><div class="a serif">Saved</div><div class="b">Santa Barbara, daily</div></div></div></div>
+          <div class="empty">
+            <div class="ico">&#9829;</div>
+            <h3 class="serif">Your saved list</h3>
+            <p>Nothing saved yet. <span class="hl">Tap the heart</span> on anything you love and it'll live right here, on this device, no account needed.</p>
+            <button class="empty-see" id="empty-replay">&#8635; New here? See how it works</button>
+          </div>
+        </div>
+        <div class="nav">
+          <div class="t"><span class="i">&#9678;</span><span class="l">Explore</span></div>
+          <div class="t on"><span class="i">&#9829;</span><span class="l">Saved</span></div>
+          <div class="t"><span class="i">&#10022;</span><span class="l">Discover SB</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="unit">
+      <div class="unit-cap"><span class="name">"Did you make it?" prompt</span><span class="pill cost">reworded copy</span></div>
+      <div class="device"><div class="screen">
+        <div class="app">
+          <div class="saved-head">
+            <div class="t serif">Saved</div>
+            <div class="stog"><b class="on">Want &middot; 3</b><b>Been &middot; 0</b></div>
+          </div>
+          <div class="c2">
+            <div class="q serif">Did you make it to First Thursday?</div>
+            <div class="sub">Mark what you did. It's how SB Daymaker learns your Santa Barbara.</div>
+            <div class="row"><button class="yes">&#10003; I went</button><button class="no">Not yet</button></div>
+          </div>
+          <div class="svcard"><div class="si"></div><div><div class="st serif">Sunset Jazz at the Lobero</div><div class="sm">Tonight &middot; 8:00 PM</div></div></div>
+          <div class="svcard"><div class="si" style="background:linear-gradient(150deg,#8a5a86,#9C6B9E)"></div><div><div class="st serif">Trombone Shorty</div><div class="sm">SB Bowl &middot; 6:30 PM</div></div></div>
+        </div>
+        <div class="nav">
+          <div class="t"><span class="i">&#9678;</span><span class="l">Explore</span></div>
+          <div class="t on"><span class="i">&#9829;</span><span class="l">Saved</span><span class="badge">3</span></div>
+          <div class="t"><span class="i">&#10022;</span><span class="l">Discover SB</span></div>
+        </div>
+      </div></div>
+    </div>
+
+    <div class="unit" style="width:330px">
+      <div class="anno"><ul style="margin:0;padding:0">
+        <li><b>Both screens already ship.</b> Approach A only rewords them: no component to build, no anchor to add.</li>
+        <li>The gold-edged prompt is the live <b>C2</b> surface; "learns your Santa Barbara" echoes carousel Panel 3.</li>
+        <li>The empty-Saved <b>"New here?"</b> link reopens the tour, catching first-timers who skipped.</li>
+      </ul></div>
+    </div>
+  </div>
+
+  <!-- ===== 03 REPLAY ENTRY ===== -->
+  <div class="sec-head"><span class="sec-num">03</span><h2 class="serif">Replay entry &middot; the footer button</h2></div>
+  <p class="sec-note">One quiet link at the bottom of the Explore feed. Tapping <b>"How SB Daymaker works"</b> reopens the same carousel at panel 1 and never changes the first-visit flag.</p>
+
+  <div class="rack rack--intro">
+    <div class="unit">
+      <div class="device"><div class="screen">
+        <div class="app">
+          <div class="feed" style="padding-top:16px">
+            <div class="kick">Happening today</div>
+            <div class="card"><div class="card-img funk"></div><div class="card-body"><div class="card-eye">Free &middot; Funk Zone</div><div class="card-title serif">First Thursday Art Walk</div><div class="card-meta">5:00 PM &middot; Free</div></div></div>
+          </div>
+          <div class="signup"><h4 class="serif">The daily, in your inbox</h4><div class="r"><input placeholder="you@email.com"><button class="sbtn">Sign up</button></div></div>
+          <div class="foot">
+            <div class="links">
+              <a href="#"><span class="u">Submit a happening</span></a>
+              <span class="dot">&middot;</span>
+              <button class="replaybtn" id="footer-replay"><span>&#8635;</span><span class="u">How SB Daymaker works</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="nav">
+          <div class="t on"><span class="i">&#9678;</span><span class="l">Explore</span></div>
+          <div class="t"><span class="i">&#9829;</span><span class="l">Saved</span></div>
+          <div class="t"><span class="i">&#10022;</span><span class="l">Discover SB</span></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="unit" style="width:360px">
+      <div class="anno"><ul style="margin:0;padding:0">
+        <li><b>Placement:</b> Explore footer, beside "Submit a happening." No header icon, no menu.</li>
+        <li><b>Label:</b> "How SB Daymaker works" (evergreen: serves skippers and refreshers alike).</li>
+        <li><b>Behavior:</b> reopens the carousel at panel 1; leaves <code>sbd.tour.v1</code> set, so it never auto-opens again.</li>
+        <li><b>Accessibility:</b> real button, <code>aria-haspopup="dialog"</code>, pacific focus ring, 44px target.</li>
+      </ul></div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+  // shared Explore backdrop behind the carousel
+  const backdrop = `
+    <div class="bhdr"><div class="lock"><div class="mk"></div><div class="wm"><div class="a serif">Santa Barbara</div><div class="b">Daymaker · daily</div></div></div></div>
+    <div class="hero">
+      <div class="sun"></div>
+      <svg class="range" viewBox="0 0 340 74" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,74 L0,54 Q34,42 70,48 T150,44 L168,32 L178,46 Q220,42 252,52 L272,34 L280,50 Q310,46 340,52 L340,74 Z" fill="#0E3C49" opacity=".9"/>
+      </svg>
+      <div class="hero-sky">
+        <div class="date">Thu · Jun 19 · Golden hour</div>
+        <div class="daypart serif">Good evening.</div>
+        <div class="cond"><span>☀ 71°</span><span>◐ Sunset 8:04</span></div>
+      </div>
+      <div class="pick">
+        <div class="pick-img bowl"><span class="pick-tag">TONIGHT'S PICK</span></div>
+        <button class="heart">♡</button>
+        <div class="pick-body">
+          <div class="eyebrow">Live music · The Bowl</div>
+          <div class="pick-title serif">Trombone Shorty</div>
+          <div class="pick-meta">6:30 PM · $59–95</div>
+        </div>
+      </div>
+    </div>
+    <div class="feed">
+      <div class="horizon"><div class="seg"><b class="on">Today</b><b>Week</b><b>Month</b></div><span class="tune">⚙ Tune</span></div>
+      <div class="kick">Happening today</div>
+      <div class="card"><div class="card-img funk"></div><div class="card-body"><div class="card-eye">Free · Funk Zone</div><div class="card-title serif">First Thursday Art Walk</div><div class="card-meta">5:00 PM · Free</div></div></div>
+    </div>`;
+  document.getElementById('c-app').innerHTML = backdrop;
+
+  // carousel logic
+  const panels = [...document.querySelectorAll('#c-sheet .panel')];
+  const dotsWrap = document.getElementById('c-dots');
+  const back = document.getElementById('c-back');
+  const next = document.getElementById('c-next');
+  const repnote = document.getElementById('c-repnote');
+  let i = 0;
+  panels.forEach((_,n)=>{const d=document.createElement('span');d.className='dot'+(n===0?' on':'');dotsWrap.appendChild(d);});
+  const dots=[...dotsWrap.children];
+
+  function render(){
+    panels.forEach((p,n)=>p.classList.toggle('on',n===i));
+    dots.forEach((d,n)=>d.classList.toggle('on',n===i));
+    back.style.visibility = i===0 ? 'hidden' : 'visible';
+    if(i===panels.length-1){
+      next.textContent='Show me today →';
+      next.className='btn btn-cta';
+      repnote.style.display='block';
+    }else{
+      next.textContent='Next';
+      next.className='btn btn-p';
+      repnote.style.display='none';
+    }
+  }
+  next.onclick=()=>{ if(i<panels.length-1){i++;render();} else {closeTour();} };
+  back.onclick=()=>{ if(i>0){i--;render();} };
+  dots.forEach((d,n)=>d.onclick=()=>{i=n;render();});
+  document.getElementById('c-skip').onclick=closeTour;
+  document.getElementById('c-scrim').onclick=closeTour;
+
+  function closeTour(){
+    document.getElementById('c-sheet').style.transform='translateY(110%)';
+    document.getElementById('c-scrim').style.opacity='0';
+    setTimeout(()=>{
+      document.getElementById('c-sheet').style.display='none';
+      document.getElementById('c-scrim').style.display='none';
+    },320);
+  }
+
+  function reopenTour(){
+    i=0; render();
+    const sh=document.getElementById('c-sheet'), sc=document.getElementById('c-scrim');
+    sh.style.display=''; sc.style.display=''; sh.style.transform=''; sc.style.opacity='1';
+    document.querySelector('.rack--intro') && document.getElementById('c-sheet').scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  ['footer-replay','empty-replay'].forEach(id=>{const el=document.getElementById(id); if(el) el.onclick=reopenTour;});
+</script>
+</body>
+</html>

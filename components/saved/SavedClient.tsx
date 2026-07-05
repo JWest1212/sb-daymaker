@@ -9,7 +9,8 @@ import { groupSaved } from "@/lib/savedGroups";
 import type { Zone } from "@/lib/zones";
 import { ZONE_LABEL } from "@/lib/zones";
 import { useSaves, type SaveState } from "@/components/saves/SavesProvider";
-import { EmptyState } from "@/components/ui";
+import { useTour } from "@/components/tour/useTour";
+import { EmptyState, SBIcon } from "@/components/ui";
 import { SavedToggle } from "./SavedToggle";
 import { NearMeSheet } from "@/components/explore/NearMeSheet";
 import { createSharedList } from "@/lib/shares";
@@ -49,6 +50,7 @@ function persistDismissed(ids: Set<string>) {
 
 export function SavedClient({ things }: { things: Thing[] }) {
   const { ids, saves, state, setState, remove, counts } = useSaves();
+  const { openTour } = useTour();
 
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
   const [zone, setZone] = useState<Zone | null>(null);
@@ -205,7 +207,18 @@ export function SavedClient({ things }: { things: Thing[] }) {
         <EmptyState
           icon="❤️"
           title="Your saved list"
-          message="Nothing saved yet. Tap the heart on anything you love and it'll live right here — on this device, no account needed."
+          message="Nothing saved yet. Tap the heart on anything you love and it'll live right here, on this device, no account needed."
+          action={
+            <button
+              type="button"
+              className="sbd-tour-replay sbd-tour-replay--saved"
+              aria-haspopup="dialog"
+              onClick={openTour}
+            >
+              <SBIcon name="reset" size={14} />
+              New here? See how it works
+            </button>
+          }
         />
       </div>
     );
@@ -258,6 +271,9 @@ export function SavedClient({ things }: { things: Thing[] }) {
             ) : null}
             <p className="sbd-c2__question">Did you make it to {c2Item.title}?</p>
           </div>
+          <p className="sbd-c2__sub">
+            {"Mark what you did. It's how SB Daymaker learns your Santa Barbara."}
+          </p>
           <div className="sbd-c2__actions">
             <button
               type="button"

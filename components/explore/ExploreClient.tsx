@@ -18,6 +18,8 @@ import type { OccasionKey } from "@/lib/occasions";
 import type { Zone } from "@/lib/zones";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { trackEvent } from "@/lib/analytics";
+import { useTour } from "@/components/tour/useTour";
+import { SBIcon } from "@/components/ui/SBIcon";
 import { Hero } from "./Hero";
 import { ControlRow } from "./ControlRow";
 import { TuneSheet } from "./TuneSheet";
@@ -42,6 +44,7 @@ export function ExploreClient({
   pinnedHeroId?: string | null;
 }) {
   const { isSaved, toggle } = useSaves();
+  const { openTour } = useTour();
   const [lens, setLens] = useState<OccasionKey | null>(null);
   const [horizon, setHorizon] = useState<Horizon>("today");
   const [zone, setZone] = useState<Zone | null>(null);
@@ -126,6 +129,15 @@ export function ExploreClient({
           <Link href="/submit" className="sbd-foot__submit">
             ＋ Submit an event or business
           </Link>
+          <button
+            type="button"
+            className="sbd-tour-replay sbd-tour-replay--footer"
+            aria-haspopup="dialog"
+            onClick={openTour}
+          >
+            <SBIcon name="reset" size={14} />
+            How SB Daymaker works
+          </button>
         </footer>
       </div>
 
