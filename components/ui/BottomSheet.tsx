@@ -13,12 +13,15 @@ export function BottomSheet({
   onClose,
   title,
   kicker,
+  ariaLabel,
   children,
 }: {
   open: boolean;
   onClose: () => void;
   title?: string;
   kicker?: string;
+  /** Accessible name when no visible `title` is rendered. Ignored if `title` is set. */
+  ariaLabel?: string;
   children: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -72,7 +75,7 @@ export function BottomSheet({
         className="sbd-sheet"
         role="dialog"
         aria-modal="true"
-        aria-label={title}
+        aria-label={title ?? ariaLabel}
         tabIndex={-1}
         ref={panelRef}
         onClick={(e) => e.stopPropagation()}

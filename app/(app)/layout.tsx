@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import BrandHeader from "@/components/BrandHeader";
 import { BottomNav } from "@/components/app/BottomNav";
+import { TourProvider } from "@/components/tour/TourProvider";
 
 // SavesProvider lives in the root layout so the public /s and /r pages share it.
 
@@ -13,7 +14,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </a>
       <BrandHeader />
       <main id="main" className="sbd-shell__main">
-        {children}
+        <TourProvider>{children}</TourProvider>
       </main>
       <BottomNav />
     </div>
