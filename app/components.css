@@ -675,6 +675,10 @@
   margin: var(--space-1) 0 var(--space-2);
   letter-spacing: -0.4px;
 }
+/* Panel 3's title is a touch longer than the other two and wraps to a lonely
+   "did." on a real iPhone at --text-2xl; sized down just enough to clear a
+   375px-wide screen (iPhone SE and up) on one line. */
+.sbd-tour__title--remember { font-size: 26px; }
 .sbd-tour__body {
   font: 400 var(--text-base)/var(--leading-body) var(--font-body);
   color: var(--text-muted);
