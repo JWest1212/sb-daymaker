@@ -685,22 +685,23 @@
 /* Panel 1 illustration frame (SVG ships its own tokenized fills) */
 .sbd-tour__art-frame { margin: 14px 0 2px; }
 
-/* illustration frames (panels 2 + 3) — 2x scale (doubled from the original
-   150px/74%-card/text-sm proportions per Jim's request; see build-deltas). */
+/* illustration frames (panels 2 + 3) — right-sized to read as a genuine
+   miniature of a real feed card (compare .sbd-listcard: 108px rail, 18px
+   title, 44px heart) rather than dominate the panel on a real phone. */
 .sbd-tour__art {
   border-radius: var(--radius-md);
   overflow: hidden;
   margin-bottom: var(--space-4);
-  min-height: 300px;
+  min-height: 170px;
   display: grid;
   place-items: center;
 }
 .sbd-tour__art--save { background: var(--plaster-2); }
 .sbd-tour__art--been { background: linear-gradient(160deg, var(--pacific-dark), var(--pacific)); }
 
-/* Panel 2 — mini save card (2x) */
+/* Panel 2 — mini save card */
 .sbd-tour__save-card {
-  width: 74%;
+  width: 82%;
   background: var(--surface);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
@@ -709,60 +710,61 @@
   position: relative;
 }
 .sbd-tour__save-img {
-  width: 78px;
+  width: 72px;
   flex-shrink: 0;
   background: linear-gradient(150deg, #7a3f2a, var(--terracotta) 70%, var(--tile-light));
 }
-.sbd-tour__save-body { padding: 12px 18px; flex: 1; min-width: 0; }
-.sbd-tour__save-title { font: 600 21px/1.15 var(--font-display); color: var(--text); overflow-wrap: break-word; }
-.sbd-tour__save-meta { font: 600 18px/1 var(--font-mono); color: var(--pacific); margin-top: 5px; }
+.sbd-tour__save-body { padding: var(--space-2) var(--space-3); flex: 1; min-width: 0; }
+.sbd-tour__save-title {
+  font: 600 17px/1.2 var(--font-display);
+  color: var(--text);
+  /* Always one line (never wrap "Trombone Shorty"); reserves clearance from
+     the heart badge and ellipsizes instead of colliding with it. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 40px);
+}
+.sbd-tour__save-meta { font: 600 13px/1 var(--font-mono); color: var(--pacific); margin-top: 4px; }
 .sbd-tour__heart {
   position: absolute;
-  top: 11px;
-  right: 11px;
-  width: 39px;
-  height: 39px;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: var(--terracotta);
   color: var(--surface);
   display: grid;
   place-items: center;
-  font-size: 20px;
+  font-size: 15px;
   animation: sbdHeartPop var(--dur-pulse) var(--ease-spring) infinite;
 }
 
-/* Panel 3 — want-to-been flow (2x). At full 2x size the row (chip + arrow +
-   chip) is wider than a narrow phone's content area, so below 600px (the
-   token file's own mobile breakpoint) the flow reorients vertically with the
-   arrow rotated to point down, instead of wrapping mid-row. */
+/* Panel 3 — want-to-been flow */
 .sbd-tour__flow {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-8);
+  gap: var(--space-3);
   color: var(--surface);
 }
 .sbd-tour__chip {
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: var(--radius-pill);
-  padding: var(--space-4) var(--space-8);
-  font: 600 28px/1 var(--font-body);
+  padding: var(--space-2) var(--space-4);
+  font: 600 16px/1 var(--font-body);
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-2);
   white-space: nowrap;
 }
 .sbd-tour__chip--been { background: var(--sage); border-color: transparent; color: var(--ink); }
 .sbd-tour__flow-arrow {
   color: var(--surface);
-  font-size: 40px;
+  font-size: 20px;
   opacity: 0.7;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-@media (max-width: 599px) {
-  .sbd-tour__flow { flex-direction: column; gap: var(--space-4); }
-  .sbd-tour__flow-arrow { transform: rotate(90deg); }
 }
 
 /* footer */
