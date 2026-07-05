@@ -108,13 +108,25 @@ export function pickUnused(options: ImageOption[], used: Map<string, number>): I
 
 // ---- network sources (isolated; each returns null on miss/error) -----------
 
+/** Set when Pexels answers 429 (free tier: ~200 searches/hour). Once tripped, the
+ *  resolver stops treating empty Pexels results as a genuine free-tier miss — so it
+ *  will NOT fall through to paid Google for rows Pexels could cover for free later
+ *  (the 2026-07-04 threshold-1 run burned 6 Google calls exactly this way). */
+let pexelsRateLimited = false;
+export function isPexelsRateLimited(): boolean { return pexelsRateLimited; }
+
 /** Up to `n` Pexels results — the first is the pick, the rest are swap-able
  *  alternates for the cockpit picker. */
 async function pexelsMany(query: string, n = 3): Promise<ImageOption[]> {
-  if (!PEXELS_KEY) return [];
+  if (!PEXELS_KEY || pexelsRateLimited) return [];
   try {
     const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${n}&orientation=landscape`;
     const res = await fetch(url, { headers: { Authorization: PEXELS_KEY } });
+    if (res.status === 429) {
+      pexelsRateLimited = true;
+      console.log('  [images] Pexels rate limit hit (429) — remaining rows resolve without Pexels; re-run in ~1 hour');
+      return [];
+    }
     if (!res.ok) return [];
     const json: any = await res.json();
     return (json?.photos ?? [])
@@ -248,8 +260,9 @@ export async function resolveImages(
       // result pool — a deeper pool is what lets the dedupe actually spread them.
       found.push(...await pexelsMany(q, 8));
       const wm = await wikimedia(q); if (wm) found.push(wm);
-      // Paid fallback — only when every free tier missed.
-      if (!found.length && c.place_id && GOOGLE_KEY) {
+      // Paid fallback — only when every free tier GENUINELY missed. A Pexels 429 is
+      // not a miss: those rows resolve free on a later run, so don't pay Google now.
+      if (!found.length && !pexelsRateLimited && c.place_id && GOOGLE_KEY) {
         if (calls < CAP) {
           const g = await googlePhoto(c.place_id, () => { calls++; });
           if (g) found.push(g);
