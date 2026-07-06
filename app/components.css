@@ -4197,6 +4197,27 @@
   color: var(--text);
   margin: var(--space-1) 0 0;
 }
+.sbd-disc__more {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--pacific) 5%, transparent);
+}
+.sbd-disc__more-icon {
+  flex-shrink: 0;
+  font-size: var(--text-lg);
+  color: var(--pacific);
+}
+.sbd-disc__more-text {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.4;
+}
 
 /* Guide card */
 .sbd-guidecard {

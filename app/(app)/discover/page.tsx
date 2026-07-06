@@ -29,11 +29,15 @@ export default async function DiscoverPage() {
         <section>
           <div className="sbd-disc__head">
             <div className="sbd-disc__eyebrow">By neighborhood</div>
-            <h2 className="sbd-disc__title">Know the city block by block</h2>
+            <h2 className="sbd-disc__title">Discover the city block by block</h2>
           </div>
           {hoods.map((g) => (
             <GuideCard key={g.id} guide={g} />
           ))}
+          <div className="sbd-disc__more">
+            <span className="sbd-disc__more-icon" aria-hidden="true">🧭</span>
+            <p className="sbd-disc__more-text">More guides are on their way to help you discover Santa Barbara.</p>
+          </div>
         </section>
       ) : null}
 
