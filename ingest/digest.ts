@@ -8,6 +8,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendEmail } from '../lib/email';
 import type { ResolveStats } from './images';
 import type { RunRow } from './land';
+import { autosendUnapprovedEnabled } from '../lib/edition/rolloutGate';
 
 const REASON_LABEL: Record<string, string> = {
   no_start: 'no start-time', no_title: 'no title', no_address: 'no address',
@@ -28,11 +29,21 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
   if (!to) { console.log('  digest skipped — DIGEST_TO not set'); return; }
 
   const since = new Date(Date.now() - 2 * 3600_000).toISOString(); // this run's window
+  const recentCutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10); // 14-day noise cap
 
-  const [{ count: queued }, dropsRes, runsRes] = await Promise.all([
+  const [{ count: queued }, dropsRes, runsRes, pendingEditionsRes, failedEditionsRes] = await Promise.all([
     sb.from('things').select('*', { count: 'exact', head: true }).eq('status', 'needs_review'),
     sb.from('ingest_drops').select('reason').gte('created_at', since),
     sb.from('source_runs').select('source, landed, fetched, ok, error, started_at').gte('started_at', since),
+    // Spec §11.3 rollout gate: while EDITION_AUTOSEND_UNAPPROVED is unset, a still-draft
+    // edition is skipped rather than sent — surface it here every night until approved,
+    // since the send cron itself only logs the skip (Vercel Cron logs, easy to miss).
+    sb.from('editions').select('edition_date, edition_type').eq('status', 'draft').order('edition_date'),
+    // Spec §10 "Assembly failure ... alert ops" — the drafter marks a status='failed'
+    // row and never retries it; this is the only proactive alert for that (otherwise
+    // it only shows up if someone happens to open the cockpit archive). Capped to the
+    // last 14 days so a months-old failure doesn't nag forever.
+    sb.from('editions').select('edition_date, edition_type, skip_reason').eq('status', 'failed').gte('edition_date', recentCutoff).order('edition_date'),
   ]);
 
   const drops = dropsRes.data ?? [];
@@ -45,6 +56,8 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
   const img = s.images;
   const overCap = img?.overCap ?? 0;
   const rejectedRelevance = img?.rejectedRelevance ?? 0;
+  const pendingEditions = autosendUnapprovedEnabled() ? [] : (pendingEditionsRes.data ?? []);
+  const failedEditions = failedEditionsRes.data ?? [];
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sbdaymaker.com';
   const subject = `SB Daymaker — ${queued ?? 0} in review queue (${s.landed} new tonight)`;
@@ -70,9 +83,14 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
       ${overCap ? line('⚠ Over photo cap', `${overCap} cards → placeholder (resets next month)`) : ''}
       ${s.closed ? line('Closed & archived', String(s.closed)) : ''}
       ${down.length ? line('⚠ Sources down', down.map((d) => d.source).join(', ')) : ''}
+      ${pendingEditions.length ? line('⚠ Edition awaiting approval',
+        pendingEditions.map((e) => `${e.edition_date} (${e.edition_type})`).join(', ') + ' — will NOT auto-send') : ''}
+      ${failedEditions.length ? line('🔴 Edition assembly failed',
+        failedEditions.map((e) => `${e.edition_date} (${e.edition_type}): ${e.skip_reason ?? 'unknown'}`).join('; ')) : ''}
     </table>
     <table style="border-collapse:collapse;font-size:13px;margin-bottom:22px">${sourceRows}</table>
     <a href="${site}/admin/review" style="display:inline-block;background:#16586A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the queue →</a>
+    ${pendingEditions.length ? `<a href="${site}/admin/edition-draft" style="display:inline-block;margin-left:10px;background:#B0592A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the edition →</a>` : ''}
   </div>`;
 
   const ok = await sendEmail({ to, subject, html });

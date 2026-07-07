@@ -112,6 +112,16 @@ export function selectEdition(input: SelectEditionInput): EditionSelection {
     } else {
       // Evergreen fallback — cooldown-filtered first; if that empties the
       // pool, "never blank" wins over cooldown (spec §3.6 flags this case).
+      if (heroRanked.length > 0) {
+        // heroRanked had candidates but EVERY one is in cooldown — the pool itself
+        // (not just this window) is too small for the 12-edition memory. Spec §3.6:
+        // "surface a warning in the ops digest" — console.warn is picked up by both
+        // the GitHub Action log and draftEdition.ts's own summary output.
+        console.warn(
+          `[edition select] hero pool (${heroRanked.length} candidates) fully exhausted by ` +
+            `12-edition cooldown — falling back to evergreen. Consider growing the evergreen pool.`,
+        );
+      }
       const tier3Clear = things.filter((t) => t.happening_tier === 3 && !cooldownIds.has(t.id));
       const evergreen =
         pickEvergreenFallback(asThings(tier3Clear), editionDateKey) ??
@@ -164,6 +174,10 @@ export function selectEdition(input: SelectEditionInput): EditionSelection {
   let anchorPick = fires ? firstClearingCooldown(anchorRanked, cooldownIds) : null;
   if (fires && !anchorPick && anchorRanked.length > 0) {
     // "never skip" wins over cooldown here too, same as the hero's evergreen path.
+    console.warn(
+      `[edition select] anchor pool (${anchorRanked.length} candidates) fully exhausted by ` +
+        `12-edition cooldown — repeating the top-ranked anchor. Consider growing the evergreen pool.`,
+    );
     anchorPick = anchorRanked[0];
   }
   if (anchorPick) chosenIds.add(anchorPick.id);
