@@ -28,6 +28,10 @@ on:
         description: 'Repeat-offender share threshold (1 = spread even pairs; default 3)'
         type: string
         default: '3'
+      voice_backfill:
+        description: 'Re-draft published blurbs in the new knowing-local-friend voice (VOICE_BACKFILL=1)'
+        type: boolean
+        default: false
 
 jobs:
   ingest:
@@ -48,6 +52,7 @@ jobs:
           WEIGHT_BACKFILL: ${{ inputs.weight_backfill == true && '1' || '' }}
           REPEAT_BACKFILL: ${{ inputs.repeat_backfill == true && '1' || '' }}
           REPEAT_THRESHOLD: ${{ inputs.repeat_threshold }}
+          VOICE_BACKFILL: ${{ inputs.voice_backfill == true && '1' || '' }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}

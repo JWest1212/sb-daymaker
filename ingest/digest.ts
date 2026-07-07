@@ -44,6 +44,7 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
   const down = runs.filter((r) => !r.ok);
   const img = s.images;
   const overCap = img?.overCap ?? 0;
+  const rejectedRelevance = img?.rejectedRelevance ?? 0;
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sbdaymaker.com';
   const subject = `SB Daymaker — ${queued ?? 0} in review queue (${s.landed} new tonight)`;
@@ -65,6 +66,7 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
       ${line('New tonight', String(s.landed))}
       ${line('Dropped', `${drops.length}${breakdown ? ` (${breakdown})` : ''}`)}
       ${img ? line('Images', `${img.free} free · ${img.google} Google · ${img.placeholder} placeholder`) : ''}
+      ${rejectedRelevance ? line('Images flagged irrelevant', `${rejectedRelevance} → placeholder instead`) : ''}
       ${overCap ? line('⚠ Over photo cap', `${overCap} cards → placeholder (resets next month)`) : ''}
       ${s.closed ? line('Closed & archived', String(s.closed)) : ''}
       ${down.length ? line('⚠ Sources down', down.map((d) => d.source).join(', ')) : ''}

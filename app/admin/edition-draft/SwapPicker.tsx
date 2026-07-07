@@ -1,0 +1,92 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import type { CockpitCandidate } from "@/lib/edition/cockpitTypes";
+import type { EditionSlot } from "@/lib/edition/types";
+
+interface SearchThing { id: string; title: string; neighborhood: string | null; happening_tier: number }
+
+export function SwapPicker({
+  slot, position, candidates, editionId, onClose, onPick,
+}: {
+  slot: EditionSlot;
+  position: number;
+  candidates: CockpitCandidate[];
+  editionId: string;
+  onClose: () => void;
+  onPick: (thingId: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchThing[]>([]);
+  const [searching, setSearching] = useState(false);
+  const showSearch = query.trim().length >= 2;
+
+  // Debounced search-all (spec §5.1's "search-all fallback"). setState calls
+  // live inside the timer callback, not the effect body, so this only ever
+  // fires in response to the debounce elapsing — not on every render.
+  useEffect(() => {
+    if (!showSearch) return;
+    const t = setTimeout(() => {
+      setSearching(true);
+      fetch(`/api/admin/editions/${editionId}/search-things?q=${encodeURIComponent(query)}`)
+        .then((r) => r.json())
+        .catch(() => null)
+        .then((res) => { setResults(res?.things ?? []); setSearching(false); });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query, editionId, showSearch]);
+
+  return (
+    <>
+      <div className="scrim show" onClick={onClose} />
+      <div className="sheet show" role="dialog" aria-modal="true" aria-labelledby="swapTitle">
+        <h3 id="swapTitle">
+          Swap — {slot}{slot === "secondary" ? ` #${position + 1}` : ""}
+          <button className="x" aria-label="Close" onClick={onClose}>✕</button>
+        </h3>
+        <div className="sbody">
+          <input
+            className="ed-search" placeholder="Search all published things…" value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {showSearch ? (
+            <>
+              <p className="ed-swap-heading">Search results</p>
+              {searching ? <p className="ed-swap-empty">Searching…</p> : null}
+              {!searching && results.length === 0 ? <p className="ed-swap-empty">No matches</p> : null}
+              {results.map((t) => (
+                <div className="pickrow" key={t.id}>
+                  <div>
+                    <div className="ttl">{t.title}</div>
+                    <div className="pm">T{t.happening_tier} · {t.neighborhood ?? "—"}</div>
+                  </div>
+                  <button className="btn btn-approve btn-sm pickbtn" onClick={() => onPick(t.id)}>Use</button>
+                </div>
+              ))}
+            </>
+          ) : (
+            <>
+              <p className="ed-swap-heading">Ranked candidates</p>
+              {candidates.length === 0 ? (
+                <div className="gatebox">No ranked alternates for this slot — search above for any published thing.</div>
+              ) : candidates.map((c) => (
+                <div className="pickrow" key={c.thing.id}>
+                  <div>
+                    <div className="ttl">{c.thing.title}{c.selected ? <span className="chip evergreen"> current</span> : null}</div>
+                    <div className="pm">{c.thing.when} · {c.thing.neighborhood ?? "—"}</div>
+                  </div>
+                  <button className="btn btn-approve btn-sm pickbtn" disabled={c.selected} onClick={() => onPick(c.thing.id)}>
+                    {c.selected ? "Current" : "Use"}
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+        <div className="sfoot">
+          <button className="btn btn-edit" onClick={onClose}>Done</button>
+        </div>
+      </div>
+    </>
+  );
+}

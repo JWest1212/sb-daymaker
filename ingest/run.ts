@@ -29,6 +29,7 @@ const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
 const WEIGHT_BACKFILL = process.env.WEIGHT_BACKFILL === '1';
 const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
+const VOICE_BACKFILL = process.env.VOICE_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -247,11 +248,86 @@ async function backfillWeights() {
   console.log(`[weight-backfill] downweighted ${updated} civic item(s) to −3 (audit rows written)`);
 }
 
+/** Mobile/image addendum Part C, one-time / on-demand: re-draft EVERY published
+ *  thing's blurb + blurb_long through the retuned voice prompt, so the live catalog
+ *  matches the new knowing-local-friend voice (not just new drafts going forward).
+ *  Skips any row a founder has explicitly rewritten the blurb on post-publish (a
+ *  catalog_edit / edit_applied / approve audit_log row whose payload.edits has a
+ *  `blurb` key) — a founder's own wording is never silently overwritten. This can't
+ *  detect a blurb tweak made during PRE-publish review (review/update doesn't log the
+ *  blurb text), so it's a conservative signal, not a guarantee; spot-check afterward.
+ *  Only writes a row when the re-draft actually differs from the current text. */
+async function backfillVoice() {
+  const sb = getDb();
+
+  const { data: editLog, error: logErr } = await sb
+    .from('audit_log')
+    .select('entity_id, payload')
+    .eq('entity_type', 'thing')
+    .eq('actor', 'founder')
+    .in('action', ['catalog_edit', 'edit_applied', 'approve']);
+  if (logErr) throw new Error(`voice-backfill audit_log select: ${logErr.message}`);
+  const founderBlurbEdited = new Set(
+    (editLog ?? [])
+      .filter((r) => {
+        const edits = (r.payload as { edits?: Record<string, unknown> } | null)?.edits;
+        return edits != null && Object.prototype.hasOwnProperty.call(edits, 'blurb');
+      })
+      .map((r) => r.entity_id as string),
+  );
+
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, blurb, blurb_long, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed')
+    .eq('status', 'published');
+  if (error) throw new Error(`voice-backfill select: ${error.message}`);
+  const all = data ?? [];
+  const rows = all.filter((r) => !founderBlurbEdited.has(r.id as string));
+  console.log(
+    `\n[voice-backfill] ${all.length} published rows · ${all.length - rows.length} skipped ` +
+      `(founder-edited blurb) · ${rows.length} to re-draft\n`,
+  );
+  if (!rows.length) return;
+
+  const cands: Candidate[] = rows.map((r) => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: (r.time_of_day_fit as Tod[]) ?? [],
+    starts_at: null, ends_at: null, // deliberately not loaded — enrich must never see it
+    source_url: (r.source as string) ?? '', reason_to_go: r.reason_to_go ?? undefined,
+    local_note: r.local_note ?? undefined, is_21_plus: (r.is_21_plus as boolean) ?? undefined,
+    last_confirmed: (r.last_confirmed as string)?.slice(0, 10) ?? '', start_strategy: 'none',
+    // Seeded with the CURRENT text so a chunk failure (mergeEnrichment's fallback)
+    // preserves it rather than nulling it out.
+    blurb: (r.blurb as string) ?? undefined, blurb_long: (r.blurb_long as string) ?? undefined,
+  }));
+
+  const enriched = await enrich(cands, { sb });
+  const byId = new Map(rows.map((r) => [r.id as string, r]));
+  let updated = 0;
+  for (const c of enriched) {
+    const original = byId.get(c.id);
+    if (!original) continue;
+    const blurbChanged = c.blurb && c.blurb !== original.blurb;
+    const longChanged = c.blurb_long && c.blurb_long !== original.blurb_long;
+    if (!blurbChanged && !longChanged) continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ blurb: c.blurb ?? original.blurb, blurb_long: c.blurb_long ?? original.blurb_long })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`voice-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+  console.log(`\n[voice-backfill] re-drafted ${updated}/${rows.length} blurbs in the new voice`);
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
   if (WEIGHT_BACKFILL) return backfillWeights();
   if (REPEAT_BACKFILL) return backfillRepeatImages();
+  if (VOICE_BACKFILL) return backfillVoice();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -324,7 +400,10 @@ async function main() {
     const r = await resolveImages(keep, sb);
     toLand = r.cands;
     imageStats = r.stats;
-    console.log(`  images               free ${r.stats.free}  google ${r.stats.google}  placeholder ${r.stats.placeholder}  over-cap ${r.stats.overCap}`);
+    console.log(
+      `  images               free ${r.stats.free}  google ${r.stats.google}  placeholder ${r.stats.placeholder}` +
+        `  over-cap ${r.stats.overCap}  rejected-quality ${r.stats.rejectedQuality}  rejected-relevance ${r.stats.rejectedRelevance}`,
+    );
   }
 
   // attribute dedupe drops + landed counts back to each source run
