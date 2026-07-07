@@ -6,8 +6,18 @@ on:
     # 09:00 UTC = 02:00 America/Los_Angeles (PDT). Cron is fixed-UTC, so this is
     # 01:00 local in winter (PST) — fine for a nightly batch.
     - cron: '0 9 * * *'
+    # Edition drafter (spec §3.1): "19:00 America/Los_Angeles the night before each
+    # send... fold into the existing nightly GitHub Action, not a new scheduler."
+    # 02:00 UTC Thu/Sun = 19:00 PDT Wed/Sat (fixed-UTC, same DST-drift tradeoff as
+    # every other cron here). Runs draftEdition.ts INSTEAD of the regular ingest —
+    # see the job steps' `if:` conditions below.
+    - cron: '0 2 * * 0,4'
   workflow_dispatch:
     inputs:
+      draft_edition:
+        description: 'Draft the next edition on demand (ingest/draftEdition.ts, auto Wed/Sat mode)'
+        type: boolean
+        default: false
       enrich_backfill:
         description: 'Re-enrich all needs_review rows with no blurb (ENRICH_BACKFILL=1)'
         type: boolean
@@ -45,7 +55,12 @@ jobs:
           # (added in Node 22; Node 20 is also now deprecated by setup-node).
           node-version: '22'
       - run: npm ci
-      - run: npx tsx ingest/run.ts
+      # The drafter schedule replaces the regular ingest run that night (both would
+      # be redundant hours apart) — every other trigger (nightly schedule, manual
+      # dispatch) still runs the full ingest as before.
+      - name: Nightly ingest
+        if: github.event.schedule != '0 2 * * 0,4'
+        run: npx tsx ingest/run.ts
         env:
           ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}
           IMAGE_BACKFILL: ${{ inputs.image_backfill == true && '1' || '' }}
@@ -72,3 +87,9 @@ jobs:
           SCRAPFLY_KEY: ${{ secrets.SCRAPFLY_KEY }}
           # Wave 4: SeatGeek backstop (free client_id; omit to skip)
           SEATGEEK_CLIENT_ID: ${{ secrets.SEATGEEK_CLIENT_ID }}
+      - name: Draft the edition
+        if: github.event.schedule == '0 2 * * 0,4' || inputs.draft_edition == true
+        run: npx tsx ingest/draftEdition.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}

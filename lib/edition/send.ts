@@ -16,6 +16,7 @@ import { loadRenderableEdition } from "./renderData";
 import { renderEditionEmailHtml, renderEditionPlainText } from "./render";
 import { stripEmDashes } from "./emdash";
 import { sendEmailBatch } from "../email";
+import { autosendUnapprovedEnabled } from "./rolloutGate";
 
 const UNSUB_SENTINEL = "__SBD_UNSUB_TOKEN__";
 const BATCH_SIZE = 100; // Resend's per-call cap
@@ -35,10 +36,14 @@ export async function sendEdition(sb: SupabaseClient, editionDate: string): Prom
   if (edErr) throw new Error(`send: edition select failed: ${edErr.message}`);
   if (!ed) return { ok: false, sent: 0, skipReason: "no edition for this date" };
 
-  // Spec §7.2: approved OR still-draft both send (auto-send-if-unapproved).
-  // skipped/failed/sent are all terminal — never (re-)send them.
-  if (!["draft", "approved"].includes(ed.status)) {
-    return { ok: false, sent: 0, skipReason: `status is '${ed.status}' — not eligible to send` };
+  // skipped/failed/sent are all terminal — never (re-)send them. 'draft' is only
+  // eligible when the rollout gate has been explicitly opened (see above).
+  const eligibleStatuses = autosendUnapprovedEnabled() ? ["draft", "approved"] : ["approved"];
+  if (!eligibleStatuses.includes(ed.status)) {
+    const reason = ed.status === "draft"
+      ? "status is 'draft' — rollout gate active (EDITION_AUTOSEND_UNAPPROVED unset): approve it in the cockpit, or set EDITION_AUTOSEND_UNAPPROVED=1 to auto-send unapproved drafts"
+      : `status is '${ed.status}' — not eligible to send`;
+    return { ok: false, sent: 0, skipReason: reason };
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.sbdaymaker.com").replace(/\/+$/, "");

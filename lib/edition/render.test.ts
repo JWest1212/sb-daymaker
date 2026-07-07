@@ -92,6 +92,14 @@ describe("renderEditionEmailHtml — missing image state matrix", () => {
     );
     expect(html).toContain('alt="Sunset jazz on the Mesa (photo: Jane Doe)"');
   });
+
+  it("falls back to a solid gradient tile (not an <img>) for a missing secondary thumbnail", () => {
+    const html = renderEditionEmailHtml(
+      edition({ secondaries: [pick({ thingId: "s1", title: "Market day", imageUrl: null, dayLabel: "Saturday" })] }),
+    );
+    expect(html).not.toMatch(/<img[^>]*Market day/);
+    expect(html).toContain("#16586A"); // pacific fallback tile
+  });
 });
 
 describe("renderEditionEmailHtml — secondaries + non-event + anchor bands", () => {
@@ -108,6 +116,19 @@ describe("renderEditionEmailHtml — secondaries + non-event + anchor bands", ()
     expect(html).toContain("New taqueria");
     expect(html).toContain("New this week");
     expect(html).not.toContain("Always worth it");
+  });
+});
+
+describe("renderEditionEmailHtml — long titles/blurbs wrap, never truncate (state matrix §10)", () => {
+  it("passes a long hero title and blurb through in full, with no ellipsis/clipping styles applied to the text", () => {
+    const longTitle = "The Santa Barbara International Orchid Show and Farmers Market Block Party Weekend";
+    const longBlurb =
+      "Three full blocks close to traffic for the day, with orchid growers from as far as Ventura " +
+      "setting up alongside the regular Saturday stalls, so budget extra time to wander before the tasting tent lines start.";
+    const html = renderEditionEmailHtml(edition({ hero: pick({ title: longTitle, blurb: longBlurb }) }));
+    expect(html).toContain(longTitle);
+    expect(html).toContain(longBlurb);
+    expect(html).not.toMatch(/text-overflow|white-space:\s*nowrap/);
   });
 });
 
