@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { cacheKey, imageQuery, rankOptions, pickUnused, isCivicImage, CATEGORY_QUERY, type ImageOption } from './images';
+import {
+  cacheKey, imageQuery, rankOptions, pickUnused, isCivicImage, CATEGORY_QUERY,
+  meetsQualityBar, MIN_IMAGE_WIDTH, MIN_IMAGE_HEIGHT, type ImageOption,
+} from './images';
 
 describe('cacheKey', () => {
   it('prefers the Google place_id', () => {
@@ -85,6 +88,23 @@ describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
   });
   it('placeholder-only input is unchanged', () => {
     expect(pickUnused([{ url: '', source: 'placeholder' }], counts({ a: 1 })).map((o) => o.source)).toEqual(['placeholder']);
+  });
+});
+
+describe('meetsQualityBar — addendum Part B retina-safe HD floor', () => {
+  it('passes an option at or above the floor', () => {
+    expect(meetsQualityBar({ width: MIN_IMAGE_WIDTH, height: MIN_IMAGE_HEIGHT })).toBe(true);
+    expect(meetsQualityBar({ width: 1920, height: 1080 })).toBe(true);
+  });
+  it('rejects an option below the floor on either dimension', () => {
+    expect(meetsQualityBar({ width: MIN_IMAGE_WIDTH - 1, height: MIN_IMAGE_HEIGHT })).toBe(false);
+    expect(meetsQualityBar({ width: MIN_IMAGE_WIDTH, height: MIN_IMAGE_HEIGHT - 1 })).toBe(false);
+    expect(meetsQualityBar({ width: 200, height: 120 })).toBe(false);
+  });
+  it('passes through options with no reported size (permissive, e.g. owned/manual entries)', () => {
+    expect(meetsQualityBar({})).toBe(true);
+    expect(meetsQualityBar({ width: 100 })).toBe(true);
+    expect(meetsQualityBar({ height: 100 })).toBe(true);
   });
 });
 

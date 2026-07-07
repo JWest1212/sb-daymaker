@@ -16,6 +16,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Candidate, PhotoSource, HappeningCategory } from '../packages/shared/types';
 import { classifyWeight } from './weight';
+import { checkImageRelevance } from './imageRelevance';
 
 const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 1400); // ~$10 at $0.007/call
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
@@ -24,9 +25,26 @@ const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 export interface ImageOption {
   url: string;
   source: PhotoSource;
+  width?: number;
+  height?: number;
   attribution?: string;
 }
-export interface ResolveStats { resolved: number; free: number; google: number; placeholder: number; overCap: number; }
+export interface ResolveStats {
+  resolved: number; free: number; google: number; placeholder: number; overCap: number;
+  rejectedQuality: number; rejectedRelevance: number;
+}
+
+/** Addendum Part B — quality bar: a retina-safe HD floor. Free-tier searches
+ *  occasionally return thumbnail-sized or cropped-down images; this screens those
+ *  out before they can become the auto-pick or a cockpit alternate. Options with no
+ *  reported size (shouldn't happen for pexels/wikimedia/google after the capture
+ *  below, but keeps 'owned'/manually-set entries permissive) pass through. */
+export const MIN_IMAGE_WIDTH = 960;
+export const MIN_IMAGE_HEIGHT = 540;
+export function meetsQualityBar(o: Pick<ImageOption, 'width' | 'height'>): boolean {
+  if (o.width == null || o.height == null) return true;
+  return o.width >= MIN_IMAGE_WIDTH && o.height >= MIN_IMAGE_HEIGHT;
+}
 
 // ---- pure helpers (unit-tested) --------------------------------------------
 
@@ -131,7 +149,15 @@ async function pexelsMany(query: string, n = 3): Promise<ImageOption[]> {
     const json: any = await res.json();
     return (json?.photos ?? [])
       .filter((p: any) => p?.src?.large)
-      .map((p: any) => ({ url: p.src.large, source: 'pexels' as const, attribution: `Photo by ${p.photographer} on Pexels` }));
+      // large2x (retina, ~1880w) over large (~940w) when Pexels has it — addendum
+      // Part B's "high-quality images" bias; falls back to large for smaller originals.
+      .map((p: any) => ({
+        url: p.src.large2x || p.src.large,
+        source: 'pexels' as const,
+        width: p.width,
+        height: p.height,
+        attribution: `Photo by ${p.photographer} on Pexels`,
+      }));
   } catch { return []; }
 }
 
@@ -139,7 +165,7 @@ async function wikimedia(query: string): Promise<ImageOption | null> {
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search`
       + `&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=3`
-      + `&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1200&origin=*`;
+      + `&prop=imageinfo&iiprop=url|extmetadata|size&iiurlwidth=1200&origin=*`;
     const res = await fetch(url, { headers: { 'user-agent': 'SBDaymaker-ingest/1.0' } });
     if (!res.ok) return null;
     const json: any = await res.json();
@@ -149,7 +175,12 @@ async function wikimedia(query: string): Promise<ImageOption | null> {
       const u = info?.thumburl || info?.url;
       if (u && /\.(jpe?g|png|webp)$/i.test(u)) {
         const artist = info?.extmetadata?.Artist?.value?.replace(/<[^>]+>/g, '') ?? 'Wikimedia Commons';
-        return { url: u, source: 'wikimedia', attribution: `${artist} (Wikimedia Commons)` };
+        // Original dimensions (Wikimedia never upscales the thumb beyond them) — the
+        // right quality-bar signal even though we serve the capped 1200px-wide thumb.
+        return {
+          url: u, source: 'wikimedia', width: info?.width, height: info?.height,
+          attribution: `${artist} (Wikimedia Commons)`,
+        };
       }
     }
     return null;
@@ -178,8 +209,28 @@ async function googlePhoto(placeId: string, onCall: () => void): Promise<ImageOp
     const med: any = await medRes.json();
     if (!med?.photoUri) return null;
     const attr = photo?.authorAttributions?.[0]?.displayName;
-    return { url: med.photoUri, source: 'google', attribution: attr ? `${attr} (Google)` : 'Google' };
+    return {
+      url: med.photoUri, source: 'google', width: photo?.widthPx, height: photo?.heightPx,
+      attribution: attr ? `${attr} (Google)` : 'Google',
+    };
   } catch { return null; }
+}
+
+/** On-demand widening for the cockpit's "find more options" action (edition_build_spec
+ *  §3.5 — "and lazily for candidates on demand"). Free sources only (Pexels + Wikimedia,
+ *  no Google) — an operator clicking repeatedly should never risk the paid cap. Merges
+ *  with the caller's existing real options, deduped by URL, and re-appends the
+ *  placeholder sentinel via rankOptions (never forking that logic). */
+export async function findMoreOptions(query: string, existing: ImageOption[]): Promise<ImageOption[]> {
+  const existingReal = existing.filter((o) => o.url);
+  const seen = new Set(existingReal.map((o) => o.url));
+  const fresh: ImageOption[] = [];
+  for (const o of (await pexelsMany(query, 8)).filter(meetsQualityBar)) {
+    if (!seen.has(o.url)) { fresh.push(o); seen.add(o.url); }
+  }
+  const wm = await wikimedia(query);
+  if (wm && meetsQualityBar(wm) && !seen.has(wm.url)) fresh.push(wm);
+  return rankOptions([...existingReal, ...fresh]);
 }
 
 // ---- spend counter ---------------------------------------------------------
@@ -218,7 +269,10 @@ export async function resolveImages(
   sb: SupabaseClient,
   opts: { force?: boolean } = {},
 ): Promise<{ cands: Candidate[]; stats: ResolveStats }> {
-  const stats: ResolveStats = { resolved: 0, free: 0, google: 0, placeholder: 0, overCap: 0 };
+  const stats: ResolveStats = {
+    resolved: 0, free: 0, google: 0, placeholder: 0, overCap: 0,
+    rejectedQuality: 0, rejectedRelevance: 0,
+  };
   if (!cands.length) return { cands, stats };
 
   const month = monthKey();
@@ -239,6 +293,11 @@ export async function resolveImages(
   const bump = (u: string) => used.set(u, (used.get(u) ?? 0) + 1);
 
   const out: Candidate[] = [];
+  // Freshly-resolved rows whose auto-pick still needs the Part B relevance guard
+  // before it can be finalized/persisted — cache hits skip straight to `out` above
+  // (once vetted, always vetted; re-checking every run would just burn tokens).
+  const pending: { c: Candidate; key: string; options: ImageOption[] }[] = [];
+
   for (const c of cands) {
     const key = cacheKey(c);
     const cached = cache.get(key);
@@ -258,14 +317,18 @@ export async function resolveImages(
       const q = imageQuery(c);
       // 8 options (not 3): clusters of similar events (90+ library programs) share one
       // result pool — a deeper pool is what lets the dedupe actually spread them.
-      found.push(...await pexelsMany(q, 8));
-      const wm = await wikimedia(q); if (wm) found.push(wm);
+      const pexelsRaw = await pexelsMany(q, 8);
+      const pexelsGood = pexelsRaw.filter(meetsQualityBar);
+      stats.rejectedQuality += pexelsRaw.length - pexelsGood.length;
+      found.push(...pexelsGood);
+      const wm = await wikimedia(q);
+      if (wm) { if (meetsQualityBar(wm)) found.push(wm); else stats.rejectedQuality++; }
       // Paid fallback — only when every free tier GENUINELY missed. A Pexels 429 is
       // not a miss: those rows resolve free on a later run, so don't pay Google now.
       if (!found.length && !pexelsRateLimited && c.place_id && GOOGLE_KEY) {
         if (calls < CAP) {
           const g = await googlePhoto(c.place_id, () => { calls++; });
-          if (g) found.push(g);
+          if (g) { if (meetsQualityBar(g)) found.push(g); else stats.rejectedQuality++; }
         } else {
           stats.overCap++; // free missed, would have paid, but the cap is hit
         }
@@ -274,25 +337,42 @@ export async function resolveImages(
 
     // W2.3: least-used option leads; repeats spread evenly when the pool is exhausted.
     const options = pickUnused(rankOptions(found), used);
-    const chosen = options[0];
+    pending.push({ c, key, options });
+  }
+
+  // Addendum Part B — one batched vision call over every fresh auto-pick with a real
+  // image (never over the alternates; those are the cockpit's human-reviewed picker).
+  const relevanceCandidates = pending
+    .filter((p) => p.options[0]?.url)
+    .map((p) => ({ id: p.c.id, title: p.c.title, category: p.c.happening_category, imageUrl: p.options[0].url }));
+  const relevance = await checkImageRelevance(relevanceCandidates);
+
+  for (const p of pending) {
+    let chosen = p.options[0];
+    if (chosen.url && relevance.get(p.c.id) === false) {
+      // A wrong image is worse than a clean branded gradient — fall back, don't guess
+      // at the next-ranked alternate (it wasn't vetted either).
+      stats.rejectedRelevance++;
+      chosen = { url: '', source: 'placeholder' };
+    }
     if (!chosen.url) stats.placeholder++;
     else { if (chosen.source === 'google') stats.google++; else stats.free++; bump(chosen.url); }
     stats.resolved++;
 
     const resolved: Candidate = {
-      ...c,
+      ...p.c,
       photo_url: chosen.url || undefined,
       photo_source: chosen.source,
-      photo_options: options,
+      photo_options: p.options,
     };
     out.push(resolved);
 
-    // Persist the per-place resolution so we never re-fetch/re-pay.
+    // Persist the per-place resolution so we never re-fetch/re-pay/re-check.
     await sb.from('image_cache').upsert({
-      place_key: key,
+      place_key: p.key,
       photo_url: chosen.url || null,
       photo_source: chosen.source,
-      photo_options: options,
+      photo_options: p.options,
       attribution: chosen.attribution ?? null,
       resolved_at: new Date().toISOString(),
     }, { onConflict: 'place_key' });

@@ -11,7 +11,8 @@
     "test": "vitest run",
     "ingest": "tsx ingest/run.ts",
     "ingest:dry": "DRY_RUN=1 tsx ingest/run.ts",
-    "enrich:backfill": "ENRICH_BACKFILL=1 tsx ingest/run.ts"
+    "enrich:backfill": "ENRICH_BACKFILL=1 tsx ingest/run.ts",
+    "voice:backfill": "VOICE_BACKFILL=1 tsx ingest/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
@@ -22,6 +23,7 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "svix": "^1.96.1",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

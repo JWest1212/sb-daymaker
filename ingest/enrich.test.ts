@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildItems, applyNegativeRules, mergeEnrichment } from './enrich';
+import { buildItems, applyNegativeRules, mergeEnrichment, SYSTEM } from './enrich';
 import type { Candidate, OccasionTag } from '../packages/shared/types';
 
 function cand(over: Partial<Candidate>): Candidate {
@@ -46,6 +46,32 @@ describe('mergeEnrichment — AI only adds voice + tags, never edits a start', (
   it('passes through candidates the model omitted, unchanged', () => {
     const c = cand({ id: 'missing' });
     expect(mergeEnrichment([c], [])[0]).toBe(c);
+  });
+});
+
+// Addendum Part C — the batch drafting prompt is retuned to the copy kit's
+// knowing-local-friend voice. These guard the prompt text itself, not model output
+// (that's only verifiable against a live call), so they're regression guards against
+// the two easiest ways to silently drift: reintroducing an em dash, or losing the
+// before/after calibration examples Jim supplied.
+describe('SYSTEM prompt — Part C voice retune', () => {
+  it('never contains an em dash — the prompt cannot ban what it itself does', () => {
+    expect(SYSTEM).not.toContain('—');
+  });
+  it('explicitly instructs against em dashes', () => {
+    expect(SYSTEM.toLowerCase()).toContain('em dash');
+  });
+  it('carries the addendum before/after calibration pairs verbatim', () => {
+    expect(SYSTEM).toContain('Gardens, families, evening exploration, roots and growth.');
+    expect(SYSTEM).toContain('Bring the');
+    expect(SYSTEM).toContain('Game day at the library, strategy, stakes, community.');
+    expect(SYSTEM).toContain('Board games and low stakes over lunch at the');
+  });
+  it('bans hype and exclamation marks and calls for sentence case / active voice', () => {
+    const s = SYSTEM.toLowerCase();
+    expect(s).toContain('exclamation');
+    expect(s).toContain('sentence case');
+    expect(s).toContain('active voice');
   });
 });
 
