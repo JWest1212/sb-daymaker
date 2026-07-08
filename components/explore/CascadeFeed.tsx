@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ListCard, EmptyState, SBIcon } from "@/components/ui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -68,6 +68,7 @@ function LeadSection({
         mode="lead"
         label={HORIZON_LABEL[horizon]}
         dek={deriveLeadDek(horizon, tier1.length)}
+        sticky={horizon !== "month"}
       />
       {horizon === "today" && <TodayLead tier1={tier1} />}
       {horizon === "week" && <LeadDayRail items={tier1} />}
@@ -97,6 +98,7 @@ export function CascadeFeed({
   const [tier3Open, setTier3Open] = useState(false);
   const [monthShownCount, setMonthShownCount] = useState(8);
   const feedRef = useRef<HTMLDivElement>(null);
+  const onMonthShowMore = useCallback(() => setMonthShownCount((c) => c + 8), []);
 
   // Reset collapsed state and pagination on horizon change
   useEffect(() => {
@@ -127,7 +129,9 @@ export function CascadeFeed({
     );
     nodes.forEach((node) => observer.observe(node));
     return () => observer.disconnect();
-  }, [items, tier2Open, tier3Open]);
+    // monthShownCount: "See more" mounts fresh .sbd-reveal nodes (Month pagination)
+    // that this effect must re-scan for, or they'd sit at opacity:0 forever.
+  }, [items, tier2Open, tier3Open, monthShownCount]);
 
   const tier1 = items.filter((t) => t.happening_tier === 1);
   const tier2 = items.filter((t) => t.happening_tier === 2);
@@ -162,7 +166,7 @@ export function CascadeFeed({
           tier1={tier1}
           horizon={horizon}
           monthShownCount={monthShownCount}
-          onMonthShowMore={() => setMonthShownCount((c) => c + 8)}
+          onMonthShowMore={onMonthShowMore}
         />
       )}
 

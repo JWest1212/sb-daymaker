@@ -36,17 +36,22 @@ export function LeadDayRail({ items }: { items: Thing[] }) {
               <div className="sbd-dayhead__rule" aria-hidden="true" />
             </div>
             <div className="sbd-daygroup__list">
-              {dayItems.map((t) => (
-                <ListCard
+              {dayItems.map((t, i) => (
+                <div
                   key={t.id}
-                  id={t.id}
-                  title={t.title}
-                  blurb={cardBlurb(t)}
-                  occasionKey={t.tags[0]}
-                  when={cardFacts(t).join(" · ")}
-                  href={`/thing/${t.id}`}
-                  photo={t.photo_url ?? undefined}
-                />
+                  className="sbd-reveal"
+                  style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
+                >
+                  <ListCard
+                    id={t.id}
+                    title={t.title}
+                    blurb={cardBlurb(t)}
+                    occasionKey={t.tags[0]}
+                    when={cardFacts(t).join(" · ")}
+                    href={`/thing/${t.id}`}
+                    photo={t.photo_url ?? undefined}
+                  />
+                </div>
               ))}
             </div>
           </div>

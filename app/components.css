@@ -2887,6 +2887,14 @@
 .sbd-sh2--lead {
   padding: var(--space-4) 0 var(--space-3);
 }
+/* Month: the lead header scrolls away normally once the first .sbd-weekhead
+   reaches the sticky slot, instead of staying pinned underneath it forever. */
+.sbd-sh2--static {
+  position: static;
+  z-index: auto;
+  backdrop-filter: none;
+  background: none;
+}
 .sbd-sh2--lead .sbd-sh2__label {
   font-family: var(--font-display);
   font-size: var(--text-xl);
@@ -3173,31 +3181,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* "See more" expand-only button */
-.sbd-rock-more {
-  width: 100%;
-  min-height: var(--tap-min);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  color: var(--text-link);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: var(--weight-bold);
-  text-align: center;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.sbd-rock-more:hover {
-  background: var(--bg);
-}
-.sbd-rock-more:focus-visible {
-  outline: 2px solid var(--pacific);
-  outline-offset: 2px;
-}
 /* A11y: visible focus ring on the whole tile when the stretch link is focused.
    The heart button shows its own ring via .sbd-heart:focus-visible. */
 .sbd-rock:has(.sbd-stretch:focus-visible) {
@@ -3277,6 +3260,36 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+/* ---- Month lead: sticky "Week of ..." group headers --------------------
+ * Each week's cards live inside their own .sbd-weekgroup, so the sticky
+ * header's stuck range is bounded by that group — as the user scrolls past
+ * one week, the next week's header (same top/z-index as SectionHeader's
+ * lead mode) takes over the same spot, giving a native, JS-free "which week
+ * am I looking at" cue without any scroll listeners.
+ */
+.sbd-weekgroup__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.sbd-weekhead {
+  position: sticky;
+  top: 60px;
+  z-index: 18;
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(6px);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-2);
+}
+.sbd-weekhead__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--terra-text);
 }
 
 /* ---- Lens sheet -------------------------------------------------------- */

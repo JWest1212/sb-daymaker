@@ -10,6 +10,7 @@ export function SectionHeader({
   expanded,
   onToggle,
   controlsId,
+  sticky = true,
 }: {
   mode: "lead" | "collapsible";
   label: string;
@@ -18,10 +19,14 @@ export function SectionHeader({
   expanded?: boolean;
   onToggle?: () => void;
   controlsId?: string;
+  /** Lead mode only. False for Month, whose per-week headers (.sbd-weekhead)
+   *  take over the sticky top slot — leaving this one sticky too would let its
+   *  translucent background ghost through underneath them. */
+  sticky?: boolean;
 }) {
   if (mode === "lead") {
     return (
-      <div className="sbd-sh2 sbd-sh2--lead">
+      <div className={`sbd-sh2 sbd-sh2--lead${sticky ? "" : " sbd-sh2--static"}`}>
         <h2 className="sbd-sh2__label">{label}</h2>
         <div className="sbd-sh__rule" aria-hidden="true" />
         {dek ? <p className="sbd-sh2__dek">{dek}</p> : null}
