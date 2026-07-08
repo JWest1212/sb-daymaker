@@ -42,7 +42,7 @@ export async function POST(
 
   const { data: edition, error: edErr } = await sb.from("editions").select("status").eq("id", editionId).maybeSingle();
   if (edErr || !edition) return NextResponse.json({ error: "edition not found" }, { status: 404 });
-  if (!["draft", "approved"].includes(edition.status)) {
+  if (!["draft", "approved", "skipped"].includes(edition.status)) {
     return NextResponse.json({ error: `edition is ${edition.status} — no longer editable` }, { status: 400 });
   }
 
