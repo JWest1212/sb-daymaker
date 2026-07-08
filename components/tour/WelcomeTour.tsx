@@ -204,7 +204,7 @@ export function WelcomeTour({
             </div>
           </div>
           <div className="sbd-tour__kick">Remember</div>
-          <h3 className="sbd-tour__title">Then mark what you did.</h3>
+          <h3 className="sbd-tour__title sbd-tour__title--remember">Then mark what you did.</h3>
           <p className="sbd-tour__body">
             Come back and check off the places you made it to. Over time, SB Daymaker{" "}
             <b>learns your Santa Barbara</b>.

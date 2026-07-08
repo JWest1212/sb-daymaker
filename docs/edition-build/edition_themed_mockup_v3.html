@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker · Edition · Phase 4 Themed Mockup v3 (zoned bands)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --terracotta:#C0532E; --terra-text:#9E3F20; --gold:#E0A82E; --gold-text:#7A5E13;
+    --line:#D8CDB8;
+    --fd:'Fraunces',Georgia,serif; --fb:'Inter',system-ui,sans-serif; --fm:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--plaster); color:var(--ink); font-family:var(--fb); -webkit-font-smoothing:antialiased; }
+
+  .page-head{ max-width:1340px; margin:0 auto; padding:32px 24px 4px; }
+  .page-head .kicker{ font-family:var(--fm); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--pacific); margin:0 0 8px; }
+  .page-head h1{ font-family:var(--fd); font-weight:600; font-size:28px; margin:0 0 8px; }
+  .page-head p{ font-size:15px; line-height:1.55; color:var(--ink-2); margin:0; max-width:80ch; }
+  .page-head .note{ font-size:13px; font-style:italic; margin-top:12px; }
+
+  .gallery{ max-width:1340px; margin:0 auto; padding:16px 24px 60px; display:flex; gap:32px; flex-wrap:wrap; justify-content:center; align-items:flex-start; }
+  .col{ flex:0 0 400px; max-width:400px; }
+  .col-label{ display:flex; align-items:baseline; gap:10px; margin:0 2px 12px; }
+  .col-label .tag{ font-family:var(--fm); font-size:12px; font-weight:600; background:var(--pacific); color:var(--paper); border-radius:999px; padding:3px 11px; }
+  .col-label .desc{ font-size:13px; color:var(--ink-2); }
+
+  .inbox{ background:var(--plaster-2); border:1px solid var(--line); border-radius:12px 12px 0 0; border-bottom:none; padding:10px 14px; }
+  .inbox .from{ font-family:var(--fm); font-size:11px; color:var(--pacific); letter-spacing:.04em; }
+  .inbox .subj{ font-size:14px; font-weight:700; color:var(--ink); margin:3px 0 1px; }
+  .inbox .pre{ font-size:12.5px; color:var(--ink-2); }
+
+  .device{ background:var(--paper); border:1px solid var(--line); border-radius:0 0 16px 16px; overflow:hidden; box-shadow:0 1px 2px rgba(36,28,22,.05),0 12px 30px rgba(36,28,22,.08); }
+
+  /* masthead */
+  .masthead{ padding:20px 22px 16px; }
+  .brand{ display:flex; align-items:center; gap:9px; }
+  .sunglyph{ width:20px; height:20px; border-radius:999px; background:radial-gradient(circle at 50% 42%, #FFE39B, var(--gold) 72%); box-shadow:0 0 0 3px rgba(224,168,46,.18); flex:none; }
+  .wordmark{ font-family:var(--fd); font-weight:900; font-size:22px; letter-spacing:-.01em; margin:0; }
+  .goldband{ height:4px; margin:13px 0 0; border-radius:3px; background:linear-gradient(90deg, var(--gold), rgba(224,168,46,.12) 82%, rgba(224,168,46,0)); }
+  .dateline{ font-family:var(--fm); font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--pacific); margin:12px 0 0; }
+  .greeting{ font-size:15px; line-height:1.55; color:var(--ink-2); margin:8px 0 0; }
+
+  /* hero band */
+  .hero-img{ height:172px; position:relative; background:
+      radial-gradient(120% 92% at 50% 122%, rgba(224,168,46,.55), rgba(224,168,46,0) 60%),
+      linear-gradient(160deg,#2B5563 0%,#6E5A46 55%,var(--gold) 132%); }
+  .hero-img.eve{ background:
+      radial-gradient(120% 92% at 50% 122%, rgba(224,168,46,.45), rgba(224,168,46,0) 60%),
+      linear-gradient(160deg,#3A4A3A 0%,#7A6A4E 60%,var(--gold) 140%); }
+  .hero-img .sun{ position:absolute; right:20px; bottom:-15px; width:52px; height:52px; border-radius:999px; background:radial-gradient(circle at 50% 40%,#FFE7A8,var(--gold) 70%); box-shadow:0 0 0 6px var(--paper); }
+  .hero-body{ padding:19px 22px 22px; }
+  .move-eyebrow{ font-family:var(--fm); font-size:11px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--terra-text); margin:0 0 8px; display:flex; align-items:center; gap:7px; }
+  .move-eyebrow .dot{ width:6px; height:6px; border-radius:999px; background:var(--terracotta); }
+  .hero-title{ font-family:var(--fd); font-weight:600; font-size:27px; line-height:1.1; margin:0 0 9px; }
+  .when{ font-family:var(--fm); font-size:12px; font-weight:600; color:var(--ink-2); }
+  .when .loc{ color:var(--pacific); }
+  .blurb{ font-size:15px; line-height:1.6; color:var(--ink-2); margin:10px 0 0; }
+  .secret{ margin:13px 0 0; padding:11px 13px; background:var(--plaster); border-left:3px solid var(--gold); border-radius:0 8px 8px 0; font-size:13.5px; line-height:1.55; color:var(--ink-2); }
+  .secret b{ font-family:var(--fm); font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--gold-text); display:block; margin-bottom:3px; }
+  .btn{ display:inline-block; margin-top:15px; font-size:13.5px; font-weight:600; color:var(--paper); background:var(--pacific); border-radius:999px; padding:9px 17px; text-decoration:none; }
+
+  /* zones (bands) */
+  .zone{ border-top:1px solid var(--line); }
+  .zone.also{ background:var(--plaster); padding-bottom:8px; }
+  .zone.newthis{ background:var(--paper); padding:2px 0 10px; }
+  .zone.anchor{ background:var(--plaster-2); padding:2px 0 12px; }
+  .footer{ background:var(--plaster); border-top:1px solid var(--line); padding:22px; }
+
+  .sechead{ display:flex; align-items:center; gap:11px; margin:16px 22px 2px; }
+  .sechead .lbl{ font-family:var(--fd); font-style:italic; font-weight:500; font-size:17px; color:var(--ink); }
+  .sechead .sun{ width:11px; height:11px; border-radius:999px; background:var(--gold); flex:none; }
+  .sechead .ln{ flex:1; height:1px; background:var(--line); }
+
+  .prow{ display:flex; gap:13px; align-items:flex-start; padding:15px 22px; border-top:1px solid var(--line); }
+  .prow.first{ border-top:none; }
+  .pthumb{ width:78px; height:78px; border-radius:10px; flex:none; }
+  .t1{ background:linear-gradient(150deg,#3E6B74,#C79A5A); }
+  .t2{ background:linear-gradient(150deg,#8A3B2A,#E0A82E); }
+  .t3{ background:linear-gradient(150deg,#25506B,#7FB0B6); }
+  .t4{ background:linear-gradient(150deg,#5B6B44,#D8B85C); }
+  .pmain{ flex:1; min-width:0; }
+  .pday{ font-family:var(--fm); font-size:10px; font-weight:600; letter-spacing:.11em; text-transform:uppercase; color:var(--pacific); }
+  .ptitle{ font-family:var(--fd); font-weight:600; font-size:17px; line-height:1.2; margin:3px 0 4px; }
+  .pwhen{ font-family:var(--fm); font-size:11px; color:var(--ink-2); margin-bottom:5px; }
+  .pblurb{ font-size:13px; line-height:1.5; color:var(--ink-2); margin:0; }
+  .parrow{ display:inline-block; margin-top:7px; font-size:12.5px; font-weight:600; color:var(--pacific); text-decoration:none; }
+  .chip{ display:inline-block; font-family:var(--fm); font-size:9.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--gold-text); border:1px solid var(--line); border-radius:999px; padding:2px 7px; margin-left:7px; vertical-align:2px; }
+
+  .special{ padding:16px 22px 4px; }
+  .special .lbl{ font-family:var(--fm); font-size:10.5px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; margin:0 0 6px; }
+  .special.new .lbl{ color:var(--pacific); }
+  .special.gold .lbl{ color:var(--gold-text); }
+  .special .ptitle{ font-size:18px; }
+  .special .pblurb{ font-size:13.5px; }
+  .special .row2{ margin-top:13px; padding-top:13px; border-top:1px solid var(--line); }
+
+  .forward{ background:var(--paper); border:1px solid var(--line); border-radius:13px; padding:16px 18px; margin-bottom:18px; }
+  .forward h4{ font-family:var(--fd); font-weight:600; font-size:17px; margin:0 0 5px; }
+  .forward p{ font-size:13.5px; line-height:1.5; color:var(--ink-2); margin:0 0 12px; }
+  .fwd-cta{ display:inline-block; font-size:13px; font-weight:600; color:var(--paper); background:var(--pacific); border-radius:999px; padding:8px 16px; text-decoration:none; }
+  .footer .fine{ font-size:12.5px; line-height:1.55; color:var(--ink-2); margin:0 0 8px; }
+  .footer a{ color:var(--pacific); }
+  .footer .addr{ font-family:var(--fm); font-size:11px; color:var(--ink-2); margin:0; }
+
+  @media (max-width:520px){ .col{ flex:1 1 100%; max-width:420px; } }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <p class="kicker">Phase 4 · Themed mockup v3 · zoned bands</p>
+  <h1>The edition, built out in zoned bands</h1>
+  <p>Option B applied across all three: the flagship Thursday (event-forward), Sunday (discovery-forward, still event-led), and a thin-week Thursday where the evergreen anchor fills. Same width throughout. Events carry thumbnails; the non-event and "always worth it" blocks sit in their own tinted bands so they read as a different kind of thing.</p>
+  <p class="note">Illustrative content, placeholder gradient images, em dash free copy.</p>
+</header>
+
+<main class="gallery">
+
+  <!-- ===== THURSDAY ===== -->
+  <section class="col">
+    <div class="col-label"><span class="tag">Thursday</span><span class="desc">event-forward</span></div>
+    <div class="inbox">
+      <div class="from">SB Daymaker</div>
+      <div class="subj">This weekend: Sunset jazz on the Mesa</div>
+      <div class="pre">The Move, three more picks, and where to point your weekend.</div>
+    </div>
+    <div class="device">
+      <div class="masthead">
+        <div class="brand"><span class="sunglyph"></span><p class="wordmark">SB Daymaker</p></div>
+        <div class="goldband"></div>
+        <p class="dateline">The weekend ahead · Thu Jul 9</p>
+        <p class="greeting">The Mesa is where we'd start this weekend.</p>
+      </div>
+      <div class="hero-img"><div class="sun"></div></div>
+      <div class="hero-body">
+        <p class="move-eyebrow"><span class="dot"></span> The Move</p>
+        <h2 class="hero-title">Sunset jazz on the Mesa</h2>
+        <p class="when">FRI 6:00 PM · <span class="loc">Shoreline Park</span></p>
+        <p class="blurb">The Lobero's quartet plays the bluff until the sun gives up. Bring a blanket. The good grass is gone by 5:30.</p>
+        <div class="secret"><b>Local's secret</b>Park up on Cliff Drive and walk in from the west end. The lot fills. The street doesn't.</div>
+        <a class="btn" href="#">See it →</a>
+      </div>
+
+      <div class="zone also">
+        <div class="sechead"><span class="sun"></span><span class="lbl">Also this weekend</span><span class="ln"></span></div>
+        <div class="prow first"><div class="pthumb t1"></div><div class="pmain">
+          <p class="pday">Saturday <span class="chip">Free</span></p>
+          <h3 class="ptitle">Farmers market, then the new Funk Zone mural</h3>
+          <p class="pwhen">SAT 8:30 AM · Santa Barbara &amp; Cota</p>
+          <p class="pblurb">Peak stone-fruit season. Two blocks south there's a mural on the Anacapa wall that went up Tuesday.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+        <div class="prow"><div class="pthumb t2"></div><div class="pmain">
+          <p class="pday">Saturday night <span class="chip">21+</span></p>
+          <h3 class="ptitle">First pour at Nook, the new Eastside wine bar</h3>
+          <p class="pwhen">SAT · FROM 5 PM · Milpas</p>
+          <p class="pblurb">Old bottle shop, reborn: twelve stools, a very short, very good list. Go early. It's tiny.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+        <div class="prow"><div class="pthumb t3"></div><div class="pmain">
+          <p class="pday">Sunday</p>
+          <h3 class="ptitle">Low-tide tide-pooling at Coal Oil Point</h3>
+          <p class="pwhen">SUN 7:42 AM · Devereux</p>
+          <p class="pblurb">Lowest tide of the month. The reserve's docents are usually out by eight. Wear shoes you don't love.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+      </div>
+
+      <div class="zone newthis">
+        <div class="special new">
+          <p class="lbl">New this week</p>
+          <h3 class="ptitle">Just opened: a six-seat taqueria on Cliff Drive</h3>
+          <p class="pblurb">The Mesa Verde team opened a tiny counter two doors down. Nixtamal tortillas, cash only, no website. The good sign.</p>
+          <a class="parrow" href="#">See it →</a>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="forward"><h4>Know someone new to town?</h4><p>Forward this along. SB Daymaker tells them what's worth doing in Santa Barbara, twice a week.</p><a class="fwd-cta" href="#">Get it in your inbox →</a></div>
+        <p class="fine">You're getting this because you asked SB Daymaker what's worth doing in Santa Barbara.</p>
+        <p class="fine">Two a week: Thursday and Sunday. No more than that. · <a href="#">Unsubscribe</a></p>
+        <p class="addr">SB Daymaker · 78 Brandon Drive, Goleta, CA 93117</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SUNDAY ===== -->
+  <section class="col">
+    <div class="col-label"><span class="tag">Sunday</span><span class="desc">discovery-forward · event-led</span></div>
+    <div class="inbox">
+      <div class="from">SB Daymaker</div>
+      <div class="subj">The week ahead: Cinema under the oaks</div>
+      <div class="pre">Your Monday to Thursday, plus somewhere worth exploring.</div>
+    </div>
+    <div class="device">
+      <div class="masthead">
+        <div class="brand"><span class="sunglyph"></span><p class="wordmark">SB Daymaker</p></div>
+        <div class="goldband"></div>
+        <p class="dateline">The week ahead · Sun Jul 12</p>
+        <p class="greeting">Here's the week ahead, and a corner of SB worth your time.</p>
+      </div>
+      <div class="hero-img"><div class="sun"></div></div>
+      <div class="hero-body">
+        <p class="move-eyebrow"><span class="dot"></span> The Move</p>
+        <h2 class="hero-title">Cinema under the oaks</h2>
+        <p class="when">WED 8:15 PM · <span class="loc">Sunken Gardens</span></p>
+        <p class="blurb">Free outdoor screening on the Courthouse lawn. Hedges open at 7. Bring low chairs so the row behind you doesn't revolt.</p>
+        <div class="secret"><b>Local's secret</b>The east lawn gets the last light and the fewest picnic blankets.</div>
+        <a class="btn" href="#">See it →</a>
+      </div>
+
+      <div class="zone also">
+        <div class="sechead"><span class="sun"></span><span class="lbl">Also this week</span><span class="ln"></span></div>
+        <div class="prow first"><div class="pthumb t3"></div><div class="pmain">
+          <p class="pday">Monday</p>
+          <h3 class="ptitle">Full-moon paddle out of the harbor</h3>
+          <p class="pwhen">MON 8:00 PM · SB Harbor</p>
+          <p class="pblurb">Guided moonlight kayak past the breakwater. Beginners fine. The water goes glassy after dark.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+        <div class="prow"><div class="pthumb t4"></div><div class="pmain">
+          <p class="pday">Tuesday</p>
+          <h3 class="ptitle">State Street farmers market</h3>
+          <p class="pwhen">TUE 3:00 PM · 500 to 600 State</p>
+          <p class="pblurb">The smaller, calmer market. Come for the Fat Uncle almonds, stay for the guy with the stone fruit.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+        <div class="prow"><div class="pthumb t2"></div><div class="pmain">
+          <p class="pday">Thursday <span class="chip">Free</span></p>
+          <h3 class="ptitle">Opening night: "Desert Light" at MCASB</h3>
+          <p class="pwhen">THU · FROM 5 PM · Paseo Nuevo</p>
+          <p class="pblurb">New group show, free reception. Wine, if you time it before the students clear the table.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+      </div>
+
+      <div class="zone newthis">
+        <div class="special new">
+          <p class="lbl">Worth exploring</p>
+          <h3 class="ptitle">This week's corner: the Riviera steps at sunset</h3>
+          <p class="pblurb">Climb the Alameda Padre Serra steps for the whole coastline in one frame. Twenty minutes, zero dollars, best light after seven.</p>
+          <a class="parrow" href="#">See it →</a>
+        </div>
+      </div>
+
+      <div class="zone anchor">
+        <div class="special gold">
+          <p class="lbl">Always worth it</p>
+          <h3 class="ptitle">The Courthouse tower</h3>
+          <p class="pblurb">Free, open till 4:45, still the best 360&deg; in town. If the week gets away from you, this doesn't.</p>
+          <a class="parrow" href="#">See it →</a>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="forward"><h4>Know someone new to town?</h4><p>Forward this along. SB Daymaker tells them what's worth doing in Santa Barbara, twice a week.</p><a class="fwd-cta" href="#">Get it in your inbox →</a></div>
+        <p class="fine">You're getting this because you asked SB Daymaker what's worth doing in Santa Barbara.</p>
+        <p class="fine">Two a week: Thursday and Sunday. No more than that. · <a href="#">Unsubscribe</a></p>
+        <p class="addr">SB Daymaker · 78 Brandon Drive, Goleta, CA 93117</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== THIN WEEK ===== -->
+  <section class="col">
+    <div class="col-label"><span class="tag">Thin week</span><span class="desc">Thursday · evergreen fill</span></div>
+    <div class="inbox">
+      <div class="from">SB Daymaker</div>
+      <div class="subj">A quiet one this weekend? Here's where we'd be</div>
+      <div class="pre">A calmer one this week. Still worth it.</div>
+    </div>
+    <div class="device">
+      <div class="masthead">
+        <div class="brand"><span class="sunglyph"></span><p class="wordmark">SB Daymaker</p></div>
+        <div class="goldband"></div>
+        <p class="dateline">The weekend ahead · Thu Aug 20</p>
+        <p class="greeting">Quieter weekend than most, but we found the good corners.</p>
+      </div>
+      <div class="hero-img eve"><div class="sun"></div></div>
+      <div class="hero-body">
+        <p class="move-eyebrow"><span class="dot"></span> The Move</p>
+        <h2 class="hero-title">Sundowners at the Boathouse</h2>
+        <p class="when">FRI to SUN · GOLDEN HOUR · <span class="loc">Arroyo Burro</span></p>
+        <p class="blurb">The only bar with its feet in the sand. Order the last round when the sun hits the water. You'll know the moment.</p>
+        <div class="secret"><b>Local's secret</b>The bench at the north end is first come. Get there by 6:15.</div>
+        <a class="btn" href="#">See it →</a>
+      </div>
+
+      <div class="zone also">
+        <div class="sechead"><span class="sun"></span><span class="lbl">Also this weekend</span><span class="ln"></span></div>
+        <div class="prow first"><div class="pthumb t4"></div><div class="pmain">
+          <p class="pday">Saturday <span class="chip">Free</span></p>
+          <h3 class="ptitle">Chalk-art afternoon on the Mission plaza</h3>
+          <p class="pwhen">SAT 10:00 AM · Mission</p>
+          <p class="pblurb">Artists cover the plaza in pastel all day. Bring the kids. The good spots go by lunch.</p>
+          <a class="parrow" href="#">See it →</a></div></div>
+      </div>
+
+      <div class="zone anchor">
+        <div class="special gold">
+          <p class="lbl">Always worth it</p>
+          <h3 class="ptitle">Butterfly Beach at low tide</h3>
+          <p class="pblurb">The wide, flat stretch below Montecito. Walk to the point and back before the tide turns.</p>
+          <a class="parrow" href="#">See it →</a>
+          <div class="row2">
+            <h3 class="ptitle">The Funk Zone, any afternoon</h3>
+            <p class="pblurb">Six tasting rooms in four blocks, plus the murals between them. No plan required.</p>
+            <a class="parrow" href="#">See it →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="forward"><h4>Know someone new to town?</h4><p>Forward this along. SB Daymaker tells them what's worth doing in Santa Barbara, twice a week.</p><a class="fwd-cta" href="#">Get it in your inbox →</a></div>
+        <p class="fine">You're getting this because you asked SB Daymaker what's worth doing in Santa Barbara.</p>
+        <p class="fine">Two a week: Thursday and Sunday. No more than that. · <a href="#">Unsubscribe</a></p>
+        <p class="addr">SB Daymaker · 78 Brandon Drive, Goleta, CA 93117</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
