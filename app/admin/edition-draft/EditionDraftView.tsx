@@ -173,7 +173,7 @@ export function EditionDraftView({
     return (
       <div className="wrap" style={{ display: "block", maxWidth: 1180 }}>
         <div className="vhead"><h1 className="qtitle">Edition draft</h1></div>
-        <div className="gatebox">No edition to review right now. The drafter runs Wednesday and Saturday nights (19:00 PT). Already-sent or failed editions are in the Archive tab.</div>
+        <div className="gatebox">No edition to review right now. The drafter runs Wednesday and Saturday mornings (07:00 PT), a full day before each send. Already-sent or failed editions are in the Archive tab.</div>
       </div>
     );
   }

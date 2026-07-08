@@ -1,14 +1,18 @@
 // ingest/draftEdition.ts
 //
-// On-demand / nightly entrypoint for the reader-edition drafter (spec §3, §3.1).
-// Mirrors ingest/run.ts's conventions (getDb(), console summary, non-zero exit
-// on fatal error) so it drops into the same GitHub Action pattern once §3.1's
-// schedule wiring lands (Wed/Sat-night gate — not built yet, tracked separately).
+// On-demand / scheduled entrypoint for the reader-edition drafter (spec §3, §3.1,
+// amended). Mirrors ingest/run.ts's conventions (getDb(), console summary,
+// non-zero exit on fatal error). Wired into the nightly GitHub Action on a
+// Wed/Sat 07:00 PT schedule (.github/workflows/ingest.yml) — morning-of-the-
+// day-before, not the original spec's night-before, so the operator gets a
+// full day to review before the following morning's send.
 //
 // Usage:
 //   npx tsx ingest/draftEdition.ts                 auto: drafts the next Thu/Sun
-//                                                   edition IF tonight (SB time)
+//                                                   edition IF today (SB time)
 //                                                   is Wed or Sat; else no-ops.
+//                                                   (Day-of-week only — safe to
+//                                                   run at any hour of that day.)
 //   EDITION_DATE=2026-07-09 EDITION_TYPE=weekend \
 //     npx tsx ingest/draftEdition.ts               explicit override (testing/backfill).
 
@@ -21,8 +25,8 @@ function nextEditionTarget(now: number): { date: string; type: EditionType } | n
   const dow = sbDayOfWeek(now);
   const [y, m, d] = sbDay(now).split('-').map(Number);
   const tomorrow = sbDay(Date.UTC(y, m - 1, d + 1, 12));
-  if (dow === 3) return { date: tomorrow, type: 'weekend' };   // Wed night -> Thu edition
-  if (dow === 6) return { date: tomorrow, type: 'week_ahead' }; // Sat night -> Sun edition
+  if (dow === 3) return { date: tomorrow, type: 'weekend' };   // Wed -> Thu edition
+  if (dow === 6) return { date: tomorrow, type: 'week_ahead' }; // Sat -> Sun edition
   return null;
 }
 
