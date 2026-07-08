@@ -157,7 +157,14 @@ export function EditionDraftView({
       body: JSON.stringify({ status, ...(skip_reason ? { skip_reason } : {}) }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
-      showToast(status === "approved" ? "Approved" : "On hold");
+      // Approving an edition whose send window already passed (e.g. it was on
+      // hold past its scheduled time) triggers an immediate send server-side —
+      // res.sent is only present when that happened.
+      if (res.sent) {
+        showToast(res.sent.ok ? `Approved — sent to ${res.sent.sent} reader${res.sent.sent === 1 ? "" : "s"} just now` : `Approved, but the send failed: ${res.sent.skipReason ?? "unknown error"}`);
+      } else {
+        showToast(status === "approved" ? "Approved" : "On hold");
+      }
       loadDetail(detail.id);
     } else showToast(res?.error ?? "Update failed");
   };
@@ -284,7 +291,7 @@ export function EditionDraftView({
                 </button>
               </div>
               <p className="ed-hint">
-                This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way.
+                This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.
               </p>
             </div>
           </CollapsiblePanel>

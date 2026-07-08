@@ -86,7 +86,7 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
       ${failedEditions.length ? line('🔴 Edition assembly failed',
         failedEditions.map((e) => `${e.edition_date} (${e.edition_type}): ${e.skip_reason ?? 'unknown'}`).join('; ')) : ''}
       ${heldEditions.length ? line('⏸ Edition on hold',
-        heldEditions.map((e) => `${e.edition_date} (${e.edition_type})`).join(', ') + ' — will NOT send until taken off hold') : ''}
+        heldEditions.map((e) => `${e.edition_date} (${e.edition_type})`).join(', ') + ' — will NOT send; approving it sends immediately') : ''}
     </table>
     <table style="border-collapse:collapse;font-size:13px;margin-bottom:22px">${sourceRows}</table>
     <a href="${site}/admin/review" style="display:inline-block;background:#16586A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the queue →</a>
