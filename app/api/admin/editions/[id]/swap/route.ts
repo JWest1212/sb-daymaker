@@ -3,6 +3,7 @@ import { getAdminUser } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import type { EditionSlot } from "@/lib/edition/types";
 import { rehostImage } from "@/lib/edition/imageHost";
+import { ensureBlurbs, ensureImageOptions } from "@/lib/edition/draft";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +44,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { data: thing, error: thingErr } = await sb
     .from("things")
-    .select("id, title, photo_url")
+    .select("id, type, title, blurb, photo_url, photo_options, happening_tier, happening_category, neighborhood")
     .eq("id", body.thingId)
     .eq("status", "published")
     .maybeSingle();
   if (thingErr || !thing) return NextResponse.json({ error: "thing not found or not published" }, { status: 400 });
+
+  // A swapped-in thing may be a bench candidate or an ad-hoc search-all pick —
+  // neither goes through draftEdition()'s initial pass, so it may still be
+  // missing a blurb or short on image options. Same guarantee as a fresh draft,
+  // just scoped to this one thing (see draft.ts for the fuller rationale).
+  await ensureBlurbs(sb, [thing]);
+  await ensureImageOptions(sb, [thing]);
+
   const hostedUrl = await rehostImage(sb, thing.photo_url);
 
   const { data: existingPick } = await sb
