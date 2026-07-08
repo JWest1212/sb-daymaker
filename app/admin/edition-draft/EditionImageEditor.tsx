@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { PhotoOption } from "@/lib/review";
 
+const MAX_OPTIONS = 10; // 6 guaranteed at draft time + up to 4 more via "find more"
+
 export function EditionImageEditor({
   editionId, pickId, currentUrl, photoOptions, onSaved, onMoreFound,
 }: {
@@ -19,7 +21,10 @@ export function EditionImageEditor({
   const [err, setErr] = useState<string | null>(null);
 
   const base = `/api/admin/editions/${editionId}/picks/${pickId}/image`;
-  const options = photoOptions.filter((o) => o.url).slice(0, 6);
+  // The drafter guarantees 6 real options for every selected pick before the
+  // cockpit ever opens (draft.ts's ensureImageOptions) — "find more" is now an
+  // explicit escalation beyond that guaranteed default, up to 10 total.
+  const options = photoOptions.filter((o) => o.url).slice(0, MAX_OPTIONS);
 
   async function saveUrl(url: string) {
     setBusy(true); setErr(null);
@@ -68,9 +73,9 @@ export function EditionImageEditor({
           ))}
         </div>
       ) : null}
-      {options.length < 6 ? (
+      {options.length < MAX_OPTIONS ? (
         <button type="button" className="ed-find-more" disabled={finding} onClick={findMore}>
-          {finding ? "Searching…" : `Find more options (${options.length}/6)`}
+          {finding ? "Searching…" : `Find more options (${options.length}/${MAX_OPTIONS})`}
         </button>
       ) : null}
       <div className="ed-image-row">

@@ -4,6 +4,10 @@
 // Deliberately relative-import-only (no `@/` alias) so this module loads the
 // same way from Next.js (cockpit, later phases) and from the ingest/ worker
 // (tsx in the GitHub Action) — mirrors lib/heroServer.ts / lib/occurrences.ts.
+// PhotoSource is a plain type-only import (no server-only/env dependency), so
+// it's safe under the same dual-context constraint.
+
+import type { PhotoSource } from "../../packages/shared/types";
 
 export type EditionType = "weekend" | "week_ahead";
 export type EditionSlot = "hero" | "secondary" | "nonevent" | "anchor";
@@ -16,9 +20,11 @@ export interface DraftThing {
   type: string; // 'place' | 'event' | 'firstlook' | 'happyhour'
   title: string;
   blurb: string | null;
+  blurb_long: string | null;
   local_note: string | null;
   reason_to_go: string | null;
   happening_tier: number;
+  happening_category: string;
   editorial_weight: number;
   neighborhood: string | null;
   starts_at: string | null;
@@ -27,6 +33,7 @@ export interface DraftThing {
   photo_url: string | null;
   photo_source: string | null;
   photo_attribution: string | null;
+  photo_options: { url: string; source: PhotoSource; width?: number; height?: number; attribution?: string }[];
   created_at: string | null;
   last_confirmed: string | null;
   recurring: {

@@ -13,10 +13,20 @@ interface Fields {
   title: string; blurb: string; when: string; neighborhood: string; localNote: string;
 }
 
+/** The hero slot's effective blurb is the longer blurb_long (falling back to
+ *  the short blurb for an older row missing it) — mirrors renderData.ts's
+ *  blurbSourceFor exactly, so the editor always shows what will actually
+ *  render/send, not a stale/empty field with the title ghosted in behind it. */
+function effectiveBlurb(pick: CockpitPick): string {
+  if (pick.override_blurb != null) return pick.override_blurb;
+  if (pick.slot === "hero") return pick.thing.blurb_long ?? pick.thing.blurb ?? "";
+  return pick.thing.blurb ?? "";
+}
+
 function fieldsFrom(pick: CockpitPick): Fields {
   return {
     title: pick.override_title ?? pick.thing.title,
-    blurb: pick.override_blurb ?? "",
+    blurb: effectiveBlurb(pick),
     when: pick.override_when ?? pick.thing.when,
     neighborhood: pick.override_neighborhood ?? pick.thing.neighborhood ?? "",
     localNote: pick.override_local_note ?? "",
@@ -44,10 +54,30 @@ export function PickEditor({
 }) {
   const [fields, setFields] = useState<Fields>(() => fieldsFrom(pick));
   const [dirty, setDirty] = useState(false);
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const set = (k: keyof Fields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFields((f) => ({ ...f, [k]: e.target.value }));
     setDirty(true);
+  };
+
+  const aiEdit = async () => {
+    if (!aiInstruction.trim() || aiBusy) return;
+    setAiBusy(true); setAiError(null);
+    const res = await fetch(`/api/admin/editions/${editionId}/picks/${pick.id}/blurb-edit`, {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ instruction: aiInstruction, currentBlurb: fields.blurb }),
+    }).then((r) => r.json()).catch(() => null);
+    setAiBusy(false);
+    if (res?.ok) {
+      setFields((f) => ({ ...f, blurb: res.blurb }));
+      setDirty(true);
+      setAiInstruction("");
+    } else {
+      setAiError(res?.error ?? "Claude edit failed");
+    }
   };
 
   return (
@@ -88,8 +118,19 @@ export function PickEditor({
       </label>
       <label className="ed-field">
         <span>Blurb</span>
-        <textarea rows={3} value={fields.blurb} onChange={set("blurb")} placeholder={pick.thing.title} />
+        <textarea rows={3} value={fields.blurb} onChange={set("blurb")} placeholder="No blurb yet — write one, or use Claude below" />
       </label>
+      <div className="ed-ai-edit">
+        <input
+          type="text" className="ed-ai-edit-input" placeholder="Describe an edit… e.g. “make it warmer” or “mention it's dog-friendly”"
+          value={aiInstruction} onChange={(e) => setAiInstruction(e.target.value)} disabled={aiBusy}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); aiEdit(); } }}
+        />
+        <button type="button" className="btn btn-quiet btn-sm" disabled={!aiInstruction.trim() || aiBusy} onClick={aiEdit}>
+          {aiBusy ? "Asking Claude…" : "Claude edit for me"}
+        </button>
+      </div>
+      {aiError ? <p className="ed-image-error">{aiError}</p> : null}
       {SHOWS_WHEN_LOCATOR[pick.slot] ? (
         <div className="ed-field-row">
           <label className="ed-field">

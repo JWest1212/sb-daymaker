@@ -13,16 +13,19 @@
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { whenString } from "../review";
-import type { DraftResult, DraftThing, EditionSlot, EditionType } from "./types";
+import type { DraftResult, DraftThing, EditionSelection, EditionSlot, EditionType } from "./types";
 import { EDITION_CONFIG, windowDaysFor } from "./window";
 import { selectEdition } from "./select";
 import { resolveEditionCopy } from "./copyPools";
 import { titleCaseNeighborhood } from "./format";
 import { rehostImage } from "./imageHost";
+import { discoverMoreImages } from "./imageDiscovery";
+import { enrich } from "../../ingest/enrich";
+import type { Candidate } from "../../packages/shared/types";
 
-const THING_SELECT = `id, type, title, blurb, local_note, reason_to_go,
-  happening_tier, editorial_weight, neighborhood, starts_at, ends_at,
-  hero_eligible, photo_url, photo_source, photo_attribution, created_at, last_confirmed,
+const THING_SELECT = `id, type, title, blurb, blurb_long, local_note, reason_to_go,
+  happening_tier, happening_category, editorial_weight, neighborhood, starts_at, ends_at,
+  hero_eligible, photo_url, photo_source, photo_attribution, photo_options, created_at, last_confirmed,
   recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
 // Deliberately NOT selected: is_featured, sponsor_id (spec §0.2 — sponsor-blindness
 // enforced by never reading these columns, not just by convention).
@@ -59,6 +62,65 @@ async function fetchCooldownIds(sb: SupabaseClient, beforeDate: string): Promise
   const { data: picks, error: pErr } = await sb.from("edition_picks").select("thing_id").in("edition_id", ids);
   if (pErr) throw new Error(`draft: cooldown picks select failed: ${pErr.message}`);
   return new Set((picks ?? []).map((p) => p.thing_id as string));
+}
+
+function allSelectedThings(selection: EditionSelection): DraftThing[] {
+  return [
+    ...selection.hero.picks,
+    ...selection.secondary.picks,
+    ...selection.nonevent.picks,
+    ...selection.anchor.picks,
+  ];
+}
+
+/** Every selected pick gets a real blurb, not a blank line or (per the cockpit's
+ *  own bug this fixes) a title standing in for one. A published thing can reach
+ *  the drafter blurb-less if the nightly enrich() call missed it — this is a
+ *  batch, draft-time (not send-time) Claude Haiku call, same tiering/cost
+ *  category as the nightly enrich pass, just scoped to this issue's picks.
+ *  Fills genuinely MISSING blurbs only (never overwrites one that already
+ *  exists) and persists to the CANONICAL thing, benefiting the main site and
+ *  every future edition, not just this one. */
+async function ensureBlurbs(sb: SupabaseClient, things: DraftThing[]): Promise<void> {
+  const missing = things.filter((t) => !t.blurb);
+  if (!missing.length) return;
+  const cands: Candidate[] = missing.map((t) => ({
+    id: t.id, type: t.type as Candidate["type"], status: "needs_review", title: t.title,
+    tier: t.happening_tier as Candidate["tier"], happening_category: t.happening_category as Candidate["happening_category"],
+    neighborhood: (t.neighborhood as Candidate["neighborhood"]) ?? undefined, address: "", price_band: null,
+    time_of_day_fit: [], starts_at: null, ends_at: null, source_url: "",
+    last_confirmed: "", start_strategy: "none",
+  }));
+  const enriched = await enrich(cands, { sb });
+  for (const c of enriched) {
+    if (!c.blurb) continue;
+    const { error } = await sb
+      .from("things").update({ blurb: c.blurb, blurb_long: c.blurb_long ?? null }).eq("id", c.id);
+    if (error) throw new Error(`draft: ensureBlurbs update ${c.id}: ${error.message}`);
+  }
+}
+
+const MIN_IMAGE_OPTIONS = 6;
+
+/** Every selected pick gets at least 6 real image options waiting in the cockpit
+ *  swap picker, not whatever the nightly resolver happened to find (often fewer,
+ *  since Pexels doesn't always return a full page for a specific query). Reuses
+ *  the same widen-and-persist logic as the cockpit's own "find more options"
+ *  button (imageDiscovery.ts), just run proactively at draft time instead of
+ *  waiting for an operator to click. Sequential, not parallel, to stay gentle on
+ *  Pexels's rate limit — this runs twice a week for ~5 picks, not on a hot path. */
+async function ensureImageOptions(sb: SupabaseClient, things: DraftThing[]): Promise<void> {
+  for (const t of things) {
+    const current = (t.photo_options ?? []).filter((o) => o.url);
+    if (current.length >= MIN_IMAGE_OPTIONS) continue;
+    const options = await discoverMoreImages({
+      neighborhood: t.neighborhood,
+      happening_category: t.happening_category,
+      photo_options: t.photo_options ?? [],
+    });
+    const { error } = await sb.from("things").update({ photo_options: options }).eq("id", t.id);
+    if (error) throw new Error(`draft: ensureImageOptions update ${t.id}: ${error.message}`);
+  }
 }
 
 /** thing -> its edition_picks row shape (spec §2.2). `position` renders each
@@ -144,6 +206,12 @@ export async function draftEdition(
     );
     return { ok: false, editionId, editionDate, editionType, status: "failed", skipReason };
   }
+
+  // Every selected pick gets a real blurb and a full bench of image options
+  // before the cockpit ever opens (see ensureBlurbs/ensureImageOptions above).
+  const selectedThings = allSelectedThings(selection);
+  await ensureBlurbs(sb, selectedThings);
+  await ensureImageOptions(sb, selectedThings);
 
   const cfg = EDITION_CONFIG[editionType];
   const copy = resolveEditionCopy(editionId, editionType, {

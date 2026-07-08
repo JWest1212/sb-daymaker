@@ -17,12 +17,14 @@ import type {
 
 export type { CockpitThing, CockpitPick, CockpitCandidate, EditionSummary, EditionDraftDetail, ArchiveRow };
 
-const THING_SELECT = `id, title, neighborhood, photo_url, photo_options, happening_tier, starts_at,
+const THING_SELECT = `id, title, blurb, blurb_long, neighborhood, photo_url, photo_options, happening_tier, starts_at,
   recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
 
 interface ThingJoinRow {
   id: string;
   title: string;
+  blurb: string | null;
+  blurb_long: string | null;
   neighborhood: string | null;
   photo_url: string | null;
   photo_options: PhotoOption[] | null;
@@ -35,6 +37,8 @@ function toCockpitThing(t: ThingJoinRow): CockpitThing {
   return {
     id: t.id,
     title: t.title,
+    blurb: t.blurb,
+    blurb_long: t.blurb_long,
     neighborhood: t.neighborhood ? titleCaseNeighborhood(t.neighborhood) : null,
     photo_url: t.photo_url,
     photo_options: t.photo_options ?? [],

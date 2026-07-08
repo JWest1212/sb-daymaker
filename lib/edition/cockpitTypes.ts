@@ -10,6 +10,8 @@ import type { PhotoOption } from "../review";
 export interface CockpitThing {
   id: string;
   title: string;
+  blurb: string | null;
+  blurb_long: string | null;
   neighborhood: string | null;
   photo_url: string | null;
   photo_options: PhotoOption[];
