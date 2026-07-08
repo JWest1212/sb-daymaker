@@ -35,13 +35,18 @@ export async function sendEdition(sb: SupabaseClient, editionDate: string): Prom
   if (edErr) throw new Error(`send: edition select failed: ${edErr.message}`);
   if (!ed) return { ok: false, sent: 0, skipReason: "no edition for this date" };
 
-  // Spec §7.2: an edition sends at its normal time regardless of whether it was
-  // approved, held ('skipped' — an editorial note, not a gate), or never touched
-  // at all — approving/holding are optional signals for the operator, not a
-  // send gate. Only 'failed' (the drafter couldn't build a valid issue — no
-  // picks exist to send) and 'sent' (already went out) are excluded.
-  if (!["draft", "approved", "skipped"].includes(ed.status)) {
-    return { ok: false, sent: 0, skipReason: `status is '${ed.status}' — not eligible to send` };
+  // Spec §7.2: an edition sends at its normal time whether it was explicitly
+  // approved or just never touched ('draft') — approving is optional, not
+  // required, so the twice-a-week promise holds either way. 'skipped' (Hold)
+  // is the one deliberate exception: an operator clicking Hold is an explicit
+  // "do not send this" and must actually stop the send, not just be a note.
+  // 'failed' (nothing was ever built) and 'sent' (already went out) are also
+  // excluded.
+  if (!["draft", "approved"].includes(ed.status)) {
+    const reason = ed.status === "skipped"
+      ? "status is 'skipped' — operator put this edition on hold, so it will NOT send"
+      : `status is '${ed.status}' — not eligible to send`;
+    return { ok: false, sent: 0, skipReason: reason };
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://www.sbdaymaker.com").replace(/\/+$/, "");

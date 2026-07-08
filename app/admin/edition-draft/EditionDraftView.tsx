@@ -13,9 +13,9 @@ const SLOT_TITLE: Record<EditionSlot, string> = {
 };
 
 // 'skipped' is the DB value (unchanged, avoids a migration) but reads as
-// permanent/terminal — it isn't. It's an editorial "still deciding" note: the
-// edition stays fully editable and still sends at its normal time. Display
-// label only; never compare against this anywhere.
+// permanent/terminal — it isn't. It stays fully editable and reversible; the
+// one real effect is that it stops the send (see send.ts). Display label
+// only; never compare against this anywhere.
 const STATUS_LABEL: Record<string, string> = { draft: "Draft", approved: "Approved", skipped: "On hold" };
 function statusLabel(status: string): string { return STATUS_LABEL[status] ?? status; }
 
@@ -144,11 +144,12 @@ export function EditionDraftView({
     if (ra.ok && rb.ok) { showToast("Reordered"); loadDetail(detail.id); } else showToast("Reorder failed");
   };
 
-  // Approving and holding are both just editorial notes now — neither removes
-  // the edition from view or blocks further edits, so this always just
-  // refreshes the current detail in place. (Holding used to navigate away to
-  // "whatever's next," back when 'skipped' fell out of the pending list — it
-  // no longer does, so there's nothing to navigate to.)
+  // Neither approving nor holding removes the edition from view or blocks
+  // further edits (only Hold blocks the SEND, handled server-side in
+  // send.ts) — so this always just refreshes the current detail in place.
+  // (Holding used to navigate away to "whatever's next," back when 'skipped'
+  // fell out of the pending list — it no longer does, so there's nothing to
+  // navigate to.)
   const setStatus = async (status: "approved" | "skipped", skip_reason?: string) => {
     if (!detail) return;
     const res = await fetch(`/api/admin/editions/${detail.id}`, {
@@ -283,7 +284,7 @@ export function EditionDraftView({
                 </button>
               </div>
               <p className="ed-hint">
-                Approving and holding are both just notes to yourself — this edition sends at its normal time (07:00 PT on send day) either way, and stays editable until then. Nothing here blocks the send except a build failure.
+                This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way.
               </p>
             </div>
           </CollapsiblePanel>

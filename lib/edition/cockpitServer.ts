@@ -48,10 +48,10 @@ function toCockpitThing(t: ThingJoinRow): CockpitThing {
 }
 
 /** Editions still reachable/editable in the reviewer (the worklist). 'skipped'
- *  (the cockpit's "Hold" status) belongs here, not in the archive: putting an
- *  edition on hold is an editorial note, not a terminal state — it stays
- *  editable and still sends at its normal time unless the drafter genuinely
- *  couldn't build one ('failed') or it already went out ('sent'). */
+ *  (the cockpit's "Hold" status) belongs here, not in the archive: it isn't a
+ *  terminal state — it stays fully editable and reversible. Its one real
+ *  effect is that send.ts will NOT send it (an explicit operator opt-out),
+ *  unlike 'draft'/'approved' which both send at the normal time. */
 export async function loadPendingEditions(sb: SupabaseClient): Promise<EditionSummary[]> {
   const { data, error } = await sb
     .from("editions")
