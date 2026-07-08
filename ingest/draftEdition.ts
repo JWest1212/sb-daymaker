@@ -3,7 +3,7 @@
 // On-demand / scheduled entrypoint for the reader-edition drafter (spec §3, §3.1,
 // amended). Mirrors ingest/run.ts's conventions (getDb(), console summary,
 // non-zero exit on fatal error). Wired into the nightly GitHub Action on a
-// Wed/Sat 07:00 PT schedule (.github/workflows/ingest.yml) — morning-of-the-
+// Wed/Sat 06:00 PT schedule (.github/workflows/ingest.yml) — morning-of-the-
 // day-before, not the original spec's night-before, so the operator gets a
 // full day to review before the following morning's send.
 //

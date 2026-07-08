@@ -8,11 +8,11 @@ on:
     - cron: '0 9 * * *'
     # Edition drafter (spec §3.1, amended): originally 19:00 PT the night before
     # each send; moved to morning-of-the-day-before so the operator gets a full
-    # day to review instead of just an overnight window. 14:00 UTC Wed/Sat =
-    # 07:00 PDT Wed/Sat (fixed-UTC, same DST-drift tradeoff as every other cron
-    # here — 06:00 local in winter PST). Runs draftEdition.ts INSTEAD of the
+    # day to review instead of just an overnight window. 13:00 UTC Wed/Sat =
+    # 06:00 PDT Wed/Sat (fixed-UTC, same DST-drift tradeoff as every other cron
+    # here — 05:00 local in winter PST). Runs draftEdition.ts INSTEAD of the
     # regular ingest — see the job steps' `if:` conditions below.
-    - cron: '0 14 * * 3,6'
+    - cron: '0 13 * * 3,6'
   workflow_dispatch:
     inputs:
       draft_edition:
@@ -60,7 +60,7 @@ jobs:
       # be redundant hours apart) — every other trigger (nightly schedule, manual
       # dispatch) still runs the full ingest as before.
       - name: Nightly ingest
-        if: github.event.schedule != '0 14 * * 3,6'
+        if: github.event.schedule != '0 13 * * 3,6'
         run: npx tsx ingest/run.ts
         env:
           ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}
@@ -89,7 +89,7 @@ jobs:
           # Wave 4: SeatGeek backstop (free client_id; omit to skip)
           SEATGEEK_CLIENT_ID: ${{ secrets.SEATGEEK_CLIENT_ID }}
       - name: Draft the edition
-        if: github.event.schedule == '0 14 * * 3,6' || inputs.draft_edition == true
+        if: github.event.schedule == '0 13 * * 3,6' || inputs.draft_edition == true
         run: npx tsx ingest/draftEdition.ts
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
