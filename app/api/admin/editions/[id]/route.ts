@@ -27,9 +27,10 @@ interface PatchBody {
   skip_reason?: string;
 }
 
-// PATCH — edit chrome fields and/or move status (approve / reject-hold / back to draft).
+// PATCH — edit chrome fields and/or move status (approve / hold / back to draft).
 // Never touches a 'sent' or 'failed' edition (those are the send path's + drafter's
-// own territory) — only draft/approved are mutable here.
+// own territory) — draft/approved/skipped (on hold) are all mutable here, including
+// moving OUT of 'skipped' again — a hold is an editorial note, not a lock.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const sb = await requireAdmin();
   if (!sb) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -37,7 +38,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   const { data: current, error: curErr } = await sb.from("editions").select("status").eq("id", id).maybeSingle();
   if (curErr || !current) return NextResponse.json({ error: "not found" }, { status: 404 });
-  if (!["draft", "approved"].includes(current.status)) {
+  if (!["draft", "approved", "skipped"].includes(current.status)) {
     return NextResponse.json({ error: `edition is ${current.status} — no longer editable` }, { status: 400 });
   }
 

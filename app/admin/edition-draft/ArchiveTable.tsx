@@ -2,11 +2,11 @@
 
 import type { ArchiveRow } from "@/lib/edition/cockpitTypes";
 
-const STATUS_CHIP: Record<string, string> = { sent: "green", skipped: "amber", failed: "amber" };
+const STATUS_CHIP: Record<string, string> = { sent: "green", failed: "amber" };
 
 export function ArchiveTable({ rows }: { rows: ArchiveRow[] | null }) {
   if (rows === null) return <p className="ed-swap-empty">Loading…</p>;
-  if (rows.length === 0) return <div className="gatebox">No sent, skipped, or failed editions yet.</div>;
+  if (rows.length === 0) return <div className="gatebox">No sent or failed editions yet.</div>;
   return (
     <table className="ed-archive">
       <thead>

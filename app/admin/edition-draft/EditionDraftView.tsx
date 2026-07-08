@@ -12,6 +12,13 @@ const SLOT_TITLE: Record<EditionSlot, string> = {
   hero: "Hero — The Move", secondary: "Secondary", nonevent: "Non-event", anchor: "Anchor — Always worth it",
 };
 
+// 'skipped' is the DB value (unchanged, avoids a migration) but reads as
+// permanent/terminal — it isn't. It's an editorial "still deciding" note: the
+// edition stays fully editable and still sends at its normal time. Display
+// label only; never compare against this anywhere.
+const STATUS_LABEL: Record<string, string> = { draft: "Draft", approved: "Approved", skipped: "On hold" };
+function statusLabel(status: string): string { return STATUS_LABEL[status] ?? status; }
+
 function bySlot(picks: CockpitPick[], slot: EditionSlot) {
   return picks.filter((p) => p.slot === slot).sort((a, b) => a.position - b.position);
 }
@@ -137,6 +144,11 @@ export function EditionDraftView({
     if (ra.ok && rb.ok) { showToast("Reordered"); loadDetail(detail.id); } else showToast("Reorder failed");
   };
 
+  // Approving and holding are both just editorial notes now — neither removes
+  // the edition from view or blocks further edits, so this always just
+  // refreshes the current detail in place. (Holding used to navigate away to
+  // "whatever's next," back when 'skipped' fell out of the pending list — it
+  // no longer does, so there's nothing to navigate to.)
   const setStatus = async (status: "approved" | "skipped", skip_reason?: string) => {
     if (!detail) return;
     const res = await fetch(`/api/admin/editions/${detail.id}`, {
@@ -144,16 +156,8 @@ export function EditionDraftView({
       body: JSON.stringify({ status, ...(skip_reason ? { skip_reason } : {}) }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
-      showToast(status === "approved" ? "Approved" : "Rejected / held");
-      const list = await fetch("/api/admin/editions").then((r) => r.json()).catch(() => null);
-      if (list?.editions) {
-        const remaining = list.editions as EditionSummary[];
-        if (status === "skipped" && remaining.length && remaining[0].id !== detail.id) {
-          selectEdition(remaining[0].id);
-        } else {
-          loadDetail(detail.id);
-        }
-      }
+      showToast(status === "approved" ? "Approved" : "On hold");
+      loadDetail(detail.id);
     } else showToast(res?.error ?? "Update failed");
   };
 
@@ -161,7 +165,7 @@ export function EditionDraftView({
     return (
       <div className="wrap" style={{ display: "block", maxWidth: 1180 }}>
         <div className="vhead"><h1 className="qtitle">Edition draft</h1></div>
-        <div className="gatebox">No draft or approved edition right now. The drafter runs Wednesday and Saturday nights (19:00 PT).</div>
+        <div className="gatebox">No edition to review right now. The drafter runs Wednesday and Saturday nights (19:00 PT). Already-sent or failed editions are in the Archive tab.</div>
       </div>
     );
   }
@@ -181,7 +185,7 @@ export function EditionDraftView({
         <span className="spacer" />
         {pending.length > 1 ? (
           <select value={selectedId ?? ""} onChange={(e) => selectEdition(e.target.value)} className="ed-select">
-            {pending.map((p) => <option key={p.id} value={p.id}>{p.edition_date} ({p.status})</option>)}
+            {pending.map((p) => <option key={p.id} value={p.id}>{p.edition_date} ({statusLabel(p.status)})</option>)}
           </select>
         ) : null}
       </div>
@@ -208,11 +212,11 @@ export function EditionDraftView({
           </CollapsiblePanel>
 
           <CollapsiblePanel
-            title="Draft editor" subtitle={`status: ${detail.status}`}
+            title="Draft editor" subtitle={`status: ${statusLabel(detail.status)}`}
             open={editorOpen} onToggle={() => setEditorOpen((o) => !o)} narrow
           >
             <div className="card" style={{ padding: 16 }}>
-              <div className="ed-pick-head"><span className="ed-pick-thing">Chrome</span><span className={`chip ${detail.status === "approved" ? "green" : "amber"}`}><span className="dot" />{detail.status}</span></div>
+              <div className="ed-pick-head"><span className="ed-pick-thing">Chrome</span><span className={`chip ${detail.status === "approved" ? "green" : "amber"}`}><span className="dot" />{statusLabel(detail.status)}</span></div>
               <label className="ed-field"><span>Subject</span>
                 <input value={chrome.subject} onChange={(e) => setChrome((c) => ({ ...c, subject: e.target.value }))} /></label>
               <label className="ed-field"><span>Preheader</span>
@@ -271,14 +275,16 @@ export function EditionDraftView({
                   {detail.status === "approved" ? "Approved ✓" : "Approve"}
                 </button>
                 <input
-                  className="ed-search" placeholder="Reason (for reject/hold)" value={rejectReason}
+                  className="ed-search" placeholder="Note (optional)" value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)} style={{ maxWidth: 220 }}
                 />
-                <button className="btn btn-quiet btn-sm" onClick={() => setStatus("skipped", rejectReason || "operator hold")}>
-                  Reject / hold
+                <button className="btn btn-quiet btn-sm" onClick={() => setStatus("skipped", rejectReason || "on hold")} disabled={detail.status === "skipped"}>
+                  {detail.status === "skipped" ? "On hold ✓" : "Hold"}
                 </button>
               </div>
-              <p className="ed-hint">If left unapproved, this draft auto-sends at 07:00 PT on send day — approving is optional, not required.</p>
+              <p className="ed-hint">
+                Approving and holding are both just notes to yourself — this edition sends at its normal time (07:00 PT on send day) either way, and stays editable until then. Nothing here blocks the send except a build failure.
+              </p>
             </div>
           </CollapsiblePanel>
         </>

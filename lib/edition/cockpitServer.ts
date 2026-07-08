@@ -47,12 +47,16 @@ function toCockpitThing(t: ThingJoinRow): CockpitThing {
   };
 }
 
-/** Editions currently awaiting operator action (the reviewer's worklist). */
+/** Editions still reachable/editable in the reviewer (the worklist). 'skipped'
+ *  (the cockpit's "Hold" status) belongs here, not in the archive: putting an
+ *  edition on hold is an editorial note, not a terminal state — it stays
+ *  editable and still sends at its normal time unless the drafter genuinely
+ *  couldn't build one ('failed') or it already went out ('sent'). */
 export async function loadPendingEditions(sb: SupabaseClient): Promise<EditionSummary[]> {
   const { data, error } = await sb
     .from("editions")
     .select("id, edition_date, edition_type, status, subject")
-    .in("status", ["draft", "approved"])
+    .in("status", ["draft", "approved", "skipped"])
     .order("edition_date", { ascending: true });
   if (error) throw new Error(`cockpit: pending editions select failed: ${error.message}`);
   return (data ?? []) as EditionSummary[];
@@ -128,7 +132,7 @@ export async function loadEditionArchive(sb: SupabaseClient): Promise<ArchiveRow
   const { data, error } = await sb
     .from("editions")
     .select("edition_date, edition_type, status, subject, sent_count, open_count, click_count")
-    .in("status", ["sent", "skipped", "failed"])
+    .in("status", ["sent", "failed"])
     .order("edition_date", { ascending: false })
     .limit(100);
   if (error) throw new Error(`cockpit: archive select failed: ${error.message}`);
