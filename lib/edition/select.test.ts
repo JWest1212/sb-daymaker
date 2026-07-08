@@ -80,6 +80,27 @@ describe("hero selection — fallback chain", () => {
   });
 });
 
+describe("holistic ranking across the window", () => {
+  it("a high-weight Sunday pick outranks a low-weight Friday pick for hero", () => {
+    const things = [
+      draftThing({ id: "friday-mediocre", starts_at: "2026-07-10T09:00:00Z", editorial_weight: 0 }),
+      draftThing({ id: "sunday-standout", starts_at: "2026-07-12T09:00:00Z", editorial_weight: 5 }),
+    ];
+    const sel = selectEdition({ ...BASE_INPUT, things });
+    expect(sel.hero.picks[0]?.id).toBe("sunday-standout");
+    expect(sel.hero.rankedBench.map((p) => p.id)).toEqual(["sunday-standout", "friday-mediocre"]);
+  });
+
+  it("ties within equal editorial_weight break to the soonest starts_at", () => {
+    const things = [
+      draftThing({ id: "later-same-weight", starts_at: "2026-07-12T09:00:00Z", editorial_weight: 2 }),
+      draftThing({ id: "sooner-same-weight", starts_at: "2026-07-10T09:00:00Z", editorial_weight: 2 }),
+    ];
+    const sel = selectEdition({ ...BASE_INPUT, things });
+    expect(sel.hero.rankedBench.map((p) => p.id)).toEqual(["sooner-same-weight", "later-same-weight"]);
+  });
+});
+
 describe("secondary selection — tier qualification + window", () => {
   it("qualifies Tier-1 dated-in-window and Tier-2 recurring-in-window; excludes out-of-window and Tier-3", () => {
     const things = [

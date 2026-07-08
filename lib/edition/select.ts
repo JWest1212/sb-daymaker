@@ -1,9 +1,14 @@
 // lib/edition/select.ts
 //
 // The deterministic, sponsor-blind slot selection (edition_build_spec.md §3.3,
-// §3.6). Reuses the site's own rankers verbatim — cascade() / pickEvergreenFallback
-// (lib/explore.ts) and occursOnDate (lib/occurrences.ts) — rather than forking
-// hero/tier logic a second time (spec §3, heroServer.ts parallel).
+// §3.6). Reuses pickEvergreenFallback (lib/explore.ts) and occursOnDate
+// (lib/occurrences.ts) rather than forking that logic a second time (spec §3,
+// heroServer.ts parallel) — but ranking itself (editionCascade, below) is
+// edition-specific, NOT the public site's cascade(). cascade() sorts Tier-1
+// primarily by starts_at, which is right for the live "what's happening now"
+// feed but wrong for a multi-day digest window: it lets the earliest day in
+// the window sweep every bench slot before a stronger later-day pick is ever
+// considered. An edition ranks holistically across every day it covers.
 //
 // Ranking (`rankedBench`, cascade order, rank 0 = best) and render order
 // (`picks`) are deliberately different lists: the bench is "what the ranker
@@ -16,7 +21,7 @@
 // cockpit later) so an operator can deliberately re-select it (is_manual=true
 // overrides cooldown by design).
 
-import { cascade, pickEvergreenFallback } from "../explore";
+import { pickEvergreenFallback } from "../explore";
 import { occursOnDate, type OccThing } from "../occurrences";
 import type { Thing } from "../things";
 import type {
@@ -52,12 +57,39 @@ function earliestWindowDay(t: DraftThing, windowDays: string[]): string {
 }
 
 function asThings(things: DraftThing[]): Thing[] {
-  // cascade() only reads happening_tier / editorial_weight / starts_at — safe
-  // to cast rather than build full Thing objects (mirrors heroServer.ts).
+  // editionCascade only reads happening_tier / editorial_weight / starts_at —
+  // safe to cast rather than build full Thing objects (mirrors heroServer.ts).
   return things as unknown as Thing[];
 }
+
+/** Edition ranking: editorial_weight (founder curation) is the primary signal
+ *  for every tier, across the ENTIRE window at once — a Sunday standout can
+ *  outrank a mediocre Friday pick. starts_at only breaks a tie between two
+ *  equally-weighted Tier-1 items (soonest first, for legibility). Mirrors
+ *  cascade()'s tier-ordering and negative-weight-sinks conventions so the two
+ *  rankers stay recognizably related, but is NOT cascade() — see module header. */
+function editionCascade(things: Thing[]): Thing[] {
+  return things
+    .map((t, i) => [t, i] as const)
+    .sort(([a, ia], [b, ib]) => {
+      if (a.happening_tier !== b.happening_tier) return a.happening_tier - b.happening_tier;
+
+      // Negatives sink within their tier section (both negative → keep relative order).
+      const aNeg = a.editorial_weight < 0;
+      const bNeg = b.editorial_weight < 0;
+      if (aNeg !== bNeg) return aNeg ? 1 : -1;
+
+      if (a.editorial_weight !== b.editorial_weight) return b.editorial_weight - a.editorial_weight;
+      if (a.happening_tier === 1 && a.starts_at && b.starts_at && a.starts_at !== b.starts_at)
+        return a.starts_at.localeCompare(b.starts_at); // tie-break only
+
+      return ia - ib; // stable input order
+    })
+    .map(([t]) => t);
+}
+
 function rankedOf(things: DraftThing[]): DraftThing[] {
-  return cascade(asThings(things)) as unknown as DraftThing[];
+  return editionCascade(asThings(things)) as unknown as DraftThing[];
 }
 
 function freshnessKey(t: DraftThing): string {
