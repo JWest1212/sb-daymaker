@@ -23,24 +23,21 @@ function bySlot(picks: CockpitPick[], slot: EditionSlot) {
   return picks.filter((p) => p.slot === slot).sort((a, b) => a.position - b.position);
 }
 
-function CollapsiblePanel({
-  title, subtitle, open, onToggle, narrow, children,
+function Panel({
+  title, subtitle, narrow, children,
 }: {
   title: string;
   subtitle?: string;
-  open: boolean;
-  onToggle: () => void;
   narrow?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="ed-panel">
-      <button type="button" className="ed-panel-head" onClick={onToggle} aria-expanded={open}>
-        <span className="ed-panel-chevron">{open ? "▾" : "▸"}</span>
+      <div className="ed-panel-head">
         <span className="ed-panel-title">{title}</span>
         {subtitle ? <span className="ed-panel-subtitle">{subtitle}</span> : null}
-      </button>
-      {open ? <div className={`ed-panel-body${narrow ? " ed-panel-body-narrow" : ""}`}>{children}</div> : null}
+      </div>
+      <div className={`ed-panel-body${narrow ? " ed-panel-body-narrow" : ""}`}>{children}</div>
     </div>
   );
 }
@@ -62,8 +59,6 @@ export function EditionDraftView({
   });
   const [savingPick, setSavingPick] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [previewOpen, setPreviewOpen] = useState(true);
-  const [editorOpen, setEditorOpen] = useState(false);
   // Bumped to force the preview iframe to reload after a save (its own GET is
   // otherwise indistinguishable from the prior render to the browser cache).
   const [previewNonce, setPreviewNonce] = useState(0);
@@ -150,7 +145,7 @@ export function EditionDraftView({
   // (Holding used to navigate away to "whatever's next," back when 'skipped'
   // fell out of the pending list — it no longer does, so there's nothing to
   // navigate to.)
-  const setStatus = async (status: "approved" | "skipped", skip_reason?: string) => {
+  const setStatus = async (status: "approved" | "skipped" | "draft", skip_reason?: string) => {
     if (!detail) return;
     const res = await fetch(`/api/admin/editions/${detail.id}`, {
       method: "PATCH", headers: { "content-type": "application/json" },
@@ -163,7 +158,7 @@ export function EditionDraftView({
       if (res.sent) {
         showToast(res.sent.ok ? `Approved — sent to ${res.sent.sent} reader${res.sent.sent === 1 ? "" : "s"} just now` : `Approved, but the send failed: ${res.sent.skipReason ?? "unknown error"}`);
       } else {
-        showToast(status === "approved" ? "Approved" : "On hold");
+        showToast(status === "approved" ? "Approved" : status === "skipped" ? "On hold" : "Reset to draft");
       }
       loadDetail(detail.id);
     } else showToast(res?.error ?? "Update failed");
@@ -173,7 +168,7 @@ export function EditionDraftView({
     return (
       <div className="wrap" style={{ display: "block", maxWidth: 1180 }}>
         <div className="vhead"><h1 className="qtitle">Edition draft</h1></div>
-        <div className="gatebox">No edition to review right now. The drafter runs Wednesday and Saturday nights (19:00 PT). Already-sent or failed editions are in the Archive tab.</div>
+        <div className="gatebox">No edition to review right now. The drafter runs Wednesday and Saturday mornings (06:00 PT), a full day before each send. Already-sent or failed editions are in the Archive tab.</div>
       </div>
     );
   }
@@ -207,22 +202,16 @@ export function EditionDraftView({
         <ArchiveTable rows={archive} />
       ) : (
         <>
-          <CollapsiblePanel
-            title="Draft preview" subtitle="as it will render in the email"
-            open={previewOpen} onToggle={() => setPreviewOpen((o) => !o)}
-          >
+          <Panel title="Draft preview" subtitle="as it will render in the email">
             <div className="ed-preview-full">
               <iframe
                 src={`/api/admin/editions/${detail.id}/preview?v=${previewNonce}`}
                 title="Edition preview" className="ed-preview-frame"
               />
             </div>
-          </CollapsiblePanel>
+          </Panel>
 
-          <CollapsiblePanel
-            title="Draft editor" subtitle={`status: ${statusLabel(detail.status)}`}
-            open={editorOpen} onToggle={() => setEditorOpen((o) => !o)} narrow
-          >
+          <Panel title="Draft editor" subtitle={`status: ${statusLabel(detail.status)}`} narrow>
             <div className="card" style={{ padding: 16 }}>
               <div className="ed-pick-head"><span className="ed-pick-thing">Chrome</span><span className={`chip ${detail.status === "approved" ? "green" : "amber"}`}><span className="dot" />{statusLabel(detail.status)}</span></div>
               <label className="ed-field"><span>Subject</span>
@@ -289,12 +278,18 @@ export function EditionDraftView({
                 <button className="btn btn-quiet btn-sm" onClick={() => setStatus("skipped", rejectReason || "on hold")} disabled={detail.status === "skipped"}>
                   {detail.status === "skipped" ? "On hold ✓" : "Hold"}
                 </button>
+                {detail.status !== "draft" ? (
+                  <button className="btn btn-quiet btn-sm" onClick={() => setStatus("draft")}>
+                    Reset to draft
+                  </button>
+                ) : null}
               </div>
               <p className="ed-hint">
                 This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.
+                {detail.status !== "draft" ? " Reset to draft clears your Approve/Hold decision and lets the automatic drafter safely regenerate this edition's picks the next time it runs." : null}
               </p>
             </div>
-          </CollapsiblePanel>
+          </Panel>
         </>
       )}
 
