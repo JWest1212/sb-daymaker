@@ -150,7 +150,7 @@ export function EditionDraftView({
   // (Holding used to navigate away to "whatever's next," back when 'skipped'
   // fell out of the pending list — it no longer does, so there's nothing to
   // navigate to.)
-  const setStatus = async (status: "approved" | "skipped", skip_reason?: string) => {
+  const setStatus = async (status: "approved" | "skipped" | "draft", skip_reason?: string) => {
     if (!detail) return;
     const res = await fetch(`/api/admin/editions/${detail.id}`, {
       method: "PATCH", headers: { "content-type": "application/json" },
@@ -163,7 +163,7 @@ export function EditionDraftView({
       if (res.sent) {
         showToast(res.sent.ok ? `Approved — sent to ${res.sent.sent} reader${res.sent.sent === 1 ? "" : "s"} just now` : `Approved, but the send failed: ${res.sent.skipReason ?? "unknown error"}`);
       } else {
-        showToast(status === "approved" ? "Approved" : "On hold");
+        showToast(status === "approved" ? "Approved" : status === "skipped" ? "On hold" : "Reset to draft");
       }
       loadDetail(detail.id);
     } else showToast(res?.error ?? "Update failed");
@@ -289,9 +289,15 @@ export function EditionDraftView({
                 <button className="btn btn-quiet btn-sm" onClick={() => setStatus("skipped", rejectReason || "on hold")} disabled={detail.status === "skipped"}>
                   {detail.status === "skipped" ? "On hold ✓" : "Hold"}
                 </button>
+                {detail.status !== "draft" ? (
+                  <button className="btn btn-quiet btn-sm" onClick={() => setStatus("draft")}>
+                    Reset to draft
+                  </button>
+                ) : null}
               </div>
               <p className="ed-hint">
                 This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.
+                {detail.status !== "draft" ? " Reset to draft clears your Approve/Hold decision and lets the automatic drafter safely regenerate this edition's picks the next time it runs." : null}
               </p>
             </div>
           </CollapsiblePanel>

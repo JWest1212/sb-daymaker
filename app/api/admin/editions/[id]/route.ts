@@ -62,6 +62,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     update.status = body.status;
     if (body.status === "approved") update.approved_at = new Date().toISOString();
+    // Resetting to draft is a clean slate — clears the prior approval/hold
+    // record so a stale approved_at or hold reason doesn't linger. This is
+    // also what lets the automatic drafter safely regenerate this edition's
+    // picks next time it runs (it only overwrites while status='draft').
+    if (body.status === "draft") { update.approved_at = null; update.skip_reason = null; }
   }
   if (Object.keys(update).length === 0) return NextResponse.json({ error: "no fields to update" }, { status: 400 });
 
