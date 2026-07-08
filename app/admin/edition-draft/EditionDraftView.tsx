@@ -227,7 +227,7 @@ export function EditionDraftView({
             {hero ? (
               <div className="card" style={{ padding: 16 }}>
                 <p className="ed-slot-title">{SLOT_TITLE.hero}</p>
-                <PickEditor pick={hero} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
+                <PickEditor key={`${hero.id}-${hero.thingId}`} pick={hero} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
                   saving={savingPick === hero.id} onSwap={() => setSwap({ slot: "hero", position: 0 })} />
               </div>
             ) : null}
@@ -237,7 +237,7 @@ export function EditionDraftView({
                 <p className="ed-slot-title">Secondaries <em>use ▲▼ to reorder</em></p>
                 {secondaries.map((p, i) => (
                   <PickEditor
-                    key={p.id} pick={p} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
+                    key={`${p.id}-${p.thingId}`} pick={p} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
                     saving={savingPick === p.id} onSwap={() => setSwap({ slot: "secondary", position: p.position })}
                     reorder={{
                       canMoveUp: i > 0, canMoveDown: i < secondaries.length - 1,
@@ -251,7 +251,7 @@ export function EditionDraftView({
             {nonEvent ? (
               <div className="card" style={{ padding: 16 }}>
                 <p className="ed-slot-title">{SLOT_TITLE.nonevent}</p>
-                <PickEditor pick={nonEvent} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
+                <PickEditor key={`${nonEvent.id}-${nonEvent.thingId}`} pick={nonEvent} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
                   saving={savingPick === nonEvent.id} onSwap={() => setSwap({ slot: "nonevent", position: 0 })} />
               </div>
             ) : null}
@@ -259,7 +259,7 @@ export function EditionDraftView({
             {anchor ? (
               <div className="card" style={{ padding: 16 }}>
                 <p className="ed-slot-title">{SLOT_TITLE.anchor}</p>
-                <PickEditor pick={anchor} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
+                <PickEditor key={`${anchor.id}-${anchor.thingId}`} pick={anchor} editionId={detail.id} onSave={savePick} onImageSaved={onImageSaved} onMoreImagesFound={() => detail && loadDetail(detail.id)}
                   saving={savingPick === anchor.id} onSwap={() => setSwap({ slot: "anchor", position: 0 })} />
               </div>
             ) : null}

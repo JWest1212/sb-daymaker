@@ -73,6 +73,8 @@ function allSelectedThings(selection: EditionSelection): DraftThing[] {
   ];
 }
 
+type BlurbSource = Pick<DraftThing, "id" | "type" | "title" | "blurb" | "happening_tier" | "happening_category" | "neighborhood">;
+
 /** Every selected pick gets a real blurb, not a blank line or (per the cockpit's
  *  own bug this fixes) a title standing in for one. A published thing can reach
  *  the drafter blurb-less if the nightly enrich() call missed it — this is a
@@ -80,8 +82,11 @@ function allSelectedThings(selection: EditionSelection): DraftThing[] {
  *  category as the nightly enrich pass, just scoped to this issue's picks.
  *  Fills genuinely MISSING blurbs only (never overwrites one that already
  *  exists) and persists to the CANONICAL thing, benefiting the main site and
- *  every future edition, not just this one. */
-async function ensureBlurbs(sb: SupabaseClient, things: DraftThing[]): Promise<void> {
+ *  every future edition, not just this one. Exported: the swap route reuses
+ *  this for a single newly-swapped-in thing, which may never have gone
+ *  through the initial draft-time pass (it could be a bench candidate or an
+ *  ad-hoc search-all pick, neither of which draftEdition() touches). */
+export async function ensureBlurbs(sb: SupabaseClient, things: BlurbSource[]): Promise<void> {
   const missing = things.filter((t) => !t.blurb);
   if (!missing.length) return;
   const cands: Candidate[] = missing.map((t) => ({
@@ -101,6 +106,7 @@ async function ensureBlurbs(sb: SupabaseClient, things: DraftThing[]): Promise<v
 }
 
 const MIN_IMAGE_OPTIONS = 6;
+type ImageSource = Pick<DraftThing, "id" | "photo_options" | "neighborhood" | "happening_category">;
 
 /** Every selected pick gets at least 6 real image options waiting in the cockpit
  *  swap picker, not whatever the nightly resolver happened to find (often fewer,
@@ -108,8 +114,10 @@ const MIN_IMAGE_OPTIONS = 6;
  *  the same widen-and-persist logic as the cockpit's own "find more options"
  *  button (imageDiscovery.ts), just run proactively at draft time instead of
  *  waiting for an operator to click. Sequential, not parallel, to stay gentle on
- *  Pexels's rate limit — this runs twice a week for ~5 picks, not on a hot path. */
-async function ensureImageOptions(sb: SupabaseClient, things: DraftThing[]): Promise<void> {
+ *  Pexels's rate limit — this runs twice a week for ~5 picks, not on a hot path.
+ *  Exported for the same reason as ensureBlurbs above: reused by the swap route
+ *  for a single newly-swapped-in thing. */
+export async function ensureImageOptions(sb: SupabaseClient, things: ImageSource[]): Promise<void> {
   for (const t of things) {
     const current = (t.photo_options ?? []).filter((o) => o.url);
     if (current.length >= MIN_IMAGE_OPTIONS) continue;
