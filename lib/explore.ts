@@ -250,6 +250,71 @@ export function groupByDay(
     .map(([, v]) => v);
 }
 
+const UTC_LONG_MONTH = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC",
+  month: "long",
+});
+
+/** "5th" / "11th" / "22nd" — the standard English ordinal exceptions are the
+ *  11th–13th (never "1st"/"2nd"/"3rd"). */
+export function ordinal(day: number): string {
+  if (day % 10 === 1 && day % 100 !== 11) return `${day}st`;
+  if (day % 10 === 2 && day % 100 !== 12) return `${day}nd`;
+  if (day % 10 === 3 && day % 100 !== 13) return `${day}rd`;
+  return `${day}th`;
+}
+
+/** "July 5th through 11th" / "June 28th through July 4th" from UTC-anchored
+ *  week bounds (see groupByWeek — these are synthetic calendar-math
+ *  timestamps, not real instants, so they're formatted in UTC rather than
+ *  SB_TZ). The month name repeats only when the week crosses a month. */
+function formatWeekLabel(startMs: number, endMs: number): string {
+  const start = new Date(startMs);
+  const end = new Date(endMs);
+  const startLabel = `${UTC_LONG_MONTH.format(start)} ${ordinal(start.getUTCDate())}`;
+  const endLabel =
+    start.getUTCMonth() === end.getUTCMonth()
+      ? ordinal(end.getUTCDate())
+      : `${UTC_LONG_MONTH.format(end)} ${ordinal(end.getUTCDate())}`;
+  return `${startLabel} through ${endLabel}`;
+}
+
+/** Group items by SB-local calendar week (Sun–Sat), weeks ascending. Week bounds
+ *  are computed via UTC-anchored date math off the SB day key (same DST-safe
+ *  technique as dayOfYear above) so a late-night browser timezone can't shift
+ *  the boundary. Items without starts_at can't be dated to a week — they're
+ *  collected into a trailing, header-less group instead of being dropped. */
+export function groupByWeek(
+  items: Thing[]
+): Array<{ weekKey: string; weekLabel: string | null; items: Thing[] }> {
+  const map = new Map<string, { start: number; end: number; items: Thing[] }>();
+  const undated: Thing[] = [];
+  for (const t of items) {
+    if (!t.starts_at) {
+      undated.push(t);
+      continue;
+    }
+    const [y, m, d] = sbDay(new Date(t.starts_at).getTime()).split("-").map(Number);
+    const anchor = Date.UTC(y, m - 1, d);
+    const start = anchor - new Date(anchor).getUTCDay() * 86_400_000;
+    const end = start + 6 * 86_400_000;
+    const weekKey = new Date(start).toISOString().slice(0, 10);
+    if (!map.has(weekKey)) map.set(weekKey, { start, end, items: [] });
+    map.get(weekKey)!.items.push(t);
+  }
+  const weeks: Array<{ weekKey: string; weekLabel: string | null; items: Thing[] }> = [
+    ...map.entries(),
+  ]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([weekKey, { start, end, items }]) => ({
+      weekKey,
+      weekLabel: formatWeekLabel(start, end),
+      items,
+    }));
+  if (undated.length > 0) weeks.push({ weekKey: "undated", weekLabel: null, items: undated });
+  return weeks;
+}
+
 /** A hand-spread "perfect day": one dated event + a few distinct evergreen places. */
 export function pickPerfectDay(things: Thing[]): string[] {
   const ids: string[] = [];

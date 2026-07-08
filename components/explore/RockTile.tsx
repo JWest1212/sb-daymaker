@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { CardActions, DateEyebrow } from "@/components/ui";
-import { byDateAsc, formatWhen } from "@/lib/explore";
+import { byDateAsc, formatWhen, groupByWeek } from "@/lib/explore";
 import { cardBlurb, cardPlace } from "./derive";
 import type { Thing } from "@/lib/things";
 
@@ -46,8 +47,13 @@ function RockTile({ t }: { t: Thing }) {
 }
 
 // ---------------------------------------------------------------------------
-// RockGrid — sorts month items soonest-first, reveals 8 at a time.
-// "See more" loads the next batch of up to 8; no "Show less" collapse.
+// RockGrid — sorts month items soonest-first, grouped by SB-local calendar
+// week. Each week's header is sticky (same top/z-index as SectionHeader's
+// lead mode) so it hands off to the next week's header as the user scrolls —
+// a native-CSS "always know which week you're viewing" cue.
+// Infinite scroll: an off-screen sentinel past the last loaded tile requests
+// the next batch of 8 as it nears the viewport, so the feed keeps loading
+// itself rather than waiting on a "See more" click.
 // ---------------------------------------------------------------------------
 export function RockGrid({
   items,
@@ -61,23 +67,46 @@ export function RockGrid({
   const rocks = byDateAsc(items);
   const shown = rocks.slice(0, shownCount);
   const remaining = rocks.length - shownCount;
-  const nextBatch = Math.min(8, remaining);
+  const weeks = groupByWeek(shown);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onShowMore();
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [remaining, onShowMore]);
 
   return (
     <>
-      {shown.map((t) => (
-        <RockTile key={t.id} t={t} />
+      {weeks.map((week) => (
+        <div className="sbd-weekgroup" key={week.weekKey}>
+          {week.weekLabel && (
+            <div className="sbd-weekhead">
+              <div className="sbd-weekhead__label">{week.weekLabel}</div>
+            </div>
+          )}
+          <div className="sbd-weekgroup__list">
+            {week.items.map((t, i) => (
+              <div
+                key={t.id}
+                className="sbd-reveal"
+                style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
+              >
+                <RockTile t={t} />
+              </div>
+            ))}
+          </div>
+        </div>
       ))}
-      {remaining > 0 && (
-        <button
-          type="button"
-          className="sbd-rock-more"
-          onClick={onShowMore}
-          aria-label={`See ${nextBatch} more events this month`}
-        >
-          See {nextBatch} more this month →
-        </button>
-      )}
+      {remaining > 0 && <div ref={sentinelRef} aria-hidden="true" />}
     </>
   );
 }

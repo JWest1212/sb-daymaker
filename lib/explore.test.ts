@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Thing, RecurringSchedule, HappyHourWindow } from "./things";
-import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero } from "./explore";
+import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero, groupByWeek, ordinal } from "./explore";
 
 // SB weekday reference instants (SB = America/Los_Angeles):
 const THU = new Date("2026-07-02T19:00:00Z").getTime(); // Thu noon SB
@@ -234,5 +234,62 @@ describe("pickAutoHero — W2.1a shared hero picker", () => {
 
   it("returns null on an empty pool", () => {
     expect(pickAutoHero([], TODAY)).toBeNull();
+  });
+});
+
+describe("ordinal — week header date suffixes", () => {
+  it("uses st/nd/rd for 1/2/3 (and 21/22/23, 31)", () => {
+    expect(ordinal(1)).toBe("1st");
+    expect(ordinal(2)).toBe("2nd");
+    expect(ordinal(3)).toBe("3rd");
+    expect(ordinal(21)).toBe("21st");
+    expect(ordinal(22)).toBe("22nd");
+    expect(ordinal(23)).toBe("23rd");
+    expect(ordinal(31)).toBe("31st");
+  });
+
+  it("special-cases 11/12/13 to 'th', not 'st'/'nd'/'rd'", () => {
+    expect(ordinal(11)).toBe("11th");
+    expect(ordinal(12)).toBe("12th");
+    expect(ordinal(13)).toBe("13th");
+  });
+
+  it("falls back to 'th' for everything else", () => {
+    expect(ordinal(4)).toBe("4th");
+    expect(ordinal(18)).toBe("18th");
+    expect(ordinal(30)).toBe("30th");
+  });
+});
+
+describe("groupByWeek — Month lead sticky header grouping", () => {
+  it("buckets items into SB-local Sun–Sat weeks, ascending", () => {
+    const items = [
+      thing({ id: "wk1", happening_tier: 1, type: "event", starts_at: "2026-07-03T19:00:00Z" }), // Fri Jul 3 → week of Jun 28–Jul 4
+      thing({ id: "wk2a", happening_tier: 1, type: "event", starts_at: "2026-07-05T19:00:00Z" }), // Sun Jul 5 → week of Jul 5–11
+      thing({ id: "wk2b", happening_tier: 1, type: "event", starts_at: "2026-07-11T19:00:00Z" }), // Sat Jul 11 → same week as wk2a
+    ];
+    const weeks = groupByWeek(items);
+    expect(weeks.map((w) => w.items.map((t) => t.id))).toEqual([["wk1"], ["wk2a", "wk2b"]]);
+  });
+
+  it("formats same-month and cross-month week labels", () => {
+    const items = [
+      thing({ id: "cross", happening_tier: 1, type: "event", starts_at: "2026-07-03T19:00:00Z" }),
+      thing({ id: "same", happening_tier: 1, type: "event", starts_at: "2026-07-05T19:00:00Z" }),
+    ];
+    const weeks = groupByWeek(items);
+    expect(weeks[0].weekLabel).toBe("June 28th through July 4th");
+    expect(weeks[1].weekLabel).toBe("July 5th through 11th");
+  });
+
+  it("collects undated items into a trailing, header-less group instead of dropping them", () => {
+    const items = [
+      thing({ id: "dated", happening_tier: 1, type: "event", starts_at: "2026-07-05T19:00:00Z" }),
+      thing({ id: "undated", happening_tier: 3 }),
+    ];
+    const weeks = groupByWeek(items);
+    const last = weeks[weeks.length - 1];
+    expect(last.weekLabel).toBeNull();
+    expect(last.items.map((t) => t.id)).toEqual(["undated"]);
   });
 });
