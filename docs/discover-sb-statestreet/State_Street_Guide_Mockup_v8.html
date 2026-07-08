@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Street (First-timer), SB Daymaker guide mockup v8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;
+    --ink:#241C16;--ink2:#4A4038;--pacific:#16586A;--pacificDk:#0E3C49;
+    --terra:#C0532E;--tile:#E08A5B;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+    --gold-text:#7A5E13;--sage-text:#566049;--terra-text:#9E3F20;
+    --shadow-card:0 1px 2px rgba(36,28,22,.07),0 6px 18px rgba(36,28,22,.07);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1400px 800px at 18% -8%,#16586A,#0E3C49 62%);min-height:100vh;
+    font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;padding:40px 18px 70px;}
+  .wrap{max-width:460px;margin:0 auto;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .stepchip{display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#0E3C49;background:var(--gold);border-radius:30px;padding:4px 13px;margin-bottom:12px;}
+  .mcap{font-size:13px;line-height:1.6;color:rgba(252,250,245,.85);margin:16px 4px 0;}
+  .mcap b{color:#FCFAF5;font-weight:700;}
+
+  .app{width:390px;max-width:100%;margin:0 auto;background:var(--plaster);border-radius:28px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.3),0 28px 64px rgba(0,0,0,.45);position:relative;}
+  .statusbar{display:flex;justify-content:space-between;align-items:center;padding:12px 18px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--ink2);}
+  .g-topbar{display:flex;justify-content:space-between;align-items:center;padding:2px 10px;}
+  .g-topbar button{width:44px;height:44px;border:none;background:transparent;color:var(--ink);font-size:26px;line-height:1;display:grid;place-items:center;border-radius:50%;}
+
+  .tophead{padding:10px 18px 4px;}
+  .tophead .eyebrow{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--terra-text);}
+  .tophead h1{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(32px,9vw,44px);line-height:1.02;letter-spacing:-.5px;color:var(--terra);margin:4px 0 3px;}
+  .tophead .kicker{font-family:'Fraunces',serif;font-style:italic;font-size:15px;line-height:1.35;color:var(--ink2);margin:0;}
+  .tophead .qual{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--terra-text);margin:1px 0 7px;}
+
+  .sketchplate{margin:8px 14px 0;background:var(--paper);border-radius:14px;box-shadow:var(--shadow-card);padding:10px 10px 8px;position:relative;}
+  .sketchplate svg{width:100%;height:auto;display:block;}
+  .sketchcap{display:flex;justify-content:space-between;padding:6px 6px 2px;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;color:var(--terra);}
+
+  .g-title{padding:14px 18px 4px;}
+  .g-title .deck{font-size:14.5px;line-height:1.55;color:var(--ink2);margin:0 0 12px;}
+  .g-meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink2);}
+  .g-meta .new{color:var(--pacific);}
+
+  .stickynav{display:flex;justify-content:space-between;align-items:center;margin:14px 0 0;padding:10px 18px;background:rgba(252,250,245,.94);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .stickynav .who{font-family:'Fraunces',serif;font-weight:700;font-size:16px;}
+  .stickynav .prog{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--sage-text);}
+
+  .nowblock{margin:14px 16px 0;background:var(--plaster2);border-left:3px solid var(--sage);border-radius:0 12px 12px 0;padding:12px 15px 10px;}
+  .nowblock .eyebrow{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--sage-text);margin-bottom:5px;}
+  .nowblock p{font-size:13.8px;line-height:1.55;margin:0 0 9px;}
+  .haptoggle{display:flex;align-items:center;gap:8px;width:100%;border:none;background:transparent;border-top:1px dashed var(--line);padding:9px 0 3px;text-align:left;cursor:pointer;}
+  .haptoggle .hdot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+  .haptoggle .hd{flex:1;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sage-text);}
+  .haptoggle .chev{color:var(--sage-text);font-size:13px;}
+
+  .passport{margin:16px 16px 0;background:var(--pacificDk);border-radius:16px;padding:16px 16px 14px;display:flex;gap:15px;align-items:center;color:var(--plaster);}
+  .passport .left{flex:1;min-width:0;}
+  .passport .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px;}
+  .passport .lbl{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;color:#fff;}
+  .passport .num{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;color:var(--gold);}
+  .passport .bar{height:7px;border-radius:999px;background:rgba(246,241,231,.18);overflow:hidden;}
+  .passport .fill{height:100%;background:var(--sage);border-radius:999px;}
+  .passport .note{font-size:12px;color:rgba(246,241,231,.82);margin:9px 0 0;line-height:1.55;}
+  .passport .note .tease{color:var(--gold);font-weight:700;}
+  .stampslot{width:62px;height:62px;min-width:62px;border:1.8px dashed var(--gold);border-radius:50%;display:grid;place-items:center;position:relative;}
+  .stampslot .code{font-family:'Fraunces',serif;font-weight:900;font-size:17px;color:var(--gold);}
+  .stampslot .slotlbl{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:1px;color:rgba(246,241,231,.7);white-space:nowrap;}
+
+  .walkhead{padding:26px 18px 4px;}
+  .walkhead h3{font-family:'Fraunces',serif;font-weight:700;font-size:22px;margin:0 0 5px;}
+  .walkhead p{font-size:13.8px;color:var(--ink2);margin:0;line-height:1.55;}
+  .walkhead p b{color:var(--sage-text);font-weight:700;}
+
+  .chband{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:12px 16px 0;background:var(--terra);border:1px solid var(--terra);border-radius:13px;padding:12px 15px;text-align:left;min-height:44px;cursor:pointer;transition:background .18s ease;}
+  .chband .body{flex:1;min-width:0;}
+  .chband .k{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;}
+  .chband .nm{font-family:'Fraunces',serif;font-weight:700;font-size:18px;margin:2px 0 1px;color:#fff;}
+  .chband .sum{font-size:12.6px;color:rgba(255,255,255,.9);}
+  .chband .minibeen{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;}
+  .chband .chev{color:#fff;}
+  .nowtag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;background:rgba(255,255,255,.92);color:var(--terra);border-radius:30px;padding:1px 7px;margin-left:5px;vertical-align:1px;}
+  .chapter.open > .chband{background:var(--plaster2);border-color:var(--line);box-shadow:inset 3px 0 0 var(--terra);}
+  .chapter.open > .chband .k{color:var(--ink2);}
+  .chapter.open > .chband .nm{color:var(--terra);}
+  .chapter.open > .chband .sum{color:var(--ink2);}
+  .chapter.open > .chband .minibeen{color:var(--sage-text);}
+  .chapter.open > .chband .chev{color:var(--ink2);}
+  .chapter.open > .chband .nowtag{background:rgba(224,168,46,.2);color:var(--gold-text);}
+
+  .chinner{padding:6px 16px 2px;position:relative;}
+  .chinner::before{content:"";position:absolute;left:28px;top:22px;bottom:26px;width:2px;background:repeating-linear-gradient(180deg,var(--terra) 0 4px,transparent 4px 8px);opacity:.32;}
+  .stop{display:flex;gap:12px;padding:13px 0 0;}
+  .stop .marker{padding-top:2px;}
+  .stopnum{width:27px;height:27px;min-width:27px;border-radius:50%;background:var(--terra);color:#fff;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12.5px;position:relative;z-index:1;box-shadow:0 0 0 3px var(--paper);}
+  .stop .body{flex:1;min-width:0;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .stop.laststop .body{border-bottom:none;}
+  .stop .toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;}
+  .stop h4{font-family:'Fraunces',serif;font-weight:600;font-size:19px;line-height:1.15;margin:2px 0 2px;}
+  .stop .sub{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink2);}
+  .stop .sub .dir{color:var(--pacific);text-decoration:none;}
+  .stop p{font-size:14.5px;line-height:1.6;color:var(--ink);margin:7px 0 0;}
+  .stopctrls{display:flex;align-items:center;gap:2px;}
+  .beenbtn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:999px;border:1.5px solid var(--sage-text);background:transparent;color:var(--sage-text);font-weight:700;font-size:12.5px;white-space:nowrap;cursor:default;}
+  .heart{width:40px;height:40px;min-width:40px;border:none;background:transparent;display:grid;place-items:center;border-radius:50%;cursor:pointer;}
+  .heart svg{width:21px;height:21px;stroke:var(--pacific);fill:none;stroke-width:1.8;}
+
+  .aside{margin:20px 18px;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:16px 18px 14px;box-shadow:var(--shadow-card);position:relative;transform:rotate(-.6deg);}
+  .aside::before{content:"";position:absolute;top:-9px;left:50%;transform:translateX(-50%) rotate(1.5deg);width:74px;height:18px;background:var(--gold);opacity:.55;border-radius:2px;}
+  .aside .eyebrow{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text);}
+  .aside p{font-family:'Fraunces',serif;font-style:italic;font-size:17px;line-height:1.5;margin:8px 0 0;}
+
+  .take{margin:24px 18px 6px;background:var(--paper);border-radius:14px;box-shadow:var(--shadow-card);border:1px solid var(--line);border-top:4px double var(--tile);padding:16px 18px 12px;}
+  .take .eyebrow{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--terra-text);}
+  .take h4{font-family:'Fraunces',serif;font-weight:900;font-size:20px;margin:7px 0 10px;}
+  .take .rk{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line);}
+  .take .rk:last-of-type{border-bottom:none;}
+  .take .rk .n{font-family:'Fraunces',serif;font-weight:900;font-size:21px;color:var(--tile);min-width:20px;line-height:1;}
+  .take .rk .w{font-size:14.5px;line-height:1.45;}
+  .take .rk .w b{font-weight:600;}
+  .take .landing{font-size:14px;line-height:1.55;color:var(--ink2);margin:12px 0 0;font-style:italic;}
+  .takefoot{border-top:1px solid var(--line);margin-top:13px;padding:9px 0 2px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1.6px;color:var(--ink2);}
+
+  .know{margin:24px 18px 0;background:var(--pacificDk);border-radius:16px;padding:18px 18px 8px;color:var(--plaster);}
+  .know h3{font-family:'Fraunces',serif;font-weight:600;font-size:19px;margin:0 0 12px;color:#fff;}
+  .know .krow{display:flex;gap:12px;padding:11px 0;border-top:1px solid rgba(246,241,231,.18);}
+  .know .krow:first-of-type{border-top:none;}
+  .know .krow .k{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.2px;min-width:82px;color:var(--gold);text-transform:uppercase;padding-top:2px;}
+  .know .krow .v{font-size:13.8px;line-height:1.55;}
+
+  .g-colophon{padding:22px 18px 18px;text-align:center;}
+  .g-colophon .mono{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--ink2);}
+
+  .mappill{position:absolute;right:14px;bottom:86px;display:inline-flex;align-items:center;gap:7px;min-height:42px;background:var(--pacificDk);color:var(--plaster);border-radius:999px;padding:0 16px;font-weight:700;font-size:13px;box-shadow:0 6px 20px rgba(14,60,73,.45);border:none;cursor:pointer;}
+  .bottomnav{display:flex;border-top:1px solid var(--line);background:var(--paper);padding:8px 6px 14px;}
+  .bottomnav .tab{flex:1;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--ink2);}
+  .bottomnav .tab.active{color:var(--pacific);font-weight:700;}
+  .bottomnav svg{width:21px;height:21px;}
+
+  @media(max-width:620px){.app{width:100%;}.wrap{max-width:100%;}}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="stepchip">State Street (First-timer) · the guide at 0 / 9 · mockup v8</span>
+    <div class="app">
+      <div class="statusbar"><span>5:12</span><span>SB DAYMAKER</span><span>68%</span></div>
+      <div class="g-topbar">
+        <button aria-label="Back">‹</button>
+        <button aria-label="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M12 3l-4 4M12 3l4 4M5 13v6a2 2 0 002 2h10a2 2 0 002-2v-6"/></svg></button>
+      </div>
+
+      <div class="tophead">
+        <div class="eyebrow">Neighborhood guide</div>
+        <h1>State Street</h1>
+        <div class="qual">First-timer's guide</div>
+        <p class="kicker">State Street and the blocks that reward wandering off it</p>
+      </div>
+
+      <div class="sketchplate">
+        <svg viewBox="0 0 360 330" role="img" aria-label="Hand-drawn illustrated map of the State Street area, nine numbered stops from upper State down to the Presidio, with landmarks, palms, and insider notes, none marked yet">
+          <rect x="0" y="0" width="360" height="330" fill="#FCFAF5"/>
+
+          <!-- mountains -->
+          <g fill="none" stroke="#7E8B6B" stroke-width="1.3" stroke-linecap="round">
+            <path d="M4 34 C 44 20, 66 18, 96 28 C 128 16, 158 24, 190 14 C 224 24, 252 17, 286 27 C 316 19, 340 24, 356 20"/>
+            <path d="M150 26 C 190 32, 230 26, 270 32 M300 24 C 320 28, 340 26, 356 30" opacity=".5"/>
+          </g>
+          <text x="252" y="14" font-family="Fraunces, serif" font-style="italic" font-size="11" fill="#566049">the mountains</text>
+
+          <!-- cross streets (light background grid) -->
+          <g stroke="#4A4038" stroke-width="1" stroke-linecap="round" fill="none" opacity=".4">
+            <path d="M58 82 C 130 81, 200 82, 260 81"/>
+            <path d="M58 124 C 130 123, 200 124, 260 123"/>
+            <path d="M58 150 C 130 149, 200 150, 260 149"/>
+            <path d="M58 212 C 130 211, 200 212, 262 211"/>
+            <path d="M58 260 C 130 259, 200 260, 262 259"/>
+          </g>
+          <!-- verticals -->
+          <g stroke="#241C16" stroke-linecap="round" fill="none">
+            <path d="M152 46 C 150 120, 160 200, 170 292" stroke-width="2.6"/>
+            <path d="M152 46 C 150 120, 160 200, 170 292" stroke="#F6F1E7" stroke-width=".8" stroke-dasharray="2 6"/>
+            <path d="M260 64 C 260 140, 261 220, 262 284" stroke-width="1.2" opacity=".55"/>
+            <path d="M58 64 C 58 140, 57 220, 56 284" stroke-width="1.2" opacity=".55"/>
+          </g>
+          <!-- street labels -->
+          <g font-family="JetBrains Mono, monospace" font-size="7" font-weight="700" fill="#4A4038" letter-spacing=".5" opacity=".8">
+            <text x="160" y="176" transform="rotate(88 160 176)">STATE ST</text>
+            <text x="266" y="72" transform="rotate(88 266 72)">ANACAPA</text>
+            <text x="52" y="126" transform="rotate(88 52 126)">CHAPALA</text>
+            <text x="8" y="79">VICTORIA</text>
+            <text x="8" y="121">ANAPAMU</text>
+            <text x="8" y="147">FIGUEROA</text>
+            <text x="8" y="209">CANON PERDIDO</text>
+            <text x="8" y="257">ORTEGA</text>
+          </g>
+
+          <!-- palms -->
+          <g><path d="M98 190 Q100 182 98 174" fill="none" stroke="#4A4038" stroke-width="1.4" stroke-linecap="round"/><g fill="none" stroke="#7E8B6B" stroke-width="1.3" stroke-linecap="round"><path d="M98 174 q-9 -1 -13 4"/><path d="M98 174 q-6 -6 -12 -6"/><path d="M98 174 q0 -6 0 -9"/><path d="M98 174 q6 -6 12 -6"/><path d="M98 174 q9 -1 13 4"/></g></g>
+          <g><path d="M198 192 Q200 184 198 176" fill="none" stroke="#4A4038" stroke-width="1.4" stroke-linecap="round"/><g fill="none" stroke="#7E8B6B" stroke-width="1.3" stroke-linecap="round"><path d="M198 176 q-9 -1 -13 4"/><path d="M198 176 q-6 -6 -12 -6"/><path d="M198 176 q0 -6 0 -9"/><path d="M198 176 q6 -6 12 -6"/><path d="M198 176 q9 -1 13 4"/></g></g>
+          <g><path d="M108 256 Q110 248 108 240" fill="none" stroke="#4A4038" stroke-width="1.4" stroke-linecap="round"/><g fill="none" stroke="#7E8B6B" stroke-width="1.3" stroke-linecap="round"><path d="M108 240 q-9 -1 -13 4"/><path d="M108 240 q-6 -6 -12 -6"/><path d="M108 240 q0 -6 0 -9"/><path d="M108 240 q6 -6 12 -6"/><path d="M108 240 q9 -1 13 4"/></g></g>
+          
+
+          <!-- landmark: Public Market awning -->
+          <g stroke="#241C16" stroke-width="1.1" fill="none"><path d="M34 106 L52 106 L49 113 L37 113 Z"/><path d="M38 106 L37 113 M43 106 L42.5 113 M47 106 L46 113" stroke="#C0532E"/></g>
+          <!-- landmark: Arlington facade -->
+          <g stroke="#241C16" stroke-width="1.1" fill="none"><path d="M198 54 L198 43 Q206 34 214 43 L214 54 Z"/><path d="M198 43 Q206 34 214 43" fill="#C0532E" opacity=".85" stroke="none"/><path d="M202 54 L202 46 M210 54 L210 46"/></g>
+          <!-- landmark: Courthouse clock tower + secret -->
+          <g stroke="#241C16" stroke-width="1.2" fill="none"><rect x="278" y="120" width="13" height="27" rx="1"/><path d="M278 120 L284.5 110 L291 120" fill="#C0532E" opacity=".85" stroke="#241C16"/><circle cx="284.5" cy="131" r="3.4" fill="#FCFAF5"/><path d="M284.5 131 l0 -2.4 M284.5 131 l1.8 .7"/><path d="M281 147 q3.5 -5 7 0"/></g>
+          <text x="271" y="114" font-family="Fraunces, serif" font-size="11.5" font-weight="700" fill="#7A5E13">&#10037;</text>
+          <!-- landmark: La Arcada arch + fountain -->
+          <g stroke="#241C16" stroke-width="1.1" fill="none"><path d="M108 170 L108 160 Q116 152 124 160 L124 170"/><path d="M112 170 L112 162 Q116 158 120 162 L120 170"/></g>
+          <path d="M116 176 q-2 -4 0 -6 q2 2 0 6" fill="none" stroke="#16586A" stroke-width="1"/>
+          <!-- landmark: Book Den open book -->
+          <g stroke="#241C16" stroke-width="1.1" fill="none"><path d="M226 104 Q232 101 232 104 Q232 101 238 104 L238 111 Q232 108 226 111 Z"/><path d="M232 104 L232 111"/></g>
+          <!-- landmark: El Presidio adobe + bell -->
+          <g stroke="#241C16" stroke-width="1.1" fill="none"><rect x="262" y="200" width="18" height="13"/><path d="M262 200 L271 193 L280 200" fill="#C0532E" opacity=".85" stroke="#241C16"/><path d="M268 213 L268 205 Q271 202 274 205 L274 213"/><circle cx="271" cy="196.5" r="1.5" fill="#241C16"/></g>
+          <!-- landmark: Paloma neon dove -->
+          <circle cx="286" cy="250" r="10" fill="#E0A82E" opacity=".12"/>
+          <g fill="#E0A82E" stroke="#7A5E13" stroke-width=".5"><ellipse cx="286" cy="251" rx="6.5" ry="2.6" transform="rotate(-12 286 251)"/><path d="M284 250 q3 -6 8.5 -4.5 q-4.5 1.5 -5 5 z"/><path d="M280.5 252 l-4.5 2.4 l3.2 -3.4 z"/></g>
+
+          <!-- insider callouts -->
+          <text x="298" y="152" font-family="Fraunces, serif" font-style="italic" font-size="10" fill="#9E3F20">free view!</text>
+          <path d="M297 148 Q292 141 288 134" fill="none" stroke="#9E3F20" stroke-width="1" stroke-linecap="round"/><path d="M288 134 l1 3.4 l2.6 -1.4 z" fill="#9E3F20"/>
+          
+          
+          <text x="271" y="188" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#4A4038" letter-spacing=".5">est. 1782</text>
+          <text x="302" y="248" font-family="Fraunces, serif" font-style="italic" font-size="9.5" fill="#7A5E13" text-anchor="middle">the neon still glows</text>
+          <path d="M300 245 Q296 250 291 253" fill="none" stroke="#7A5E13" stroke-width="1" stroke-linecap="round"/><path d="M291 253 l3.2 -.4 l-1.4 -2.9 z" fill="#7A5E13"/>
+
+          <!-- route -->
+          <path d="M136 74 Q158 62 182 68 Q120 78 70 94 Q140 118 208 122 Q235 128 256 140 Q206 156 156 148 Q196 178 236 210 Q272 206 298 216 Q284 244 256 260" fill="none" stroke="#C0532E" stroke-width="2.2" stroke-dasharray="1.5 6" stroke-linecap="round" opacity=".92"/>
+
+          <!-- numbered markers -->
+          <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="700" text-anchor="middle">
+            <g><circle cx="136" cy="74" r="13" fill="#FCFAF5"/><circle cx="136" cy="74" r="10.5" fill="#C0532E"/><text x="136" y="78" fill="#FFFFFF">1</text></g>
+            <g><circle cx="182" cy="68" r="13" fill="#FCFAF5"/><circle cx="182" cy="68" r="10.5" fill="#C0532E"/><text x="182" y="72" fill="#FFFFFF">2</text></g>
+            <g><circle cx="70" cy="94" r="13" fill="#FCFAF5"/><circle cx="70" cy="94" r="10.5" fill="#C0532E"/><text x="70" y="98" fill="#FFFFFF">3</text></g>
+            <g><circle cx="256" cy="140" r="13" fill="#FCFAF5"/><circle cx="256" cy="140" r="10.5" fill="#C0532E"/><text x="256" y="144" fill="#FFFFFF">5</text></g>
+            <g><circle cx="156" cy="148" r="13" fill="#FCFAF5"/><circle cx="156" cy="148" r="10.5" fill="#C0532E"/><text x="156" y="152" fill="#FFFFFF">6</text></g>
+            <g><circle cx="208" cy="122" r="13" fill="#FCFAF5"/><circle cx="208" cy="122" r="10.5" fill="#C0532E"/><text x="208" y="126" fill="#FFFFFF">4</text></g>
+            
+            <g><circle cx="236" cy="210" r="13" fill="#FCFAF5"/><circle cx="236" cy="210" r="10.5" fill="#C0532E"/><text x="236" y="214" fill="#FFFFFF">7</text></g>
+            <g><circle cx="298" cy="216" r="13" fill="#FCFAF5"/><circle cx="298" cy="216" r="10.5" fill="#C0532E"/><text x="298" y="220" fill="#FFFFFF">8</text></g><g stroke="#B0763A" stroke-width="1.3" fill="none" stroke-linejoin="round" stroke-linecap="round"><path d="M292 188 h12 l-6 6 z"/><path d="M298 194 v6"/><path d="M295 200 h6"/></g><g><circle cx="256" cy="260" r="13" fill="#FCFAF5"/><circle cx="256" cy="260" r="10.5" fill="#C0532E"/><text x="256" y="264" fill="#FFFFFF">9</text></g>
+          </g>
+
+          <!-- lower-left beach vignette -->
+          <g>
+            <circle cx="34" cy="231" r="8" fill="#E0A82E" opacity=".9"/>
+            <g stroke="#E0A82E" stroke-width="1.3" stroke-linecap="round"><path d="M34 220 l0 -4 M34 242 l0 4 M23 231 l-4 0 M45 231 l4 0 M26 223 l-3 -3 M42 223 l3 -3 M26 239 l-3 3 M42 239 l3 3"/></g>
+            <g fill="#241C16"><rect x="28.4" y="229" width="5.2" height="3.8" rx="1.7"/><rect x="34.8" y="229" width="5.2" height="3.8" rx="1.7"/></g>
+            <path d="M33.6 231 l1.2 0" stroke="#241C16" stroke-width="1"/>
+          </g>
+          <text x="50" y="258" font-family="Fraunces, serif" font-style="italic" font-size="9" fill="#7A5E13">perfect, again</text>
+          <g><path d="M84 308 l0 -17" stroke="#4A4038" stroke-width="1.3" stroke-linecap="round"/><path d="M71 293 q13 -13 26 0 z" fill="#C0532E" opacity=".85" stroke="#9E3F20" stroke-width="1"/><path d="M84 293 l0 -7" stroke="#4A4038" stroke-width="1"/><path d="M77.5 293 q3 3 0 6 M90.5 293 q-3 3 0 6" stroke="#9E3F20" stroke-width=".7" fill="none" opacity=".7"/></g>
+
+          <!-- ocean + sailboat + wharf -->
+          <g stroke="#16586A" stroke-width="1.7" stroke-linecap="round" fill="none"><path d="M14 304 q10 -6 20 0 t20 0 t20 0 t20 0"/><path d="M120 308 q10 -6 20 0 t20 0 t20 0"/><path d="M244 304 q10 -6 20 0 t20 0 t20 0"/></g>
+          <g stroke="#16586A" stroke-width="1.2" fill="none"><path d="M40 300 l15 0 l-3 5 l-9 0 z"/><path d="M48 300 l0 -12"/><path d="M48 300 l0 -12 l8 10 z" fill="#16586A" opacity=".18" stroke="none"/></g>
+          <g stroke="#4A4038" stroke-width="1" fill="none"><path d="M306 306 l0 -8 M313 306 l0 -8 M320 306 l0 -8"/><path d="M302 298 l22 0"/></g>
+          <text x="150" y="322" font-family="Fraunces, serif" font-style="italic" font-size="13" fill="#16586A" letter-spacing="2">the Pacific</text>
+          <text x="313" y="292" font-family="JetBrains Mono, monospace" font-size="7" font-weight="700" fill="#4A4038" text-anchor="middle">STEARNS WHARF</text>
+
+          <!-- compass -->
+          <g transform="translate(335,52)"><circle r="12" fill="none" stroke="#4A4038" stroke-width="1.3"/><path d="M0 -7 L3 3 L0 1 L-3 3 Z" fill="#C0532E"/><text x="0" y="-14" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="700" fill="#4A4038">N</text></g>
+
+          <!-- STATE STREET stamp, top-left, 1.5x -->
+          <g transform="translate(64,33) rotate(-6)">
+            <rect x="-57" y="-23" width="114" height="46" rx="7" fill="none" stroke="#9E3F20" stroke-width="1.8"/>
+            <rect x="-51" y="-17" width="102" height="34" rx="4" fill="none" stroke="#9E3F20" stroke-width="1" stroke-dasharray="4 4"/>
+            <text x="0" y="-3" text-anchor="middle" font-family="Fraunces, serif" font-weight="900" font-size="16" fill="#9E3F20" letter-spacing="3">STATE</text>
+            <text x="0" y="15" text-anchor="middle" font-family="Fraunces, serif" font-weight="900" font-size="16" fill="#9E3F20" letter-spacing="3">STREET</text>
+          </g>
+        </svg>
+        <div class="sketchcap"><span>TAP A NUMBER TO JUMP</span><span>MARKED STOPS TURN SAGE</span></div>
+      </div>
+
+      <div class="g-title">
+        <p class="deck">State Street gets the postcards, but its best hours happen a block off it, in the courthouse gardens, the old bookstores, and the tiled arcades. Walk it downhill from the upper theaters to the old Presidio, and let the side streets do the work.</p>
+        <div class="g-meta"><span>9 STOPS</span><span>~1 MI</span><span class="new">PLAN 5&#8211;7 HRS</span><span>REFRESHED JUL 2026</span></div>
+      </div>
+
+      <div class="stickynav"><span class="who">State Street</span><span class="prog">9 STOPS &#183; UPPER&#8594;PRESIDIO</span></div>
+
+      <div class="nowblock">
+        <div class="eyebrow">Right now &#183; updated Jul 5</div>
+        <p>The long July evenings are the reward down here. Do the sights while it's light, then let the walk end slow on a Presidio patio as the heat lets go.</p>
+        <button class="haptoggle" aria-expanded="false"><span class="hdot"></span><span class="hd">1st Thursday Art Walk &#183; Thu 5 PM &#183; +2 more</span><span class="chev">&#9662;</span></button>
+      </div>
+
+      <div class="passport">
+        <div class="left">
+          <div class="row"><span class="lbl">Your State Street</span><span class="num">9 STOPS &#183; 1 SECRET</span></div>
+          <div class="bar"><div class="fill" style="width:0%;"></div></div>
+          <p class="note">Walk it, mark it, and the stamp presses at nine. <span class="tease">Somewhere on this walk, one detail is wrong on purpose.</span> Lives on this phone, no account.</p>
+        </div>
+        <div class="stampslot"><span class="code">DT</span><span class="slotlbl">THE STAMP</span></div>
+      </div>
+
+      <div class="walkhead">
+        <h3>The walk</h3>
+        <p>Upper State to the old Presidio, in order. Tap a chapter to open it, mark stops <b>&#10003; Been</b>, nine marks press the stamp.</p>
+      </div>
+
+      <!-- Chapter 1 -->
+      <div class="chapter open">
+        <button class="chband" aria-expanded="true">
+          <div class="body"><div class="k">Stops 1&#8211;3 &#183; Upper State</div><div class="nm">The top of the street</div><div class="sum">Coffee across from the Arlington, a graze at the market, then point downhill.</div></div>
+          <span class="minibeen">&#10003; 0/3</span><span class="chev">&#9652;</span>
+        </button>
+        <div class="chinner">
+          <div class="stop">
+            <div class="marker"><div class="stopnum">1</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>Caje</h4><div class="sub">1316 STATE ST &#183; COFFEE &#183; $ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save Caje"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>Start with a coffee from Caje, in the fountain courtyard across from the Arlington. Order it to go; the walk runs downhill from here.</p>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="marker"><div class="stopnum">2</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>The Arlington Theatre</h4><div class="sub">1317 STATE ST &#183; HISTORIC THEATER &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save The Arlington Theatre"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>The Moorish movie palace with a tiled courtyard and a ceiling painted like a night sky. Peek in even if nothing is showing.</p>
+            </div>
+          </div>
+          <div class="stop laststop">
+            <div class="marker"><div class="stopnum">3</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>Santa Barbara Public Market</h4><div class="sub">38 W VICTORIA ST &#183; FOOD HALL &#183; $$ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save Santa Barbara Public Market"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>One roof, many kitchens: Thai, tacos, a wine bar, a bakery. A good place to graze or regroup before you drop into the core.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside"><div class="eyebrow">From a local</div><p>The Courthouse tower is free and rarely has a line before noon. Go up while it's early, the view is the best in town and costs you nothing.</p></div>
+
+      <!-- Chapter 2 -->
+      <div class="chapter open">
+        <button class="chband" aria-expanded="true">
+          <div class="body"><div class="k">Stops 4&#8211;6 &#183; The core</div><div class="nm">A block off State</div><div class="sum">Lose an hour in the stacks, climb the tower, then cut through the arcade.</div></div>
+          <span class="minibeen">&#10003; 0/3</span><span class="chev">&#9652;</span>
+        </button>
+        <div class="chinner">
+          <div class="stop">
+            <div class="marker"><div class="stopnum">4</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>The Book Den</h4><div class="sub">15 E ANAPAMU ST &#183; BOOKSTORE &#183; $ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save The Book Den"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>California's oldest used bookstore, founded in 1902 and tucked just off the plaza on Anapamu across from the library. The stacks reward a slow browse; leave more time than you think.</p>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="marker"><div class="stopnum">5</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>Santa Barbara County Courthouse</h4><div class="sub">1100 ANACAPA ST &#183; LANDMARK &#183; FREE &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save Santa Barbara County Courthouse"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>Climb the clock tower for the best free view in town, with hand-painted ceilings on the way up and the sunken gardens waiting below.</p>
+            </div>
+          </div>
+          <div class="stop laststop">
+            <div class="marker"><div class="stopnum">6</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>La Arcada Courtyard</h4><div class="sub">1114 STATE ST &#183; COURTYARD &#183; FREE &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save La Arcada Courtyard"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>The Spanish courtyard hiding off State: fountains, bronze figures tucked in corners, and a handful of small shops. The prettiest shortcut on the street.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside"><div class="eyebrow">From a local</div><p>State Street's real trick is the paseos, the tiled passages cutting between the main drag and the side streets. When the street feels busy, duck into one; you come out somewhere quieter and prettier.</p></div>
+
+      <!-- Chapter 3 -->
+      <div class="chapter open">
+        <button class="chband" aria-expanded="true">
+          <div class="body"><div class="k">Stops 7&#8211;9 &#183; The evening <span class="nowtag">Now</span></div><div class="nm">The old fort, a pour, then dinner</div><div class="sum">The 1782 fort before it closes, a courtyard cocktail at golden hour, then supper under the neon dove.</div></div>
+          <span class="minibeen">&#10003; 0/3</span><span class="chev">&#9652;</span>
+        </button>
+        <div class="chinner">
+          <div class="stop">
+            <div class="marker"><div class="stopnum">7</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>El Presidio de Santa Barbara</h4><div class="sub">123 E CANON PERDIDO &#183; HISTORIC PARK &#183; $ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save El Presidio de Santa Barbara"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>The 1782 Spanish fort where the city began, restored adobe by adobe. Wander the chapel and the shady courtyard, plan on under an hour. It closes at 4:30, so make this the last stop in daylight, then it is a short walk to the evening's first drink.</p>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="marker"><div class="stopnum">8</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>Palihouse</h4><div class="sub">915 GARDEN ST &#183; COCKTAIL BAR &#183; $$ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save Palihouse"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>A craft cocktail in the Palihouse courtyard, a fountain, pale pink umbrellas, and market lights strung overhead. The prettiest place to catch golden hour, tucked a few steps off the beaten path in the Presidio blocks, and an easy walk on to dinner.</p>
+            </div>
+          </div>
+          <div class="stop laststop">
+            <div class="marker"><div class="stopnum">9</div></div>
+            <div class="body">
+              <div class="toprow">
+                <div><h4>Paloma</h4><div class="sub">702 ANACAPA ST &#183; CALIFORNIO &#183; $$$ &nbsp;<a class="dir" href="#">&#8982; DIRECTIONS</a></div></div>
+                <div class="stopctrls"><button class="beenbtn">&#10003; Been</button><button class="heart" aria-label="Save Paloma"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg></button></div>
+              </div>
+              <p>Dinner on the corner of Ortega under the old neon dove, wood-fired Californio cooking in a room that has fed this block for a century. Closed Mondays and Tuesdays; the patio is the seat to want.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="take">
+        <div class="eyebrow">The take</div>
+        <h4>Best hour on State Street, ranked.</h4>
+        <div class="rk"><span class="n">1</span><span class="w"><b>The tower climb</b> at the Courthouse: the best free view in town, and you paid nothing for it.</span></div>
+        <div class="rk"><span class="n">2</span><span class="w"><b>The old Presidio</b>: the 1782 adobes and a hushed courtyard, the city at the spot where it began.</span></div>
+        <div class="rk"><span class="n">3</span><span class="w"><b>A slow browse at the Book Den</b>: go in for a minute, lose twenty.</span></div>
+        <p class="landing">Three very different hours, all a short walk apart. String them together and you have done State Street right.</p>
+        <div class="takefoot">THE TAKE &#183; SB DAYMAKER</div>
+      </div>
+
+      <div class="know">
+        <h3>Know before you go</h3>
+        <div class="krow"><span class="k">Parking</span><span class="v">Use the city structures off State, not the street meters; the first 75 minutes are free and you are a block from every stop.</span></div>
+        <div class="krow"><span class="k">Budget</span><span class="v">The headline sights (the tower, the gardens, the Presidio, the arcade) cost little or nothing. Budget for one meal, one round, and whatever the Book Den talks you into.</span></div>
+        <div class="krow"><span class="k">Restrooms</span><span class="v">Reliable restrooms at the Public Market, the Courthouse, and Paseo Nuevo; plan around those three.</span></div>
+        <div class="krow"><span class="k">Timing</span><span class="v">This is a Wednesday to Sunday walk (Paloma is closed Mondays and Tuesdays). Start late morning: the Courthouse tower and El Presidio both close by 4:30, so see them while it is light, then the Palihouse courtyard and Paloma's dinner (from 5) carry the evening.</span></div>
+      </div>
+
+      <div class="g-colophon"><span class="mono">WRITTEN BY A LOCAL &#183; REFRESHED JUL 2026</span></div>
+
+      <button class="mappill">&#8982; Sketch</button>
+      <div class="bottomnav">
+        <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z"/></svg>Explore</span>
+        <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z"/></svg>Saved</span>
+        <span class="tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5.5C6 4.5 8.5 4 12 4s6 .5 8 1.5v13c-2-1-4.5-1.5-8-1.5s-6 .5-8 1.5v-13zM12 4v13.5"/></svg>Discover SB</span>
+      </div>
+    </div>
+
+    <p class="mcap"><b>v8.</b> The evening is now one tight Presidio cluster: the old fort at stop 7, a courtyard cocktail at the Palihouse (915 Garden St) at stop 8, then dinner at Paloma, all within a few blocks, and the uphill backtrack to the Good Lion is gone. Chapter three reads fort, pour, dinner to match, and the map is re-threaded. Re-sequenced for a 10 AM start with every stop open on arrival: the Courthouse tower and El Presidio close by 4:30, then the Palihouse and Paloma carry the evening. One item to confirm before seeding: the Palihouse Garden Cafe and Bar's public walk-in hours.</p>
+  </div>
+
+  <script>
+    document.querySelectorAll('.chband').forEach(function(b){
+      b.addEventListener('click',function(){
+        var ch=b.closest('.chapter');var open=ch.classList.toggle('open');
+        b.setAttribute('aria-expanded',open);
+        ch.querySelector('.chinner').hidden=!open;
+        var chev=b.querySelector('.chev');if(chev)chev.innerHTML=open?'\u25B4':'\u25BE';
+      });
+    });
+    document.querySelectorAll('.haptoggle').forEach(function(t){
+      t.addEventListener('click',function(){
+        var e=t.getAttribute('aria-expanded')==='true';t.setAttribute('aria-expanded',String(!e));
+        var chev=t.querySelector('.chev');if(chev)chev.innerHTML=e?'\u25BE':'\u25B4';
+      });
+    });
+  </script>
+</body>
+</html>

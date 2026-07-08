@@ -130,6 +130,14 @@ export async function getStopThingMap(
   return map;
 }
 
+/** Strip a trailing parenthetical qualifier from a guide title for the
+ *  short-label surfaces (sticky bar `who`, passport `lbl`), e.g.
+ *  "State Street (First-timer)" -> "State Street". A no-op for titles with
+ *  no trailing parenthetical (e.g. "The Funk Zone"). Spec: Guide2 §1/§8.5. */
+export function shortGuideTitle(title: string): string {
+  return title.replace(/\s*\([^)]*\)\s*$/, "").trim() || title;
+}
+
 /** Live happenings scoped to a guide. */
 export function matchGuideThings(guide: Guide, things: Thing[]): Thing[] {
   if (guide.kind === "neighborhood") {

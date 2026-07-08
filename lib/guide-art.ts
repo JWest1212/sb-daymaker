@@ -12,6 +12,7 @@
 
 import type { ComponentType } from "react";
 import { FunkZoneSketch } from "@/components/discover/FunkZoneSketch";
+import { StateStreetSketch } from "@/components/discover/StateStreetSketch";
 
 /** Marker position in the SVG coordinate space (viewBox 360×330). */
 export interface ArtMarker {
@@ -48,6 +49,23 @@ const REGISTRY: Record<string, GuideArt> = {
       "9": { x: 152, y: 288 },  // The sand
     },
     secretMark: { x: 126, y: 177 },
+  },
+  "state-street": {
+    kind: "sketch",
+    Component: StateStreetSketch,
+    // cx/cy from mockup viewBox 360×330 — keyed by stop position (spec §5)
+    markers: {
+      "1": { x: 136, y: 74 },   // Caje
+      "2": { x: 182, y: 68 },   // The Arlington Theatre
+      "3": { x: 70, y: 94 },    // Santa Barbara Public Market
+      "4": { x: 208, y: 122 },  // The Book Den
+      "5": { x: 256, y: 140 },  // Santa Barbara County Courthouse
+      "6": { x: 156, y: 148 },  // La Arcada Courtyard
+      "7": { x: 236, y: 210 },  // El Presidio de Santa Barbara
+      "8": { x: 298, y: 216 },  // Palihouse
+      "9": { x: 256, y: 260 },  // Paloma
+    },
+    secretMark: { x: 271, y: 114 },
   },
 };
 

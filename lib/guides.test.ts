@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  shortGuideTitle,
   parseGuideContent,
   deriveStopSub,
   directionsUrl,
@@ -176,5 +177,17 @@ describe("directionsUrl", () => {
   it("no query and no coords → null (no ⌖ link)", () => {
     expect(directionsUrl({ maps_query: null }, null)).toBeNull();
     expect(directionsUrl({ maps_query: null }, { lat: null, lng: null })).toBeNull();
+  });
+});
+
+// ─── shortGuideTitle (Guide2 spec §1/§8.5) ──────────────────────────────────
+
+describe("shortGuideTitle", () => {
+  it("strips a trailing parenthetical qualifier", () => {
+    expect(shortGuideTitle("State Street (First-timer)")).toBe("State Street");
+  });
+
+  it("no-op for a title with no trailing parenthetical", () => {
+    expect(shortGuideTitle("The Funk Zone")).toBe("The Funk Zone");
   });
 });

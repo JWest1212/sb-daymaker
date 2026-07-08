@@ -6,6 +6,116 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)
+
+Follow-up to the 2026-07-07 entry below. Jim asked to close the 6 catalog MISSes and
+take the guide live.
+
+- **`seed_state_street_things.mjs`** (new) — added the 6 missing venues to `things`
+  as published Tier-3 evergreens (`neighborhood`/`nearby_zone` = `downtown`), mirroring
+  the existing Book Den / Public Market / Courthouse rows: Caje, The Arlington Theatre,
+  La Arcada Courtyard, El Presidio de Santa Barbara, Palihouse, Paloma. Facts enriched,
+  not invented: addresses from spec §7, coordinates geocoded via OpenStreetMap
+  Nominatim and cross-checked by name where indexed (Cajé Coffee Roasters, Arlington
+  Theatre, La Arcada Building, El Presidio de Santa Barbara State Historic Park all
+  matched directly by name; La Arcada's exact 1114 State St storefront and Palihouse's
+  915 Garden St resolved by address only). All 6 pass the Tier-3 publish gate.
+- **`relink_state_street_stops.mjs`** (new) — re-pointed the 6 now-resolved
+  `guide_stops` from label-only to `thing_id`-backed, clearing the authored
+  `sub`/`maps_query` fallback so the sub-line and directions link auto-derive per
+  spec §3/§4. All 9 stops are now thing-backed.
+- **`resolve_state_street_images.mts`** (new) — one-off free-tier image backfill
+  (reuses `ingest/images.ts`'s real `resolveImages()` waterfall) scoped to the 6 new
+  thing ids directly, since `ingest/run.ts`'s `IMAGE_BACKFILL` mode only scans
+  `status='needs_review'` rows and these are already `published`. 4/6 resolved a real
+  Pexels photo (Caje, Palihouse, El Presidio, Paloma); 2 (Arlington Theatre, La Arcada
+  Courtyard) were flagged irrelevant by the relevance guard and stayed on the branded
+  placeholder rather than show a misleading stock photo. $0 cost (free tier only, 0
+  Google calls; these rows carry no `place_id` so the paid step never engages).
+- **`publish_state_street.mjs`** (new) — set `now_note` (the spec's own mockup copy,
+  used verbatim per Jim's go-ahead) + `now_note_on='2026-07-08'`, then flipped
+  `status` to `published`. Confirmed live: appears on the Discover SB hub next to The
+  Funk Zone, "Right now" block renders, no console errors at 390px.
+- **Declined for this launch (Jim's call, spec §8):** the planted ✵ wrong-time detail
+  on the stop-5 Courthouse note. Shipping without it; the `b9` wink ("Nine stops. One
+  of them keeps its own time.") still reads as an intriguing tease on its own, and the
+  detail can be added later without touching anything else.
+- **Still open, non-blocking:** Palihouse's exact public walk-in cocktail hours
+  (`local_note` says "call ahead to confirm" rather than asserting a time); the
+  optional §6 Funk Zone chapter-card consistency pass.
+
+---
+
+## 2026-07-07 — Living Postcard Phase 5 (State Street guide seeded, draft, holding for Jim)
+
+Source: `docs/discover-sb-statestreet/Guide2_StateStreet_ClaudeCode_Build_Spec_v1.md`
+(companion: `State_Street_Guide_Mockup_v8.html`). Guide 2 of 8 in the scale-out. DML
+only, no DDL (Phase 1 columns already cover this shape). Seeded **draft**; holds for
+Jim's ✵ edit, `now_note`, and publish approval per spec §8 (none of the three are
+Claude Code's to finalize).
+
+- **Seeded:** `seed_state_street_guide.mjs` — guide row (ID
+  `483ec84a-c031-56e0-b9fd-5a2a98f90182`, `stamp_code='DT'`, `zone='downtown'`,
+  `refreshed_on='2026-07-01'`, `status='draft'`, `now_note=null`) + 9 `guide_stops`.
+- **§4 title resolution against `things` (trigram-assisted `ilike`, broadened past the
+  spec's expected-match list to confirm each MISS) — 3 resolved, 6 MISS, wider than the
+  spec anticipated:**
+
+  | Label | Result |
+  |---|---|
+  | Caje | MISS → label-only |
+  | The Arlington Theatre | MISS → label-only (only catalog hits at 1317 State St are dated soccer watch-party events, not the venue itself) |
+  | Santa Barbara Public Market | ✅ `afd623d6-45fd-5eed-b16e-b3a485d1cba0` |
+  | The Book Den | ✅ `f97fd218-c1a5-53ff-b3d7-ee04faefb24f` |
+  | Santa Barbara County Courthouse | ✅ `c671bb72-7339-5cf1-99e8-68626d408be1` |
+  | La Arcada Courtyard | MISS → label-only |
+  | El Presidio de Santa Barbara | MISS → label-only |
+  | Palihouse | MISS → label-only (as the spec flagged as most likely) |
+  | Paloma | MISS → label-only |
+
+  All 6 misses ship with the spec §3 authored `sub`/`maps_query` fallback, no
+  fabricated thing/lat/lng. Flagged to Jim for optional catalog adds (spec §4a).
+- **`components/discover/StateStreetSketch.tsx`** (new) — base SVG sketch (360×330
+  viewBox), ported from the mockup verbatim: mountains, 3-vertical/5-cross street grid
+  + labels, 3 palms, 7 hand-drawn landmarks (Public Market awning, Arlington facade,
+  Courthouse tower + ✵, La Arcada arch + fountain, Book Den book, El Presidio adobe +
+  bell, Paloma neon dove) plus the Palihouse cocktail glass (spec §5), insider callouts,
+  beach vignette, ocean + sailboat + Stearns Wharf, compass, rotated STATE STREET stamp.
+  Zero raw hex — every mockup color mapped to its v9 token; the one mockup hex with no
+  exact token match (`#B0763A`, the cocktail-glass stroke) mapped to the nearest
+  fills/borders-only token (`--tile-light`) rather than introduced as new. No marker
+  circles (overlay layer, same pattern as Funk Zone).
+- **`lib/guide-art.ts`** — `state-street` entry added: 9 marker coordinates + secretMark
+  `(271, 114)` per spec §5, all verbatim from the mockup viewBox.
+- **`lib/guides.ts` + `app/(app)/discover/[id]/page.tsx`** — added `shortGuideTitle()`
+  (strips a trailing parenthetical qualifier, e.g. "State Street (First-timer)" →
+  "State Street"; a no-op for titles with none, e.g. "The Funk Zone"). Wired into the
+  identity-header `h1`, the title-block `h2`, the sticky bar `who`, and the passport
+  `lbl`/aria-label, resolving spec §8.5 ("title vs. derived short label") to its
+  recommended default. Also fixed a pre-existing hardcoded aria-label ("Right now in
+  the Funk Zone") that would have mislabeled every other guide's now-block; it now
+  reads the guide's own short title. Unit tests added in `lib/guides.test.ts`.
+- **Verification:** `lib/guides.test.ts` (16 tests, 2 new for `shortGuideTitle`) and
+  `tsc --noEmit` clean on every
+  touched file. RLS blocks the anon key from reading `status='draft'` rows at all
+  (`public_read_guides`/`public_read_guidestops` policies), so `/discover/[id]` can't
+  render a draft guide through the normal public path. With Jim's go-ahead, briefly
+  flipped `status` to `'published'` via the service-role key, screenshotted at 390px
+  and 1280px, then immediately reverted to `'draft'` (no code change, no lingering
+  state; the toggle script was thrown away after use). Screens matched the mockup:
+  sketch map, chapter accordion (collapsed + hint pill), asides, take card,
+  know-before, passport slab, colophon, no console errors.
+- **Deferred, not built (spec §0/§6):** Phase 3 (been-loop, stamps, gold ring, postcard
+  reveal) and Phase 4 (hub passport spread) — `✓ Been` stays static, per Funk Zone. The
+  optional §6 Funk Zone chapter-card treatment (collapsed-terracotta/open-plaster) was
+  left out; it's a cross-guide consistency pass, not required to ship this guide.
+- **Holding for Jim (spec §8, blockers to publish only, not to seed-as-draft):** the
+  planted ✵ wrong time detail on the stop-5 (Courthouse) note, `now_note` +
+  `now_note_on`, the publish flip, and Palihouse's public walk-in cocktail hours /
+  catalog add.
+
+---
+
 ## 2026-07-05 — Welcome Tour (first-run onboarding carousel)
 
 Source: `docs/intro-tutorial/01_welcome_tour_build_spec.md`. Built the 3-panel welcome

@@ -7,6 +7,7 @@ import {
   deriveStopSub,
   directionsUrl,
   getStopThingMap,
+  shortGuideTitle,
 } from "@/lib/guides";
 import { getPublishedThings } from "@/lib/things";
 import { cascade } from "@/lib/explore";
@@ -169,6 +170,7 @@ export default async function GuidePage({
 
   // ── Rich guide (Living Postcard renderer) ──────────────────────────────
   const stopCount = stops.length;
+  const shortTitle = shortGuideTitle(guide.title);
 
   return (
     <>
@@ -182,7 +184,7 @@ export default async function GuidePage({
         <p className="sbd-gd-tophead__eyebrow">
           {isTheme ? "Theme guide" : "Neighborhood guide"}
         </p>
-        <h1 className="sbd-gd-tophead__title">{guide.title}</h1>
+        <h1 className="sbd-gd-tophead__title">{shortTitle}</h1>
         {guide.kicker && (
           <p className="sbd-gd-tophead__kicker">{guide.kicker}</p>
         )}
@@ -202,7 +204,7 @@ export default async function GuidePage({
         <div className="sbd-gd-eyebrow">
           {isTheme ? "Theme guide" : "Neighborhood guide"}
         </div>
-        <h2 className="sbd-gd-h2">{guide.title}</h2>
+        <h2 className="sbd-gd-h2">{shortTitle}</h2>
         {guide.intro && <p className="sbd-gd-deck">{guide.intro}</p>}
         <div className="sbd-gd-meta">
           <span>{stopCount} STOPS</span>
@@ -220,7 +222,7 @@ export default async function GuidePage({
 
       {/* sticky bar */}
       <div className="sbd-gd-stickybar" aria-label="Guide navigation">
-        <span className="sbd-gd-stickybar__who">{guide.title}</span>
+        <span className="sbd-gd-stickybar__who">{shortTitle}</span>
         <span className="sbd-gd-stickybar__prog">
           {stopCount} STOPS · {guide.zone ? guide.zone.toUpperCase().replace("_", " ") : guide.kicker ?? ""}
         </span>
@@ -228,7 +230,7 @@ export default async function GuidePage({
 
       {/* now block (only if now_note is present) */}
       {guide.now_note && (
-        <div className="sbd-gd-now" role="note" aria-label="Right now in the Funk Zone">
+        <div className="sbd-gd-now" role="note" aria-label={`Right now in ${shortTitle}`}>
           <div className="sbd-gd-now__eyebrow">
             Right now{nowDateLabel ? ` · updated ${nowDateLabel}` : ""}
           </div>
@@ -253,10 +255,10 @@ export default async function GuidePage({
 
       {/* passport slab — zero state (static in Phase 2) */}
       {guide.stamp_code && (
-        <div className="sbd-gd-passport" aria-label={`Your ${guide.title} passport`}>
+        <div className="sbd-gd-passport" aria-label={`Your ${shortTitle} passport`}>
           <div className="sbd-gd-passport__left">
             <div className="sbd-gd-passport__row">
-              <span className="sbd-gd-passport__lbl">Your {guide.title}</span>
+              <span className="sbd-gd-passport__lbl">Your {shortTitle}</span>
               <span className="sbd-gd-passport__num">
                 {stopCount} STOPS · {content.secret_tease ? "1 SECRET" : ""}
               </span>
