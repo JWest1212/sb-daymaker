@@ -22,7 +22,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const { data, error } = await sb
     .from("things")
-    .select("id, title, neighborhood, photo_url, happening_tier")
+    .select("id, title, blurb, blurb_long, neighborhood, photo_url, happening_tier")
     .eq("status", "published")
     .ilike("title", `%${q}%`)
     .limit(15);

@@ -23,9 +23,10 @@ const DATE_LABEL_FMT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-interface ThingRow {
+export interface ThingRow {
   title: string;
   blurb: string | null;
+  blurb_long: string | null;
   local_note: string | null;
   reason_to_go: string | null;
   neighborhood: string | null;
@@ -54,7 +55,7 @@ interface PickRow {
 
 const PICK_SELECT = `slot, position, thing_id, override_title, override_blurb, override_when,
   override_neighborhood, override_local_note, override_image_url, cached_image_url,
-  things ( title, blurb, local_note, reason_to_go, neighborhood, starts_at, happening_tier,
+  things ( title, blurb, blurb_long, local_note, reason_to_go, neighborhood, starts_at, happening_tier,
     photo_attribution, recurring_schedules ( day_of_week, label, start_time, end_time, frequency ) )`;
 
 /** Noon-UTC anchor for a "YYYY-MM-DD" key (same convention as window.ts /
@@ -74,10 +75,13 @@ function dayLabelFor(t: ThingRow): string | null {
   return withDow ? DOW_LABEL[withDow.day_of_week!] : null;
 }
 
-/** Anatomy v3 §2: hero/secondary read `blurb`; anchor reads `reason_to_go`
- *  (the Tier-3 "why go" field); non-event reads `blurb` falling back to
- *  `reason_to_go`. Never things.blurb for anchor — that's the settled map. */
-function blurbSourceFor(slot: EditionSlot, t: ThingRow): string | null {
+/** Anatomy v3 §2: hero reads `blurb_long` (a deliberately longer hook than the
+ *  secondaries get, falling back to `blurb` for any older row missing it);
+ *  secondary reads `blurb`; anchor reads `reason_to_go` (the Tier-3 "why go"
+ *  field); non-event reads `blurb` falling back to `reason_to_go`. Never
+ *  things.blurb for anchor — that's the settled map. */
+export function blurbSourceFor(slot: EditionSlot, t: ThingRow): string | null {
+  if (slot === "hero") return t.blurb_long ?? t.blurb;
   if (slot === "anchor") return t.reason_to_go;
   if (slot === "nonevent") return t.blurb ?? t.reason_to_go;
   return t.blurb;

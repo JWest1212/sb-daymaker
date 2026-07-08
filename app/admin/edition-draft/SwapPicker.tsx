@@ -4,7 +4,14 @@ import { useEffect, useState } from "react";
 import type { CockpitCandidate } from "@/lib/edition/cockpitTypes";
 import type { EditionSlot } from "@/lib/edition/types";
 
-interface SearchThing { id: string; title: string; neighborhood: string | null; happening_tier: number }
+interface SearchThing { id: string; title: string; blurb: string | null; blurb_long: string | null; neighborhood: string | null; happening_tier: number }
+
+/** Mirrors renderData.ts's blurbSourceFor / PickEditor's effectiveBlurb: the hero
+ *  slot shows the longer blurb_long so what an operator previews here matches what
+ *  would actually render if they swap it in. */
+function candidateBlurb(slot: EditionSlot, blurb: string | null, blurbLong: string | null): string | null {
+  return slot === "hero" ? blurbLong ?? blurb : blurb;
+}
 
 export function SwapPicker({
   slot, position, candidates, editionId, onClose, onPick,
@@ -59,6 +66,9 @@ export function SwapPicker({
                   <div>
                     <div className="ttl">{t.title}</div>
                     <div className="pm">T{t.happening_tier} · {t.neighborhood ?? "—"}</div>
+                    {candidateBlurb(slot, t.blurb, t.blurb_long) ? (
+                      <div className="ed-swap-blurb">{candidateBlurb(slot, t.blurb, t.blurb_long)}</div>
+                    ) : null}
                   </div>
                   <button className="btn btn-approve btn-sm pickbtn" onClick={() => onPick(t.id)}>Use</button>
                 </div>
@@ -74,6 +84,9 @@ export function SwapPicker({
                   <div>
                     <div className="ttl">{c.thing.title}{c.selected ? <span className="chip evergreen"> current</span> : null}</div>
                     <div className="pm">{c.thing.when} · {c.thing.neighborhood ?? "—"}</div>
+                    {candidateBlurb(slot, c.thing.blurb, c.thing.blurb_long) ? (
+                      <div className="ed-swap-blurb">{candidateBlurb(slot, c.thing.blurb, c.thing.blurb_long)}</div>
+                    ) : null}
                   </div>
                   <button className="btn btn-approve btn-sm pickbtn" disabled={c.selected} onClick={() => onPick(c.thing.id)}>
                     {c.selected ? "Current" : "Use"}

@@ -422,6 +422,16 @@
 .sbd-cockpit .ed-swap-empty { font-size: .82rem; color: var(--ink-2); padding: 8px 0; }
 .sbd-cockpit .sbody .ed-search { width: 100%; margin-bottom: 4px; }
 .sbd-cockpit .sbody .pickrow + .pickrow { margin-top: 8px; }
+.sbd-cockpit .pickrow { align-items: flex-start; }
+.sbd-cockpit .ed-swap-blurb { font-size: .78rem; color: var(--ink-2); line-height: 1.4; margin-top: 4px; max-width: 46ch; }
+
+.sbd-cockpit .ed-ai-edit { display: flex; gap: 8px; align-items: center; margin-top: -2px; }
+.sbd-cockpit .ed-ai-edit-input {
+  flex: 1; font-family: inherit; font-size: .8rem; color: var(--ink); background: var(--plaster);
+  border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 7px 10px; min-height: 34px;
+}
+.sbd-cockpit .ed-ai-edit-input:focus-visible { outline: 3px solid var(--pacific); outline-offset: 1px; }
+.sbd-cockpit .ed-ai-edit-input:disabled { opacity: .6; }
 
 .sbd-cockpit .ed-archive { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: .84rem; }
 .sbd-cockpit .ed-archive th { text-align: left; font-family: var(--font-mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); padding: 8px 10px; border-bottom: 1px solid var(--line); }
