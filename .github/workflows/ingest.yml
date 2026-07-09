@@ -31,6 +31,10 @@ on:
         description: 'With image_backfill: re-resolve every row, skip cache (IMAGE_FORCE=1) — Card Imagery Phase 0 triage'
         type: boolean
         default: false
+      image_backfill_published:
+        description: 'Re-resolve PUBLISHED rows too (IMAGE_BACKFILL_PUBLISHED=1) — Card Imagery Phase 0, Jim-authorized broader pass. May overwrite a founder-picked photo (no way to detect one).'
+        type: boolean
+        default: false
       weight_backfill:
         description: 'Auto-downweight civic filler on existing rows (WEIGHT_BACKFILL=1)'
         type: boolean
@@ -70,6 +74,7 @@ jobs:
           ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}
           IMAGE_BACKFILL: ${{ inputs.image_backfill == true && '1' || '' }}
           IMAGE_FORCE: ${{ inputs.image_force == true && '1' || '' }}
+          IMAGE_BACKFILL_PUBLISHED: ${{ inputs.image_backfill_published == true && '1' || '' }}
           WEIGHT_BACKFILL: ${{ inputs.weight_backfill == true && '1' || '' }}
           REPEAT_BACKFILL: ${{ inputs.repeat_backfill == true && '1' || '' }}
           REPEAT_THRESHOLD: ${{ inputs.repeat_threshold }}

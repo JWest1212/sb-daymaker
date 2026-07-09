@@ -123,6 +123,37 @@ now sends it.
 files. Forced backfill run 2026-07-09 (see finding 8 above). Stop-and-show pending
 Jim's review of the coverage report + the scope question in finding 8.
 
+**2026-07-09, same day — Jim explicitly authorized the broader published-rows pass**
+flagged in finding 8, accepting the founder-pick-clobbering risk rather than have it
+worked around. Added `backfillPublishedImages()` (`IMAGE_BACKFILL_PUBLISHED=1`,
+new workflow_dispatch input) rather than widening the existing `IMAGE_BACKFILL`
+flag, so `needs_review`-only behavior stays the documented default for anyone
+using that flag later.
+
+Split by tier instead of one blanket forced pass, purely for cost/safety, not to
+narrow what was authorized — the outcome (every published row re-evaluated under
+the new logic) is the same either way:
+- **Tier-1 events (~526 rows): resolved without `force`.** Events cluster at a
+  small set of venues (the coverage report's 34 addresses with 2+ events), so
+  their `place_key` is almost always already cached — this hits the cache-hit
+  fast path + the tier-aware display override already built for Phase 0, i.e.
+  effectively zero new network calls, not a partial application of the pass.
+- **Tier-2/3 places (~80 rows): resolved with `force`,** so they actually get
+  re-ranked relevance-first instead of reusing an old cached Pexels pick. This is
+  the only branch that spends real network/API calls. Sized (~80 rows) to stay
+  well clear of Pexels' ~200/hr free-tier rate limit and comfortably inside
+  GitHub Actions' 20-minute job timeout. A handful of these (`food_drink_spot`
+  with a `place_id` and no free hit) can reach the Google fallback for the first
+  time — small, bounded real spend (well under the 500/mo cap), not zero, flagged
+  so it isn't a surprise on the next `image_spend` check.
+- The two branches run **sequentially, not in parallel** — both read-modify-write
+  the shared `image_spend` counter; concurrent calls would race that update and
+  could silently under-count Google spend.
+- No founder-pick detection was added to this pass (e.g. an `audit_log` check
+  mirroring `backfillVoice()`'s blurb-edit guard). Jim's authorization already
+  resolved that exact question explicitly; unilaterally excluding some rows
+  anyway would be quietly narrowing what he asked for, not protecting him from it.
+
 ---
 
 ## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)

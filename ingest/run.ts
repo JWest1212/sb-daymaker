@@ -28,6 +28,7 @@ const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
+const IMAGE_BACKFILL_PUBLISHED = process.env.IMAGE_BACKFILL_PUBLISHED === '1';
 const WEIGHT_BACKFILL = process.env.WEIGHT_BACKFILL === '1';
 const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
 const VOICE_BACKFILL = process.env.VOICE_BACKFILL === '1';
@@ -213,6 +214,93 @@ async function backfillImages() {
   await emitCoverageReport(sb);
 }
 
+/** Card Imagery Build Spec Phase 0 — one-time / on-demand, explicitly authorized by
+ *  Jim (2026-07-09): a broader pass over PUBLISHED rows. `IMAGE_BACKFILL` above never
+ *  reaches these — Explore's RLS policy only ever serves `status='published'`, so
+ *  without this the public feed doesn't visibly change (see the 2026-07-09 ledger
+ *  entry, finding 8). No column or audit-log entry distinguishes a founder's manual
+ *  cockpit pick from an auto-pick, so this CAN silently overwrite a hand-picked
+ *  photo — a risk Jim accepted explicitly rather than have this function guess at a
+ *  workaround.
+ *
+ *  Split by tier to keep this affordable and safe to run in one GitHub Actions job:
+ *   - Tier-1 events resolve WITHOUT force. Events cluster at a small set of venues
+ *     (34 addresses host 2+ events per the coverage report), so their place_key is
+ *     almost always already cached — this is a cache read + the tier-aware display
+ *     override from resolveImages(), effectively zero new network calls, and zero
+ *     regression risk for places (their cache is untouched by this branch).
+ *   - Tier-2/3 places resolve WITH force, so they actually get re-ranked
+ *     relevance-first instead of reusing an old cached Pexels pick. This is the only
+ *     branch that spends network calls (~80 rows) — safe under Pexels' ~200/hr
+ *     free-tier limit and the Google monthly cap (only place_id food_drink_spot rows
+ *     with no free hit can reach Google at all).
+ *  Deliberately sequential, not parallel — both branches read-modify-write the
+ *  shared image_spend counter; running them concurrently would race that update. */
+async function backfillPublishedImages() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
+    .eq('status', 'published');
+  if (error) throw new Error(`published-image-backfill select: ${error.message}`);
+  const rows = data ?? [];
+  console.log(`\n[published-image-backfill] ${rows.length} published rows`);
+  if (!rows.length) return;
+
+  const toCand = (r: (typeof rows)[number]): Candidate => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
+    source_url: '', place_id: (r.place_id as string) ?? undefined,
+    last_confirmed: '', start_strategy: 'none',
+  });
+
+  const tier1Rows = rows.filter((r) => Number(r.happening_tier) === 1);
+  const otherRows = rows.filter((r) => Number(r.happening_tier) !== 1);
+  console.log(
+    `[published-image-backfill] ${tier1Rows.length} Tier-1 (cache-only, no force) · ` +
+      `${otherRows.length} Tier-2/3 (forced refresh)`,
+  );
+
+  const tier1 = tier1Rows.length
+    ? await resolveImages(tier1Rows.map(toCand), sb, { force: false })
+    : { cands: [] as Candidate[], stats: null as ResolveStats | null };
+  const others = otherRows.length
+    ? await resolveImages(otherRows.map(toCand), sb, { force: true })
+    : { cands: [] as Candidate[], stats: null as ResolveStats | null };
+
+  let updated = 0;
+  for (const c of [...tier1.cands, ...others.cands]) {
+    // Same guard as image-backfill: don't drop a Tier-1 event's real photo_options
+    // just because its display auto-pick landed on 'placeholder'.
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`published-image-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+
+  console.log(`\n[published-image-backfill] updated ${updated}/${rows.length} things`);
+  if (others.stats) {
+    console.log(
+      `  tier-2/3 (forced)     free ${others.stats.free} · google ${others.stats.google} · ` +
+        `placeholder ${others.stats.placeholder} · over-cap ${others.stats.overCap}`,
+    );
+  }
+  if (tier1.stats) {
+    console.log(
+      `  tier-1 (cache-only)   free ${tier1.stats.free} · google ${tier1.stats.google} · ` +
+        `placeholder ${tier1.stats.placeholder}`,
+    );
+  }
+
+  await emitCoverageReport(sb);
+}
+
 /** W2.3 one-time / on-demand: re-resolve the "repeat offenders" — a photo_url shared by
  *  MORE than 3 published things — through the resolver with force + the new variety logic
  *  (category-aware queries + per-batch dedupe), so an over-repeated stock photo gets spread
@@ -393,6 +481,7 @@ async function backfillVoice() {
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
+  if (IMAGE_BACKFILL_PUBLISHED) return backfillPublishedImages();
   if (WEIGHT_BACKFILL) return backfillWeights();
   if (REPEAT_BACKFILL) return backfillRepeatImages();
   if (VOICE_BACKFILL) return backfillVoice();
