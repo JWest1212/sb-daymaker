@@ -154,6 +154,36 @@ the new logic) is the same either way:
   resolved that exact question explicitly; unilaterally excluding some rows
   anyway would be quietly narrowing what he asked for, not protecting him from it.
 
+**Same day, first run's actual result exposed a wrong assumption above — fixed
+before a second run.** The "Tier-1 events are basically already cached" premise
+was wrong: `cacheKey()` is title-based, and most of the ~505 Tier-1 titles are
+unique even at a shared venue (194 events at the Library aren't 194 copies of one
+title), so the great majority were fresh cache misses, not hits. Gathering
+Pexels/Wikimedia for all 505 of them (still useful for `photo_options`, but their
+*display* was always going to be forced to placeholder regardless of what was
+found) exhausted Pexels' ~200/hr free-tier quota before the 54 Tier-2/3 places got
+a turn. Worse, the resolver's existing "don't spend Google while Pexels is
+rate-limited" guard (correct in isolation — a 429 isn't a genuine free-tier miss)
+then also blocked the Google fallback for the rest of the run. Net effect: 52/54
+Tier-2/3 places landed on `placeholder` — a real regression for rows that likely
+had a decent, if generic, Pexels photo before this ran. (The 505 Tier-1 rows
+themselves were unaffected by the rate limit — their outcome doesn't depend on
+what's found — so no harm there.)
+
+Fixed by reordering and simplifying, not by adding a retry/backoff: Tier-2/3
+(forced) now runs **first**, so the bounded, valuable work gets first claim on the
+shared quota. Tier-1 is no longer a `resolveImages()` call at all — since its
+outcome is unconditional (`eventDefaultsToNoPhoto` forces placeholder regardless
+of what a search would find), it's now a direct `things` UPDATE with zero network
+calls, only touching rows not already on `placeholder`. This makes the whole
+function idempotent and safe to re-run any time — re-running after this fix will
+correctly resolve the 52 stuck Tier-2/3 rows without re-touching the 505 Tier-1
+rows (already correct from the first run) or competing with them for quota.
+Tier-1's `photo_options` (cockpit alternates) are no longer refreshed by this
+specific pass as a result — an accepted trade for protecting the shared budget;
+use the cockpit picker's "find more options" per-event if one is needed sooner
+than the normal pipeline would supply it.
+
 ---
 
 ## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)

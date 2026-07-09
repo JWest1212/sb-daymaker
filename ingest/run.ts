@@ -223,19 +223,27 @@ async function backfillImages() {
  *  photo — a risk Jim accepted explicitly rather than have this function guess at a
  *  workaround.
  *
- *  Split by tier to keep this affordable and safe to run in one GitHub Actions job:
- *   - Tier-1 events resolve WITHOUT force. Events cluster at a small set of venues
- *     (34 addresses host 2+ events per the coverage report), so their place_key is
- *     almost always already cached — this is a cache read + the tier-aware display
- *     override from resolveImages(), effectively zero new network calls, and zero
- *     regression risk for places (their cache is untouched by this branch).
- *   - Tier-2/3 places resolve WITH force, so they actually get re-ranked
- *     relevance-first instead of reusing an old cached Pexels pick. This is the only
- *     branch that spends network calls (~80 rows) — safe under Pexels' ~200/hr
- *     free-tier limit and the Google monthly cap (only place_id food_drink_spot rows
- *     with no free hit can reach Google at all).
- *  Deliberately sequential, not parallel — both branches read-modify-write the
- *  shared image_spend counter; running them concurrently would race that update. */
+ *  v2 (2026-07-09, same day) — reordered after the first run showed the bug this
+ *  comment now documents: `cacheKey()` is TITLE-based, not address-based, so most of
+ *  ~505 Tier-1 events (mostly unique titles even at a shared venue) turned out to be
+ *  cache MISSES, not hits — the original "events are basically free" assumption was
+ *  wrong. Gathering fresh Pexels/Wikimedia for all of them first exhausted Pexels'
+ *  ~200/hr free-tier quota before the 54 Tier-2/3 places got a turn, and the
+ *  resolver's own "don't spend Google while Pexels is rate-limited" guard then also
+ *  blocked their Google fallback — 52/54 places landed on placeholder, a real
+ *  regression for rows that likely had a decent (if generic) photo before this ran.
+ *  Fixed by flipping the order and how Tier-1 is handled:
+ *   - Tier-2/3 places run FIRST, forced — the only branch worth spending Pexels/
+ *     Google budget on. Bounded (~80 rows), safe under both the rate limit and the
+ *     Google monthly cap (only place_id food_drink_spot rows with no free hit can
+ *     reach Google at all).
+ *   - Tier-1 events are a direct, no-network UPDATE, not a resolveImages() call.
+ *     `eventDefaultsToNoPhoto` forces their display to placeholder unconditionally
+ *     regardless of what a search would find, so gathering anything for them first
+ *     was always pure waste against the shared quota — this version spends nothing
+ *     on them and only touches rows not already on placeholder (idempotent, safe to
+ *     re-run any time). Their photo_options (cockpit alternates) aren't refreshed by
+ *     this pass; use the picker's "find more options" on a given event if needed. */
 async function backfillPublishedImages() {
   const sb = getDb();
   const { data, error } = await sb
@@ -259,21 +267,19 @@ async function backfillPublishedImages() {
   const tier1Rows = rows.filter((r) => Number(r.happening_tier) === 1);
   const otherRows = rows.filter((r) => Number(r.happening_tier) !== 1);
   console.log(
-    `[published-image-backfill] ${tier1Rows.length} Tier-1 (cache-only, no force) · ` +
-      `${otherRows.length} Tier-2/3 (forced refresh)`,
+    `[published-image-backfill] ${otherRows.length} Tier-2/3 (forced refresh, runs first) · ` +
+      `${tier1Rows.length} Tier-1 (direct update, no network)`,
   );
 
-  const tier1 = tier1Rows.length
-    ? await resolveImages(tier1Rows.map(toCand), sb, { force: false })
-    : { cands: [] as Candidate[], stats: null as ResolveStats | null };
+  // Tier-2/3 first — see the function comment for why order matters here.
   const others = otherRows.length
     ? await resolveImages(otherRows.map(toCand), sb, { force: true })
     : { cands: [] as Candidate[], stats: null as ResolveStats | null };
 
   let updated = 0;
-  for (const c of [...tier1.cands, ...others.cands]) {
-    // Same guard as image-backfill: don't drop a Tier-1 event's real photo_options
-    // just because its display auto-pick landed on 'placeholder'.
+  for (const c of others.cands) {
+    // Same guard as image-backfill: don't drop real photo_options just because the
+    // display auto-pick landed on 'placeholder'.
     const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
     if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue;
     const { error: upErr } = await sb
@@ -284,17 +290,27 @@ async function backfillPublishedImages() {
     updated++;
   }
 
-  console.log(`\n[published-image-backfill] updated ${updated}/${rows.length} things`);
+  // Tier-1: deterministic, no resolveImages() call — see the function comment.
+  let tier1Updated = 0;
+  for (const r of tier1Rows) {
+    if (r.photo_source === 'placeholder') continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: null, photo_source: 'placeholder' })
+      .eq('id', r.id);
+    if (upErr) throw new Error(`published-image-backfill tier-1 update ${r.id}: ${upErr.message}`);
+    tier1Updated++;
+  }
+  updated += tier1Updated;
+
+  console.log(
+    `\n[published-image-backfill] updated ${updated}/${rows.length} things ` +
+      `(${tier1Updated} Tier-1 direct, ${updated - tier1Updated} Tier-2/3 via resolver)`,
+  );
   if (others.stats) {
     console.log(
       `  tier-2/3 (forced)     free ${others.stats.free} · google ${others.stats.google} · ` +
         `placeholder ${others.stats.placeholder} · over-cap ${others.stats.overCap}`,
-    );
-  }
-  if (tier1.stats) {
-    console.log(
-      `  tier-1 (cache-only)   free ${tier1.stats.free} · google ${tier1.stats.google} · ` +
-        `placeholder ${tier1.stats.placeholder}`,
     );
   }
 
