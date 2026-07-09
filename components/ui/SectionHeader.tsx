@@ -19,9 +19,10 @@ export function SectionHeader({
   expanded?: boolean;
   onToggle?: () => void;
   controlsId?: string;
-  /** Lead mode only. False for Month, whose per-week headers (.sbd-weekhead)
-   *  take over the sticky top slot — leaving this one sticky too would let its
-   *  translucent background ghost through underneath them. */
+  /** Lead mode only. False for Week/Month, whose per-group headers
+   *  (.sbd-dayhead / .sbd-weekhead) take over the sticky top slot — leaving
+   *  this one sticky too would let its translucent background ghost through
+   *  underneath them. */
   sticky?: boolean;
 }) {
   if (mode === "lead") {

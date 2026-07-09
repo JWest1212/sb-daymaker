@@ -18,8 +18,9 @@ function formatDayLabel(starts_at: string): string {
   return `${value("weekday")} · ${value("month")} ${value("day")}`.toUpperCase();
 }
 
-// Groups Tier-1 week items by SB-local day; each day shows a header + spine
-// node followed by ListCard rows. groupByDay() order and logic are unchanged.
+// Groups Tier-1 week items by SB-local day; each day shows a sticky header
+// (.sbd-dayhead) followed by ListCard rows. Same sticky-handoff mechanic as
+// Month's .sbd-weekhead — see components.css. groupByDay() order/logic unchanged.
 export function LeadDayRail({ items }: { items: Thing[] }) {
   const days = groupByDay(items);
 
