@@ -22,6 +22,7 @@ import { consumeDirectives } from './restock';
 import { sendDigest } from './digest';
 import { getDb } from './db';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
@@ -109,6 +110,62 @@ async function backfillEnrich() {
   console.log(`\n[enrich-backfill] wrote ${updated} missing blurbs · inserted ${tagged} tags`);
 }
 
+/** Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from
+ *  live data. No schema changes, no writes: things-per-category × photo_source, plus
+ *  Tier-1 event address clusters (a simple normalized-address grouping — the real
+ *  lat/lng-radius + fuzzy-name clustering is Phase 2 §5.2's dedicated seeding script;
+ *  this just needs enough real concentration data for Jim to eyeball before then). */
+async function emitCoverageReport(sb: SupabaseClient) {
+  const { data, error } = await sb
+    .from('things')
+    .select('happening_category, photo_source, happening_tier, address, lat, lng')
+    .in('status', ['published', 'needs_review']);
+  if (error) throw new Error(`coverage-report select: ${error.message}`);
+  const rows = data ?? [];
+
+  const bySource = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const cat = (r.happening_category as string) ?? '(none)';
+    const src = (r.photo_source as string) ?? '(none)';
+    if (!bySource.has(cat)) bySource.set(cat, new Map());
+    const m = bySource.get(cat)!;
+    m.set(src, (m.get(src) ?? 0) + 1);
+  }
+  const sources = ['owned', 'wikimedia', 'google', 'pexels', 'placeholder'];
+  console.log(`\n[coverage-report] ${rows.length} things · category × photo_source:`);
+  console.log(`  ${'category'.padEnd(24)}${sources.map((s) => s.padEnd(12)).join('')}total`);
+  const catRows = [...bySource].sort((a, b) => {
+    const totalA = [...a[1].values()].reduce((x, y) => x + y, 0);
+    const totalB = [...b[1].values()].reduce((x, y) => x + y, 0);
+    return totalB - totalA;
+  });
+  for (const [cat, m] of catRows) {
+    const total = [...m.values()].reduce((a, b) => a + b, 0);
+    const cells = sources.map((s) => String(m.get(s) ?? 0).padEnd(12)).join('');
+    console.log(`  ${cat.padEnd(24)}${cells}${total}`);
+  }
+
+  // Tier-1 event address clusters (normalized string grouping), sorted by event count.
+  const t1 = rows.filter((r) => Number(r.happening_tier) === 1 && r.address);
+  const clusters = new Map<string, { count: number; lat: unknown; lng: unknown }>();
+  for (const r of t1) {
+    const key = (r.address as string).trim().toLowerCase();
+    const entry = clusters.get(key) ?? { count: 0, lat: r.lat, lng: r.lng };
+    entry.count++;
+    clusters.set(key, entry);
+  }
+  const sorted = [...clusters].filter(([, v]) => v.count >= 2).sort((a, b) => b[1].count - a[1].count);
+  console.log(
+    `\n[coverage-report] Tier-1 event address clusters (>=2 events): ${sorted.length} of ` +
+      `${clusters.size} distinct addresses (seeds the Phase 2 venue registry)`,
+  );
+  for (const [addr, v] of sorted.slice(0, 60)) {
+    const coords = v.lat != null && v.lng != null ? ` (${v.lat}, ${v.lng})` : '';
+    console.log(`  ×${String(v.count).padStart(2)}  ${addr}${coords}`);
+  }
+  if (sorted.length > 60) console.log(`  … ${sorted.length - 60} more`);
+}
+
 /** One-time / on-demand: resolve images for existing needs_review rows still on the
  *  placeholder (rows landed before Phase 13). Updates photo_url/source/options. */
 async function backfillImages() {
@@ -137,7 +194,11 @@ async function backfillImages() {
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force });
   let updated = 0;
   for (const c of resolved) {
-    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    // Phase 0 §3.1.2: a Tier-1 event can land on 'placeholder' for display while
+    // still carrying real photo_options (the cockpit picker's per-thing override) —
+    // only skip the write when NOTHING was found at all (truly nothing changed).
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
       .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
@@ -146,6 +207,10 @@ async function backfillImages() {
     updated++;
   }
   console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`);
+
+  // Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from
+  // live data: seeds the Phase 2 venue registry with real concentration data.
+  await emitCoverageReport(sb);
 }
 
 /** W2.3 one-time / on-demand: re-resolve the "repeat offenders" — a photo_url shared by
@@ -195,7 +260,10 @@ async function backfillRepeatImages() {
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force: true });
   let updated = 0;
   for (const c of resolved) {
-    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    // Phase 0 §3.1.2: same as image-backfill — a Tier-1 event can land on
+    // 'placeholder' for display while still carrying real photo_options.
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
       .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })

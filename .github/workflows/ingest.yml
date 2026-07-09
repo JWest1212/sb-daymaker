@@ -27,6 +27,10 @@ on:
         description: 'Refresh images for needs_review rows (IMAGE_BACKFILL=1)'
         type: boolean
         default: false
+      image_force:
+        description: 'With image_backfill: re-resolve every row, skip cache (IMAGE_FORCE=1) — Card Imagery Phase 0 triage'
+        type: boolean
+        default: false
       weight_backfill:
         description: 'Auto-downweight civic filler on existing rows (WEIGHT_BACKFILL=1)'
         type: boolean
@@ -65,6 +69,7 @@ jobs:
         env:
           ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}
           IMAGE_BACKFILL: ${{ inputs.image_backfill == true && '1' || '' }}
+          IMAGE_FORCE: ${{ inputs.image_force == true && '1' || '' }}
           WEIGHT_BACKFILL: ${{ inputs.weight_backfill == true && '1' || '' }}
           REPEAT_BACKFILL: ${{ inputs.repeat_backfill == true && '1' || '' }}
           REPEAT_THRESHOLD: ${{ inputs.repeat_threshold }}

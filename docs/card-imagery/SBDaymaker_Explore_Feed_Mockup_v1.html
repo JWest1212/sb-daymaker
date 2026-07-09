@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Explore Feed · Recommended Stack Applied</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+    --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+    --stroke:#2b211a; --stroke-soft:#6a5a49;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--plaster-2);font-family:var(--font-body);color:var(--ink);
+    -webkit-font-smoothing:antialiased;padding:0 0 80px;}
+
+  .art{display:block;}
+  .art .body{fill:var(--stroke);}
+  .art .soft{fill:var(--stroke-soft);opacity:.5;}
+  .art .gold{fill:var(--gold);}
+  .art .terra{fill:var(--terracotta);}
+  .art .paper{fill:var(--paper);}
+  .art .hair{fill:none;stroke:var(--stroke);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;}
+  .art .hair-t{fill:none;stroke:var(--terracotta);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;}
+
+  /* ---------- doc chrome ---------- */
+  .masthead{background:var(--pacific-dark);color:#fff;text-align:center;
+    padding:38px 20px 32px;border-bottom:3px solid var(--gold);}
+  .masthead .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;margin-bottom:10px;}
+  .masthead h1{font-family:var(--font-display);font-weight:900;font-size:clamp(26px,4vw,36px);
+    margin:0 0 10px;letter-spacing:-.02em;}
+  .masthead p{color:#cfe0e4;max-width:620px;margin:0 auto;font-size:14px;line-height:1.6;}
+
+  .stage{display:flex;justify-content:center;padding:44px 16px 0;}
+
+  /* ---------- the phone ---------- */
+  .phone{width:390px;background:var(--plaster);border-radius:30px;overflow:hidden;
+    box-shadow:0 2px 6px rgba(36,28,22,.12),0 30px 70px rgba(36,28,22,.22);
+    border:1px solid rgba(36,28,22,.14);}
+
+  /* sky strip — afternoon, post burn-off */
+  .sky{background:linear-gradient(180deg,#cfe2e8 0%,#e3ecea 70%,var(--plaster) 100%);
+    padding:16px 18px 12px;position:relative;overflow:hidden;}
+  .sky__sun{position:absolute;top:14px;right:56px;width:26px;height:26px;border-radius:50%;
+    background:var(--gold);box-shadow:0 0 0 7px rgba(224,168,46,.18);}
+  .sky__date{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--pacific-dark);}
+  .sky__pills{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;}
+  .sky__pill{font-family:var(--font-mono);font-size:10.5px;font-weight:500;color:var(--pacific-dark);
+    background:rgba(252,250,245,.72);border:1px solid rgba(22,88,106,.16);
+    padding:4px 9px;border-radius:var(--radius-pill);}
+
+  /* hero slot placeholder — spec'd separately */
+  .heroslot{margin:12px 14px 4px;border:1.5px dashed var(--line);border-radius:var(--radius-lg);
+    padding:22px 16px;text-align:center;font-family:var(--font-mono);font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);background:rgba(252,250,245,.4);}
+
+  /* segmented control — Option A */
+  .seg{display:flex;gap:4px;margin:12px 14px 4px;background:var(--plaster-2);
+    border:1px solid rgba(216,205,184,.7);border-radius:var(--radius-pill);padding:3px;}
+  .seg button{flex:1;border:0;background:transparent;font-family:var(--font-body);font-weight:600;
+    font-size:13.5px;color:var(--ink-2);padding:9px 0;border-radius:var(--radius-pill);cursor:pointer;min-height:44px;}
+  .seg button.is-active{background:var(--paper);color:var(--pacific);box-shadow:0 1px 3px rgba(36,28,22,.12);}
+  .seg button:focus-visible{outline:2px solid var(--pacific);outline-offset:2px;}
+
+  /* feed */
+  .feed{padding:8px 14px 18px;}
+  .feed-head{display:flex;align-items:baseline;justify-content:space-between;margin:18px 2px 10px;}
+  .feed-head h3{font-family:var(--font-display);font-weight:600;font-size:19px;margin:0;letter-spacing:-.01em;}
+  .feed-head .dot{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-2);}
+  .feed .card + .card{margin-top:12px;}
+
+  /* the canonical list card — Phase 7 format */
+  .card{background:var(--paper);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);
+    border:1px solid rgba(216,205,184,.5);display:flex;overflow:hidden;}
+  .card__visual{width:108px;min-width:108px;align-self:stretch;position:relative;display:grid;}
+  .card__visual svg{width:100%;height:100%;position:absolute;inset:0;}
+  .card__heart{position:absolute;top:7px;right:7px;width:26px;height:26px;border-radius:50%;
+    background:rgba(252,250,245,.88);display:grid;place-items:center;font-size:13px;color:var(--ink-2);z-index:2;
+    box-shadow:0 1px 3px rgba(36,28,22,.14);}
+  .card__pill{position:absolute;top:7px;left:7px;z-index:2;font-family:var(--font-mono);font-size:9px;
+    font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(14,60,73,.78);
+    padding:3px 7px;border-radius:var(--radius-pill);backdrop-filter:blur(2px);}
+  .card__body{padding:12px 14px 11px;flex:1;min-width:0;}
+  .card__kicker{font-family:var(--font-mono);font-size:10.5px;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;margin-bottom:3px;}
+  .card__title{font-family:var(--font-display);font-weight:600;font-size:18px;letter-spacing:-.01em;
+    margin:0 0 3px;line-height:1.16;}
+  .card__desc{font-size:13.5px;line-height:1.48;color:var(--ink-2);margin:0;}
+  .card__aside{font-family:var(--font-mono);font-size:12.5px;line-height:1.55;color:var(--ink-2);
+    margin:7px 0 0;}
+  .card__aside::before{content:"— ";color:var(--terracotta);}
+  .card__meta{display:flex;gap:7px;align-items:center;font-family:var(--font-mono);font-size:11.5px;
+    color:var(--ink-2);margin-top:8px;}
+  .card__meta .free{color:var(--forest);font-weight:700;}
+
+  /* tints */
+  .t-wine{background:#eddfe4;} .t-sea{background:#d7e6ea;} .t-stage{background:#f4e1d5;}
+  .t-trail{background:#dfe9da;} .t-mission{background:#eee3d1;}
+  .t-market{background:#f5ecd4;} .t-book{background:#e8e1d1;} .t-beer{background:#f1e7cd;}
+  .t-beach{background:#dae8e4;} .t-sea--golden{background:#efe0c6;}
+
+  /* bottom nav */
+  .nav{display:flex;border-top:1px solid var(--line);background:var(--paper);padding:8px 6px 14px;}
+  .nav a{flex:1;text-align:center;text-decoration:none;color:var(--ink-2);font-family:var(--font-body);
+    font-size:11px;font-weight:600;padding:6px 0;min-height:44px;display:grid;place-items:center;gap:2px;}
+  .nav a.is-active{color:var(--pacific);}
+  .nav svg{width:22px;height:22px;display:block;margin:0 auto;}
+
+  /* legend under phone */
+  .keys{max-width:560px;margin:26px auto 0;padding:0 18px;font-size:12.5px;line-height:1.65;color:var(--ink-2);}
+  .keys b{color:var(--ink);}
+  .keys .k{font-family:var(--font-mono);font-size:9.5px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--terra-text);margin-right:5px;}
+  .footer{margin-top:48px;text-align:center;font-family:var(--font-mono);font-size:10.5px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="7" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.17  0 0 0 0 0.13  0 0 0 0 0.10  0 0 0 0.7 0"/>
+  </filter>
+  <radialGradient id="vig" cx="50%" cy="46%" r="72%">
+    <stop offset="78%" stop-color="#3a2a1a" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#3a2a1a" stop-opacity=".05"/>
+  </radialGradient>
+  <filter id="tremble" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="2" seed="3" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="2.3"/>
+  </filter>
+  <filter id="tremble2" x="-6%" y="-6%" width="112%" height="112%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="8" result="w"/>
+    <feDisplacementMap in="SourceGraphic" in2="w" scale="2.2"/>
+  </filter>
+  <symbol id="peli" viewBox="0 0 20 16">
+    <path d="M0 7.3 6.8 3.6Q7.2 1.3 9.4 1q2.4-.2 3.3 1.9 3.8.1 5.6 2.7 1.6 2.6-.2 5.2-2 2.5-5.7 2.3-3.2-.2-4.7-2.4-1.7.6-3-.3l1.6-.9Q3.1 9.7 1.2 8.3.4 7.8 0 7.3z"/>
+    <path d="M10.9 13.1h1V16h-1zM13.7 13h1v2.9h-1z"/>
+    <circle cx="9.5" cy="3.2" r=".6" fill="#FCFAF5"/>
+  </symbol>
+</defs></svg>
+
+<header class="masthead">
+  <div class="eyebrow">Explore Feed · Recommended Stack Applied</div>
+  <h1>Ten Cards, As Shipped</h1>
+  <p>Thursday, July 2, mid-afternoon, marine layer burned off. The v3 ink chassis carrying the full personality system: deadpan asides with real silence, true details in the drawings, the 1873 type fallback in situ, one field-guide garnish, and two pelicans hiding somewhere below.</p>
+</header>
+
+<div class="stage">
+<div class="phone">
+
+  <div class="sky">
+    <div class="sky__sun"></div>
+    <div class="sky__date">Thu · Jul 2</div>
+    <div class="sky__pills">
+      <span class="sky__pill">74°</span>
+      <span class="sky__pill">burned off ✓</span>
+      <span class="sky__pill">sunset 8:12</span>
+    </div>
+  </div>
+
+  <div class="heroslot">— hero pick card · per hero spec —</div>
+
+  <div class="seg" role="tablist" aria-label="Time horizon">
+    <button class="is-active" aria-label="Happening today">Today</button>
+    <button aria-label="Happening this week">Week</button>
+    <button aria-label="Happening this month">Month</button>
+  </div>
+
+  <div class="feed">
+    <div class="feed-head"><h3>Happening today</h3><div class="dot">Thu · Jul 2</div></div>
+
+    <!-- 1 · Art Walk — deadpan aside (the canonical line) -->
+    <article class="card"><div class="card__visual t-stage"><span class="card__pill">Arts</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)"><path class="gold" d="M50 24 66 82H34z" opacity=".22"/><path class="body" d="M50 16q9 10 15 22-15 3-30 0 6-12 15-22z"/><path class="paper" d="M50 23q6 7 10 15-10 2-20 0 4-8 10-15z"/><circle class="gold" cx="50" cy="30" r="3.4"/><path class="body" d="M30 82q20-3 40 0 0 1.6 0 3.2-20 2.4-40 0 0-1.6 0-3.2z"/><path class="hair-t" d="M45 48l-3 12M55 48l3 12"/></g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--terra-text)">Arts · 1st Thursday</div>
+      <h4 class="card__title">Funk Zone Art Walk</h4><p class="card__desc">Galleries and studios open late down the Zone — openings, pours, people.</p>
+      <p class="card__aside">park on anacapa. the funk zone lots are a trap.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>Tonight 5–8</span></div></div></article>
+
+    <!-- 2 · Lobero — brutalist type fallback, SILENT -->
+    <article class="card"><div class="card__visual t-wine"><span class="card__pill">Show</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><text x="50" y="57" text-anchor="middle" font-weight="900" font-size="36" letter-spacing="-.03em" fill="#241C16" style="font-family:var(--font-display)">1873</text><path d="M20 65h60" stroke="#E0A82E" stroke-width="1.7"/><text x="50" y="78" text-anchor="middle" font-size="4.6" fill="#4A4038" style="font-family:var(--font-mono)">lobero theatre — since.</text><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--pacific)">Catch a Show · Tonight</div>
+      <h4 class="card__title">Jazz at the Lobero</h4><p class="card__desc">A summer quartet in the landmark adobe hall — the room does half the work.</p>
+      <div class="card__meta"><span>$$</span><span>·</span><span>Thu 8 PM</span></div></div></article>
+
+    <!-- 3 · Sunset — golden state motif, absurdist aside (the 1-in-10) -->
+    <article class="card"><div class="card__visual t-sea--golden"><span class="card__pill">Outdoors</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)">
+        <circle class="gold" cx="26" cy="42" r="10"/>
+        <circle cx="26" cy="42" r="12.5" fill="none" stroke="#C0532E" stroke-width="1" opacity=".55"/>
+        <path class="soft" d="M0 58q25-6 50 0t50 0v10q-25-6-50 0T0 68z"/>
+        <path class="body" d="M0 68q25-6 50 0t50 0v9q-25-6-50 0T0 77z"/>
+        <path d="M20 60q8 10 10 22l6-1q-3-11-9-21z" fill="#E0A82E" opacity=".3"/>
+        <path class="hair" d="M10 86q8-3 16 0t16 0 16 0 16 0"/>
+      </g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--gold-text)">Golden Hour · 8:12</div>
+      <h4 class="card__title">Sunset at Shoreline Park</h4><p class="card__desc">Grass bluffs, the full channel view, and the night's main event.</p>
+      <p class="card__aside">the sun rehearses this nightly. still sells out.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>8:12 PM</span></div></div></article>
+
+    <div class="feed-head"><h3>This weekend</h3><div class="dot">Sat–Sun</div></div>
+
+    <!-- 4 · Market — deadpan aside -->
+    <article class="card"><div class="card__visual t-market"><span class="card__pill">Outdoors</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble2)"><ellipse class="soft" cx="50" cy="80" rx="26" ry="2.8"/><path class="body" d="M27 47q23-1 46 0 .8 15 0 30-23 1-46 0-.8-15 0-30z"/><path class="paper" d="M31 51q19-.8 38 0 .6 11 0 22-19 .8-38 0-.6-11 0-22z"/><path class="body" d="M20 47q30-4 60 0l-4-16q-26-3-52 0z"/><path class="terra" d="M25 34q3 7-1 11M37 33q3 7-1 11M49 33q3 7-1 11M61 33q3 7-1 11M73 34q3 7-1 11"/><circle class="terra" cx="42" cy="62" r="5"/><circle class="gold" cx="56" cy="64" r="5"/></g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--sage-text)">Outdoors · Market</div>
+      <h4 class="card__title">Saturday Farmers Market</h4><p class="card__desc">The Saturday ritual — growers, flowers, prepared food.</p>
+      <p class="card__aside">arrive at 8 for parking, 12:45 for deals. pick one.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>Sat 8–1</span></div></div></article>
+
+    <!-- 5 · Inspiration Point — deadpan aside -->
+    <article class="card"><div class="card__visual t-trail"><span class="card__pill">Outdoors</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)"><circle class="gold" cx="70" cy="28" r="9"/><path class="soft" d="M6 74 34 40l16 22 6-8 32 20z"/><path class="body" d="M10 78 32 46l14 20 8-11 30 23z"/><path class="paper" d="M32 46l5 7-9 4z" opacity=".7"/><path class="hair-t" d="M34 52l5 7"/><path class="hair" d="M8 78h80"/></g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--sage-text)">Outdoors · Hike</div>
+      <h4 class="card__title">Inspiration Point</h4><p class="card__desc">A 3.8-mile climb to ridge views over the coast and channel.</p>
+      <p class="card__aside">3.8 miles up. the islands show up for the last one.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>Morning start</span></div></div></article>
+
+    <div class="feed-head"><h3>Anytime in SB</h3><div class="dot">Evergreen</div></div>
+
+    <!-- 6 · Wharf — hidden pelican #1, gull true detail, deadpan aside -->
+    <article class="card"><div class="card__visual t-sea"><span class="card__pill">Outdoors</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)"><circle class="gold" cx="28" cy="28" r="8"/><path class="hair" d="M64 22q2-2 4 0q2-2 4 0" stroke-width="1.05"/><path class="body" d="M12 48q31-2 62 0l8 11q-39-2-78 0z"/><path class="paper" d="M18 50q28-1.4 56 0l4 6q-32-1.4-64 0z" opacity=".5"/><path class="body" d="M22 60q1.6 0 3 0 .4 10 0 20-1.4 0-3 0-.4-10 0-20z"/><path class="body" d="M38 60q1.6 0 3 0 .4 10 0 20-1.4 0-3 0-.4-10 0-20z"/><path class="body" d="M54 60q1.6 0 3 0 .4 10 0 20-1.4 0-3 0-.4-10 0-20z"/><path class="body" d="M70 60q1.6 0 3 0 .4 10 0 20-1.4 0-3 0-.4-10 0-20z"/><path class="hair" d="M14 84q10-5 20 0t20 0 20 0"/><path class="hair-t" d="M60 40h12"/></g><use href="#peli" x="59.5" y="76" width="10.5" height="8.4" opacity=".9" style="fill:#2b211a"/><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--sage-text)">Outdoors · Waterfront</div>
+      <h4 class="card__title">Stearns Wharf</h4><p class="card__desc">The oldest working wooden wharf on the coast — walk it to the end.</p>
+      <p class="card__aside">the gulls have a system. your fries are in it.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>Open late</span></div></div></article>
+
+    <!-- 7 · Mission — SILENT, field-guide garnish label -->
+    <article class="card"><div class="card__visual t-mission"><span class="card__pill">Landmark</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)"><ellipse class="soft" cx="52" cy="85" rx="34" ry="3.2"/><path class="body" d="M19 84q-.5-22 .4-42 .2-3 7-7.4 6.8 4.4 7 7.4.9 20 .4 42-3.8.8-7.4.8-3.6 0-7.4-.8z"/><path class="body" d="M65 84q-.5-22 .4-42 .2-3 7-7.4 6.8 4.4 7 7.4.9 20 .4 42-3.8.8-7.4.8-3.6 0-7.4-.8z"/><path class="body" d="M33 84q-.6-16 0-31 8.5-7 17-12.4 8.5 5.4 17 12.4.6 15 0 31-8.6.9-17 .9-8.4 0-17-.9z"/><path class="paper" d="M24 50q3-.4 6 0 .3 4.4 0 9-3 .4-6 0-.3-4.6 0-9z"/><path class="paper" d="M70 50q3-.4 6 0 .3 4.4 0 9-3 .4-6 0-.3-4.6 0-9z"/><path class="terra" d="M43 84q-.5-9 0-17 3.5-6 7-6t7 6q.5 8 0 17-3.5.5-7 .5t-7-.5z"/><path class="paper" d="M46 84q-.4-7 0-13 2-3.4 4-3.4t4 3.4q.4 6 0 13-2 .3-4 .3t-4-.3z"/><path class="soft" d="M33 53q3-3 6-4.6.4 17 0 34-3-.2-6-.7-.6-14 0-28.7z"/><rect class="body" x="49" y="25" width="2.4" height="10" rx="1"/><rect class="body" x="46" y="28" width="8.4" height="2.2" rx="1"/></g><path d="M14 22 24 36" stroke="#4A4038" stroke-width=".55" fill="none"/><text x="5" y="19" font-size="4.2" fill="#4A4038" style="font-family:var(--font-mono)">est. 1786</text><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--pacific)">Landmark · Gardens</div>
+      <h4 class="card__title">Old Mission Santa Barbara</h4><p class="card__desc">Twin bell towers, rose gardens, and the long view down to the sea.</p>
+      <div class="card__meta"><span>$$</span><span>·</span><span>Til 5</span></div></div></article>
+
+    <!-- 8 · Chaucer's — deadpan aside -->
+    <article class="card"><div class="card__visual t-book"><span class="card__pill">Arts</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble2)"><ellipse class="soft" cx="50" cy="79" rx="26" ry="2.6"/><path class="body" d="M29 77q-.6-18 0-36 6-1 12 0 .6 18 0 36-6 1-12 0z"/><path class="body" d="M42 77q-.6-16 0-32 6-1 12 0 .6 16 0 32-6 1-12 0z"/><path class="body" d="M55 77 61 47q5.6.7 11 2.4L66 79q-5.6-1-11-2z"/><path class="hair-t" d="M33 51h6M46 53h6"/></g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--terra-text)">Arts · Bookshop</div>
+      <h4 class="card__title">Chaucer's Books</h4><p class="card__desc">Fiercely independent, packed floor to ceiling in Loreto Plaza.</p>
+      <p class="card__aside">you came for one book. sure.</p>
+      <div class="card__meta"><span class="free">Browse free</span><span>·</span><span>Til 8 PM</span></div></div></article>
+
+    <!-- 9 · Topa Topa — SILENT -->
+    <article class="card"><div class="card__visual t-beer"><span class="card__pill">Food</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble)"><ellipse class="soft" cx="50" cy="80" rx="20" ry="2.6"/><path class="body" d="M33 40q14-1.6 28 0 1 20 0 38-14 1.6-28 0-1-18 0-38z"/><path class="paper" d="M37 46q10-1 20 0 .7 15 0 28-10 1-20 0-.7-13 0-28z"/><path class="paper" d="M32 40q6-9 15-9t15 9q-15 3-30 0z"/><path class="body" d="M61 47q9-1 9 8t-9 8q0-2 0-3.4 5 .4 5-4.6t-5-4.6q0-1.7 0-3.4z"/><path class="gold" d="M37 52q10-1 20 0 .5 10 0 20-10 1-20 0-.5-10 0-20z" opacity=".5"/></g><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--gold-text)">Wine &amp; Food · Taproom</div>
+      <h4 class="card__title">Topa Topa Brewing Co.</h4><p class="card__desc">An airy Funk Zone taproom pouring the Ojai flagships.</p>
+      <div class="card__meta"><span>$$</span><span>·</span><span>Til 10 PM</span></div></div></article>
+
+    <!-- 10 · Butterfly Beach — true details, hidden pelican #2, deadpan aside -->
+    <article class="card"><div class="card__visual t-beach"><span class="card__pill">Outdoors</span><span class="card__heart">♡</span>
+      <svg viewBox="0 0 100 100" class="art"><g filter="url(#tremble2)">
+        <circle class="gold" cx="72" cy="24" r="8"/>
+        <path class="hair" d="M28 18q2-2 4 0q2-2 4 0" stroke-width="1.1"/>
+        <path class="hair" d="M42 26q1.6-1.6 3.2 0q1.6-1.6 3.2 0" stroke-width="1"/>
+        <path class="soft" d="M0 52q25-5 50 0t50 0v9q-25-5-50 0T0 61z"/>
+        <path class="body" d="M0 61q25-5 50 0t50 0v8q-25-5-50 0T0 69z"/>
+        <path d="M0 77q30-4 60 0t40 0V100H0z" fill="#e9ddc2"/>
+        <path class="hair" d="M8 80q7-2.6 14 0t14 0 14 0"/>
+        <path class="body" d="M24 88.5q1.4-.8 2.6 0 .6 1-.3 1.7-1.4.7-2.5-.2-.4-.9.2-1.5z"/>
+        <path class="body" d="M46 92q1-.6 2 0 .5.8-.2 1.4-1 .5-1.9-.2-.3-.7.1-1.2z"/>
+        <path class="body" d="M62 87.6q.9-.5 1.7 0 .4.7-.2 1.2-.9.4-1.6-.2-.3-.6.1-1z"/>
+      </g><use href="#peli" x="75" y="80.5" width="9.5" height="7.6" opacity=".95" style="fill:#2b211a"/><rect width="100" height="100" fill="url(#vig)"/><rect width="100" height="100" filter="url(#grain)" opacity=".12" style="mix-blend-mode:multiply"/></svg>
+    </div><div class="card__body"><div class="card__kicker" style="color:var(--sage-text)">Outdoors · Beach</div>
+      <h4 class="card__title">Butterfly Beach</h4><p class="card__desc">The crescent along Channel Drive — sunrise walkers, low-tide pools.</p>
+      <p class="card__aside">the tar is natural. we've agreed not to discuss it.</p>
+      <div class="card__meta"><span class="free">Free</span><span>·</span><span>All day</span></div></div></article>
+
+  </div><!-- /feed -->
+
+  <nav class="nav" aria-label="Primary">
+    <a href="#" class="is-active" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5 13.5 13.5 8.5 15.5 10.5 10.5z"/></svg>
+      Explore</a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.6-9-9c-1.3-3 .8-6.5 4-6.5 2 0 3.4 1 5 3 1.6-2 3-3 5-3 3.2 0 5.3 3.5 4 6.5-2 4.4-9 9-9 9z"/></svg>
+      Saved</a>
+    <a href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 4 6v14l5-2 6 2 5-2V4l-5 2z"/><path d="M9 4v14M15 6v14"/></svg>
+      Discover SB</a>
+  </nav>
+
+</div><!-- /phone -->
+</div><!-- /stage -->
+
+<div class="keys">
+  <p><span class="k">Applied</span><b>7 speak, 3 are silent</b> (Lobero, Mission, Topa Topa) — silence is a setting. One absurdist line in the ten (Shoreline). The Lobero card is the <b>D8 type fallback</b> in situ; the Mission carries the one <b>field-guide garnish</b> of the day. <b>Two pelicans</b> are hiding below the fold of two coastal drawings — no hints beyond that. Feed state: post-burn-off Thursday; on a gloom morning the sky strip, tints, and two of these asides would read differently.</p>
+</div>
+
+<div class="footer">SB Daymaker · Explore Feed Mockup v1 · Recommended stack, as it would ship</div>
+
+</body>
+</html>

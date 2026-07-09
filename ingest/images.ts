@@ -1,13 +1,17 @@
 // ingest/images.ts
 //
-// Image resolution (Doc 11 §7b/§7c). For each card, walk a waterfall and attach a
-// REAL image plus ranked alternates for the cockpit picker — stop at the first hit:
+// Image resolution (Doc 11 §7b/§7c; Card Imagery Build Spec Phase 0). For each card,
+// gather every free-source candidate, rank them relevance-first, and attach a REAL
+// image plus ranked alternates for the cockpit picker:
 //   0. image_cache (per place)  -> zero cost, never re-pay
-//   1. Pexels        (free)
-//   2. Wikimedia     (free)
-//   3. Google Place Photo (PAID) -> only if free tiers miss, the card has a place_id,
+//   1. Wikimedia     (free, SB-specific)
+//   2. Google Place Photo (PAID) -> only if free tiers miss, the card has a place_id,
 //      and the persisted monthly counter is under the cap. Counts every Google call.
-//   4. branded placeholder      -> ONLY if the cap is hit or no image exists anywhere.
+//   3. Pexels        (free, generic — demoted to last-resort real image, Phase 0)
+//   4. branded placeholder      -> the cap is hit, no image exists anywhere, the item
+//      is a civic meeting (isCivicImage), OR the item is a Tier-1 dated event, which
+//      defaults to no photo (eventDefaultsToNoPhoto) until the motif tier (Phase 3)
+//      ships — ListCard's occasion-gradient fallback carries these.
 //
 // Cost control (audit flag B6): free-first + per-place caching keep real spend ≈ $0;
 // the hard monthly cap is the runaway guard. We store the Google photoUri (a URL, not
@@ -18,7 +22,11 @@ import type { Candidate, PhotoSource, HappeningCategory } from '../packages/shar
 import { classifyWeight } from './weight';
 import { checkImageRelevance } from './imageRelevance';
 
-const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 1400); // ~$10 at $0.007/call
+// Card Imagery Build Spec Phase 0 §3.1.4: the old "$0.007/call" comment was stale —
+// Places Photo is Enterprise-class (~$20 per 1,000 calls; two billable calls/photo).
+// Default cap dropped 1400 -> 500 (~$20/mo worst case); Jim sets the env var
+// explicitly in Phase 2. Counter is shared with the closure-check feature.
+const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 500);
 const PEXELS_KEY = process.env.PEXELS_API_KEY;
 const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 
@@ -99,11 +107,22 @@ export function imageQuery(
   return `${c.title}${hood}${catPart} Santa Barbara`;
 }
 
-/** Rank found options and always append the placeholder as the final alternate. */
+/** Rank found options and always append the placeholder as the final alternate.
+ *  Card Imagery Build Spec Phase 0 §3.1.1 — relevance-first: an SB-specific free
+ *  source (Wikimedia) now outranks generic stock (Pexels), which is demoted to a
+ *  last-resort real image until Phase 3 retires it entirely. */
 export function rankOptions(found: ImageOption[]): ImageOption[] {
-  const order: PhotoSource[] = ['owned', 'pexels', 'wikimedia', 'google'];
+  const order: PhotoSource[] = ['owned', 'wikimedia', 'google', 'pexels'];
   const real = found.filter((o) => o.url).sort((a, b) => order.indexOf(a.source) - order.indexOf(b.source));
   return [...real, { url: '', source: 'placeholder' as const }];
+}
+
+/** Card Imagery Build Spec Phase 0 §3.1.2 — Tier-1 dated events default to no photo:
+ *  a confident branded gradient beats a generic/mismatched stock photo for the 87%
+ *  of the catalog that's happenings, not places. Superseded in Phase 3 by the motif
+ *  tier. Pure so it's unit-testable independent of the resolver's DB/network calls. */
+export function eventDefaultsToNoPhoto(c: Pick<Candidate, 'tier'>): boolean {
+  return c.tier === 1;
 }
 
 /** W2.3 per-batch dedupe (PURE). Given ranked options and per-url usage COUNTS from
@@ -302,8 +321,15 @@ export async function resolveImages(
     const key = cacheKey(c);
     const cached = cache.get(key);
     if (!opts.force && cached && cached.photo_source && cached.photo_source !== 'placeholder') {
-      if (cached.photo_url) bump(cached.photo_url as string);
-      out.push({ ...c, photo_url: cached.photo_url ?? undefined, photo_source: cached.photo_source as PhotoSource,
+      // Phase 0 §3.1.2: a cached PLACE-level real photo still isn't shown on a
+      // Tier-1 event — e.g. a second same-venue event landing after the first
+      // already cached a real find. The cache itself is untouched (still holds the
+      // real place-level resolution for a future non-event candidate).
+      const cacheDisplay = eventDefaultsToNoPhoto(c)
+        ? { url: undefined, source: 'placeholder' as PhotoSource }
+        : { url: cached.photo_url ?? undefined, source: cached.photo_source as PhotoSource };
+      if (cacheDisplay.url) bump(cacheDisplay.url);
+      out.push({ ...c, photo_url: cacheDisplay.url, photo_source: cacheDisplay.source,
         photo_options: (cached.photo_options as ImageOption[]) ?? [] });
       stats.resolved++;
       continue;
@@ -325,7 +351,10 @@ export async function resolveImages(
       if (wm) { if (meetsQualityBar(wm)) found.push(wm); else stats.rejectedQuality++; }
       // Paid fallback — only when every free tier GENUINELY missed. A Pexels 429 is
       // not a miss: those rows resolve free on a later run, so don't pay Google now.
-      if (!found.length && !pexelsRateLimited && c.place_id && GOOGLE_KEY) {
+      // Phase 0 §3.1.2: never spend a paid call on a Tier-1 event — its auto-pick is
+      // forced to the placeholder below regardless, so a Google call here would be
+      // spent on a photo nobody ever sees.
+      if (!found.length && !pexelsRateLimited && c.place_id && GOOGLE_KEY && !eventDefaultsToNoPhoto(c)) {
         if (calls < CAP) {
           const g = await googlePhoto(c.place_id, () => { calls++; });
           if (g) { if (meetsQualityBar(g)) found.push(g); else stats.rejectedQuality++; }
@@ -342,8 +371,11 @@ export async function resolveImages(
 
   // Addendum Part B — one batched vision call over every fresh auto-pick with a real
   // image (never over the alternates; those are the cockpit's human-reviewed picker).
+  // Phase 0 §3.1.2: Tier-1 events are excluded — their auto-pick is forced to the
+  // placeholder below no matter what the vision check would say, so checking them
+  // would just burn tokens on a verdict that's discarded.
   const relevanceCandidates = pending
-    .filter((p) => p.options[0]?.url)
+    .filter((p) => p.options[0]?.url && !eventDefaultsToNoPhoto(p.c))
     .map((p) => ({ id: p.c.id, title: p.c.title, category: p.c.happening_category, imageUrl: p.options[0].url }));
   const relevance = await checkImageRelevance(relevanceCandidates);
 
@@ -355,19 +387,11 @@ export async function resolveImages(
       stats.rejectedRelevance++;
       chosen = { url: '', source: 'placeholder' };
     }
-    if (!chosen.url) stats.placeholder++;
-    else { if (chosen.source === 'google') stats.google++; else stats.free++; bump(chosen.url); }
-    stats.resolved++;
 
-    const resolved: Candidate = {
-      ...p.c,
-      photo_url: chosen.url || undefined,
-      photo_source: chosen.source,
-      photo_options: p.options,
-    };
-    out.push(resolved);
-
-    // Persist the per-place resolution so we never re-fetch/re-pay/re-check.
+    // Persist the per-PLACE resolution so we never re-fetch/re-pay/re-check — this is
+    // what was actually FOUND for the place, independent of whether today's candidate
+    // is allowed to display it. Keeps a later non-event candidate at the same place
+    // (place_key) from silently inheriting a Tier-1 event's forced placeholder.
     await sb.from('image_cache').upsert({
       place_key: p.key,
       photo_url: chosen.url || null,
@@ -376,6 +400,25 @@ export async function resolveImages(
       attribution: chosen.attribution ?? null,
       resolved_at: new Date().toISOString(),
     }, { onConflict: 'place_key' });
+
+    // Phase 0 §3.1.2: Tier-1 dated events default to no photo on the THING itself,
+    // even when a real photo was found for the place — photo_options still carries
+    // the real alternates below so the cockpit picker can hand-assign one per event.
+    const display = eventDefaultsToNoPhoto(p.c) && chosen.url
+      ? { url: '', source: 'placeholder' as const }
+      : chosen;
+
+    if (!display.url) stats.placeholder++;
+    else { if (display.source === 'google') stats.google++; else stats.free++; bump(display.url); }
+    stats.resolved++;
+
+    const resolved: Candidate = {
+      ...p.c,
+      photo_url: display.url || undefined,
+      photo_source: display.source,
+      photo_options: p.options,
+    };
+    out.push(resolved);
   }
 
   await saveSpend(sb, month, calls, spend.over_cap + stats.overCap);

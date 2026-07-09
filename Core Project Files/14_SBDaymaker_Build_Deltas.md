@@ -6,6 +6,108 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-09 — Card Imagery Phase 0 (triage: relevance-first ranking, events default to no photo)
+
+Source: `docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md` §3 (Phase 0). No DDL,
+fully reversible. First step per the spec's own ground rule 1: reconcile §1 "current
+state" against live code — several deviations found before writing anything.
+
+**Path deviations (spec text vs. live repo):**
+- `ingest/pipeline.ts` (named in both the spec and the kickoff prompt as a file to
+  reconcile) **does not exist.** There is no separate ingest pipeline file — the
+  nightly worker's orchestration lives entirely in `ingest/run.ts`, which is the
+  actual call site for `resolveImages()`. `lib/pipeline.ts` is unrelated: the retired
+  duplicate cockpit-era worker already flagged dead in CLAUDE.md §10 (Wave 4
+  cleanup), untouched by this change.
+- The Build Deltas ledger itself lives at `Core Project Files/14_SBDaymaker_Build_Deltas.md`,
+  not `docs/14_SBDaymaker_Build_Deltas.md` as both the spec and the kickoff prompt
+  say. This entry is recorded at the real path.
+
+**Current-state diagnosis is more nuanced than spec §1 describes.** The live resolver
+already carries three guards the spec's "current state" section doesn't mention:
+`isCivicImage()` (civic-meeting titles skip network sources entirely), `meetsQualityBar()`
+(a 960×540 HD floor rejecting undersized results before they can be picked), and
+`checkImageRelevance()` (a batched Claude Haiku **vision** call, nightly/batch-only,
+that screens the resolver's auto-pick and falls back to placeholder on an obvious
+mismatch). None of these existed when the spec's cited 591/592-Pexels live-site audit
+was run; the exact current split is unverified from this session (no direct prod DB
+query tool available here) but is almost certainly less lopsided than the spec assumes.
+Diagnosis and fix direction are unaffected — flagging for the record, not disputing
+the plan.
+
+**Judgment calls made while implementing §3.1:**
+1. **Change 3 (de-dup guard):** already satisfied by the existing `pickUnused()` +
+   catalog-wide usage-count mechanism (W2.3), which is strictly stronger than the
+   plain in-run `Set` the spec describes (it spreads repeats evenly across a shared
+   pool using historical `image_cache` counts, not just this run's picks). No new
+   guard added — a second, weaker mechanism would just be confusing.
+2. **Change 2's "never clobber founder picks" exception:** confirmed via code search
+   that **no mechanism exists** to distinguish a founder's cockpit pick from an
+   auto-resolved pick on a `things` row — `photo_source`/`photo_url` are written
+   identically by both `/api/review/approve` and `resolveImages()`; no
+   `photo_locked`/`photo_pinned` column, no dedicated `audit_log` action. Not
+   addable in Phase 0 (no DDL). Resolved structurally instead: the two call sites
+   this phase touches (`ingest/run.ts`'s nightly land path, which only ever handles
+   brand-new candidates, and `backfillImages()`, which is hard-filtered to
+   `status='needs_review'`) never touch an already-`published` (i.e.
+   founder-reviewed) row, so no founder pick is at risk from this change.
+   **Pre-existing, out-of-scope gap noted, not fixed:** `backfillRepeatImages()`
+   (`REPEAT_BACKFILL=1`, a separate on-demand tool) forces a re-resolve of
+   `published` rows whose photo is shared by 3+ things with zero awareness of
+   founder authorship — this predates Phase 0 and isn't in its change list, so it's
+   left alone per "known open items, don't silently fix" (CLAUDE.md §10). It did
+   pick up one incidental one-line fix shared with `backfillImages()` (below).
+3. **`image_cache` now intentionally diverges from the `things` row for Tier-1
+   events.** The cache still stores the *real* per-place resolution (whatever was
+   actually found), so a future non-event candidate at the same `place_key` isn't
+   starved by an event's forced placeholder. Only the `things`-row write (what's
+   actually displayed) applies the tier override. This wasn't spelled out in the
+   spec; without it, a second same-day event at a venue already cached by a first
+   event would incorrectly inherit that place's real photo bypassing the new rule
+   — fixed in both the cache-hit fast path and the fresh-resolve path.
+4. **Incidental bug fix required by change 2:** both `backfillImages()` and
+   `backfillRepeatImages()` had a `continue`-and-skip-the-write guard keyed on
+   `photo_source === 'placeholder'`, which would have silently dropped the
+   `photo_options` write for Tier-1 events (the exact data the cockpit picker needs
+   per the spec's explicit "photo_options still gathered and stored" requirement).
+   Narrowed the skip to only fire when there are truly no real alternates.
+5. **`.github/workflows/ingest.yml` had no `image_force` input** — only
+   `image_backfill`. `IMAGE_FORCE=1` (needed for the spec's "forced backfill") was
+   therefore not dispatchable at all via the existing GitHub Actions path. Added an
+   `image_force` boolean input, wired to `IMAGE_FORCE`, following the existing
+   input pattern.
+6. **Coverage report (change 6)** implemented as a console report appended to the
+   end of `backfillImages()`'s existing run (`emitCoverageReport()` in
+   `ingest/run.ts`), rather than a new dedicated workflow input — it reads the
+   live catalog independent of whatever `backfillImages()` touched, so it's most
+   useful printed right after a Phase 0 backfill completes. Tier-1 "clusters" use
+   normalized-address string grouping (not true lat/lng-radius clustering, which is
+   Phase 2 §5.2's dedicated seeding script) — sufficient to eyeball real
+   concentration ahead of that phase, not a production clustering algorithm.
+7. **No `gh` CLI or GitHub token available in this environment** to dispatch the
+   Actions workflow programmatically (consistent with the earlier note that
+   `GITHUB_DISPATCH_TOKEN` was never provisioned — see the Cockpit v2 C2b
+   deferral). Per the kickoff instruction to never ask Jim to run terminal
+   commands, he'll be asked to click "Run workflow" in the Actions tab (a UI
+   action) with `image_backfill` + `image_force` checked, rather than being
+   handed a CLI command.
+
+**Files touched:** `ingest/images.ts` (rank order flip, `eventDefaultsToNoPhoto()`,
+cap default 1400→500 + comment, Tier-1 skip in both the cache-hit and fresh-resolve
+paths, Google call skipped for Tier-1, relevance-check skipped for Tier-1),
+`ingest/run.ts` (`emitCoverageReport()`, `photo_options` skip-guard fix in both
+backfill functions), `.github/workflows/ingest.yml` (`image_force` input),
+`ingest/images.test.ts` (updated `rankOptions` expectations, new
+`eventDefaultsToNoPhoto` tests). `components/ui/Card.tsx` needed no change — its
+existing occasion-gradient no-photo fallback already renders whatever this phase
+now sends it.
+
+**Status:** code complete, 498/498 tests passing, `tsc --noEmit` clean on all touched
+files. Forced backfill not yet run (pending Jim triggering the workflow — see above);
+stop-and-show pending that run's completion.
+
+---
+
 ## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)
 
 Follow-up to the 2026-07-07 entry below. Jim asked to close the 6 catalog MISSes and
