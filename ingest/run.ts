@@ -243,7 +243,16 @@ async function backfillImages() {
  *     was always pure waste against the shared quota — this version spends nothing
  *     on them and only touches rows not already on placeholder (idempotent, safe to
  *     re-run any time). Their photo_options (cockpit alternates) aren't refreshed by
- *     this pass; use the picker's "find more options" on a given event if needed. */
+ *     this pass; use the picker's "find more options" on a given event if needed.
+ *
+ *  v3 (2026-07-09, same day) — a v2 re-run still hit a fresh Pexels 429 on only 54
+ *  candidates, leaving 22 places on placeholder (down from 52, but not zero) —
+ *  apparently the free-tier quota hadn't fully replenished within the assumed
+ *  ~1hr window. Tier-2/3 now also skips any row already on 'wikimedia'/'google'/
+ *  'owned', so a re-run only spends quota on rows still stuck at 'pexels' or
+ *  'placeholder' instead of re-confirming ones already fixed — cheaper each time
+ *  and naturally converges to zero-remaining over a few re-runs regardless of
+ *  exactly how long Pexels' quota window turns out to be. */
 async function backfillPublishedImages() {
   const sb = getDb();
   const { data, error } = await sb
@@ -265,7 +274,17 @@ async function backfillPublishedImages() {
   });
 
   const tier1Rows = rows.filter((r) => Number(r.happening_tier) === 1);
-  const otherRows = rows.filter((r) => Number(r.happening_tier) !== 1);
+  // Card Imagery Build Spec Phase 0 — only re-force rows not already on a
+  // relevance-first source: a re-run (e.g. after a Pexels 429) shouldn't re-spend
+  // quota re-confirming the ones that already got wikimedia/google/owned. Makes
+  // repeated runs cheaper and self-converging instead of re-attempting all ~80
+  // Tier-2/3 rows every time — observed necessary 2026-07-09 when a second run
+  // still hit a fresh 429 on only 54 candidates (Pexels' quota apparently hadn't
+  // fully replenished from the first run within the assumed ~1hr window).
+  const GOOD_SOURCES = new Set(['wikimedia', 'google', 'owned']);
+  const otherRows = rows.filter(
+    (r) => Number(r.happening_tier) !== 1 && !GOOD_SOURCES.has(r.photo_source as string),
+  );
   console.log(
     `[published-image-backfill] ${otherRows.length} Tier-2/3 (forced refresh, runs first) · ` +
       `${tier1Rows.length} Tier-1 (direct update, no network)`,

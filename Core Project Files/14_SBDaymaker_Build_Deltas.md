@@ -184,6 +184,20 @@ specific pass as a result — an accepted trade for protecting the shared budget
 use the cockpit picker's "find more options" per-event if one is needed sooner
 than the normal pipeline would supply it.
 
+**Same day, second run: the fix above worked as designed (Tier-1 order/skip was
+correct — 505 events cost zero network calls) but Tier-2/3 still hit a fresh 429
+on only 54 candidates**, leaving 22 of 54 places on `placeholder` (down from 52,
+real progress, but not the clean pass expected). Pexels' actual quota-reset timing
+apparently didn't match the ~1hr assumption in the existing code comment — an
+external account-level limit outside this codebase's control, not a logic bug.
+Rather than keep asking Jim to guess how long to wait, made re-runs
+self-converging: the Tier-2/3 selection now excludes rows already on
+`wikimedia`/`google`/`owned`, so each re-run only spends quota on rows still stuck
+at `pexels`/`placeholder` instead of re-confirming ones a prior run already fixed.
+Cheaper every time, and reaches zero-remaining after enough re-runs regardless of
+the true reset window. `resolveImages()`/`images.ts` untouched — this is entirely
+row-selection logic in `backfillPublishedImages()`.
+
 ---
 
 ## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)
