@@ -68,7 +68,7 @@ function LeadSection({
         mode="lead"
         label={HORIZON_LABEL[horizon]}
         dek={deriveLeadDek(horizon, tier1.length)}
-        sticky={horizon !== "month"}
+        sticky={horizon === "today"}
       />
       {horizon === "today" && <TodayLead tier1={tier1} />}
       {horizon === "week" && <LeadDayRail items={tier1} />}

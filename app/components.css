@@ -3196,49 +3196,29 @@
   }
 }
 
-/* ---- Week lead: day-group + spine ---------------------------------------- */
-/*
- * Groups Tier-1 week events by SB-local calendar day. Each group has a full-
- * width day header with a terracotta node on a thin spine, then ListCard rows.
+/* ---- Week lead: sticky "WEDNESDAY · JULY 8" day headers -----------------
+ * Groups Tier-1 week events by SB-local calendar day. Same pattern as
+ * Month's .sbd-weekhead: each day's cards live inside their own
+ * .sbd-daygroup, so the sticky header's stuck range is bounded by that
+ * group — the next day's header takes over the same spot as the user
+ * scrolls past, with no JS scroll tracking.
  */
 .sbd-daygroup-list {
   display: flex;
   flex-direction: column;
   padding-top: var(--space-3);
 }
-.sbd-daygroup {
-  position: relative;
-  padding-left: 22px;
-}
 .sbd-daygroup + .sbd-daygroup {
-  margin-top: var(--space-6);
-}
-/* Spine: thin vertical rule behind each day group */
-.sbd-daygroup::before {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 6px;
-  bottom: 6px;
-  width: 2px;
-  background: var(--line);
-  border-radius: 2px;
+  margin-top: var(--space-5);
 }
 .sbd-dayhead {
-  position: relative;
-  margin-bottom: var(--space-3);
-}
-/* Node: terracotta dot at the day header, ringed with the page background */
-.sbd-dayhead::before {
-  content: "";
-  position: absolute;
-  left: -19px;
-  top: 5px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--terracotta);
-  box-shadow: 0 0 0 3px var(--plaster);
+  position: sticky;
+  top: 60px;
+  z-index: 18;
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(6px);
+  padding: var(--space-2) 0;
+  margin-bottom: var(--space-2);
 }
 .sbd-dayhead__label {
   font-family: var(--font-mono);
