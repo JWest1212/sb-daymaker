@@ -92,6 +92,23 @@ the plan.
    action) with `image_backfill` + `image_force` checked, rather than being
    handed a CLI command.
 
+8. **The forced backfill only reaches 47/606 things, and the public Explore feed
+   won't visibly change yet.** Ran 2026-07-09 via the Actions UI
+   (`IMAGE_BACKFILL=1 IMAGE_FORCE=1`, branch `fix/edition-bench-size-12`):
+   47 `needs_review` rows re-resolved (free 25 · google 0 · placeholder 22), and
+   the coverage report confirms the catalog-wide split is still 572 Pexels / 5
+   Wikimedia / 0 Google / 29 placeholder out of 606. That's because
+   `backfillImages()` (pre-existing, unchanged in Phase 0) is hard-scoped to
+   `status='needs_review'` — and Explore's RLS policy (`sbdaymaker_schema.sql`
+   `public_read_things`) only ever serves `status='published'` rows. The other
+   ~559 things are published and structurally untouched by this run. This is the
+   flip side of judgment call 2 above (no way to tell a founder pick from an
+   auto-pick on a published row) — expanding the backfill to published rows would
+   reopen exactly that clobbering risk, so it wasn't done unilaterally. Flagged to
+   Jim at the stop-and-show rather than assumed either way; the new resolver logic
+   is fully live for all *new* nightly landings regardless, so the published feed's
+   mix will improve as content cycles even with no further action.
+
 **Files touched:** `ingest/images.ts` (rank order flip, `eventDefaultsToNoPhoto()`,
 cap default 1400→500 + comment, Tier-1 skip in both the cache-hit and fresh-resolve
 paths, Google call skipped for Tier-1, relevance-check skipped for Tier-1),
@@ -103,8 +120,8 @@ existing occasion-gradient no-photo fallback already renders whatever this phase
 now sends it.
 
 **Status:** code complete, 498/498 tests passing, `tsc --noEmit` clean on all touched
-files. Forced backfill not yet run (pending Jim triggering the workflow — see above);
-stop-and-show pending that run's completion.
+files. Forced backfill run 2026-07-09 (see finding 8 above). Stop-and-show pending
+Jim's review of the coverage report + the scope question in finding 8.
 
 ---
 
