@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker · Card Imagery Build Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  :root{
+    --plaster:#F6F1E7; --plaster2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink2:#4A4038;
+    --pacific:#16586A; --pacificDk:#0E3C49; --tile:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --line:#D8CDB8; --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+    --forest:#3E7C5A; --stroke:#2b211a; --stroke-soft:#6a5a49;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--plaster);line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .serif{font-family:'Fraunces',Georgia,serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:780px;margin:0 auto;padding:0 20px 90px;}
+
+  /* HEADER */
+  header{background:linear-gradient(165deg,var(--pacificDk),var(--pacific));color:#fff;padding:44px 0 36px;margin-bottom:30px;border-bottom:3px solid var(--gold);}
+  .hin{max-width:780px;margin:0 auto;padding:0 20px;}
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:20px;}
+  .brand .m{width:32px;height:32px;border-radius:8px;background:#fff;color:var(--pacific);display:grid;place-items:center;font-family:'Fraunces',serif;font-weight:900;font-size:18px;}
+  .brand .nm{font-family:'Fraunces',serif;font-weight:600;font-size:17px;}
+  .brand .sub{font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;opacity:.6;font-weight:700;margin-top:2px;}
+  header h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(27px,5vw,36px);line-height:1.08;letter-spacing:-.5px;margin:0;}
+  header .lede{font-size:15px;opacity:.9;margin-top:13px;max-width:640px;line-height:1.65;}
+  header .docrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;}
+  header .chip{font-size:11px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:6px 12px;border-radius:999px;}
+
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:23px;letter-spacing:-.3px;margin:44px 0 6px;display:flex;align-items:flex-start;gap:11px;line-height:1.2;}
+  h2 .step{width:30px;height:30px;border-radius:9px;background:var(--tile);color:#fff;display:grid;place-items:center;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;flex-shrink:0;margin-top:1px;}
+  h3{font-family:'Fraunces',serif;font-weight:600;font-size:17.5px;margin:26px 0 8px;letter-spacing:-.2px;}
+  .sublede{color:var(--ink2);font-size:14.5px;margin:0 0 16px;}
+  p{font-size:14.5px;margin:12px 0;}
+  ul,ol{font-size:14.5px;padding-left:22px;margin:10px 0;}
+  li{margin:7px 0;}
+  strong{color:var(--ink);font-weight:700;}
+  code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--plaster2);padding:2px 6px;border-radius:5px;color:var(--terra-text);white-space:nowrap;}
+  .small{font-size:12.5px;color:var(--ink2);}
+
+  /* VERDICT */
+  .verdict{border:2px solid var(--gold);background:linear-gradient(135deg,rgba(224,168,46,.14),rgba(224,168,46,.03));border-radius:18px;padding:24px 24px 20px;margin:6px 0 8px;}
+  .verdict .vt{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-text);margin-bottom:10px;}
+  .verdict h2{margin:0 0 10px;font-size:24px;}
+  .verdict p{margin:9px 0;}
+  .verdict .doctrine{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--terra-text);margin:14px 0 10px;letter-spacing:-.2px;}
+  .vfacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px;}
+  .vfact{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;}
+  .vfact .n{font-family:'Fraunces',serif;font-weight:900;font-size:22px;color:var(--pacific);line-height:1;}
+  .vfact .l{font-size:11px;color:var(--ink2);margin-top:5px;line-height:1.4;}
+
+  /* FLAG / NOTE CALLOUTS */
+  .flag{border:1.5px solid var(--gold);background:linear-gradient(135deg,rgba(224,168,46,.13),rgba(224,168,46,.04));border-radius:16px;padding:18px 20px;margin:22px 0;}
+  .flag .ft{font-family:'Fraunces',serif;font-size:16.5px;font-weight:600;color:var(--gold-text);margin-bottom:6px;}
+  .flag p{margin:7px 0 0;font-size:13.5px;color:#5e4a20;}
+  .flag p strong{color:#3f3110;}
+  .note{border-left:3px solid var(--pacific);background:var(--paper);border-radius:0 12px 12px 0;padding:14px 18px;margin:18px 0;font-size:13.5px;color:var(--ink2);}
+  .note strong{color:var(--ink);}
+  .risk{border-left:3px solid var(--tile);background:var(--paper);border-radius:0 12px 12px 0;padding:14px 18px;margin:14px 0;font-size:13.5px;color:var(--ink2);}
+  .risk strong{color:var(--terra-text);}
+
+  /* CARDS */
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0;box-shadow:0 14px 30px -24px rgba(20,40,50,.4);}
+  .card h3{margin-top:0;}
+
+  /* CODE BLOCK */
+  .codewrap{margin:16px 0;border-radius:14px;overflow:hidden;border:1px solid var(--ink);}
+  .codehead{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--ink);color:#fff;padding:9px 15px;}
+  .codehead .lbl{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gold);}
+  .codehead .hint{font-size:10.5px;opacity:.65;font-weight:600;font-family:'JetBrains Mono',monospace;}
+  .codebody{background:#1c1611;color:#f3ece0;padding:15px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-x:auto;}
+  .codebody .hl{color:var(--gold);}
+  .codebody .bad{color:#e08a5b;font-weight:700;}
+  .codebody .dim{opacity:.55;}
+
+  /* WATERFALL DIAGRAM */
+  .falls{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0;}
+  @media (max-width:560px){.falls{grid-template-columns:1fr;}}
+  .fall{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;}
+  .fall .fh{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:12px;color:var(--ink2);}
+  .fall.good .fh{color:var(--pacific);}
+  .tier{border-radius:10px;padding:9px 12px;margin:7px 0;font-size:12.5px;font-weight:600;line-height:1.4;border:1px solid transparent;position:relative;}
+  .tier .t-tag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:block;opacity:.75;margin-bottom:2px;}
+  .tier.win{background:#f6e3d9;border-color:var(--tile-light);color:var(--terra-text);}
+  .tier.ok{background:#e2ecee;border-color:#bcd3d9;color:var(--pacificDk);}
+  .tier.free{background:#e9eee3;border-color:#ccd8bf;color:var(--sage-text);}
+  .tier.paid{background:#f6ecd2;border-color:#e6d4a0;color:var(--gold-text);}
+  .tier.dead{background:var(--plaster2);border-color:var(--line);color:var(--ink2);opacity:.75;}
+  .tier.new{background:#efe4f0;border-color:#d7bfd9;color:#6d4470;}
+  .tier .pct{float:right;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;}
+  .arrow{text-align:center;color:var(--ink2);font-size:12px;line-height:1;margin:1px 0;opacity:.5;}
+
+  /* SOURCE CARDS */
+  .src{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 17px;margin:12px 0;}
+  .src .sh{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+  .src .sn{font-family:'Fraunces',serif;font-weight:600;font-size:16px;}
+  .src p{margin:6px 0;font-size:13.5px;color:var(--ink2);}
+  .badge{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 9px;border-radius:999px;white-space:nowrap;}
+  .b-promote{background:#e2ecee;color:var(--pacificDk);border:1px solid #bcd3d9;}
+  .b-keep{background:#e9eee3;color:var(--sage-text);border:1px solid #ccd8bf;}
+  .b-demote{background:#f6ecd2;color:var(--gold-text);border:1px solid #e6d4a0;}
+  .b-retire{background:#f6e3d9;color:var(--terra-text);border:1px solid var(--tile-light);}
+  .b-skip{background:var(--plaster2);color:var(--ink2);border:1px solid var(--line);}
+  .b-defer{background:#efe4f0;color:#6d4470;border:1px solid #d7bfd9;}
+
+  /* TABLES */
+  .tblwrap{overflow-x:auto;margin:16px 0;-webkit-overflow-scrolling:touch;}
+  table{border-collapse:collapse;width:100%;min-width:520px;background:var(--paper);border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+  th{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-align:left;color:#fff;background:var(--pacificDk);padding:10px 12px;}
+  td{font-size:13px;padding:10px 12px;border-top:1px solid var(--line);vertical-align:top;line-height:1.5;}
+  td:first-child{font-weight:600;}
+  tr:nth-child(even) td{background:rgba(239,231,216,.35);}
+
+  /* DEMO CARDS (quoting the approved mockup art) */
+  .demo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 6px;}
+  @media (max-width:600px){.demo{grid-template-columns:1fr;}}
+  .demo-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin:0 0 7px 2px;}
+  .mcard{background:var(--paper);border-radius:16px;box-shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);border:1px solid rgba(216,205,184,.5);display:flex;overflow:hidden;}
+  .mcard__visual{width:96px;min-width:96px;align-self:stretch;position:relative;display:grid;}
+  .mcard__visual svg,.mcard__visual .stockfill{width:100%;height:100%;position:absolute;inset:0;}
+  .mcard__pill{position:absolute;top:7px;left:7px;z-index:2;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:rgba(14,60,73,.78);padding:3px 7px;border-radius:999px;}
+  .mcard__body{padding:11px 13px 10px;flex:1;min-width:0;}
+  .mcard__kicker{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;}
+  .mcard__title{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;letter-spacing:-.01em;margin:0 0 2px;line-height:1.16;}
+  .mcard__desc{font-size:12.5px;line-height:1.45;color:var(--ink2);margin:0;}
+  .mcard__aside{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.5;color:var(--ink2);margin:6px 0 0;}
+  .mcard__aside::before{content:"— ";color:var(--tile);}
+  .t-sea{background:#d7e6ea;} .t-wine{background:#eddfe4;}
+  .art{display:block;}
+  .art .body{fill:var(--stroke);} .art .soft{fill:var(--stroke-soft);opacity:.5;}
+  .art .gold{fill:var(--gold);} .art .paper{fill:var(--paper);}
+  .art .hair{fill:none;stroke:var(--stroke);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;}
+  .art .hair-t{fill:none;stroke:var(--tile);stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;}
+  .stockfill{background:repeating-linear-gradient(45deg,#cfc6b6,#cfc6b6 8px,#c4bba9 8px,#c4bba9 16px);display:grid;place-items:center;}
+  .stockfill span{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:700;letter-spacing:.06em;color:#6a5f4e;background:rgba(252,250,245,.85);padding:3px 7px;border-radius:999px;text-transform:uppercase;}
+
+  /* PATH CARDS */
+  .path{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin:16px 0;}
+  .path.pick{border:2px solid var(--pacific);box-shadow:0 16px 34px -22px rgba(14,60,73,.45);}
+  .path .ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;}
+  .path .pn{font-family:'Fraunces',serif;font-weight:600;font-size:18.5px;letter-spacing:-.2px;}
+  .path .meta-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px;}
+  .kv{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--plaster2);color:var(--ink2);border:1px solid var(--line);}
+  .pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  @media (max-width:560px){.pros-cons{grid-template-columns:1fr;}}
+  .pc{border-radius:12px;padding:12px 14px;font-size:13px;}
+  .pc.pro{background:#e9eee3;border:1px solid #ccd8bf;}
+  .pc.con{background:#f6e3d9;border:1px solid var(--tile-light);}
+  .pc .pch{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;}
+  .pc.pro .pch{color:var(--sage-text);} .pc.con .pch{color:var(--terra-text);}
+  .pc ul{margin:0;padding-left:18px;font-size:12.5px;}
+  .pc li{margin:5px 0;}
+
+  /* DECISIONS */
+  .dec{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:14px 0;}
+  .dec .dh{display:flex;align-items:flex-start;gap:10px;}
+  .dec .dn{width:28px;height:28px;border-radius:8px;background:var(--pacific);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex-shrink:0;font-family:'Inter',sans-serif;}
+  .dec .dq{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;line-height:1.3;letter-spacing:-.2px;}
+  .dec p{font-size:13.5px;color:var(--ink2);margin:9px 0;}
+  .vote{display:inline-flex;align-items:center;gap:7px;background:#e2ecee;border:1px solid #bcd3d9;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--pacificDk);margin-top:4px;}
+  .vote .vlbl{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--pacific);}
+
+  /* PHASES */
+  ol.phases{counter-reset:s;list-style:none;padding:0;margin:14px 0;}
+  ol.phases li{position:relative;padding:0 0 22px 46px;}
+  ol.phases li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:-1px;width:32px;height:32px;border-radius:50%;background:var(--pacific);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;font-family:'Inter',sans-serif;}
+  ol.phases li::after{content:"";position:absolute;left:15px;top:34px;bottom:2px;width:2px;background:var(--line);}
+  ol.phases li:last-child::after{display:none;}
+  ol.phases .pt{font-family:'Fraunces',serif;font-weight:600;font-size:16.5px;letter-spacing:-.2px;}
+  ol.phases p{margin:6px 0 0;font-size:13.5px;color:var(--ink2);}
+  .effort{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-text);background:#f6ecd2;border:1px solid #e6d4a0;border-radius:999px;padding:3px 9px;margin-left:8px;white-space:nowrap;}
+
+  .footer{margin-top:56px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink2);}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+
+  /* BUILD-GUIDE ADDITIONS */
+  .copyblock{position:relative;background:#10262c;color:#e8f0ee;border-radius:14px;padding:16px 16px 14px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-word;}
+  .copyblock .cb-label{display:block;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#8fb5ad;margin-bottom:8px;}
+  .stepper{counter-reset:st;list-style:none;padding:0;margin:12px 0;}
+  .stepper>li{position:relative;padding:0 0 18px 44px;counter-increment:st;}
+  .stepper>li::before{content:counter(st);position:absolute;left:0;top:-1px;width:30px;height:30px;border-radius:50%;background:var(--paper);border:2px solid var(--pacific);color:var(--pacificDk);display:grid;place-items:center;font-weight:800;font-size:13px;font-family:'Inter',sans-serif;}
+  .stepper>li::after{content:"";position:absolute;left:14px;top:31px;bottom:0;width:2px;background:var(--line);}
+  .stepper>li:last-child::after{display:none;}
+  .stepper .st-t{font-weight:700;font-size:14.5px;color:var(--ink);}
+  .stepper p{margin:5px 0 0;font-size:13.5px;color:var(--ink2);}
+  .who{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-radius:999px;padding:3px 9px;margin-left:6px;vertical-align:2px;}
+  .who.you{background:#f6ecd2;border:1px solid #e6d4a0;color:var(--gold-text);}
+  .who.cc{background:#e2ecee;border:1px solid #bcd3d9;color:var(--pacificDk);}
+  .who.wait{background:var(--plaster2);border:1px solid var(--line);color:var(--ink2);}
+  .checklist{list-style:none;padding:0;margin:10px 0;}
+  .checklist li{position:relative;padding:6px 0 6px 30px;font-size:13.5px;color:var(--ink2);border-bottom:1px dashed var(--line);}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist li::before{content:"";position:absolute;left:2px;top:9px;width:15px;height:15px;border:2px solid var(--pacific);border-radius:4px;background:var(--paper);}
+  .pausecard{background:#f6ecd2;border:1.5px solid #e6d4a0;border-radius:14px;padding:14px 16px;margin:14px 0;font-size:13.5px;}
+  .pausecard b{color:var(--gold-text);}
+  .stopcard{background:#f6e3d9;border:1.5px solid var(--tile-light);border-radius:14px;padding:14px 16px;margin:14px 0;font-size:13.5px;}
+  .stopcard b{color:var(--terra-text);}
+</style>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="brand"><span class="brand-mark">SB</span><div><div class="brand-name">SB Daymaker</div><div class="brand-sub">Companion series · Card imagery · Build guide</div></div></div>
+  <h1>Card Imagery Overhaul:<br>Your Build Guide</h1>
+  <p class="lede">Scenario D, click by click. This page is everything you personally do; the markdown spec (its twin file) is everything Claude Code does. Four phases, four stop-and-shows, two SQL pastes, one settings change, and two cockpit curation sessions. Nothing here requires a terminal.</p>
+  <div class="chips"><span class="chip">Founder-side guide</span><span class="chip">July 9, 2026</span><span class="chip">Twin: BuildSpec.md</span></div>
+</header>
+
+<div class="verdict">
+  <div class="v-eyebrow">How this build works</div>
+  <div class="v-title">You do five kinds of things. That's it.</div>
+  <table>
+    <thead><tr><th>Action</th><th>Where</th><th>How often</th></tr></thead>
+    <tbody>
+      <tr><td><b>Paste a kickoff prompt</b></td><td>Claude Code, in VS Code</td><td>Once per phase (4 total)</td></tr>
+      <tr><td><b>Paste SQL</b></td><td>Supabase SQL Editor</td><td>Twice, exactly when told</td></tr>
+      <tr><td><b>Set one setting</b></td><td>Vercel + GitHub</td><td>Once, at Phase 2</td></tr>
+      <tr><td><b>Review a stop-and-show</b></td><td>Your browser, phone width + desktop width</td><td>Once per phase</td></tr>
+      <tr><td><b>Curate photos</b></td><td>Your cockpit, Venues tab</td><td>One session at Phase 2, then minutes weekly</td></tr>
+    </tbody>
+  </table>
+  <p class="small" style="margin-top:10px;">Legend used throughout: <span class="who you">You</span> means you click it. <span class="who cc">Claude Code</span> means it happens automatically after your prompt. <span class="who wait">Wait point</span> means do not proceed until the previous step is confirmed.</p>
+</div>
+
+<h2><span class="secnum">0</span>Before you start (5 minutes, once)</h2>
+<ol class="stepper">
+  <li><span class="st-t">Put both files in the repo <span class="who you">You</span></span>
+  <p>In VS Code's file explorer (left sidebar), find the <code>docs</code> folder. Right-click it, choose <b>New Folder</b>, name it <code>card-imagery</code>. Drag both downloaded files into it: <code>SBDaymaker_CardImagery_BuildSpec.md</code> and this HTML guide (the guide is for you, but keeping it in the repo keeps the record clean).</p></li>
+  <li><span class="st-t">Open Claude Code <span class="who you">You</span></span>
+  <p>Open the Claude Code panel in VS Code the way you normally do. Confirm it shows your sbdaymaker repo as the working folder.</p></li>
+  <li><span class="st-t">Confirm Supabase access <span class="who you">You</span></span>
+  <p>In a browser tab, log into supabase.com, open your SB Daymaker project, and find <b>SQL Editor</b> in the left sidebar. Leave this tab open; you will paste here twice during the build (Phase 2 and Phase 3). You never need it before then.</p></li>
+</ol>
+
+<h2><span class="secnum">1</span>Phase 0 · Triage (this week; one session)</h2>
+<p>What it does: flips the resolver to relevance-first, routes dated events to the clean gradient fallback, adds a repeat-image guard, and re-runs image resolution for the whole catalog. The feed stops being a stock swamp today. No SQL, no settings, fully reversible.</p>
+<ol class="stepper">
+  <li><span class="st-t">Paste the Phase 0 kickoff prompt <span class="who you">You</span></span>
+  <p>Copy the block below into Claude Code and press enter.</p>
+  <div class="copyblock"><span class="cb-label">Kickoff prompt · Phase 0 · copy everything below</span>Read docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md in full, then read CLAUDE.md. Execute Phase 0 (section 3) only. Begin by reconciling the spec's "current state" section against the live code in ingest/images.ts, ingest/run.ts, ingest/pipeline.ts, and components/ui/Card.tsx; if anything differs, the live code wins and you record the difference in docs/14_SBDaymaker_Build_Deltas.md. Implement the Phase 0 changes, run the tests, then run the forced image backfill through the existing GitHub Actions path (never ask me to run terminal commands). Then stop and show me the Explore feed at about 390px and about 1280px, with the coverage report from spec section 3.1 item 6, and wait for my approval before merging. Do not begin Phase 1.</div></li>
+  <li><span class="st-t">Review the stop-and-show <span class="who wait">Wait point</span> <span class="who you">You</span></span>
+  <p>Claude Code will show you the feed at both widths plus a coverage report. Check the list below; if anything fails, describe what you see and let it fix before approving.</p>
+  <ul class="checklist">
+    <li>No generic stock photos above the fold (no gyms-in-nowhere, no anonymous coffee cups)</li>
+    <li>Dated event cards show the warm gradient-with-icon look, and it looks intentional, not broken</li>
+    <li>Place cards (restaurants, landmarks) show real photos where they exist</li>
+    <li>No blank cards anywhere; the hero has an image or designed fallback</li>
+    <li>The coverage report lists venues ranked by how many events they host (save this; Phase 2 uses it)</li>
+  </ul></li>
+  <li><span class="st-t">Approve <span class="who you">You</span></span>
+  <p>Reply <b>approved, merge</b>. Claude Code merges and confirms. Phase 0 done. Look at the live site on your phone tonight; enjoy it.</p></li>
+</ol>
+
+<h2><span class="secnum">2</span>Phase 1 · Real SB photos for places + marquee landmarks (~2 sessions)</h2>
+<p>What it does: upgrades Wikimedia to location-based search with a strict quality gate, wires food and drink venues to Google (capped), adds photo credits to detail pages, and lets events at the big landmarks (the Bowl, the Lobero, the Courthouse) inherit a beautiful pinned photo. Expected: no SQL needed.</p>
+<ol class="stepper">
+  <li><span class="st-t">Paste the Phase 1 kickoff prompt <span class="who you">You</span></span>
+  <div class="copyblock"><span class="cb-label">Kickoff prompt · Phase 1</span>Continue from the approved Phase 0 of docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md. Execute Phase 1 (section 4) only. Reconcile against live code first. Before enabling any Google calls, re-verify current Google Places photo pricing and free-tier terms against Google's live pricing pages and record what you find in the Build Deltas ledger; if it is materially worse than the spec's assumption, stop and tell me before any call fires. Build the marquee registry file with empty pins, the geosearch upgrade with the quality gate and unit tests, detail-page attribution, and the food-set Google routing with a scoped backfill. Then stop and show me both widths, including one food venue detail page with its credit line, and wait for approval. Do not begin Phase 2.</div></li>
+  <li><span class="st-t">Review the stop-and-show <span class="who wait">Wait point</span> <span class="who you">You</span></span>
+  <ul class="checklist">
+    <li>Landmark-type places show the actual landmark (the Courthouse is the Courthouse)</li>
+    <li>Food venues show their real storefront or interior from Google</li>
+    <li>Open any photo card's detail page: a small credit line appears under or near the photo</li>
+    <li>Nothing ugly slipped the gate (no maps, logos, documents, or weirdly stretched images)</li>
+    <li>Claude Code reports the number of Google calls used; it should be roughly two per food venue, well under 200 total</li>
+  </ul></li>
+  <li><span class="st-t">Approve, then pin your landmarks in the cockpit <span class="who you">You</span> (15 to 20 minutes, once)</span>
+  <p>After the merge, open your cockpit → <b>Live catalog</b>. For each of the ~12 marquee venues (the Bowl, Arlington, Granada, Lobero, Courthouse, Old Mission, Stearns Wharf, MOXI, Museum of Art, Chase Palm Park, Alameda Park, the Zoo): open its thing, use the photo picker arrows, and pick the shot you would put on a postcard. Options labeled <b>landmark</b> are the curated candidates. When you pick, the cockpit shows a small code snippet; paste that snippet into Claude Code with the words <b>add this pin to the marquee registry</b>. That is the same flow you already use for recurring schedules.</p></li>
+</ol>
+<h2><span class="secnum">3</span>Phase 2 · Venue photo pools (the big one; ~3 sessions)</h2>
+<p>What it does: this is your amendment made real. Events inherit real photos of the venue they happen at, drawn from pools of photos you approve in the cockpit, rotated so the feed never repeats, refreshed nightly so Google links never go stale. This phase has your only SQL paste and your only settings change.</p>
+<ol class="stepper">
+  <li><span class="st-t">Set the spending cap in Vercel <span class="who you">You</span> (2 minutes)</span>
+  <p>In a browser: vercel.com → log in → open the <b>sbdaymaker</b> project → <b>Settings</b> (top tab) → <b>Environment Variables</b> (left menu) → click <b>Add New</b>. Key: <code>IMAGE_MONTHLY_CALL_CAP</code> · Value: <code>500</code> · leave all three environment checkboxes (Production, Preview, Development) checked → <b>Save</b>.</p></li>
+  <li><span class="st-t">Set the same cap in GitHub <span class="who you">You</span> (2 minutes)</span>
+  <p>github.com → your sbdaymaker repository → <b>Settings</b> tab → in the left menu, <b>Secrets and variables</b> → <b>Actions</b> → click the <b>Variables</b> tab (not Secrets; this is not sensitive) → <b>New repository variable</b>. Name: <code>IMAGE_MONTHLY_CALL_CAP</code> · Value: <code>500</code> → <b>Add variable</b>. If Claude Code later tells you it needs to be a Secret instead because of how the workflow reads it, do the same steps under the Secrets tab.</p></li>
+  <li><span class="st-t">Paste the Phase 2 kickoff prompt <span class="who you">You</span></span>
+  <div class="copyblock"><span class="cb-label">Kickoff prompt · Phase 2</span>Continue from the approved Phase 1 of docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md. Execute Phase 2 (section 5). Reconcile against live code first. I have set IMAGE_MONTHLY_CALL_CAP=500 in Vercel and GitHub; verify it is being read. Generate the Phase 2 DDL from spec section 5.1, verify it against the live schema, and present it to me as a single copy-paste block, then wait: I will run it in the Supabase SQL Editor and confirm before you build anything that depends on it. Then build the venue seeding, the cockpit Venues tab, pool rotation with per-feed dedupe, and the nightly Google refresh exactly as specified, including the refresh cadence verification in 5.5; if the cap math does not work, bring me the numbers rather than deciding alone. Stop and show me both widths plus the SOhO-style repetition demo from 5.6, and wait for approval. Do not begin Phase 3.</div></li>
+  <li><span class="st-t">Paste the SQL when asked <span class="who wait">Wait point</span> <span class="who you">You</span> (3 minutes)</span>
+  <p>Claude Code will hand you a SQL block (creating <code>venues</code> and <code>venue_photos</code> tables and one new column). In your Supabase tab: <b>SQL Editor</b> → <b>New query</b> → paste the entire block → click <b>Run</b> (bottom right). You should see <b>Success. No rows returned</b>. Go back to Claude Code and type: <b>DDL run, success, no rows returned</b>. If you see any red error instead, paste the error text into Claude Code; it will give you a corrected block. Never edit the SQL yourself.</p></li>
+  <li><span class="st-t">Review the stop-and-show <span class="who wait">Wait point</span> <span class="who you">You</span></span>
+  <ul class="checklist">
+    <li>An event at a known venue shows a real photo of that venue</li>
+    <li>The repetition demo: several same-day events at one venue show different photos, and no venue photo appears twice in one feed view</li>
+    <li>The cockpit has a new Venues tab with match review and photo pools, and it feels like the rest of the cockpit</li>
+    <li>Claude Code confirms the nightly refresh ran in a test and reports how many calls it costs per night against the 500 cap, with the math shown</li>
+    <li>Detail pages show credits on venue photos, including the Google photographer name</li>
+  </ul></li>
+  <li><span class="st-t">Approve, then hold your first pool curation session <span class="who you">You</span> (60 to 90 minutes, once; the fun part)</span>
+  <p>Cockpit → <b>Venues</b> tab. Work top to bottom; the list is ordered by how many events each venue hosts, so the first ten venues you finish cover the biggest slice of the feed.</p>
+  <ul class="checklist">
+    <li><b>Matches to review:</b> for each proposed match, confirm the event really belongs to that venue. Approve, reject, or reassign. Do this pane first.</li>
+    <li><b>Photo pools:</b> open a venue, tap <b>Fetch candidates</b>. You will see up to ten Google photos and up to five Wikimedia shots. Approve three to five that pass your bar: would a knowing local friend show this? Reject blurry drinks, random selfies, and anything that misrepresents the room.</li>
+    <li>If every candidate for a venue is bad, approve none. That venue's events simply keep the motif treatment, which is the design working as intended.</li>
+    <li>You do not need to finish in one sitting. Every approved pool starts appearing in the feed after the next nightly run.</li>
+  </ul>
+  <p>Ongoing: new venues appear in Matches to review as the pipeline meets them; a few minutes during your normal daily cockpit pass covers it.</p></li>
+</ol>
+<div class="pausecard"><b>Two-week checkpoint.</b> After Phase 2 has run for about two weeks, look at the feed like a user. If venue photos are pulling their weight, proceed to Phase 3 on schedule. If any venue's photos feel wrong, unapprove them in the pool; the motif takes over automatically the next night. Nothing in this phase is one-way.</div>
+
+<h2><span class="secnum">4</span>Phase 3 · The motif tier and goodbye Pexels (~2 sessions + art)</h2>
+<p>What it does: every card that has not earned a real photo gets a house-drawn v3 ink motif (or the big-type fallback), and Pexels is deleted from the codebase. Second and final SQL paste. The illustrated-identity moat ships here.</p>
+<ol class="stepper">
+  <li><span class="st-t">Paste the Phase 3 kickoff prompt <span class="who you">You</span></span>
+  <div class="copyblock"><span class="cb-label">Kickoff prompt · Phase 3</span>Continue from the approved Phase 2 of docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md. Execute Phase 3 (section 6). Reconcile against live code first. The working motif art lives in docs/card-imagery/SBDaymaker_Explore_Feed_Mockup_v1.html: port the SVG symbols, filters, and tint classes from that file directly; do not redraw them, and remember that SVG use elements need inline style attributes. Generate the Phase 3 DDL from 6.1, present it as one block, and wait for my confirmation before depending on it. Then build the motif registry, the big-type fallback, the Card.tsx render order, retire Pexels, and run the full forced backfill. Stop and show me a full Explore day at both widths and confirm zero Pexels rows remain. </div>
+  <p style="font-size:12.5px;color:var(--ink2);margin-top:6px;">Before pasting: drag <code>SBDaymaker_Explore_Feed_Mockup_v1.html</code> into <code>docs/card-imagery/</code> the same way you did in step 0, so Claude Code can read the art.</p></li>
+  <li><span class="st-t">Paste the SQL when asked <span class="who wait">Wait point</span> <span class="who you">You</span></span>
+  <p>Same routine as Phase 2: Supabase → SQL Editor → New query → paste → Run → report back <b>DDL run, success</b>. This one adds three columns and one new value to a list; it is even smaller than the last.</p></li>
+  <li><span class="st-t">Review the stop-and-show <span class="who wait">Wait point</span> <span class="who you">You</span></span>
+  <ul class="checklist">
+    <li>Scroll a full day: photos where earned, ink motifs everywhere else, and it reads as one designed product</li>
+    <li>No two identical visuals sit next to each other</li>
+    <li>Cards whose category has no motif yet show the big-type treatment (one confident fact in Fraunces), not a hole</li>
+    <li>Claude Code confirms: zero Pexels rows in the database, zero Pexels requests in the nightly log</li>
+    <li>Everything still readable: text on every tint passes contrast (Claude Code reports the check)</li>
+  </ul></li>
+  <li><span class="st-t">Delete the Pexels key <span class="who you">You</span> (1 minute, only after the step above passes)</span>
+  <p>Vercel → sbdaymaker → Settings → Environment Variables → find <code>PEXELS_API_KEY</code> → the three-dot menu on its row → <b>Remove</b>. Then GitHub → repo Settings → Secrets and variables → Actions → Secrets tab → find <code>PEXELS_API_KEY</code> → remove it there too. Tell Claude Code you did it; it will confirm the next nightly run is clean.</p></li>
+  <li><span class="st-t">Art sessions <span class="who you">You</span> (with me, in chat, ongoing)</span>
+  <p>Eight motifs exist; the target library is 24 to 36. We draft the rest together in this chat a few at a time, in the established v3 ink style, and each finished batch drops into the registry with a one-line prompt to Claude Code. Repetition within a category shrinks with every batch.</p></li>
+</ol>
+
+<h2><span class="secnum">5</span>If something goes wrong</h2>
+<ul>
+  <li><b>A stop-and-show looks wrong:</b> do not approve. Describe what you see in plain words ("the third card's photo is a map", "two cards show the same bar"). Claude Code fixes and re-shows. Approval is always yours to withhold.</li>
+  <li><b>SQL error in Supabase:</b> paste the exact red error text into Claude Code. Do not retry with edits of your own.</li>
+  <li><b>A bad photo reaches the live site:</b> cockpit → Venues → that venue's pool → unapprove the photo. Gone at next render. For a non-pool photo, use the thing's picker arrows to choose a different option, exactly as today.</li>
+  <li><b>Images look broken or stale:</b> tell Claude Code "check the nightly refresh"; it will read the run logs. The cards are built to fall back to the gradient rather than show a broken image in the meantime.</li>
+  <li><b>Costs:</b> the 500-call cap is a hard stop enforced in code and you set it yourself in step one of Phase 2. Worst case if every call billed: about $10 in a month. Expected: $0. You can check the meter any time by asking Claude Code for this month's image_spend row.</li>
+  <li><b>Want it all undone:</b> each phase's merge notes include its revert path. Phase 0 reverts with one line; pools revert by unapproving; motifs revert by render-order change. Nothing destructive ever runs.</li>
+</ul>
+
+<h2><span class="secnum">6</span>What done looks like</h2>
+<ul class="checklist">
+  <li>Roughly half the feed is real, founder-approved Santa Barbara photography; the rest is the house-drawn identity</li>
+  <li>Zero stock photos, zero repeats within a feed view, zero blank cards</li>
+  <li>Image costs pinned at about $0 with a hard cap you control</li>
+  <li>Every borrowed photo credits its photographer on the detail page</li>
+  <li>Your daily routine unchanged; pool upkeep rides the cockpit pass you already do</li>
+</ul>
+<div class="stopcard"><b>The order matters.</b> Phase 0 this week, then 1, then 2, then 3. Each is a prerequisite for the next, each ends in your explicit approval, and the two-week checkpoint after Phase 2 is a real decision point, not a formality.</div>
+
+<div class="footer">SB Daymaker · Card imagery build guide · v1.0 · Twin spec: SBDaymaker_CardImagery_BuildSpec.md</div>
+</div>
+</body>
+</html>

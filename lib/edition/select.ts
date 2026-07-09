@@ -34,7 +34,7 @@ import type {
 } from "./types";
 import { EDITION_CONFIG } from "./window";
 
-const BENCH_SIZE = { hero: 5, secondary: 6, nonevent: 4, anchor: 3 } as const;
+const BENCH_SIZE = { hero: 12, secondary: 12, nonevent: 12, anchor: 12 } as const;
 
 function occThing(t: DraftThing): OccThing {
   return { happening_tier: t.happening_tier, starts_at: t.starts_at, recurring: t.recurring };

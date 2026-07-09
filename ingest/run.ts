@@ -22,11 +22,13 @@ import { consumeDirectives } from './restock';
 import { sendDigest } from './digest';
 import { getDb } from './db';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
+const IMAGE_BACKFILL_PUBLISHED = process.env.IMAGE_BACKFILL_PUBLISHED === '1';
 const WEIGHT_BACKFILL = process.env.WEIGHT_BACKFILL === '1';
 const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
 const VOICE_BACKFILL = process.env.VOICE_BACKFILL === '1';
@@ -109,6 +111,62 @@ async function backfillEnrich() {
   console.log(`\n[enrich-backfill] wrote ${updated} missing blurbs · inserted ${tagged} tags`);
 }
 
+/** Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from
+ *  live data. No schema changes, no writes: things-per-category × photo_source, plus
+ *  Tier-1 event address clusters (a simple normalized-address grouping — the real
+ *  lat/lng-radius + fuzzy-name clustering is Phase 2 §5.2's dedicated seeding script;
+ *  this just needs enough real concentration data for Jim to eyeball before then). */
+async function emitCoverageReport(sb: SupabaseClient) {
+  const { data, error } = await sb
+    .from('things')
+    .select('happening_category, photo_source, happening_tier, address, lat, lng')
+    .in('status', ['published', 'needs_review']);
+  if (error) throw new Error(`coverage-report select: ${error.message}`);
+  const rows = data ?? [];
+
+  const bySource = new Map<string, Map<string, number>>();
+  for (const r of rows) {
+    const cat = (r.happening_category as string) ?? '(none)';
+    const src = (r.photo_source as string) ?? '(none)';
+    if (!bySource.has(cat)) bySource.set(cat, new Map());
+    const m = bySource.get(cat)!;
+    m.set(src, (m.get(src) ?? 0) + 1);
+  }
+  const sources = ['owned', 'wikimedia', 'google', 'pexels', 'placeholder'];
+  console.log(`\n[coverage-report] ${rows.length} things · category × photo_source:`);
+  console.log(`  ${'category'.padEnd(24)}${sources.map((s) => s.padEnd(12)).join('')}total`);
+  const catRows = [...bySource].sort((a, b) => {
+    const totalA = [...a[1].values()].reduce((x, y) => x + y, 0);
+    const totalB = [...b[1].values()].reduce((x, y) => x + y, 0);
+    return totalB - totalA;
+  });
+  for (const [cat, m] of catRows) {
+    const total = [...m.values()].reduce((a, b) => a + b, 0);
+    const cells = sources.map((s) => String(m.get(s) ?? 0).padEnd(12)).join('');
+    console.log(`  ${cat.padEnd(24)}${cells}${total}`);
+  }
+
+  // Tier-1 event address clusters (normalized string grouping), sorted by event count.
+  const t1 = rows.filter((r) => Number(r.happening_tier) === 1 && r.address);
+  const clusters = new Map<string, { count: number; lat: unknown; lng: unknown }>();
+  for (const r of t1) {
+    const key = (r.address as string).trim().toLowerCase();
+    const entry = clusters.get(key) ?? { count: 0, lat: r.lat, lng: r.lng };
+    entry.count++;
+    clusters.set(key, entry);
+  }
+  const sorted = [...clusters].filter(([, v]) => v.count >= 2).sort((a, b) => b[1].count - a[1].count);
+  console.log(
+    `\n[coverage-report] Tier-1 event address clusters (>=2 events): ${sorted.length} of ` +
+      `${clusters.size} distinct addresses (seeds the Phase 2 venue registry)`,
+  );
+  for (const [addr, v] of sorted.slice(0, 60)) {
+    const coords = v.lat != null && v.lng != null ? ` (${v.lat}, ${v.lng})` : '';
+    console.log(`  ×${String(v.count).padStart(2)}  ${addr}${coords}`);
+  }
+  if (sorted.length > 60) console.log(`  … ${sorted.length - 60} more`);
+}
+
 /** One-time / on-demand: resolve images for existing needs_review rows still on the
  *  placeholder (rows landed before Phase 13). Updates photo_url/source/options. */
 async function backfillImages() {
@@ -137,7 +195,11 @@ async function backfillImages() {
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force });
   let updated = 0;
   for (const c of resolved) {
-    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    // Phase 0 §3.1.2: a Tier-1 event can land on 'placeholder' for display while
+    // still carrying real photo_options (the cockpit picker's per-thing override) —
+    // only skip the write when NOTHING was found at all (truly nothing changed).
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
       .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
@@ -146,6 +208,132 @@ async function backfillImages() {
     updated++;
   }
   console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`);
+
+  // Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from
+  // live data: seeds the Phase 2 venue registry with real concentration data.
+  await emitCoverageReport(sb);
+}
+
+/** Card Imagery Build Spec Phase 0 — one-time / on-demand, explicitly authorized by
+ *  Jim (2026-07-09): a broader pass over PUBLISHED rows. `IMAGE_BACKFILL` above never
+ *  reaches these — Explore's RLS policy only ever serves `status='published'`, so
+ *  without this the public feed doesn't visibly change (see the 2026-07-09 ledger
+ *  entry, finding 8). No column or audit-log entry distinguishes a founder's manual
+ *  cockpit pick from an auto-pick, so this CAN silently overwrite a hand-picked
+ *  photo — a risk Jim accepted explicitly rather than have this function guess at a
+ *  workaround.
+ *
+ *  v2 (2026-07-09, same day) — reordered after the first run showed the bug this
+ *  comment now documents: `cacheKey()` is TITLE-based, not address-based, so most of
+ *  ~505 Tier-1 events (mostly unique titles even at a shared venue) turned out to be
+ *  cache MISSES, not hits — the original "events are basically free" assumption was
+ *  wrong. Gathering fresh Pexels/Wikimedia for all of them first exhausted Pexels'
+ *  ~200/hr free-tier quota before the 54 Tier-2/3 places got a turn, and the
+ *  resolver's own "don't spend Google while Pexels is rate-limited" guard then also
+ *  blocked their Google fallback — 52/54 places landed on placeholder, a real
+ *  regression for rows that likely had a decent (if generic) photo before this ran.
+ *  Fixed by flipping the order and how Tier-1 is handled:
+ *   - Tier-2/3 places run FIRST, forced — the only branch worth spending Pexels/
+ *     Google budget on. Bounded (~80 rows), safe under both the rate limit and the
+ *     Google monthly cap (only place_id food_drink_spot rows with no free hit can
+ *     reach Google at all).
+ *   - Tier-1 events are a direct, no-network UPDATE, not a resolveImages() call.
+ *     `eventDefaultsToNoPhoto` forces their display to placeholder unconditionally
+ *     regardless of what a search would find, so gathering anything for them first
+ *     was always pure waste against the shared quota — this version spends nothing
+ *     on them and only touches rows not already on placeholder (idempotent, safe to
+ *     re-run any time). Their photo_options (cockpit alternates) aren't refreshed by
+ *     this pass; use the picker's "find more options" on a given event if needed.
+ *
+ *  v3 (2026-07-09, same day) — a v2 re-run still hit a fresh Pexels 429 on only 54
+ *  candidates, leaving 22 places on placeholder (down from 52, but not zero) —
+ *  apparently the free-tier quota hadn't fully replenished within the assumed
+ *  ~1hr window. Tier-2/3 now also skips any row already on 'wikimedia'/'google'/
+ *  'owned', so a re-run only spends quota on rows still stuck at 'pexels' or
+ *  'placeholder' instead of re-confirming ones already fixed — cheaper each time
+ *  and naturally converges to zero-remaining over a few re-runs regardless of
+ *  exactly how long Pexels' quota window turns out to be. */
+async function backfillPublishedImages() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
+    .eq('status', 'published');
+  if (error) throw new Error(`published-image-backfill select: ${error.message}`);
+  const rows = data ?? [];
+  console.log(`\n[published-image-backfill] ${rows.length} published rows`);
+  if (!rows.length) return;
+
+  const toCand = (r: (typeof rows)[number]): Candidate => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
+    source_url: '', place_id: (r.place_id as string) ?? undefined,
+    last_confirmed: '', start_strategy: 'none',
+  });
+
+  const tier1Rows = rows.filter((r) => Number(r.happening_tier) === 1);
+  // Card Imagery Build Spec Phase 0 — only re-force rows not already on a
+  // relevance-first source: a re-run (e.g. after a Pexels 429) shouldn't re-spend
+  // quota re-confirming the ones that already got wikimedia/google/owned. Makes
+  // repeated runs cheaper and self-converging instead of re-attempting all ~80
+  // Tier-2/3 rows every time — observed necessary 2026-07-09 when a second run
+  // still hit a fresh 429 on only 54 candidates (Pexels' quota apparently hadn't
+  // fully replenished from the first run within the assumed ~1hr window).
+  const GOOD_SOURCES = new Set(['wikimedia', 'google', 'owned']);
+  const otherRows = rows.filter(
+    (r) => Number(r.happening_tier) !== 1 && !GOOD_SOURCES.has(r.photo_source as string),
+  );
+  console.log(
+    `[published-image-backfill] ${otherRows.length} Tier-2/3 (forced refresh, runs first) · ` +
+      `${tier1Rows.length} Tier-1 (direct update, no network)`,
+  );
+
+  // Tier-2/3 first — see the function comment for why order matters here.
+  const others = otherRows.length
+    ? await resolveImages(otherRows.map(toCand), sb, { force: true })
+    : { cands: [] as Candidate[], stats: null as ResolveStats | null };
+
+  let updated = 0;
+  for (const c of others.cands) {
+    // Same guard as image-backfill: don't drop real photo_options just because the
+    // display auto-pick landed on 'placeholder'.
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`published-image-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+
+  // Tier-1: deterministic, no resolveImages() call — see the function comment.
+  let tier1Updated = 0;
+  for (const r of tier1Rows) {
+    if (r.photo_source === 'placeholder') continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({ photo_url: null, photo_source: 'placeholder' })
+      .eq('id', r.id);
+    if (upErr) throw new Error(`published-image-backfill tier-1 update ${r.id}: ${upErr.message}`);
+    tier1Updated++;
+  }
+  updated += tier1Updated;
+
+  console.log(
+    `\n[published-image-backfill] updated ${updated}/${rows.length} things ` +
+      `(${tier1Updated} Tier-1 direct, ${updated - tier1Updated} Tier-2/3 via resolver)`,
+  );
+  if (others.stats) {
+    console.log(
+      `  tier-2/3 (forced)     free ${others.stats.free} · google ${others.stats.google} · ` +
+        `placeholder ${others.stats.placeholder} · over-cap ${others.stats.overCap}`,
+    );
+  }
+
+  await emitCoverageReport(sb);
 }
 
 /** W2.3 one-time / on-demand: re-resolve the "repeat offenders" — a photo_url shared by
@@ -195,7 +383,10 @@ async function backfillRepeatImages() {
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force: true });
   let updated = 0;
   for (const c of resolved) {
-    if (!c.photo_url && c.photo_source === 'placeholder') continue; // still nothing — leave it
+    // Phase 0 §3.1.2: same as image-backfill — a Tier-1 event can land on
+    // 'placeholder' for display while still carrying real photo_options.
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
       .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
@@ -325,6 +516,7 @@ async function backfillVoice() {
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
+  if (IMAGE_BACKFILL_PUBLISHED) return backfillPublishedImages();
   if (WEIGHT_BACKFILL) return backfillWeights();
   if (REPEAT_BACKFILL) return backfillRepeatImages();
   if (VOICE_BACKFILL) return backfillVoice();

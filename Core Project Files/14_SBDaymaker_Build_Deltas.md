@@ -6,6 +6,200 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-09 — Card Imagery Phase 0 (triage: relevance-first ranking, events default to no photo)
+
+Source: `docs/card-imagery/SBDaymaker_CardImagery_BuildSpec.md` §3 (Phase 0). No DDL,
+fully reversible. First step per the spec's own ground rule 1: reconcile §1 "current
+state" against live code — several deviations found before writing anything.
+
+**Path deviations (spec text vs. live repo):**
+- `ingest/pipeline.ts` (named in both the spec and the kickoff prompt as a file to
+  reconcile) **does not exist.** There is no separate ingest pipeline file — the
+  nightly worker's orchestration lives entirely in `ingest/run.ts`, which is the
+  actual call site for `resolveImages()`. `lib/pipeline.ts` is unrelated: the retired
+  duplicate cockpit-era worker already flagged dead in CLAUDE.md §10 (Wave 4
+  cleanup), untouched by this change.
+- The Build Deltas ledger itself lives at `Core Project Files/14_SBDaymaker_Build_Deltas.md`,
+  not `docs/14_SBDaymaker_Build_Deltas.md` as both the spec and the kickoff prompt
+  say. This entry is recorded at the real path.
+
+**Current-state diagnosis is more nuanced than spec §1 describes.** The live resolver
+already carries three guards the spec's "current state" section doesn't mention:
+`isCivicImage()` (civic-meeting titles skip network sources entirely), `meetsQualityBar()`
+(a 960×540 HD floor rejecting undersized results before they can be picked), and
+`checkImageRelevance()` (a batched Claude Haiku **vision** call, nightly/batch-only,
+that screens the resolver's auto-pick and falls back to placeholder on an obvious
+mismatch). None of these existed when the spec's cited 591/592-Pexels live-site audit
+was run; the exact current split is unverified from this session (no direct prod DB
+query tool available here) but is almost certainly less lopsided than the spec assumes.
+Diagnosis and fix direction are unaffected — flagging for the record, not disputing
+the plan.
+
+**Judgment calls made while implementing §3.1:**
+1. **Change 3 (de-dup guard):** already satisfied by the existing `pickUnused()` +
+   catalog-wide usage-count mechanism (W2.3), which is strictly stronger than the
+   plain in-run `Set` the spec describes (it spreads repeats evenly across a shared
+   pool using historical `image_cache` counts, not just this run's picks). No new
+   guard added — a second, weaker mechanism would just be confusing.
+2. **Change 2's "never clobber founder picks" exception:** confirmed via code search
+   that **no mechanism exists** to distinguish a founder's cockpit pick from an
+   auto-resolved pick on a `things` row — `photo_source`/`photo_url` are written
+   identically by both `/api/review/approve` and `resolveImages()`; no
+   `photo_locked`/`photo_pinned` column, no dedicated `audit_log` action. Not
+   addable in Phase 0 (no DDL). Resolved structurally instead: the two call sites
+   this phase touches (`ingest/run.ts`'s nightly land path, which only ever handles
+   brand-new candidates, and `backfillImages()`, which is hard-filtered to
+   `status='needs_review'`) never touch an already-`published` (i.e.
+   founder-reviewed) row, so no founder pick is at risk from this change.
+   **Pre-existing, out-of-scope gap noted, not fixed:** `backfillRepeatImages()`
+   (`REPEAT_BACKFILL=1`, a separate on-demand tool) forces a re-resolve of
+   `published` rows whose photo is shared by 3+ things with zero awareness of
+   founder authorship — this predates Phase 0 and isn't in its change list, so it's
+   left alone per "known open items, don't silently fix" (CLAUDE.md §10). It did
+   pick up one incidental one-line fix shared with `backfillImages()` (below).
+3. **`image_cache` now intentionally diverges from the `things` row for Tier-1
+   events.** The cache still stores the *real* per-place resolution (whatever was
+   actually found), so a future non-event candidate at the same `place_key` isn't
+   starved by an event's forced placeholder. Only the `things`-row write (what's
+   actually displayed) applies the tier override. This wasn't spelled out in the
+   spec; without it, a second same-day event at a venue already cached by a first
+   event would incorrectly inherit that place's real photo bypassing the new rule
+   — fixed in both the cache-hit fast path and the fresh-resolve path.
+4. **Incidental bug fix required by change 2:** both `backfillImages()` and
+   `backfillRepeatImages()` had a `continue`-and-skip-the-write guard keyed on
+   `photo_source === 'placeholder'`, which would have silently dropped the
+   `photo_options` write for Tier-1 events (the exact data the cockpit picker needs
+   per the spec's explicit "photo_options still gathered and stored" requirement).
+   Narrowed the skip to only fire when there are truly no real alternates.
+5. **`.github/workflows/ingest.yml` had no `image_force` input** — only
+   `image_backfill`. `IMAGE_FORCE=1` (needed for the spec's "forced backfill") was
+   therefore not dispatchable at all via the existing GitHub Actions path. Added an
+   `image_force` boolean input, wired to `IMAGE_FORCE`, following the existing
+   input pattern.
+6. **Coverage report (change 6)** implemented as a console report appended to the
+   end of `backfillImages()`'s existing run (`emitCoverageReport()` in
+   `ingest/run.ts`), rather than a new dedicated workflow input — it reads the
+   live catalog independent of whatever `backfillImages()` touched, so it's most
+   useful printed right after a Phase 0 backfill completes. Tier-1 "clusters" use
+   normalized-address string grouping (not true lat/lng-radius clustering, which is
+   Phase 2 §5.2's dedicated seeding script) — sufficient to eyeball real
+   concentration ahead of that phase, not a production clustering algorithm.
+7. **No `gh` CLI or GitHub token available in this environment** to dispatch the
+   Actions workflow programmatically (consistent with the earlier note that
+   `GITHUB_DISPATCH_TOKEN` was never provisioned — see the Cockpit v2 C2b
+   deferral). Per the kickoff instruction to never ask Jim to run terminal
+   commands, he'll be asked to click "Run workflow" in the Actions tab (a UI
+   action) with `image_backfill` + `image_force` checked, rather than being
+   handed a CLI command.
+
+8. **The forced backfill only reaches 47/606 things, and the public Explore feed
+   won't visibly change yet.** Ran 2026-07-09 via the Actions UI
+   (`IMAGE_BACKFILL=1 IMAGE_FORCE=1`, branch `fix/edition-bench-size-12`):
+   47 `needs_review` rows re-resolved (free 25 · google 0 · placeholder 22), and
+   the coverage report confirms the catalog-wide split is still 572 Pexels / 5
+   Wikimedia / 0 Google / 29 placeholder out of 606. That's because
+   `backfillImages()` (pre-existing, unchanged in Phase 0) is hard-scoped to
+   `status='needs_review'` — and Explore's RLS policy (`sbdaymaker_schema.sql`
+   `public_read_things`) only ever serves `status='published'` rows. The other
+   ~559 things are published and structurally untouched by this run. This is the
+   flip side of judgment call 2 above (no way to tell a founder pick from an
+   auto-pick on a published row) — expanding the backfill to published rows would
+   reopen exactly that clobbering risk, so it wasn't done unilaterally. Flagged to
+   Jim at the stop-and-show rather than assumed either way; the new resolver logic
+   is fully live for all *new* nightly landings regardless, so the published feed's
+   mix will improve as content cycles even with no further action.
+
+**Files touched:** `ingest/images.ts` (rank order flip, `eventDefaultsToNoPhoto()`,
+cap default 1400→500 + comment, Tier-1 skip in both the cache-hit and fresh-resolve
+paths, Google call skipped for Tier-1, relevance-check skipped for Tier-1),
+`ingest/run.ts` (`emitCoverageReport()`, `photo_options` skip-guard fix in both
+backfill functions), `.github/workflows/ingest.yml` (`image_force` input),
+`ingest/images.test.ts` (updated `rankOptions` expectations, new
+`eventDefaultsToNoPhoto` tests). `components/ui/Card.tsx` needed no change — its
+existing occasion-gradient no-photo fallback already renders whatever this phase
+now sends it.
+
+**Status:** code complete, 498/498 tests passing, `tsc --noEmit` clean on all touched
+files. Forced backfill run 2026-07-09 (see finding 8 above). Stop-and-show pending
+Jim's review of the coverage report + the scope question in finding 8.
+
+**2026-07-09, same day — Jim explicitly authorized the broader published-rows pass**
+flagged in finding 8, accepting the founder-pick-clobbering risk rather than have it
+worked around. Added `backfillPublishedImages()` (`IMAGE_BACKFILL_PUBLISHED=1`,
+new workflow_dispatch input) rather than widening the existing `IMAGE_BACKFILL`
+flag, so `needs_review`-only behavior stays the documented default for anyone
+using that flag later.
+
+Split by tier instead of one blanket forced pass, purely for cost/safety, not to
+narrow what was authorized — the outcome (every published row re-evaluated under
+the new logic) is the same either way:
+- **Tier-1 events (~526 rows): resolved without `force`.** Events cluster at a
+  small set of venues (the coverage report's 34 addresses with 2+ events), so
+  their `place_key` is almost always already cached — this hits the cache-hit
+  fast path + the tier-aware display override already built for Phase 0, i.e.
+  effectively zero new network calls, not a partial application of the pass.
+- **Tier-2/3 places (~80 rows): resolved with `force`,** so they actually get
+  re-ranked relevance-first instead of reusing an old cached Pexels pick. This is
+  the only branch that spends real network/API calls. Sized (~80 rows) to stay
+  well clear of Pexels' ~200/hr free-tier rate limit and comfortably inside
+  GitHub Actions' 20-minute job timeout. A handful of these (`food_drink_spot`
+  with a `place_id` and no free hit) can reach the Google fallback for the first
+  time — small, bounded real spend (well under the 500/mo cap), not zero, flagged
+  so it isn't a surprise on the next `image_spend` check.
+- The two branches run **sequentially, not in parallel** — both read-modify-write
+  the shared `image_spend` counter; concurrent calls would race that update and
+  could silently under-count Google spend.
+- No founder-pick detection was added to this pass (e.g. an `audit_log` check
+  mirroring `backfillVoice()`'s blurb-edit guard). Jim's authorization already
+  resolved that exact question explicitly; unilaterally excluding some rows
+  anyway would be quietly narrowing what he asked for, not protecting him from it.
+
+**Same day, first run's actual result exposed a wrong assumption above — fixed
+before a second run.** The "Tier-1 events are basically already cached" premise
+was wrong: `cacheKey()` is title-based, and most of the ~505 Tier-1 titles are
+unique even at a shared venue (194 events at the Library aren't 194 copies of one
+title), so the great majority were fresh cache misses, not hits. Gathering
+Pexels/Wikimedia for all 505 of them (still useful for `photo_options`, but their
+*display* was always going to be forced to placeholder regardless of what was
+found) exhausted Pexels' ~200/hr free-tier quota before the 54 Tier-2/3 places got
+a turn. Worse, the resolver's existing "don't spend Google while Pexels is
+rate-limited" guard (correct in isolation — a 429 isn't a genuine free-tier miss)
+then also blocked the Google fallback for the rest of the run. Net effect: 52/54
+Tier-2/3 places landed on `placeholder` — a real regression for rows that likely
+had a decent, if generic, Pexels photo before this ran. (The 505 Tier-1 rows
+themselves were unaffected by the rate limit — their outcome doesn't depend on
+what's found — so no harm there.)
+
+Fixed by reordering and simplifying, not by adding a retry/backoff: Tier-2/3
+(forced) now runs **first**, so the bounded, valuable work gets first claim on the
+shared quota. Tier-1 is no longer a `resolveImages()` call at all — since its
+outcome is unconditional (`eventDefaultsToNoPhoto` forces placeholder regardless
+of what a search would find), it's now a direct `things` UPDATE with zero network
+calls, only touching rows not already on `placeholder`. This makes the whole
+function idempotent and safe to re-run any time — re-running after this fix will
+correctly resolve the 52 stuck Tier-2/3 rows without re-touching the 505 Tier-1
+rows (already correct from the first run) or competing with them for quota.
+Tier-1's `photo_options` (cockpit alternates) are no longer refreshed by this
+specific pass as a result — an accepted trade for protecting the shared budget;
+use the cockpit picker's "find more options" per-event if one is needed sooner
+than the normal pipeline would supply it.
+
+**Same day, second run: the fix above worked as designed (Tier-1 order/skip was
+correct — 505 events cost zero network calls) but Tier-2/3 still hit a fresh 429
+on only 54 candidates**, leaving 22 of 54 places on `placeholder` (down from 52,
+real progress, but not the clean pass expected). Pexels' actual quota-reset timing
+apparently didn't match the ~1hr assumption in the existing code comment — an
+external account-level limit outside this codebase's control, not a logic bug.
+Rather than keep asking Jim to guess how long to wait, made re-runs
+self-converging: the Tier-2/3 selection now excludes rows already on
+`wikimedia`/`google`/`owned`, so each re-run only spends quota on rows still stuck
+at `pexels`/`placeholder` instead of re-confirming ones a prior run already fixed.
+Cheaper every time, and reaches zero-remaining after enough re-runs regardless of
+the true reset window. `resolveImages()`/`images.ts` untouched — this is entirely
+row-selection logic in `backfillPublishedImages()`.
+
+---
+
 ## 2026-07-08 — Living Postcard Phase 5 (State Street: catalog completed, guide published)
 
 Follow-up to the 2026-07-07 entry below. Jim asked to close the 6 catalog MISSes and

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   cacheKey, imageQuery, rankOptions, pickUnused, isCivicImage, CATEGORY_QUERY,
-  meetsQualityBar, MIN_IMAGE_WIDTH, MIN_IMAGE_HEIGHT, type ImageOption,
+  meetsQualityBar, MIN_IMAGE_WIDTH, MIN_IMAGE_HEIGHT, eventDefaultsToNoPhoto, type ImageOption,
 } from './images';
 
 describe('cacheKey', () => {
@@ -108,14 +108,22 @@ describe('meetsQualityBar — addendum Part B retina-safe HD floor', () => {
   });
 });
 
-describe('rankOptions', () => {
-  it('orders real sources (pexels > wikimedia > google) and appends placeholder last', () => {
+describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1, relevance-first', () => {
+  it('orders real sources (owned > wikimedia > google > pexels) and appends placeholder last', () => {
     const found: ImageOption[] = [
+      { url: 'p', source: 'pexels' },
       { url: 'g', source: 'google' },
+      { url: 'o', source: 'owned' },
+      { url: 'w', source: 'wikimedia' },
+    ];
+    expect(rankOptions(found).map((o) => o.source)).toEqual(['owned', 'wikimedia', 'google', 'pexels', 'placeholder']);
+  });
+  it('demotes pexels below wikimedia and google (the Phase 0 flip)', () => {
+    const found: ImageOption[] = [
       { url: 'w', source: 'wikimedia' },
       { url: 'p', source: 'pexels' },
     ];
-    expect(rankOptions(found).map((o) => o.source)).toEqual(['pexels', 'wikimedia', 'google', 'placeholder']);
+    expect(rankOptions(found).map((o) => o.source)).toEqual(['wikimedia', 'pexels', 'placeholder']);
   });
   it('drops empty urls and still ends on placeholder', () => {
     expect(rankOptions([{ url: '', source: 'pexels' }]).map((o) => o.source)).toEqual(['placeholder']);
@@ -123,5 +131,15 @@ describe('rankOptions', () => {
   it('placeholder-only when nothing was found', () => {
     const r = rankOptions([]);
     expect(r).toEqual([{ url: '', source: 'placeholder' }]);
+  });
+});
+
+describe('eventDefaultsToNoPhoto — Card Imagery Build Spec Phase 0 §3.1.2', () => {
+  it('is true for Tier-1 dated events', () => {
+    expect(eventDefaultsToNoPhoto({ tier: 1 })).toBe(true);
+  });
+  it('is false for Tier-2 recurring and Tier-3 evergreen places', () => {
+    expect(eventDefaultsToNoPhoto({ tier: 2 })).toBe(false);
+    expect(eventDefaultsToNoPhoto({ tier: 3 })).toBe(false);
   });
 });
