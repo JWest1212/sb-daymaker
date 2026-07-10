@@ -1,16 +1,18 @@
 import { getPublishedThings } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
+import { getVenuePhotoPools } from "@/lib/venues";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 
 // Read fresh each request (DB-backed). All ranking/filtering is deterministic.
 export const dynamic = "force-dynamic";
 
 export default async function ExplorePage() {
-  const [things, weather, pinnedHeroId] = await Promise.all([
+  const [things, weather, pinnedHeroId, venuePools] = await Promise.all([
     getPublishedThings(),
     getWeather(),
     getLiveHeroPinId(), // today's founder hero pin, if any (overrides the ranker)
+    getVenuePhotoPools(), // Card Imagery Phase 2 §5.4 — feeds CascadeFeed's per-feed dedupe
   ]);
 
   return (
@@ -21,6 +23,7 @@ export default async function ExplorePage() {
       weather={weather}
       nowMs={Date.now()}
       pinnedHeroId={pinnedHeroId}
+      venuePools={venuePools}
     />
   );
 }

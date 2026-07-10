@@ -43,7 +43,9 @@ export interface CatalogResult {
 const PAGE_SIZE = 50;
 const SELECT =
   `id, title, blurb, blurb_long, neighborhood, is_21_plus, happening_tier, nearby_zone, price_band,
-   hero_eligible, editorial_weight, photo_url, photo_source, starts_at, thing_tags ( tag ),
+   hero_eligible, editorial_weight, photo_url, photo_source, photo_attribution, photo_options,
+   place_id, lat, lng, venue_id,
+   starts_at, thing_tags ( tag ),
    recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
 
 export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult> {
@@ -110,11 +112,17 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
     editorial_weight: (t.editorial_weight as number) ?? 0,
     photo_url: (t.photo_url as string) ?? null,
     photo_source: (t.photo_source as string) ?? "placeholder",
+    photo_attribution: (t.photo_attribution as string) ?? null,
+    photo_options: (t.photo_options as CatalogRow["photo_options"]) ?? [],
     tags: ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag),
     when: whenString(tier, starts_at, (t.recurring_schedules as []) ?? []),
     pending_edit: pending.has(t.id as string),
     groupKey,
     groupLabel,
+    place_id: (t.place_id as string) ?? null,
+    lat: (t.lat as number) ?? null,
+    lng: (t.lng as number) ?? null,
+    venue_id: (t.venue_id as string) ?? null,
   }));
 
   return { rows, total, page, pageSize: PAGE_SIZE };

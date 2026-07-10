@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ListCard, EmptyState, SBIcon } from "@/components/ui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { Thing } from "@/lib/things";
 import type { Horizon } from "@/lib/explore";
-import { cardBlurb, cardFacts } from "./derive";
+import { dedupeFeedVenuePhotos, type PoolPhoto } from "@/lib/venuePool";
+import { cardBlurb, cardFacts, cardVisual } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
@@ -44,6 +45,7 @@ function TodayLead({ tier1 }: { tier1: Thing[] }) {
             blurb={cardBlurb(t)}
             when={cardFacts(t).join(" · ")}
             photo={t.photo_url ?? undefined}
+            visual={cardVisual(t)}
           />
         </div>
       ))}
@@ -86,19 +88,34 @@ function LeadSection({
 }
 
 export function CascadeFeed({
-  items,
+  items: rawItems,
   horizon,
   onClearFilters,
+  venuePools,
 }: {
   items: Thing[];
   horizon: Horizon;
   onClearFilters?: () => void;
+  /** Card Imagery Build Spec Phase 2 §5.4 — approved venue photo pools, keyed by
+   *  venue_id. Optional: callers that don't pass one (there are none left, but the
+   *  type stays permissive) simply skip the per-feed dedupe pass. */
+  venuePools?: Record<string, PoolPhoto[]>;
 }) {
   const [tier2Open, setTier2Open] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
   const [monthShownCount, setMonthShownCount] = useState(8);
   const feedRef = useRef<HTMLDivElement>(null);
   const onMonthShowMore = useCallback(() => setMonthShownCount((c) => c + 8), []);
+
+  // §5.4 — walk THIS render's feed order and de-repeat a venue's pool photo across
+  // same-day siblings (e.g. three SOhO events sharing one ingest-time hash
+  // collision); falls to the gradient once a venue's pool is exhausted this render.
+  // Every downstream section (TodayLead, LeadDayRail, RockGrid, tier2/3 lists) reads
+  // from this single deduped array, so the pass only needs to run once, here.
+  const items = useMemo(
+    () => (venuePools ? dedupeFeedVenuePhotos(rawItems, venuePools) : rawItems),
+    [rawItems, venuePools],
+  );
 
   // Reset collapsed state and pagination on horizon change
   useEffect(() => {
@@ -213,6 +230,7 @@ export function CascadeFeed({
                     blurb={cardBlurb(t)}
                     when={cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
+                    visual={cardVisual(t)}
                   />
                 </div>
               ))}
@@ -248,6 +266,7 @@ export function CascadeFeed({
                     blurb={cardBlurb(t)}
                     when={cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
+                    visual={cardVisual(t)}
                   />
                 </div>
               ))}

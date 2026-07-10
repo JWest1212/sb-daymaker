@@ -45,6 +45,18 @@ export interface Thing {
   indoor: boolean;
   photo_url: string | null;
   photo_source: string | null;
+  /** Card Imagery Build Spec Phase 1 §4.3 — non-owned photo credit, rendered on the
+   *  detail page only (never the card rail). Detail-select-only field, like local_note. */
+  photo_attribution: string | null;
+  /** Card Imagery Build Spec Phase 3 §6.1/§6.2 — the motif tier. Set only when
+   *  `photo_source === 'motif'`; `visual_key` is null for a `'bigtype'` kind (the
+   *  D8 fallback computes its own text from other fields, not a registry lookup). */
+  visual_kind: "motif" | "bigtype" | null;
+  visual_key: string | null;
+  visual_seed: number | null;
+  /** Card Imagery Build Spec Phase 2 §5.1 — the venue this thing is attached to (if
+   *  any), the join key for the venue photo pool + per-feed dedupe (lib/venuePool.ts). */
+  venue_id: string | null;
   tags: OccasionKey[];
   happyHours: HappyHourWindow[];
   recurring: RecurringSchedule[];
@@ -54,12 +66,13 @@ export interface Thing {
 // query (getThing), so the feeds keep working before phase7.sql runs.
 const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go,
   happening_tier, editorial_weight, happening_category, neighborhood, nearby_zone, price_band, free,
-  starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor, photo_url, photo_source`;
+  starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor, photo_url, photo_source, venue_id,
+  visual_kind, visual_key, visual_seed`;
 const RELATIONS = `thing_tags ( tag ),
   happy_hour_windows ( day_of_week, starts_local, ends_local, deal_text ),
   recurring_schedules ( category, day_of_week, start_time, end_time, label )`;
 const SELECT = `${BASE_COLS}, ${RELATIONS}`;
-const SELECT_DETAIL = `${BASE_COLS}, local_note, ${RELATIONS}`;
+const SELECT_DETAIL = `${BASE_COLS}, local_note, photo_attribution, ${RELATIONS}`;
 
 function mapThing(row: Record<string, unknown>): Thing {
   return {
@@ -85,6 +98,11 @@ function mapThing(row: Record<string, unknown>): Thing {
     indoor: (row.indoor as boolean) ?? false,
     photo_url: (row.photo_url as string) ?? null,
     photo_source: (row.photo_source as string) ?? null,
+    photo_attribution: (row.photo_attribution as string) ?? null,
+    visual_kind: (row.visual_kind as Thing["visual_kind"]) ?? null,
+    visual_key: (row.visual_key as string) ?? null,
+    visual_seed: (row.visual_seed as number) ?? null,
+    venue_id: (row.venue_id as string) ?? null,
     tags: ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag),
     happyHours: (row.happy_hour_windows as HappyHourWindow[]) ?? [],
     recurring: (row.recurring_schedules as RecurringSchedule[]) ?? [],

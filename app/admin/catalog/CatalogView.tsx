@@ -1,10 +1,12 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { NEIGHBORHOODS, OCCASION_TAGS, type CatalogRow } from "@/lib/review";
 import { OCCASIONS, OCCASION_BY_KEY } from "@/lib/occasions";
 import { ZONES, ZONE_LABEL } from "@/lib/zones";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { WeightNudge } from "../WeightNudge";
+import { CatalogImagePicker, type AppliedPhoto } from "./CatalogImagePicker";
 
 interface CatalogResult { rows: CatalogRow[]; total: number; page: number; pageSize: number; }
 type Tier = "all" | "1" | "2" | "3";
@@ -22,11 +24,14 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
   const [heroOverride, setHeroOverride] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<CatalogRow | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const pageSize = initial.pageSize;
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(sheetRef, !!editing);
 
   const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3600); }, []);
   const isHero = (r: CatalogRow) => heroOverride[r.id] ?? r.hero_eligible;
@@ -48,22 +53,37 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     if (zone) sp.set("zone", zone);
     if (qDebounced) sp.set("q", qDebounced);
     sp.set("page", String(p));
-    const res: CatalogResult | null = await fetch(`/api/admin/catalog?${sp}`).then((r) => r.json()).catch(() => null);
-    setLoading(false);
-    if (res) { setRows(res.rows); setTotal(res.total); setPage(res.page); }
+    try {
+      const r = await fetch(`/api/admin/catalog?${sp}`);
+      if (!r.ok) throw new Error(`status ${r.status}`);
+      const res: CatalogResult = await r.json();
+      setRows(res.rows); setTotal(res.total); setPage(res.page);
+      setFetchError(false);
+    } catch {
+      // LC-2: a failed refresh keeps showing the last-known rows — don't wipe
+      // them — but the banner below makes clear they're stale, not empty.
+      setFetchError(true);
+    } finally {
+      setLoading(false);
+    }
   }, [tier, vibe, zone, qDebounced]);
 
   // Refetch from page 1 whenever a filter changes.
   useEffect(() => { fetchPage(1); }, [tier, vibe, zone, qDebounced, fetchPage]);
 
-  const toggleHero = useCallback((r: CatalogRow) => {
+  const toggleHero = useCallback(async (r: CatalogRow) => {
     const next = !isHero(r);
-    setHeroOverride((h) => ({ ...h, [r.id]: next }));
-    fetch("/api/admin/hero-eligible", {
+    setHeroOverride((h) => ({ ...h, [r.id]: next })); // optimistic
+    const res = await fetch("/api/admin/hero-eligible", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ thing_id: r.id, hero_eligible: next }),
-    });
-    showToast(next ? `★ Hero-flagged ${r.title}` : "Removed hero flag");
+    }).then((res) => res.json()).catch(() => null);
+    if (!res?.ok) {
+      setHeroOverride((h) => ({ ...h, [r.id]: !next })); // revert
+      showToast("Hero toggle failed — reverted");
+    } else {
+      showToast(next ? `★ Hero-flagged ${r.title}` : "Removed hero flag");
+    }
   }, [heroOverride, showToast]);
 
   const openEdit = useCallback((r: CatalogRow) => {
@@ -73,6 +93,27 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
 
   const toggleDraftTag = (tag: string) =>
     setDraft((d) => d ? { ...d, tags: d.tags.includes(tag) ? d.tags.filter((t) => t !== tag) : [...d.tags, tag] } : d);
+
+  // Photo picks apply instantly (their own network call inside CatalogImagePicker) —
+  // this just syncs the already-applied result into the row list + the open sheet,
+  // so the thumbnail behind the sheet and the sheet's own "currently live" state
+  // both reflect it without a page reload.
+  const applyPhoto = useCallback((thingId: string, photo: AppliedPhoto) => {
+    setRows((rs) => rs.map((r) => (r.id === thingId
+      ? { ...r, photo_url: photo.url, photo_source: photo.source, photo_attribution: photo.attribution }
+      : r)));
+    setEditing((e) => (e && e.id === thingId
+      ? { ...e, photo_url: photo.url, photo_source: photo.source, photo_attribution: photo.attribution }
+      : e));
+  }, []);
+
+  // 2026-07-10 addendum: a fetch can auto-attach/auto-create a venue for a thing
+  // that didn't have one — sync venue_id so a second fetch in the same sheet
+  // session reuses it instead of re-running the attach/create logic.
+  const applyVenueId = useCallback((thingId: string, venueId: string) => {
+    setRows((rs) => rs.map((r) => (r.id === thingId ? { ...r, venue_id: venueId } : r)));
+    setEditing((e) => (e && e.id === thingId ? { ...e, venue_id: venueId } : e));
+  }, []);
 
   // Admin edits apply directly to the live row — no review queue.
   const submitEdit = useCallback(async () => {
@@ -119,7 +160,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         <span className="spacer" />
         <span className="lcount">{loading ? "…" : `${rows.length} of ${total} live`}</span>
       </div>
-      <p className="vsub">Everything currently published. Edits go back through the Queue; the live version stays up until you re-approve.</p>
+      <p className="vsub">Everything currently published. Edits here go live immediately, no review step. To change a start time, reject and re-ingest in the Queue.</p>
 
       <div className="filters">
         <div className="filterbar" role="group" aria-label="Filter by tier">
@@ -142,9 +183,16 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         </div>
       </div>
 
-      {rows.length === 0 ? (
+      {fetchError ? (
+        <div className="covempty is-error">
+          Couldn&apos;t refresh the list. Showing the last results.
+          <button className="btn btn-edit btn-sm" onClick={() => fetchPage(page)}>Retry</button>
+        </div>
+      ) : null}
+
+      {rows.length === 0 && !fetchError ? (
         <div className="covempty">{loading ? "Loading…" : "No published things match these filters."}</div>
-      ) : (() => {
+      ) : rows.length === 0 ? null : (() => {
         let prevGroup = "";
         return rows.map((r) => {
           const showHeader = r.groupKey !== prevGroup;
@@ -152,12 +200,13 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
           return (
         <Fragment key={r.id}>
           {showHeader ? <div className="lgroup">{r.groupLabel}</div> : null}
-        <div className="lrow">
+        <div className={`lrow${r.pending_edit ? " pending" : ""}`}>
           {r.photo_url ? <img className="lthumb" src={r.photo_url} alt="" /> : <div className="lthumb" />}
           <div className="lmain">
             <div className="lt">
               <span className="ttl">{r.title}</span>
               <span className={`tier t${r.happening_tier}`}>{TIER_CHIP[r.happening_tier]}</span>
+              {r.pending_edit ? <span className="pendpill">Pending edit in Queue</span> : null}
             </div>
             <div className="lmeta">
               <span className="mono">{r.when}</span>
@@ -195,9 +244,22 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
       {editing && draft ? (
         <>
           <div className="scrim show" onClick={() => { setEditing(null); setDraft(null); }} />
-          <div className="sheet show" role="dialog" aria-modal="true" aria-labelledby="ceTitle">
+          <div className="sheet show" role="dialog" aria-modal="true" aria-labelledby="ceTitle" ref={sheetRef}>
             <h3 id="ceTitle">Edit live thing<button className="x" aria-label="Close" onClick={() => { setEditing(null); setDraft(null); }}>✕</button></h3>
             <div className="sbody">
+              <CatalogImagePicker
+                thingId={editing.id}
+                photoUrl={editing.photo_url}
+                photoSource={editing.photo_source}
+                options={editing.photo_options}
+                venueId={editing.venue_id}
+                placeId={editing.place_id}
+                lat={editing.lat}
+                lng={editing.lng}
+                onApplied={(photo) => applyPhoto(editing.id, photo)}
+                onVenueAttached={(venueId) => applyVenueId(editing.id, venueId)}
+                onToast={showToast}
+              />
               <label className="editlabel">Title
                 <input className="edit-textarea" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
               </label>

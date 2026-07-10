@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   cacheKey, imageQuery, rankOptions, pickUnused, isCivicImage, CATEGORY_QUERY,
   meetsQualityBar, MIN_IMAGE_WIDTH, MIN_IMAGE_HEIGHT, eventDefaultsToNoPhoto, type ImageOption,
+  isDirectGoogleFoodCandidate, passesWikimediaGate, scoreWikimediaCandidate, pickBestWikimedia,
+  type WikimediaCandidate,
 } from './images';
 
 describe('cacheKey', () => {
@@ -50,8 +52,8 @@ describe('isCivicImage — W2.3 civic items skip stock, go to placeholder', () =
 
 describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
   const ranked: ImageOption[] = [
-    { url: 'a', source: 'pexels' },
-    { url: 'b', source: 'pexels' },
+    { url: 'a', source: 'wikimedia' },
+    { url: 'b', source: 'google' },
     { url: 'c', source: 'wikimedia' },
     { url: '', source: 'placeholder' },
   ];
@@ -108,22 +110,22 @@ describe('meetsQualityBar — addendum Part B retina-safe HD floor', () => {
   });
 });
 
-describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1, relevance-first', () => {
-  it('orders real sources (owned > wikimedia > google > pexels) and appends placeholder last', () => {
+describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.2', () => {
+  it('orders real sources (owned > wikimedia > google) and appends placeholder last', () => {
     const found: ImageOption[] = [
-      { url: 'p', source: 'pexels' },
       { url: 'g', source: 'google' },
       { url: 'o', source: 'owned' },
       { url: 'w', source: 'wikimedia' },
     ];
-    expect(rankOptions(found).map((o) => o.source)).toEqual(['owned', 'wikimedia', 'google', 'pexels', 'placeholder']);
+    expect(rankOptions(found).map((o) => o.source)).toEqual(['owned', 'wikimedia', 'google', 'placeholder']);
   });
-  it('demotes pexels below wikimedia and google (the Phase 0 flip)', () => {
+  it('Phase 3: pexels is no longer in the order — a historical pexels entry (still possible in a stored photo_options list) sorts LAST among real options, not first', () => {
     const found: ImageOption[] = [
-      { url: 'w', source: 'wikimedia' },
       { url: 'p', source: 'pexels' },
+      { url: 'g', source: 'google' },
+      { url: 'w', source: 'wikimedia' },
     ];
-    expect(rankOptions(found).map((o) => o.source)).toEqual(['wikimedia', 'pexels', 'placeholder']);
+    expect(rankOptions(found).map((o) => o.source)).toEqual(['wikimedia', 'google', 'pexels', 'placeholder']);
   });
   it('drops empty urls and still ends on placeholder', () => {
     expect(rankOptions([{ url: '', source: 'pexels' }]).map((o) => o.source)).toEqual(['placeholder']);
@@ -141,5 +143,100 @@ describe('eventDefaultsToNoPhoto — Card Imagery Build Spec Phase 0 §3.1.2', (
   it('is false for Tier-2 recurring and Tier-3 evergreen places', () => {
     expect(eventDefaultsToNoPhoto({ tier: 2 })).toBe(false);
     expect(eventDefaultsToNoPhoto({ tier: 3 })).toBe(false);
+  });
+});
+
+describe('isDirectGoogleFoodCandidate — Card Imagery Build Spec Phase 1 §4.5', () => {
+  it('is true for food_drink_spot', () => {
+    expect(isDirectGoogleFoodCandidate({ happening_category: 'food_drink_spot', type: 'place' })).toBe(true);
+  });
+  it('is true for weekly_special', () => {
+    expect(isDirectGoogleFoodCandidate({ happening_category: 'weekly_special', type: 'place' })).toBe(true);
+  });
+  it('is true for type happyhour regardless of category', () => {
+    expect(isDirectGoogleFoodCandidate({ happening_category: 'recurring_nightlife', type: 'happyhour' })).toBe(true);
+  });
+  it('is false for other categories/types', () => {
+    expect(isDirectGoogleFoodCandidate({ happening_category: 'arts_theater', type: 'event' })).toBe(false);
+    expect(isDirectGoogleFoodCandidate({ happening_category: 'culture_spot', type: 'place' })).toBe(false);
+  });
+});
+
+describe('passesWikimediaGate — Card Imagery Build Spec Phase 1 §4.2', () => {
+  const base: WikimediaCandidate = {
+    url: 'https://example.org/x.jpg', title: 'File:Stearns Wharf sunset.jpg', description: 'Stearns Wharf at sunset',
+    width: 1600, height: 1000, mime: 'image/jpeg', artist: 'Jane Doe', license: 'CC BY-SA 4.0',
+  };
+  it('passes a well-formed landscape photo', () => {
+    expect(passesWikimediaGate(base)).toBe(true);
+  });
+  it('rejects undersized images (< 800px wide)', () => {
+    expect(passesWikimediaGate({ ...base, width: 799, height: 500 })).toBe(false);
+  });
+  it('rejects portrait-orientation images (aspect ratio below 1:1)', () => {
+    expect(passesWikimediaGate({ ...base, width: 900, height: 1400 })).toBe(false);
+  });
+  it('rejects an ultra-wide image above 2.2:1', () => {
+    expect(passesWikimediaGate({ ...base, width: 3000, height: 1000 })).toBe(false);
+  });
+  it('rejects a map file by filename, underscores included', () => {
+    expect(passesWikimediaGate({ ...base, title: 'File:Santa_Barbara_Map_1875.jpg' })).toBe(false);
+  });
+  it('rejects a logo file by filename', () => {
+    expect(passesWikimediaGate({ ...base, title: 'File:City of Santa Barbara logo.png', mime: 'image/png' })).toBe(false);
+  });
+  it('rejects a non-web-safe MIME (svg)', () => {
+    expect(passesWikimediaGate({ ...base, title: 'File:Some diagram.svg', mime: 'image/svg+xml' })).toBe(false);
+  });
+});
+
+describe('scoreWikimediaCandidate / pickBestWikimedia — Card Imagery Build Spec Phase 1 §4.2', () => {
+  const photo = (over: Partial<WikimediaCandidate>): WikimediaCandidate => ({
+    url: 'https://example.org/a.jpg', title: 'File:Photo.jpg', description: '',
+    width: 1600, height: 1000, mime: 'image/jpeg', artist: 'Jane Doe', license: 'CC BY-SA 4.0',
+    ...over,
+  });
+
+  it('scores keyword overlap between candidate title/description and the thing title/neighborhood', () => {
+    const c = photo({ title: 'File:Stearns Wharf pier.jpg', description: 'Stearns Wharf at sunset' });
+    const score = scoreWikimediaCandidate(c, { title: 'Stearns Wharf', neighborhood: 'waterfront' });
+    expect(score).toBeGreaterThanOrEqual(4); // "stearns" + "wharf" overlap, +2 each
+  });
+
+  it('a PD photo outranks an equally-relevant CC BY-SA photo', () => {
+    const pd = photo({ title: 'File:Stearns Wharf.jpg', license: 'Public domain' });
+    const ccBySa = photo({ url: 'https://example.org/b.jpg', title: 'File:Stearns Wharf.jpg', license: 'CC BY-SA 4.0' });
+    const best = pickBestWikimedia([ccBySa, pd], { title: 'Stearns Wharf' });
+    expect(best?.url).toBe(pd.url);
+  });
+
+  it('CC BY outranks CC BY-SA at equal keyword score', () => {
+    const ccBy = photo({ url: 'https://example.org/by.jpg', title: 'File:Stearns Wharf.jpg', license: 'CC BY 4.0' });
+    const ccBySa = photo({ url: 'https://example.org/bysa.jpg', title: 'File:Stearns Wharf.jpg', license: 'CC BY-SA 4.0' });
+    const best = pickBestWikimedia([ccBySa, ccBy], { title: 'Stearns Wharf' });
+    expect(best?.url).toBe(ccBy.url);
+  });
+
+  it('breaks equal-score ties by ascending distance (geosearch mode)', () => {
+    const far = photo({ url: 'https://example.org/far.jpg', title: 'File:Wharf.jpg', distanceM: 180 });
+    const near = photo({ url: 'https://example.org/near.jpg', title: 'File:Wharf.jpg', distanceM: 20 });
+    const best = pickBestWikimedia([far, near], { title: 'Wharf' });
+    expect(best?.url).toBe(near.url);
+  });
+
+  it('rejects gate-failing candidates before scoring (a map outranked by nothing, since it never enters scoring)', () => {
+    const map = photo({ title: 'File:Downtown_Map.jpg', width: 2000, height: 1000 });
+    const best = pickBestWikimedia([map], { title: 'Downtown' });
+    expect(best).toBeNull();
+  });
+
+  it('below-threshold survivors (score < 2) are a miss, not a forced pick', () => {
+    const irrelevant = photo({ title: 'File:Random unrelated photo.jpg', license: 'All rights reserved' });
+    const best = pickBestWikimedia([irrelevant], { title: 'Stearns Wharf', neighborhood: 'waterfront' });
+    expect(best).toBeNull();
+  });
+
+  it('empty candidate list returns null', () => {
+    expect(pickBestWikimedia([], { title: 'Anything' })).toBeNull();
   });
 });

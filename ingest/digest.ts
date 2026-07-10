@@ -14,6 +14,14 @@ const REASON_LABEL: Record<string, string> = {
   no_source: 'no source', duplicate: 'duplicate',
 };
 
+export interface VenueFallbackEvent {
+  venueName: string;
+  /** What the dead Google photo was replaced with — 'wikimedia' if a strong
+   *  candidate was found and auto-approved into the pool, 'none' if the venue's
+   *  pool just lost a slot (falls through to gradient/motif once exhausted). */
+  replacement: 'wikimedia' | 'none';
+}
+
 export interface DigestSummary {
   landed: number;
   gateDropped: number;
@@ -21,6 +29,10 @@ export interface DigestSummary {
   images: ResolveStats | null;
   runs: RunRow[];
   closed: number;
+  /** Card Imagery Build Spec Phase 2 §5.5 addendum, 2026-07-10 (Jim's ask) —
+   *  confirmed-dead Google venue photos auto-replaced this run, so he can
+   *  re-review the stand-in and go find a better photo himself if he wants one. */
+  venueFallbacks?: VenueFallbackEvent[];
 }
 
 export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<void> {
@@ -87,10 +99,13 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
         failedEditions.map((e) => `${e.edition_date} (${e.edition_type}): ${e.skip_reason ?? 'unknown'}`).join('; ')) : ''}
       ${heldEditions.length ? line('⏸ Edition on hold',
         heldEditions.map((e) => `${e.edition_date} (${e.edition_type})`).join(', ') + ' — will NOT send; approving it sends immediately') : ''}
+      ${s.venueFallbacks?.length ? line('📷 Venue photo(s) replaced',
+        s.venueFallbacks.map((f) => `${f.venueName} → ${f.replacement === 'wikimedia' ? 'Wikimedia (auto-approved stand-in)' : 'motif (no strong Wikimedia candidate found)'}`).join('; ')) : ''}
     </table>
     <table style="border-collapse:collapse;font-size:13px;margin-bottom:22px">${sourceRows}</table>
     <a href="${site}/admin/review" style="display:inline-block;background:#16586A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the queue →</a>
     ${(failedEditions.length || heldEditions.length) ? `<a href="${site}/admin/edition-draft" style="display:inline-block;margin-left:10px;background:#B0592A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the edition →</a>` : ''}
+    ${s.venueFallbacks?.length ? `<a href="${site}/admin/venues" style="display:inline-block;margin-left:10px;background:#7E8B6B;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review venue photos →</a>` : ''}
   </div>`;
 
   const ok = await sendEmail({ to, subject, html });

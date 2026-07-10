@@ -32,6 +32,13 @@ export interface PhotoOption {
   url: string;
   source: string; // pexels | wikimedia | google | owned | placeholder
   attribution?: string;
+  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10) — set
+   *  ONLY for an option sourced from a venue's photo pool (google/wikimedia fetched
+   *  via the venue system). Lets the apply route also approve the underlying
+   *  venue_photos row (compliant refresh/fallback) instead of just writing a raw
+   *  URL onto the thing. Undefined for every other source (pexels, a plain
+   *  find-more-images result, owned, placeholder). */
+  venuePhotoId?: string;
 }
 
 export interface QueueRow {
@@ -84,11 +91,24 @@ export interface CatalogRow {
   editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   photo_url: string | null;
   photo_source: string | null;
+  /** Card Imagery — non-owned photo credit (Build Spec Phase 1 §4.3). */
+  photo_attribution: string | null;
+  /** Card Imagery — the resolver's ranked alternates, so the Live-catalog edit sheet
+   *  can offer a photo picker without a second fetch. */
+  photo_options: PhotoOption[];
   tags: string[];
   when: string;
   pending_edit: boolean; // an edit is awaiting review in the queue
   groupKey: string;      // day/bucket this row belongs to (for the divider grouping)
   groupLabel: string;    // header shown when the group changes ("Today · Thu, Jul 3", "Recurring…")
+  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10) —
+   *  carried so the edit sheet's photo section knows whether this thing already
+   *  has a venue (fetch reuses it) or would need one auto-created on first fetch,
+   *  and whether there's a place_id/lat/lng to seed that venue with. */
+  place_id: string | null;
+  lat: number | null;
+  lng: number | null;
+  venue_id: string | null;
 }
 
 /** The editable draft held while a card is in Edit mode. Title is editable in v2

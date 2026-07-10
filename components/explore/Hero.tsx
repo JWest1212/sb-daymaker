@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
@@ -57,6 +60,12 @@ export function Hero({
   const gray = isGrayDay(weather);
   const v = variant(tod, weather);
 
+  // Card Imagery Build Spec Phase 2 §5.5 — same broken-image fallback as the card
+  // rail (components/ui/Card.tsx): a Google serving_url can 403/404 between nightly
+  // refreshes; resets whenever the pick's photo_url changes.
+  const [photoBroken, setPhotoBroken] = useState(false);
+  useEffect(() => setPhotoBroken(false), [pick?.photo_url]);
+
   // Re-dressed pick meta: `{venue} · {time}` (spec §2.2.2). Never the bare city.
   const meta = pick
     ? [cardPlace(pick), heroTime(pick)].filter(Boolean).join(" · ")
@@ -100,8 +109,14 @@ export function Hero({
       {pick ? (
         <div className="sbd-hero__pick">
           <div className="sbd-hero__pick-img sbd-media--gold">
-            {pick.photo_url ? (
-              <img className="sbd-card__img" src={pick.photo_url} alt="" loading="lazy" />
+            {pick.photo_url && !photoBroken ? (
+              <img
+                className="sbd-card__img"
+                src={pick.photo_url}
+                alt=""
+                loading="lazy"
+                onError={() => setPhotoBroken(true)}
+              />
             ) : null}
             <span className="sbd-hero__pick-heart">
               <SaveHeart

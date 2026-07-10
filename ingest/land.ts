@@ -11,16 +11,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Candidate } from '../packages/shared/types';
 import type { DropRecord } from './dedupe';
-import { nearestZone, zoneForNeighborhood } from '../lib/zones';
+import { deriveNearbyZone } from '../lib/geo';
 
 /** Map a gated Candidate to a `things` row. `source` stores the URL — the seed
  *  convention, and the same string the uuid5 id is keyed on. */
 function toThingRow(c: Candidate): Record<string, unknown> {
-  // Coarse Near-Me / Coverage zone: prefer coordinates, else fall back to the
-  // neighborhood mapping so rows without lat/lng still get a zone.
-  const nearby_zone = c.lat != null && c.lng != null
-    ? nearestZone(c.lat, c.lng)
-    : zoneForNeighborhood(c.neighborhood ?? null);
+  const nearby_zone = deriveNearbyZone(c.neighborhood ?? null, c.lat, c.lng);
   return {
     id: c.id,
     type: c.type,
@@ -46,6 +42,18 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     photo_url: c.photo_url ?? null,
     photo_source: c.photo_source ?? 'placeholder',
     photo_options: c.photo_options ?? [],
+    photo_attribution: c.photo_attribution ?? null,
+    // Card Imagery Build Spec Phase 3 §6.2 — set by resolveImages() alongside
+    // photo_source: 'motif'; null for anything else (a real photo, or a row that
+    // predates Phase 3 and hasn't been re-resolved yet).
+    visual_kind: c.visual_kind ?? null,
+    visual_key: c.visual_key ?? null,
+    visual_seed: c.visual_seed ?? null,
+    // Card Imagery Build Spec Phase 2 §5.2 — only ever set here on an exact
+    // place_id match against the venue registry (resolveImages()'s
+    // matchVenueForCandidate); a fuzzy match is never auto-written, even at land
+    // time — it queues for founder review in the cockpit's Venues tab instead.
+    venue_id: c.venue_id ?? null,
     local_note: c.local_note ?? null,
     last_confirmed: c.last_confirmed,
     source: c.source_url,
