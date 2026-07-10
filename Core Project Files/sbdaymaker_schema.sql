@@ -5,6 +5,13 @@
 -- Also lands the data layer for A6 (subscribers) and A7 (sponsor/featured fields).
 -- This file is the single source of truth for the data contract.
 -- ----------------------------------------------------------------------------
+-- CARD IMAGERY / VENUES NOTE (2026-07-10): this file predates the Card Imagery
+-- Phase 2 work. For venues, venue_photos, image_spend, image_cache,
+-- photo_options, and things.venue_id, the current source of truth is the
+-- migration files, not this dump: supabase/migrations/20260625_photo_options.sql,
+-- supabase/migrations/20260625_images.sql, and
+-- supabase/migrations/20260709_card_imagery_phase2_venues.sql.
+-- ----------------------------------------------------------------------------
 -- v9 CHANGELOG (the three-section cut — Explore · Saved · Discover SB):
 --   • shared_state_kind: 'plan' -> 'shared_list'.  The My Plan itinerary builder
 --     was retired; the surviving social artifact is a view-only SAVED-LIST share
