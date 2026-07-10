@@ -16,11 +16,20 @@ import {
 } from './land';
 import { enrich } from './enrich';
 import { classifyWeight } from './weight';
-import { resolveImages, type ResolveStats } from './images';
+import {
+  resolveImages, isDirectGoogleFoodCandidate, refreshGoogleMediaUri,
+  wikimediaGeosearch, rankWikimediaCandidates, loadVenuePools, matchVenueForCandidate,
+  monthKey, loadSpend, saveSpend, CAP, type ResolveStats,
+} from './images';
 import { detectClosures } from './adapters/googlePlaces';
 import { consumeDirectives } from './restock';
-import { sendDigest } from './digest';
+import { sendDigest, type VenueFallbackEvent } from './digest';
 import { getDb } from './db';
+import { MARQUEE_VENUES, matchMarqueeVenue } from './marqueeVenues';
+import { bestVenueMatch, extractVenueNameFromAddress, slugifyVenueKey, pickFromPool, type MatchableVenue } from '../lib/venuePool';
+import { assignVisual } from '../lib/visualAssignment';
+import { haversineMeters } from '../lib/geo';
+import { sbDay } from '../lib/explore';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -29,9 +38,12 @@ const DRY = process.env.DRY_RUN === '1';
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
 const IMAGE_BACKFILL_PUBLISHED = process.env.IMAGE_BACKFILL_PUBLISHED === '1';
+const IMAGE_BACKFILL_FOOD = process.env.IMAGE_BACKFILL_FOOD === '1';
 const WEIGHT_BACKFILL = process.env.WEIGHT_BACKFILL === '1';
 const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
 const VOICE_BACKFILL = process.env.VOICE_BACKFILL === '1';
+// Card Imagery Build Spec Phase 2 §5.2 — one-off venue registry seed.
+const VENUE_SEED = process.env.VENUE_SEED === '1';
 
 function window() {
   const from = new Date();
@@ -132,7 +144,9 @@ async function emitCoverageReport(sb: SupabaseClient) {
     const m = bySource.get(cat)!;
     m.set(src, (m.get(src) ?? 0) + 1);
   }
-  const sources = ['owned', 'wikimedia', 'google', 'pexels', 'placeholder'];
+  // 'pexels'/'placeholder' stay in this list post-Phase-3 specifically so this
+  // report can show they're at zero, not because either is still assignable.
+  const sources = ['owned', 'wikimedia', 'google', 'motif', 'pexels', 'placeholder'];
   console.log(`\n[coverage-report] ${rows.length} things · category × photo_source:`);
   console.log(`  ${'category'.padEnd(24)}${sources.map((s) => s.padEnd(12)).join('')}total`);
   const catRows = [...bySource].sort((a, b) => {
@@ -174,7 +188,7 @@ async function backfillImages() {
   const force = process.env.IMAGE_FORCE === '1'; // re-resolve every row (skip cache), refresh alternates
   let q = sb
     .from('things')
-    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source, venue_id')
     .eq('status', 'needs_review');
   if (!force) q = q.or('photo_source.is.null,photo_source.eq.placeholder');
   const { data, error } = await q;
@@ -189,25 +203,33 @@ async function backfillImages() {
     neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
     price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
     source_url: '', place_id: (r.place_id as string) ?? undefined,
+    venue_id: (r.venue_id as string) ?? undefined,
     last_confirmed: '', start_strategy: 'none',
   }));
 
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force });
   let updated = 0;
   for (const c of resolved) {
-    // Phase 0 §3.1.2: a Tier-1 event can land on 'placeholder' for display while
-    // still carrying real photo_options (the cockpit picker's per-thing override) —
-    // only skip the write when NOTHING was found at all (truly nothing changed).
+    // Phase 3 §6.2: every candidate now resolves to EITHER a real photo OR a
+    // motif/big-type assignment (`visual_kind`) — `photo_source` is never the bare
+    // 'placeholder' out of resolveImages() anymore. Only skip the write when
+    // truly nothing was found/assigned at all AND no alternates exist either
+    // (shouldn't happen post-Phase-3, kept as a defensive no-op guard).
     const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
-    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
+    if (!c.photo_url && !c.visual_kind && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
-      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .update({
+        photo_url: c.photo_url ?? null, photo_source: c.photo_source,
+        photo_options: c.photo_options ?? [], photo_attribution: c.photo_attribution ?? null,
+        visual_kind: c.visual_kind ?? null, visual_key: c.visual_key ?? null, visual_seed: c.visual_seed ?? null,
+        ...(c.venue_id ? { venue_id: c.venue_id } : {}),
+      })
       .eq('id', c.id);
     if (upErr) throw new Error(`image-backfill update ${c.id}: ${upErr.message}`);
     updated++;
   }
-  console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`);
+  console.log(`\n[image-backfill] updated ${updated} images — free ${stats.free} · google ${stats.google} · motif ${stats.motif} · over-cap ${stats.overCap}`);
 
   // Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from
   // live data: seeds the Phase 2 venue registry with real concentration data.
@@ -257,7 +279,7 @@ async function backfillPublishedImages() {
   const sb = getDb();
   const { data, error } = await sb
     .from('things')
-    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, lat, lng, price_band, place_id, photo_source, visual_kind, venue_id')
     .eq('status', 'published');
   if (error) throw new Error(`published-image-backfill select: ${error.message}`);
   const rows = data ?? [];
@@ -270,8 +292,15 @@ async function backfillPublishedImages() {
     neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
     price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
     source_url: '', place_id: (r.place_id as string) ?? undefined,
+    venue_id: (r.venue_id as string) ?? undefined,
     last_confirmed: '', start_strategy: 'none',
   });
+
+  // 2026-07-10 — loaded once so the Tier-1 fast path below can check for a
+  // venue-pool match (Build Spec §2 priority table: pool beats the Tier-1
+  // default) without a per-row network call — venue_photos is a local DB read.
+  const { byId: venuesById, byPlaceId: venuesByPlaceId, poolsByVenueId } = await loadVenuePools(sb);
+  const today = sbDay(Date.now());
 
   const tier1Rows = rows.filter((r) => Number(r.happening_tier) === 1);
   // Card Imagery Build Spec Phase 0 — only re-force rows not already on a
@@ -281,7 +310,10 @@ async function backfillPublishedImages() {
   // Tier-2/3 rows every time — observed necessary 2026-07-09 when a second run
   // still hit a fresh 429 on only 54 candidates (Pexels' quota apparently hadn't
   // fully replenished from the first run within the assumed ~1hr window).
-  const GOOD_SOURCES = new Set(['wikimedia', 'google', 'owned']);
+  // Phase 3 §6.2: 'motif' joins the good-sources set — a deterministic motif/
+  // big-type assignment is as settled as a real photo pick; a founder who wants a
+  // different pick overrides it via the cockpit's picker, not a blanket re-force.
+  const GOOD_SOURCES = new Set(['wikimedia', 'google', 'owned', 'motif']);
   const otherRows = rows.filter(
     (r) => Number(r.happening_tier) !== 1 && !GOOD_SOURCES.has(r.photo_source as string),
   );
@@ -298,24 +330,67 @@ async function backfillPublishedImages() {
   let updated = 0;
   for (const c of others.cands) {
     // Same guard as image-backfill: don't drop real photo_options just because the
-    // display auto-pick landed on 'placeholder'.
+    // display auto-pick landed on a motif/big-type assignment instead of a photo.
     const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
-    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue;
+    if (!c.photo_url && !c.visual_kind && !hasAlternates) continue;
     const { error: upErr } = await sb
       .from('things')
-      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .update({
+        photo_url: c.photo_url ?? null, photo_source: c.photo_source,
+        photo_options: c.photo_options ?? [], photo_attribution: c.photo_attribution ?? null,
+        visual_kind: c.visual_kind ?? null, visual_key: c.visual_key ?? null, visual_seed: c.visual_seed ?? null,
+        ...(c.venue_id ? { venue_id: c.venue_id } : {}),
+      })
       .eq('id', c.id);
     if (upErr) throw new Error(`published-image-backfill update ${c.id}: ${upErr.message}`);
     updated++;
   }
 
   // Tier-1: deterministic, no resolveImages() call — see the function comment.
+  // `assignVisual` is pure (no network) so this stays the cheap, no-network
+  // direct-update path the function comment promises; venue-pool/marquee lookups
+  // are local map reads, not API calls.
+  // 2026-07-10 exception (Jim's ask): a venue-POOL match wins over the Tier-1
+  // default (Build Spec §2 priority table — "Venue pool... any card (place or
+  // dated event)", ranked above "Motif... all remaining dated events"). Checked
+  // BEFORE the "already assigned, skip" guard on every row (not just unresolved
+  // ones) — pools grow as Jim curates more venues, so a row already sitting on
+  // 'motif' from a prior run still needs re-checking against the CURRENT pool
+  // state, not skipped forever.
   let tier1Updated = 0;
   for (const r of tier1Rows) {
-    if (r.photo_source === 'placeholder') continue;
+    const matchedVenue = matchVenueForCandidate(
+      { venue_id: (r.venue_id as string) ?? undefined, place_id: (r.place_id as string) ?? undefined },
+      venuesById, venuesByPlaceId,
+    );
+    const pool = matchedVenue ? poolsByVenueId.get(matchedVenue.id) : undefined;
+
+    if (pool && pool.length) {
+      const picked = pool[pickFromPool(r.id as string, today, pool.length)];
+      if (r.photo_source === picked.source && r.venue_id === matchedVenue!.id) continue; // already correct
+      const { error: upErr } = await sb
+        .from('things')
+        .update({
+          photo_url: picked.url, photo_source: picked.source,
+          photo_attribution: picked.attribution ?? null,
+          visual_kind: null, visual_key: null, visual_seed: null,
+          venue_id: matchedVenue!.id,
+        })
+        .eq('id', r.id);
+      if (upErr) throw new Error(`published-image-backfill tier-1 pool update ${r.id}: ${upErr.message}`);
+      tier1Updated++;
+      continue;
+    }
+
+    if (r.photo_source === 'motif' && r.visual_kind) continue; // already correctly assigned, no pool match
+    const marquee = matchMarqueeVenue({ title: r.title as string, lat: (r.lat as number) ?? undefined, lng: (r.lng as number) ?? undefined });
+    const visual = assignVisual({ id: r.id as string, happening_category: r.happening_category }, marquee?.key);
     const { error: upErr } = await sb
       .from('things')
-      .update({ photo_url: null, photo_source: 'placeholder' })
+      .update({
+        photo_url: null, photo_source: 'motif',
+        visual_kind: visual.visual_kind, visual_key: visual.visual_key, visual_seed: visual.visual_seed,
+      })
       .eq('id', r.id);
     if (upErr) throw new Error(`published-image-backfill tier-1 update ${r.id}: ${upErr.message}`);
     tier1Updated++;
@@ -329,11 +404,66 @@ async function backfillPublishedImages() {
   if (others.stats) {
     console.log(
       `  tier-2/3 (forced)     free ${others.stats.free} · google ${others.stats.google} · ` +
-        `placeholder ${others.stats.placeholder} · over-cap ${others.stats.overCap}`,
+        `motif ${others.stats.motif} · over-cap ${others.stats.overCap}`,
     );
   }
 
   await emitCoverageReport(sb);
+}
+
+/** Card Imagery Build Spec Phase 1 §4.5 — scoped backfill for the new direct-Google
+ *  food/drink routing: re-resolves ONLY published food_drink_spot / weekly_special /
+ *  happyhour-type rows carrying a place_id, forced (so an already-cached Wikimedia/
+ *  Pexels pick gets re-ranked through the food-first Google routing). Deliberately
+ *  scoped instead of a blanket forced pass — the spec's own "run a scoped backfill for
+ *  the food set only," and the same reasoning as the Phase 0 published-images split:
+ *  small and bounded keeps it inside the free-tier rate limit and the Google cap. */
+async function backfillFoodImages() {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source, venue_id')
+    .eq('status', 'published')
+    .not('place_id', 'is', null);
+  if (error) throw new Error(`food-image-backfill select: ${error.message}`);
+  const rows = (data ?? []).filter((r) =>
+    isDirectGoogleFoodCandidate({ happening_category: r.happening_category, type: r.type }));
+  console.log(`\n[food-image-backfill] ${rows.length} published food/drink rows with a place_id (forced re-resolve)`);
+  if (!rows.length) return;
+
+  const cands: Candidate[] = rows.map((r) => ({
+    id: r.id as string, type: r.type, status: 'needs_review', title: r.title as string,
+    tier: Number(r.happening_tier) as Candidate['tier'], happening_category: r.happening_category,
+    neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
+    price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
+    source_url: '', place_id: (r.place_id as string) ?? undefined,
+    venue_id: (r.venue_id as string) ?? undefined,
+    last_confirmed: '', start_strategy: 'none',
+  }));
+
+  const { cands: resolved, stats } = await resolveImages(cands, sb, { force: true });
+  let updated = 0;
+  for (const c of resolved) {
+    // Same guard as the other image backfills: don't drop real photo_options just
+    // because the display auto-pick landed on a motif/big-type assignment.
+    const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
+    if (!c.photo_url && !c.visual_kind && !hasAlternates) continue;
+    const { error: upErr } = await sb
+      .from('things')
+      .update({
+        photo_url: c.photo_url ?? null, photo_source: c.photo_source,
+        photo_options: c.photo_options ?? [], photo_attribution: c.photo_attribution ?? null,
+        visual_kind: c.visual_kind ?? null, visual_key: c.visual_key ?? null, visual_seed: c.visual_seed ?? null,
+        ...(c.venue_id ? { venue_id: c.venue_id } : {}),
+      })
+      .eq('id', c.id);
+    if (upErr) throw new Error(`food-image-backfill update ${c.id}: ${upErr.message}`);
+    updated++;
+  }
+  console.log(
+    `\n[food-image-backfill] updated ${updated}/${rows.length} — free ${stats.free} · google ${stats.google} · ` +
+      `motif ${stats.motif} · over-cap ${stats.overCap}`,
+  );
 }
 
 /** W2.3 one-time / on-demand: re-resolve the "repeat offenders" — a photo_url shared by
@@ -352,7 +482,7 @@ async function backfillRepeatImages() {
 
   const { data, error } = await sb
     .from('things')
-    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_url, photo_source')
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_url, photo_source, venue_id')
     .eq('status', 'published')
     .not('photo_url', 'is', null);
   if (error) throw new Error(`repeat-backfill select: ${error.message}`);
@@ -377,19 +507,26 @@ async function backfillRepeatImages() {
     neighborhood: r.neighborhood ?? undefined, address: (r.address as string) ?? '',
     price_band: r.price_band ?? null, time_of_day_fit: [], starts_at: null, ends_at: null,
     source_url: '', place_id: (r.place_id as string) ?? undefined,
+    venue_id: (r.venue_id as string) ?? undefined,
     last_confirmed: '', start_strategy: 'none',
   }));
 
   const { cands: resolved, stats } = await resolveImages(cands, sb, { force: true });
   let updated = 0;
   for (const c of resolved) {
-    // Phase 0 §3.1.2: same as image-backfill — a Tier-1 event can land on
-    // 'placeholder' for display while still carrying real photo_options.
+    // Phase 3 §6.2: same as image-backfill — a re-resolved victim can legitimately
+    // lose its real photo (e.g. the shared one no longer scores) and fall to a
+    // motif/big-type assignment instead of a bare placeholder.
     const hasAlternates = (c.photo_options ?? []).some((o) => o.url);
-    if (!c.photo_url && c.photo_source === 'placeholder' && !hasAlternates) continue; // still nothing — leave it
+    if (!c.photo_url && !c.visual_kind && !hasAlternates) continue; // still nothing — leave it
     const { error: upErr } = await sb
       .from('things')
-      .update({ photo_url: c.photo_url ?? null, photo_source: c.photo_source, photo_options: c.photo_options ?? [] })
+      .update({
+        photo_url: c.photo_url ?? null, photo_source: c.photo_source,
+        photo_options: c.photo_options ?? [], photo_attribution: c.photo_attribution ?? null,
+        visual_kind: c.visual_kind ?? null, visual_key: c.visual_key ?? null, visual_seed: c.visual_seed ?? null,
+        ...(c.venue_id ? { venue_id: c.venue_id } : {}),
+      })
       .eq('id', c.id);
     if (upErr) throw new Error(`repeat-backfill update ${c.id}: ${upErr.message}`);
     updated++;
@@ -398,7 +535,7 @@ async function backfillRepeatImages() {
   const spendAfter = (await sb.from('image_spend').select('google_calls').eq('month', month).maybeSingle()).data?.google_calls ?? 0;
   console.log(
     `\n[repeat-backfill] re-resolved ${updated} rows · distinct photos ${distinctBefore} → ${distinctAfter} ` +
-      `· free ${stats.free} · google ${stats.google} · placeholder ${stats.placeholder} · over-cap ${stats.overCap}`,
+      `· free ${stats.free} · google ${stats.google} · motif ${stats.motif} · over-cap ${stats.overCap}`,
   );
   console.log(`[repeat-backfill] image_spend google_calls: ${spendBefore} → ${spendAfter} (${spendAfter === spendBefore ? 'unchanged — free tier only' : 'within-cap Google use'})`);
 }
@@ -513,13 +650,370 @@ async function backfillVoice() {
   console.log(`\n[voice-backfill] re-drafted ${updated}/${rows.length} blurbs in the new voice`);
 }
 
+// ---- Card Imagery Build Spec Phase 2 §5.2 — venue registry -----------------
+
+function titleCaseAddress(address: string): string {
+  const first = address.split(',')[0]?.trim() || address;
+  return first.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
+/** One-off, idempotent (upsert on `key`, `ignoreDuplicates`) venue registry seed.
+ *  Two sources, both additive to `venues` — never touches `things`:
+ *   1. The 12 curated ingest/marqueeVenues.ts entries, imported verbatim (spec §5.2:
+ *      "Marquee registry entries import as venues automatically... DB becomes
+ *      runtime truth").
+ *   2. Address clusters of >=3 Tier-1 (dated) events: spatial (haversine <=75m)
+ *      when lat/lng exist, else a normalized-exact-address-string fallback group
+ *      (can't be spatially deduped without coordinates). A cluster that already
+ *      scores a match (bestVenueMatch) against a venue inserted earlier THIS PASS
+ *      (marquee or a prior cluster) is skipped — the one real dedupe pass this
+ *      simple single-pass clustering gets; it will not catch every real-world
+ *      duplicate (e.g. two address variants of the same venue with no lat/lng on
+ *      either), which is why the cockpit's venue editor (§5.3) supports rename/
+ *      archive — this is a rough first draft for the founder to correct, not a
+ *      finished registry. */
+async function seedVenueRegistry() {
+  const sb = getDb();
+
+  const marqueeInserts = MARQUEE_VENUES.map((v) => ({
+    key: v.key,
+    display_name: titleCaseAddress(v.names[0]),
+    lat: v.lat,
+    lng: v.lng,
+    radius_m: v.radiusM,
+    name_patterns: v.names,
+  }));
+  const { error: mErr } = await sb.from('venues').upsert(marqueeInserts, { onConflict: 'key', ignoreDuplicates: true });
+  if (mErr) throw new Error(`venue-seed marquee upsert: ${mErr.message}`);
+  console.log(`[venue-seed] upserted ${marqueeInserts.length} marquee venues (idempotent)`);
+
+  const { data: existingVenueRows, error: vErr } = await sb
+    .from('venues')
+    .select('id, place_id, lat, lng, radius_m, name_patterns')
+    .eq('status', 'active');
+  if (vErr) throw new Error(`venue-seed existing-venues select: ${vErr.message}`);
+  const knownVenues: MatchableVenue[] = (existingVenueRows ?? []).map((v) => ({
+    id: v.id as string, place_id: (v.place_id as string) ?? null, lat: (v.lat as number) ?? null,
+    lng: (v.lng as number) ?? null, radius_m: (v.radius_m as number) ?? 150,
+    name_patterns: (v.name_patterns as string[]) ?? [],
+  }));
+
+  const { data: rows, error } = await sb
+    .from('things')
+    .select('title, address, lat, lng')
+    .eq('happening_tier', 1)
+    .in('status', ['published', 'needs_review'])
+    .not('address', 'is', null);
+  if (error) throw new Error(`venue-seed things select: ${error.message}`);
+  const all = rows ?? [];
+  const withCoords = all.filter((r) => r.lat != null && r.lng != null);
+  const withoutCoords = all.filter((r) => r.lat == null || r.lng == null);
+
+  const SPATIAL_RADIUS_M = 75; // spec §5.2's exact clustering radius
+  interface Cluster { lat: number; lng: number; count: number; addresses: Map<string, number>; }
+  const clusters: Cluster[] = [];
+  for (const r of withCoords) {
+    const lat = r.lat as number, lng = r.lng as number;
+    let c = clusters.find((c) => haversineMeters(c.lat, c.lng, lat, lng) <= SPATIAL_RADIUS_M);
+    if (!c) { c = { lat, lng, count: 0, addresses: new Map() }; clusters.push(c); }
+    c.count++;
+    const addr = (r.address as string).trim();
+    c.addresses.set(addr, (c.addresses.get(addr) ?? 0) + 1);
+    c.lat += (lat - c.lat) / c.count; // running centroid average
+    c.lng += (lng - c.lng) / c.count;
+  }
+
+  const noCoordGroups = new Map<string, { count: number; sample: string }>();
+  for (const r of withoutCoords) {
+    const key = (r.address as string).trim().toLowerCase();
+    const g = noCoordGroups.get(key) ?? { count: 0, sample: (r.address as string).trim() };
+    g.count++;
+    noCoordGroups.set(key, g);
+  }
+
+  const proposals: { key: string; display_name: string; lat: number | null; lng: number | null; name_patterns: string[] }[] = [];
+  const proposeIfNew = (address: string, lat: number | null, lng: number | null, count: number) => {
+    if (count < 3) return;
+    const extracted = extractVenueNameFromAddress(address);
+    const displayName = extracted ?? titleCaseAddress(address);
+    const already = bestVenueMatch({ title: displayName, address, lat, lng, place_id: null }, knownVenues);
+    if (already) return; // covered by an already-inserted venue (marquee or earlier this pass)
+    const key = slugifyVenueKey(displayName);
+    if (proposals.some((p) => p.key === key)) return;
+    const namePatterns = extracted ? [extracted.toLowerCase()] : [];
+    proposals.push({ key, display_name: displayName, lat, lng, name_patterns: namePatterns });
+    knownVenues.push({ id: key, place_id: null, lat, lng, radius_m: 150, name_patterns: namePatterns });
+  };
+  for (const c of clusters) {
+    const topAddress = [...c.addresses.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    proposeIfNew(topAddress, c.lat, c.lng, c.count);
+  }
+  for (const g of noCoordGroups.values()) proposeIfNew(g.sample, null, null, g.count);
+
+  console.log(`[venue-seed] proposing ${proposals.length} address-cluster venues (>=3 Tier-1 events each):`);
+  for (const p of proposals) console.log(`  ${p.key.padEnd(40)} "${p.display_name}"`);
+
+  if (proposals.length) {
+    const { error: pErr } = await sb.from('venues').upsert(
+      proposals.map((p) => ({
+        key: p.key, display_name: p.display_name, lat: p.lat, lng: p.lng,
+        radius_m: 150, name_patterns: p.name_patterns,
+      })),
+      { onConflict: 'key', ignoreDuplicates: true },
+    );
+    if (pErr) throw new Error(`venue-seed proposals upsert: ${pErr.message}`);
+  }
+  console.log(
+    `\n[venue-seed] done — ${marqueeInserts.length} marquee + ${proposals.length} address-cluster venues ` +
+      `seeded (or already present). No photos attached yet — curate each venue's pool via the cockpit's Venues tab.`,
+  );
+}
+
+/** Card Imagery Build Spec Phase 2 §5.2 — "The matcher runs nightly for new things:
+ *  exact place_id match auto-attaches; fuzzy matches queue for review." Runs every
+ *  regular ingest (isolated — never sinks the run); fuzzy candidates are computed
+ *  live by the cockpit's Venues tab query instead of a separate persisted queue. */
+async function matchVenuesByPlaceId(sb: SupabaseClient): Promise<number> {
+  const { data: venues, error: vErr } = await sb
+    .from('venues').select('id, place_id').eq('status', 'active').not('place_id', 'is', null);
+  if (vErr || !venues?.length) return 0;
+  const byPlaceId = new Map(venues.map((v) => [v.place_id as string, v.id as string]));
+
+  const { data: things, error: tErr } = await sb
+    .from('things').select('id, place_id')
+    .is('venue_id', null).not('place_id', 'is', null)
+    .in('status', ['published', 'needs_review']);
+  if (tErr || !things?.length) return 0;
+
+  let attached = 0;
+  for (const t of things) {
+    const venueId = byPlaceId.get(t.place_id as string);
+    if (!venueId) continue;
+    const { error } = await sb.from('things').update({ venue_id: venueId }).eq('id', t.id as string);
+    if (!error) attached++;
+  }
+  return attached;
+}
+
+// Card Imagery Build Spec Phase 2 §5.5, cadence follow-up (Jim's call, 2026-07-10,
+// recorded in the ledger): stretched from the spec's original 20h to 7 days — the
+// existing client-side onError->gradient fallback already covers the interim, so a
+// longer window trades a bounded, low-stakes staleness risk for a large volume cut
+// (worst case ~2,700/mo at 20h -> ~386/mo at 7 days, comfortably under the 500/mo
+// cap even if every venue went all-Google at max pool size).
+const REFRESH_STALE_HOURS = 24 * 7;
+// Same-day follow-up #2 (Jim asked "why wait at all — can't we tell a dead photo
+// apart from a blip?"): yes, for the common case. Google's media endpoint returns
+// a real HTTP 404 when a photo resource is genuinely gone (business removed it,
+// Google's moderation pulled it, the place closed) — refreshGoogleMediaUri()
+// surfaces that distinctly now, and the loop below reacts to a 404 IMMEDIATELY,
+// no waiting. This backstop constant only covers the AMBIGUOUS failure modes
+// (rate limits, 5xx, network errors, or a 403 that could just as easily mean an
+// API-key/billing problem as a dead photo) — reacting to those instantly risks a
+// false-positive mass-reassignment (a billing hiccup would make many unrelated
+// photos fail at once; that's a config problem to go fix, not a sign hundreds of
+// venues suddenly need new photos). A row stuck on ambiguous failures for TWICE
+// the normal refresh interval with no successful refresh finally falls back too,
+// so nothing stays stuck forever even in the unclear case.
+const CONFIRMED_DEAD_HOURS = REFRESH_STALE_HOURS * 2;
+
+/** Card Imagery Build Spec Phase 2 §5.5 — nightly compliant Google URI refresh.
+ *  Spec's own sizing note ruled out refreshing whole pools (~200-350 calls/night,
+ *  "TOO MANY") and mandated this narrower scope instead: only `venue_photos` rows
+ *  (source='google', approved) that are the CURRENT pick for at least one visible
+ *  (published/needs_review) thing right now — "assigned serving photos, not whole
+ *  pools." Every refresh ALSO propagates the new URL to every `things.photo_url`
+ *  currently pointing at the old one — updating venue_photos alone would leave
+ *  already-landed things silently serving the stale, soon-to-expire URI (they
+ *  don't live-join the pool table; photo_url is a snapshot written at resolve
+ *  time). Shares the exact image_spend cap counter the resolver uses
+ *  (loadSpend/saveSpend/CAP) — on cap-exceeded, keeps yesterday's URI and logs
+ *  `over_cap`, per spec's own words, rather than either silently overspending or
+ *  silently dropping the row.
+ *
+ *  2026-07-10 addendum (Jim's ask) — automated dead-photo fallback + notification:
+ *  a row confirmed gone (a real 404 from Google, checked on EVERY attempt — no
+ *  waiting) OR stuck on ambiguous failures for CONFIRMED_DEAD_HOURS is handled by
+ *  `handleDeadVenuePhoto`: the dead row is deleted, a fresh Wikimedia candidate is
+ *  searched for and auto-approved into the freed pool slot if one clears the same
+ *  quality/relevance gate the resolver itself uses, and every thing currently
+ *  showing the dead photo is updated to the replacement (or reset to the gradient
+ *  placeholder if no replacement was found — "motif" isn't buildable yet, Phase 3
+ *  hasn't started). Every fallback is collected and surfaced in the nightly digest
+ *  email (`sendDigest`'s new `venueFallbacks` field) so Jim can go re-review the
+ *  auto-assigned stand-in and hunt for a better photo himself if he wants one —
+ *  this NEVER happens silently.
+ *
+ *  Explicitly OUT OF SCOPE: the ~14 legacy direct-Google food/drink `things` rows
+ *  from Phase 1 §4.5 — those store only a raw photoUri, no stable photo-resource-
+ *  name column (the Phase 2 §5.1 DDL Jim ran doesn't add one to `things`, only to
+ *  `venue_photos`), so there's nothing to refresh OR fall back on for them without
+ *  a fresh Place Details call each time — flagged in the ledger as a known,
+ *  already-accepted gap, not silently patched by inventing a new column outside
+ *  the founder-approved DDL. */
+async function refreshVenuePhotoServingUrls(sb: SupabaseClient): Promise<{
+  refreshed: number; skipped: number; overCap: number; failed: number; fallbacks: VenueFallbackEvent[];
+}> {
+  const stats = { refreshed: 0, skipped: 0, overCap: 0, failed: 0, fallbacks: [] as VenueFallbackEvent[] };
+
+  const { data: googlePool, error: gpErr } = await sb
+    .from('venue_photos')
+    .select('id, venue_id, stable_ref, serving_url, refreshed_at, created_at')
+    .eq('approved', true)
+    .eq('source', 'google');
+  if (gpErr || !googlePool?.length) return stats;
+
+  const { data: assignedThings, error: atErr } = await sb
+    .from('things').select('photo_url')
+    .eq('photo_source', 'google').not('venue_id', 'is', null)
+    .in('status', ['published', 'needs_review']);
+  if (atErr) return stats;
+  const assignedUrls = new Set((assignedThings ?? []).map((t) => t.photo_url as string).filter(Boolean));
+
+  const now = Date.now();
+  const ageHours = (p: { refreshed_at: unknown; created_at: unknown }) => {
+    const since = (p.refreshed_at as string) ?? (p.created_at as string);
+    return (now - new Date(since).getTime()) / 3_600_000;
+  };
+  const due = googlePool.filter((p) => {
+    if (!p.serving_url || !assignedUrls.has(p.serving_url as string)) return false; // not rendering anywhere right now
+    return ageHours(p) >= REFRESH_STALE_HOURS;
+  });
+  stats.skipped = googlePool.length - due.length;
+  if (!due.length) return stats;
+
+  const month = monthKey();
+  const spend = await loadSpend(sb, month);
+  let calls = spend.google_calls;
+  let overCap = spend.over_cap;
+
+  for (const row of due) {
+    if (calls >= CAP) { overCap++; stats.overCap++; continue; }
+    calls++;
+    const result = await refreshGoogleMediaUri(row.stable_ref as string);
+
+    if (result.status === 'not_found') {
+      // Google itself confirms this exact photo is gone — react immediately, no
+      // waiting period. This is the common real-death case (removed/moderated
+      // photo, closed business).
+      const event = await handleDeadVenuePhoto(sb, row as { id: string; venue_id: string; stable_ref: string; serving_url: string });
+      if (event) stats.fallbacks.push(event);
+      continue;
+    }
+
+    if (result.status === 'error') {
+      stats.failed++;
+      // Ambiguous failure (not a confirmed 404) — only escalate to the fallback
+      // once it's been stuck this way for a full CONFIRMED_DEAD_HOURS backstop
+      // (see the constant's comment for why this case specifically still waits).
+      if (ageHours(row) >= CONFIRMED_DEAD_HOURS) {
+        const event = await handleDeadVenuePhoto(sb, row as { id: string; venue_id: string; stable_ref: string; serving_url: string });
+        if (event) stats.fallbacks.push(event);
+      }
+      continue;
+    }
+
+    // result.status === 'ok'
+    const oldUrl = row.serving_url as string;
+    const { error: vpErr } = await sb
+      .from('venue_photos')
+      .update({ serving_url: result.url, refreshed_at: new Date().toISOString() })
+      .eq('id', row.id as string);
+    if (vpErr) { stats.failed++; continue; }
+    // Propagate to every thing currently displaying the old URL (see function comment).
+    await sb.from('things').update({ photo_url: result.url }).eq('photo_url', oldUrl).eq('photo_source', 'google');
+    stats.refreshed++;
+  }
+
+  await saveSpend(sb, month, calls, overCap);
+
+  const failureRate = due.length ? stats.failed / due.length : 0;
+  if (failureRate > 0.2) {
+    console.log(
+      `  [venue-refresh] ALERT: ${(failureRate * 100).toFixed(0)}% failure rate ` +
+        `(${stats.failed}/${due.length}) — check GOOGLE_PLACES_KEY / Places API status`,
+    );
+  }
+  return stats;
+}
+
+/** 2026-07-10 addendum — a Google venue photo confirmed dead (see
+ *  CONFIRMED_DEAD_HOURS above): delete the dead pool row, search Wikimedia for a
+ *  replacement using the SAME gate/scorer the resolver and cockpit fetch already
+ *  share (never a separate, weaker check), and auto-approve the best survivor into
+ *  the freed pool slot if one exists. Every thing currently displaying the dead
+ *  photo is updated to the replacement, or — Card Imagery Build Spec Phase 3 §6.2 —
+ *  its own deterministic motif/big-type assignment if no replacement was found
+ *  (the same `assignVisual()` every other no-photo path uses, not a special case).
+ *  Free (Wikimedia costs no cap budget) and always reported back to the caller for
+ *  the nightly digest, never applied silently. */
+async function handleDeadVenuePhoto(
+  sb: SupabaseClient,
+  row: { id: string; venue_id: string; stable_ref: string; serving_url: string },
+): Promise<VenueFallbackEvent | null> {
+  const { data: venue } = await sb.from('venues').select('id, display_name, lat, lng').eq('id', row.venue_id).maybeSingle();
+  if (!venue) return null;
+  const venueName = venue.display_name as string;
+
+  await sb.from('venue_photos').delete().eq('id', row.id);
+
+  let replacementUrl: string | null = null;
+  let replacementAttribution: string | null = null;
+
+  if (venue.lat != null && venue.lng != null) {
+    const { data: existingRefs } = await sb.from('venue_photos').select('stable_ref').eq('venue_id', row.venue_id);
+    const seen = new Set((existingRefs ?? []).map((r) => r.stable_ref as string));
+    const wm = await wikimediaGeosearch(venue.lat as number, venue.lng as number);
+    const best = rankWikimediaCandidates(wm, { title: venueName }).find((c) => !seen.has(c.title));
+    if (best) {
+      const attribution = `${best.artist} · ${best.license} · Wikimedia Commons`;
+      const { data: maxSort } = await sb
+        .from('venue_photos').select('sort_order').eq('venue_id', row.venue_id).eq('approved', true)
+        .order('sort_order', { ascending: false }).limit(1);
+      const nextSort = ((maxSort?.[0]?.sort_order as number) ?? -1) + 1;
+      const { error: insErr } = await sb.from('venue_photos').insert({
+        venue_id: row.venue_id, source: 'wikimedia', stable_ref: best.title, serving_url: best.url,
+        attribution, approved: true, sort_order: nextSort, refreshed_at: new Date().toISOString(),
+      });
+      if (!insErr) { replacementUrl = best.url; replacementAttribution = attribution; }
+    }
+  }
+
+  if (replacementUrl) {
+    await sb.from('things')
+      .update({ photo_url: replacementUrl, photo_source: 'wikimedia', photo_attribution: replacementAttribution })
+      .eq('photo_url', row.serving_url).eq('photo_source', 'google');
+  } else {
+    // Phase 3 §6.2: each affected thing gets its own deterministic motif/big-type
+    // assignment (category + marquee-venue match), not a blanket bare placeholder.
+    const { data: affected } = await sb
+      .from('things')
+      .select('id, title, happening_category, lat, lng')
+      .eq('photo_url', row.serving_url).eq('photo_source', 'google');
+    for (const t of affected ?? []) {
+      const marquee = matchMarqueeVenue({ title: t.title as string, lat: (t.lat as number) ?? undefined, lng: (t.lng as number) ?? undefined });
+      const visual = assignVisual({ id: t.id as string, happening_category: t.happening_category }, marquee?.key);
+      await sb.from('things')
+        .update({
+          photo_url: null, photo_source: 'motif', photo_attribution: null,
+          visual_kind: visual.visual_kind, visual_key: visual.visual_key, visual_seed: visual.visual_seed,
+        })
+        .eq('id', t.id);
+    }
+  }
+
+  return { venueName, replacement: replacementUrl ? 'wikimedia' : 'none' };
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
   if (IMAGE_BACKFILL_PUBLISHED) return backfillPublishedImages();
+  if (IMAGE_BACKFILL_FOOD) return backfillFoodImages();
   if (WEIGHT_BACKFILL) return backfillWeights();
   if (REPEAT_BACKFILL) return backfillRepeatImages();
   if (VOICE_BACKFILL) return backfillVoice();
+  if (VENUE_SEED) return seedVenueRegistry();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -593,7 +1087,7 @@ async function main() {
     toLand = r.cands;
     imageStats = r.stats;
     console.log(
-      `  images               free ${r.stats.free}  google ${r.stats.google}  placeholder ${r.stats.placeholder}` +
+      `  images               free ${r.stats.free}  google ${r.stats.google}  motif ${r.stats.motif}` +
         `  over-cap ${r.stats.overCap}  rejected-quality ${r.stats.rejectedQuality}  rejected-relevance ${r.stats.rejectedRelevance}`,
     );
   }
@@ -653,6 +1147,32 @@ async function main() {
 
     const closed = await detectClosures(sb);
     if (closed) console.log(`  closures             archived ${closed} permanently-closed place(s)`);
+
+    // Card Imagery Build Spec Phase 2 §5.2 — nightly exact place_id auto-attach.
+    // Isolated so a matcher failure can't sink the run (same pattern as restock above).
+    try {
+      const venueMatched = await matchVenuesByPlaceId(sb);
+      if (venueMatched) console.log(`  venue-match          auto-attached ${venueMatched} thing(s) by exact place_id`);
+    } catch (err) {
+      console.log(`  venue-match          skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Card Imagery Build Spec Phase 2 §5.5 — nightly compliant Google URI refresh.
+    // Isolated so a refresh failure can't sink the run (same pattern as above).
+    let venueFallbacks: VenueFallbackEvent[] = [];
+    try {
+      const r = await refreshVenuePhotoServingUrls(sb);
+      venueFallbacks = r.fallbacks;
+      if (r.refreshed || r.overCap || r.failed || r.fallbacks.length) {
+        console.log(
+          `  venue-refresh        refreshed ${r.refreshed} · skipped ${r.skipped} (fresh/unassigned) · ` +
+            `over-cap ${r.overCap} · failed ${r.failed} · dead-photo fallbacks ${r.fallbacks.length}`,
+        );
+      }
+    } catch (err) {
+      console.log(`  venue-refresh        skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     await sendDigest(sb, {
       landed,
       gateDropped: totalGateDropped,
@@ -660,6 +1180,7 @@ async function main() {
       images: imageStats,
       runs: [...runs.values()],
       closed,
+      venueFallbacks,
     });
   }
 }
