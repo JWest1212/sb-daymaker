@@ -232,6 +232,8 @@
 .sbd-cockpit .lmeta .dot { opacity: .5; }
 .sbd-cockpit .lacts { display: flex; gap: 8px; align-items: center; }
 .sbd-cockpit .pendpill { font-family: var(--font-mono); font-size: .62rem; letter-spacing: .06em; background: rgba(224,168,46,.18); color: var(--gold-text); border-radius: var(--radius-pill); padding: 3px 8px; }
+.sbd-cockpit .budget-chip { font-family: var(--font-mono); font-size: .68rem; font-weight: 600; letter-spacing: .02em; background: var(--plaster-2); color: var(--ink-2); border-radius: var(--radius-pill); padding: 4px 10px; white-space: nowrap; }
+.sbd-cockpit .budget-chip.is-near { background: rgba(224,168,46,.18); color: var(--gold-text); }
 /* phone: let the row's actions drop to their own full-width line */
 @media (max-width: 560px) {
   .sbd-cockpit .lrow { grid-template-columns: 40px 1fr; }

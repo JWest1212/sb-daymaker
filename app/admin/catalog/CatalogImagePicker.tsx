@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ImagePicker } from "../review/ImagePicker";
+import { BudgetChip } from "../BudgetChip";
 import type { PhotoOption } from "@/lib/review";
 import type { PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
 
@@ -103,10 +104,16 @@ export function CatalogImagePicker({
         onToast?.(
           res.googleFetched
             ? `Found ${res.count} photo(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
-            : `Found ${res.wikimediaCount} Wikimedia photo(s)`,
+            : res.capHit
+              ? "Monthly photo budget reached, resets on the 1st — showing Wikimedia results"
+              : `Found ${res.wikimediaCount} Wikimedia photo(s)`,
         );
       } else {
-        onToast?.("No photos found yet" + (!res.venue_has_place_id && !res.venue_has_coords ? " — add a place_id or coordinates below" : ""));
+        onToast?.(
+          res.capHit
+            ? "Monthly photo budget reached, resets on the 1st"
+            : "No photos found yet" + (!res.venue_has_place_id && !res.venue_has_coords ? " — add a place_id or coordinates below" : ""),
+        );
       }
     } finally {
       setFetching(false);
@@ -206,11 +213,12 @@ export function CatalogImagePicker({
       <ImagePicker options={options} index={index} onCycle={cycle} onTryFetch={() => doFetch(false)} fetching={fetching} />
       <div className="catphoto-fetchrow">
         <button type="button" className="btn btn-edit btn-sm" disabled={fetching} onClick={() => doFetch(false)}>
-          {fetching ? "Fetching…" : "Fetch candidates"}
+          {fetching ? "Fetching…" : "Fetch free candidates (Wikimedia · no cost)"}
         </button>
         <button type="button" className="btn btn-quiet btn-sm" disabled={fetching} onClick={() => doFetch(true)}>
-          {fetching ? "Fetching…" : "Fetch via Google"}
+          {fetching ? "Fetching…" : "Fetch via Google (1 paid call · counts to budget)"}
         </button>
+        <BudgetChip />
       </div>
       {(needsPlaceId || needsCoords) ? (
         <div className="catphoto-location">

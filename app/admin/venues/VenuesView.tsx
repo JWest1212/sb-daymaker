@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { VenuesData, VenueRow, MatchProposal } from "@/lib/venuesServer";
 import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
+import { BudgetChip } from "../BudgetChip";
 
 const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
 
@@ -55,7 +56,7 @@ function PhotoStrip({
       <div className="photostrip-heading">
         <h4>Candidates ({venue.candidatePhotos.length})</h4>
         <button className="btn btn-edit btn-sm" onClick={onFetch} disabled={fetching || (!venue.place_id && !venue.lat)}>
-          {fetching ? "Fetching…" : "Fetch candidates"}
+          {fetching ? "Fetching…" : "Fetch free candidates (Wikimedia · no cost)"}
         </button>
         <button
           className="btn btn-quiet btn-sm"
@@ -63,8 +64,9 @@ function PhotoStrip({
           disabled={fetching || !venue.place_id}
           title={!venue.place_id ? "Add a place_id in the editor above first" : undefined}
         >
-          {fetching ? "Fetching…" : "Fetch via Google"}
+          {fetching ? "Fetching…" : "Fetch via Google (1 paid call · counts to budget)"}
         </button>
+        <BudgetChip />
       </div>
       {!venue.place_id ? (
         <p className="empty-note" style={{ marginTop: -4, fontWeight: 600 }}>
@@ -73,10 +75,11 @@ function PhotoStrip({
         </p>
       ) : null}
       <p className="empty-note" style={{ marginTop: -4 }}>
-        Wikimedia first (free, never expires) — Google only fetches automatically when Wikimedia comes up thin, or
-        when you click &ldquo;Fetch via Google&rdquo; yourself. Google returns the same up-to-10 photos every time
-        (there's no &ldquo;load more&rdquo; on its end) and each click spends real cap budget, so re-clicking it
-        won&rsquo;t turn up anything new unless Google's own listing for this place has changed.
+        &ldquo;Fetch free candidates&rdquo; is strictly free (Wikimedia, never expires) — it never spends a Google
+        call, no matter how few results come back. Google only fetches on &ldquo;Fetch via Google&rdquo;, a
+        deliberate second click. Google returns the same up-to-10 photos every time (there&rsquo;s no &ldquo;load
+        more&rdquo; on its end) and each click spends real cap budget, so re-clicking it won&rsquo;t turn up
+        anything new unless Google&rsquo;s own listing for this place has changed.
       </p>
       {!venue.place_id && !venue.lat ? (
         <p className="empty-note">This venue has no coordinates either, so &ldquo;Fetch candidates&rdquo; is also greyed out — add at least one via the editor above.</p>
@@ -249,7 +252,9 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       showToast(
         res.googleFetched
           ? `Found ${res.count} candidate(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
-          : `Found ${res.wikimediaCount} Wikimedia candidate(s) — Google not fetched (click "Fetch via Google" for more)`,
+          : res.capHit
+            ? "Monthly photo budget reached, resets on the 1st"
+            : `Found ${res.wikimediaCount} Wikimedia candidate(s)`,
       );
     } else showToast(res?.error ?? "Fetch failed");
     await refresh();
