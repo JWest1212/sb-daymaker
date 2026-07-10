@@ -14,16 +14,19 @@ import {
 
 // Wikimedia is free and its URLs never expire, so it never touches the shared
 // refresh cap; Google costs both a cap slot up front AND an ongoing nightly
-// refresh once approved into a pool. Google auto-fires only when Wikimedia alone
-// doesn't clear this bar; `includeGoogle: true` always forces it regardless
-// (the "Fetch via Google" override button in both cockpit surfaces).
-const WIKIMEDIA_SUFFICIENT_COUNT = 3;
+// refresh once approved into a pool. LC-8: Google fires ONLY on an explicit
+// `includeGoogle: true` — the "Fetch free candidates" button never spends a
+// paid call, no matter how thin the Wikimedia results come back.
 
 export interface VenueFetchStats {
   count: number;
   wikimediaCount: number;
   googleFetched: boolean;
   googleCount: number;
+  /** LC-8 "capped ≠ empty" — true when Google was requested but the shared
+   *  monthly cap was already hit (or was hit mid-fetch), so the caller can show
+   *  a distinct "budget reached" message instead of implying nothing exists. */
+  capHit: boolean;
 }
 
 /** Top-5 gated Wikimedia geosearch results (if the venue has lat/lng) + up to 10
@@ -54,19 +57,25 @@ export async function fetchCandidatesForVenue(
 
   let googleFetched = false;
   let googleCount = 0;
-  const shouldFetchGoogle = !!venue.place_id && (includeGoogle || wikimediaCount < WIKIMEDIA_SUFFICIENT_COUNT);
+  let capHit = false;
+  const shouldFetchGoogle = !!venue.place_id && includeGoogle;
   if (shouldFetchGoogle) {
-    googleFetched = true;
     const month = monthKey();
     const spend = await loadSpend(sb, month);
     let calls = spend.google_calls;
     const hasBudget = () => calls < CAP;
-    const onCall = () => { calls++; };
-    const google = await fetchGooglePhotoCandidates(venue.place_id as string, onCall, hasBudget, 10);
-    await saveSpend(sb, month, calls, spend.over_cap);
-    googleCount = google.length;
-    for (const g of google) {
-      rows.push({ venue_id: venue.id, source: "google", stable_ref: g.stable_ref, serving_url: g.preview_url, attribution: g.attribution, approved: false });
+    if (!hasBudget()) {
+      capHit = true;
+    } else {
+      googleFetched = true;
+      const onCall = () => { calls++; };
+      const google = await fetchGooglePhotoCandidates(venue.place_id as string, onCall, hasBudget, 10);
+      await saveSpend(sb, month, calls, spend.over_cap);
+      googleCount = google.length;
+      if (calls >= CAP) capHit = true; // stopped mid-loop, budget exhausted this call
+      for (const g of google) {
+        rows.push({ venue_id: venue.id, source: "google", stable_ref: g.stable_ref, serving_url: g.preview_url, attribution: g.attribution, approved: false });
+      }
     }
   }
 
@@ -74,5 +83,5 @@ export async function fetchCandidatesForVenue(
     await sb.from("venue_photos").upsert(rows, { onConflict: "venue_id,stable_ref", ignoreDuplicates: true });
   }
 
-  return { count: rows.length, wikimediaCount, googleFetched, googleCount };
+  return { count: rows.length, wikimediaCount, googleFetched, googleCount, capHit };
 }
