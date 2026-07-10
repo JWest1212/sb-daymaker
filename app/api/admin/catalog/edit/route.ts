@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminUser, revalidatePublic } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { NEIGHBORHOODS, OCCASION_TAGS, filterTags, type EditPayload } from "@/lib/review";
+import { deriveNearbyZone } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   if (!thing_id || !payload) return NextResponse.json({ error: "thing_id + payload required" }, { status: 400 });
 
   const { data: row } = await sb
-    .from("things").select("is_21_plus, price_band, status").eq("id", thing_id).single();
+    .from("things").select("is_21_plus, price_band, status, lat, lng").eq("id", thing_id).single();
   if (!row) return NextResponse.json({ error: "thing not found" }, { status: 404 });
   if (row.status !== "published") return NextResponse.json({ error: "only published things are editable here" }, { status: 400 });
 
@@ -31,6 +32,10 @@ export async function POST(req: Request) {
   if (payload.neighborhood !== undefined) {
     patch.neighborhood = payload.neighborhood && (NEIGHBORHOODS as readonly string[]).includes(payload.neighborhood) ? payload.neighborhood : null;
     changed.neighborhood = patch.neighborhood;
+    // LC-6: a neighborhood edit can move the Near-Me/Coverage zone — recompute
+    // with the same rule ingest/land.ts lands new rows with (lib/geo.ts).
+    patch.nearby_zone = deriveNearbyZone(patch.neighborhood as string | null, row.lat, row.lng);
+    changed.nearby_zone = patch.nearby_zone;
   }
 
   let tags: string[] | undefined;

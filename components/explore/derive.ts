@@ -1,6 +1,7 @@
 import type { Thing } from "@/lib/things";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
+import type { CardVisual } from "@/components/ui/Card";
 
 const TONES = ["gold", "sage", "pacific"] as const;
 export type Tone = (typeof TONES)[number];
@@ -65,6 +66,22 @@ export function cardFacts(t: Thing): string[] {
 
 export function cardBlurb(t: Thing): string {
   return t.blurb ?? t.reason_to_go ?? "";
+}
+
+/** Card Imagery Build Spec Phase 3 §6.2 — `ListCard`'s motif/bigtype render input,
+ *  assembled from the fields `resolveImages()` already wrote. `undefined` when the
+ *  thing has no visual assigned (a real photo, or a row that predates Phase 3's
+ *  backfill) — `ListCard` falls through to the pre-existing gradient in that case. */
+export function cardVisual(t: Thing): CardVisual | undefined {
+  if (t.visual_kind !== "motif" && t.visual_kind !== "bigtype") return undefined;
+  return {
+    kind: t.visual_kind,
+    key: t.visual_key,
+    startsAt: t.starts_at,
+    neighborhood: t.neighborhood,
+    nearbyZone: t.nearby_zone,
+    category: t.happening_category,
+  };
 }
 
 // --------------------------------------------------------------------------

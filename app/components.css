@@ -510,6 +510,60 @@
   outline: none;
 }
 
+/* ---- MOTIF TIER (Card Imagery Build Spec Phase 3 §6.2) -------------------
+   Ported from docs/card-imagery/SBDaymaker_Explore_Feed_Mockup_v1.html. Render
+   order inside .sbd-listcard__rail: photo -> motif -> bigtype -> occasion
+   gradient (the pre-existing --nophoto fallback, now the last-resort catch).
+
+   --motif-stroke/--motif-stroke-soft and the --tint-* backgrounds are NOT
+   semantic tokens (sbdaymaker_tokens.css) — they're baked-in illustration
+   colors specific to this ported art asset, same exemption already
+   established for the hero skyline SVG ("scene colors are baked into the
+   asset by design," components/explore/Hero.tsx). */
+:root {
+  --motif-stroke: #2b211a;
+  --motif-stroke-soft: #6a5a49;
+}
+.sbd-motif-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.sbd-motif-art__body { fill: var(--motif-stroke); }
+.sbd-motif-art__soft { fill: var(--motif-stroke-soft); opacity: 0.5; }
+.sbd-motif-art__gold { fill: var(--gold); }
+.sbd-motif-art__terra { fill: var(--terracotta); }
+.sbd-motif-art__paper { fill: var(--paper); }
+.sbd-motif-art__hair {
+  fill: none;
+  stroke: var(--motif-stroke);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sbd-motif-art__hair-t {
+  fill: none;
+  stroke: var(--terracotta);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Tint backgrounds — one per ported motif, applied to .sbd-listcard__rail
+   alongside the motif/bigtype SVG (same hex values as the mockup's .t-*
+   classes; renamed to match this codebase's motif keys). */
+.sbd-tint-stage { background: #f4e1d5; }
+.sbd-tint-sunset { background: #efe0c6; }
+.sbd-tint-market { background: #f5ecd4; }
+.sbd-tint-trail { background: #dfe9da; }
+.sbd-tint-wharf { background: #d7e6ea; }
+.sbd-tint-mission { background: #eee3d1; }
+.sbd-tint-books { background: #e8e1d1; }
+.sbd-tint-taproom { background: #f1e7cd; }
+.sbd-tint-beach { background: #dae8e4; }
+.sbd-tint-bigtype { background: #eddfe4; }
+
 /* ---- SAVE HEART --------------------------------------------------------- */
 .sbd-heart {
   width: var(--tap-min);
@@ -5320,6 +5374,14 @@
   margin-top: var(--space-2);
   position: relative;
   overflow: hidden;
+}
+/* Card Imagery Build Spec Phase 1 §4.3 — non-owned photo credit, detail page only
+   (never the 108px card rail). --text-muted = --ink-2, the AA-safe (9:1) secondary
+   text token per the house accessibility rule (CLAUDE.md §5). */
+.sbd-detail__attribution {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 .sbd-detail__title {
   font-family: var(--font-display);

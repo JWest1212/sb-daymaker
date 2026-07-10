@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cockpit enhancements — comprehensive review mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E;
+    --sage:#7E8B6B; --purple:#9C6B9E; --forest:#3E7C5A;
+    --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+    --line:#E4DAC8;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0; background:var(--plaster-2); color:var(--ink); font-family:var(--font-body); font-size:15px; line-height:1.5; padding:26px 15px 90px}
+  .page{max-width:960px; margin:0 auto}
+
+  /* ---- masthead ---- */
+  .mast{border-bottom:3px solid var(--ink); padding-bottom:16px; margin-bottom:16px}
+  .mast .tag{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; background:var(--ink); color:var(--paper); padding:4px 10px; border-radius:var(--radius-pill); font-weight:600}
+  .mast h1{font-family:var(--font-display); font-weight:600; font-size:27px; margin:12px 0 8px; letter-spacing:-.01em; line-height:1.1}
+  .mast p{margin:0; color:var(--ink-2); font-size:14px; max-width:76ch}
+
+  /* ---- how to read + legend ---- */
+  .legend{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); padding:15px 17px; margin:14px 0 8px; box-shadow:var(--shadow-card)}
+  .legend h3{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); margin:0 0 10px; font-weight:600}
+  .legend .rows2{display:grid; grid-template-columns:1fr; gap:7px}
+  @media(min-width:620px){.legend .rows2{grid-template-columns:1fr 1fr}}
+  .legkey{display:flex; align-items:center; gap:9px; font-size:13px; color:var(--ink-2)}
+  .legend .how{margin:12px 0 0; font-size:13px; color:var(--ink-2); border-top:1px solid var(--line); padding-top:11px}
+  .legend .how b{color:var(--ink)}
+
+  /* ---- pins ---- */
+  .pin{display:inline-flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:var(--radius-pill); letter-spacing:.02em; white-space:nowrap; vertical-align:middle}
+  .pc{background:var(--terracotta); color:#fff}      /* correctness */
+  .pcost{background:var(--gold); color:var(--ink)}   /* cost */
+  .pa{background:var(--pacific); color:#fff}          /* automation */
+  .pacc{background:var(--purple); color:#fff}         /* accessibility */
+  .ph{background:var(--forest); color:#fff}           /* hygiene */
+  .popen{background:var(--paper); color:var(--ink); border:1.5px dashed var(--ink-2)} /* open question */
+
+  /* ---- section divider ---- */
+  .sec{margin:38px 0 4px; display:flex; align-items:baseline; gap:12px; border-bottom:2px solid var(--terracotta); padding-bottom:8px}
+  .sec .k{font-family:var(--font-mono); font-size:13px; color:var(--terracotta); font-weight:600}
+  .sec h2{font-family:var(--font-display); font-weight:600; font-size:23px; margin:0; letter-spacing:-.01em}
+  .sec .rt{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-2); margin-left:auto}
+
+  /* ---- cockpit shell ---- */
+  .cockpit{background:var(--plaster); border:1px solid var(--line); border-radius:var(--radius-lg); overflow:hidden; box-shadow:var(--shadow-card); margin-top:14px}
+  .topbar{background:var(--pacific-dark); color:#EAF1F2; padding:10px 16px; display:flex; align-items:center; gap:10px}
+  .topbar .brand{font-family:var(--font-display); font-weight:600; font-size:14px; color:#fff}
+  .topbar .brand span{color:#9FC3CC; font-weight:400}
+  .topbar .spacer{flex:1}
+  .topbar .who{font-family:var(--font-mono); font-size:11px; color:#9FC3CC}
+  .tabs{display:flex; gap:2px; background:var(--pacific-dark); padding:0 10px; flex-wrap:wrap}
+  .tabs a{font-size:12.5px; color:#B8D3D9; text-decoration:none; padding:9px 13px; border-bottom:3px solid transparent; display:flex; align-items:center; gap:6px}
+  .tabs a .cnt{font-family:var(--font-mono); font-size:10px; background:rgba(255,255,255,.16); color:#fff; border-radius:var(--radius-pill); padding:1px 6px}
+  .tabs a.active{color:var(--ink); font-weight:600; border-bottom-color:var(--gold); background:var(--plaster)}
+  .cbody{padding:18px}
+
+  .surfacelabel{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--sage-text); font-weight:600; margin:16px 4px 8px; display:flex; align-items:center; gap:8px}
+  .surfacelabel::before{content:""; height:1px; width:16px; background:var(--sage)}
+
+  /* ---- annotation callout ---- */
+  .ann{border:1px solid var(--line); border-left:4px solid var(--sage); background:var(--paper); border-radius:var(--radius-sm); padding:10px 13px; margin:8px 4px; display:flex; gap:11px; align-items:flex-start}
+  .ann.c{border-left-color:var(--terracotta)} .ann.cost{border-left-color:var(--gold)}
+  .ann.a{border-left-color:var(--pacific)} .ann.acc{border-left-color:var(--purple)}
+  .ann.h{border-left-color:var(--forest)} .ann.open{border-left-color:var(--ink-2); border-left-style:dashed}
+  .ann .txt{font-size:13.5px}
+  .ann .txt b{color:var(--ink)} .ann .txt{color:var(--ink-2)}
+  .ann .eff{font-family:var(--font-mono); font-size:10px; color:var(--ink-2); background:var(--plaster-2); border-radius:5px; padding:1px 6px; margin-left:6px}
+
+  /* ---- generic cockpit bits ---- */
+  .subhead{font-size:13px; color:var(--ink-2); margin:2px 4px 10px}
+  .strike{text-decoration:line-through; color:var(--terra-text); opacity:.75}
+
+  .filterbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:10px 4px}
+  .chipset{display:inline-flex; gap:4px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-pill); padding:3px}
+  .chipset button{font-size:12.5px; font-weight:600; border:none; background:transparent; color:var(--ink-2); padding:4px 11px; border-radius:var(--radius-pill); cursor:default}
+  .chipset button.on{background:var(--pacific); color:#fff}
+  .srch{margin-left:auto; display:flex; align-items:center; gap:7px; border:1px solid var(--line); background:var(--paper); border-radius:var(--radius-pill); padding:5px 12px; color:var(--ink-2); font-size:12.5px}
+  .srch input{border:none; background:transparent; font-size:13px; color:var(--ink); outline:none}
+
+  /* bulk bar */
+  .bulkbar{background:var(--pacific-dark); color:#fff; border-radius:var(--radius-sm); padding:9px 13px; display:flex; flex-wrap:wrap; align-items:center; gap:9px; font-size:13px; margin:4px 4px}
+  .bulkbar .sel{font-family:var(--font-mono); font-size:12px; color:#C9E0E6}
+  .bulkbar .bb{font-size:12px; font-weight:600; padding:5px 10px; border-radius:6px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff}
+  .bulkbar .bb.danger{background:rgba(192,83,46,.35); border-color:var(--tile-light)}
+
+  /* catalog rows */
+  .crow{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm); padding:10px 12px; margin:7px 4px; display:grid; grid-template-columns:20px 40px 1fr auto; gap:12px; align-items:center}
+  .crow.pending{border-style:dashed; border-color:var(--gold); border-width:1.5px}
+  .ck{width:17px; height:17px; border:1.5px solid var(--sage); border-radius:4px; background:var(--paper)}
+  .ck.on{background:var(--pacific); border-color:var(--pacific); position:relative}
+  .ck.on::after{content:"✓"; color:#fff; font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+  .thumb{width:40px; height:40px; border-radius:6px; background:linear-gradient(135deg,var(--tile-light),var(--gold)); flex:none}
+  .thumb.real{background:linear-gradient(135deg,var(--pacific),var(--forest))}
+  .cinfo .ct{font-weight:600; font-size:14.5px; display:flex; flex-wrap:wrap; gap:7px; align-items:center}
+  .cmeta{font-family:var(--font-mono); font-size:11px; color:var(--ink-2); margin-top:2px}
+  .tier{font-family:var(--font-mono); font-size:9.5px; font-weight:600; padding:1.5px 6px; border-radius:var(--radius-pill)}
+  .t1{background:#F6E3DA; color:var(--terra-text)} .t2{background:#DCEAEE; color:var(--pacific)} .t3{background:#E6EADE; color:var(--sage-text)}
+  .badge-pending{font-family:var(--font-mono); font-size:9px; text-transform:uppercase; letter-spacing:.04em; color:var(--gold-text); border:1px solid var(--gold); border-radius:var(--radius-pill); padding:1.5px 7px; font-weight:600}
+  .cacts{display:flex; align-items:center; gap:7px}
+  .star{font-size:15px; color:var(--gold)}
+  .wn{font-family:var(--font-mono); font-size:11px; color:var(--ink-2); border:1px solid var(--line); border-radius:5px; padding:2px 6px}
+  .mini{font-size:11.5px; font-weight:600; padding:5px 9px; border-radius:6px; border:1px solid var(--line); background:var(--paper); color:var(--ink)}
+
+  /* error banner */
+  .errbanner{display:flex; align-items:center; gap:10px; background:#F7E7DF; border:1px solid var(--tile-light); border-radius:var(--radius-sm); padding:9px 13px; margin:6px 4px; font-size:13px; color:var(--terra-text)}
+  .errbanner b{color:var(--ink)}
+  .errbanner .retry{margin-left:auto; font-weight:600; color:var(--pacific); border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:4px 10px; font-size:12px}
+
+  /* edit sheet as inline panel */
+  .sheet{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); margin:10px 4px; box-shadow:var(--shadow-card); overflow:hidden}
+  .sheet .sh{background:var(--plaster); border-bottom:1px solid var(--line); padding:11px 15px; display:flex; align-items:center; gap:9px}
+  .sheet .sh .sht{font-family:var(--font-display); font-weight:600; font-size:16px}
+  .sheet .sh .tagmini{font-family:var(--font-mono); font-size:10px; color:var(--sage-text); border:1px solid var(--line); border-radius:var(--radius-pill); padding:2px 8px}
+  .sheet .sb{padding:14px 15px}
+  .fld{margin:0 0 12px}
+  .fld label{font-family:var(--font-mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); display:block; margin:0 0 4px; font-weight:600}
+  .fld .in{border:1px solid var(--line); background:var(--paper); border-radius:var(--radius-sm); padding:8px 11px; font-size:14px; color:var(--ink)}
+  .fld .in.area{min-height:38px}
+  .tagtoggles{display:flex; flex-wrap:wrap; gap:6px}
+  .tt{font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:var(--radius-pill); border:1px solid var(--line); background:var(--paper); color:var(--ink-2)}
+  .tt.on{background:var(--sage); color:#fff; border-color:var(--sage)}
+  .tt.off{opacity:.45}
+
+  /* image picker */
+  .picker{border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--plaster); padding:13px; margin:0 0 14px}
+  .picker .ph{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); font-weight:600; margin:0 0 10px; display:flex; align-items:center; gap:8px}
+  .bigthumb{height:120px; border-radius:var(--radius-sm); background:linear-gradient(135deg,var(--pacific),var(--forest)); position:relative; margin-bottom:10px; display:flex; align-items:flex-end; justify-content:space-between; padding:8px}
+  .bigthumb .srcpill{font-family:var(--font-mono); font-size:10px; background:rgba(0,0,0,.35); color:#fff; padding:2px 8px; border-radius:var(--radius-pill)}
+  .bigthumb .nav{display:flex; gap:5px}
+  .bigthumb .nav span{width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.85); color:var(--ink); display:flex; align-items:center; justify-content:center; font-size:14px}
+  .budget-chip{display:inline-flex; align-items:center; gap:8px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-pill); padding:5px 11px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink-2)}
+  .budget-chip .dot{width:8px; height:8px; border-radius:50%; background:var(--forest)} .budget-chip.warn .dot{background:var(--gold)}
+  .budget-chip b{color:var(--ink)}
+  .btnrow{display:flex; flex-wrap:wrap; gap:7px; align-items:flex-start; margin-top:10px}
+  .b{font-size:12px; font-weight:600; padding:7px 11px; border-radius:6px; border:1px solid var(--line); background:var(--paper); color:var(--ink); text-align:center}
+  .b.free{border-color:var(--forest); color:var(--forest)}
+  .b.paid{border-color:var(--gold); background:#fff}
+  .b.primary{background:var(--pacific); color:#fff; border-color:var(--pacific)}
+  .b.best{background:var(--forest); color:#fff; border-color:var(--forest)}
+  .b .sub{display:block; font-family:var(--font-mono); font-size:9px; font-weight:500; margin-top:2px}
+  .b.free .sub{color:var(--sage-text)} .b.paid .sub{color:var(--gold-text)}
+
+  .gatebox{background:var(--plaster-2); border-radius:var(--radius-sm); padding:9px 12px; font-size:12.5px; color:var(--ink-2); margin:2px 0 12px}
+  .sheetfoot{display:flex; gap:8px; padding:11px 15px; border-top:1px solid var(--line); background:var(--plaster)}
+  .redraft{display:inline-flex; align-items:center; gap:7px; border:1px dashed var(--purple); color:var(--purple); background:var(--paper); border-radius:6px; padding:6px 11px; font-size:12px; font-weight:600}
+
+  /* venue catcher + sheet reuse */
+  .pane{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); box-shadow:var(--shadow-card); position:relative; margin:14px 4px}
+  .newflag{position:absolute; top:-10px; left:15px; background:var(--gold); color:var(--ink); font-family:var(--font-mono); font-size:9.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:var(--radius-pill)}
+  .pane-head{padding:17px 16px 12px; border-bottom:1px solid var(--line)}
+  .pane-head h4{font-family:var(--font-display); font-weight:600; font-size:17px; margin:0 0 3px}
+  .pane-head h4 .n{color:var(--terracotta)}
+  .pane-head p{margin:0; color:var(--ink-2); font-size:13px; max-width:74ch}
+  .vrow{border:1px solid var(--line); border-radius:var(--radius-sm); margin:9px 12px; background:var(--paper); padding:11px 13px; display:grid; grid-template-columns:40px 1fr auto; gap:12px; align-items:start}
+  .vrow.open{border-color:var(--pacific)}
+  .vrinfo .vt{font-weight:600; font-size:14px; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+  .vmeta{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2); margin-top:2px}
+  .noaddr{color:var(--terra-text); border:1px solid var(--tile-light); border-radius:var(--radius-pill); padding:0 6px; font-size:10px}
+  .why{font-size:12px; color:var(--ink-2); margin-top:4px} .why b{color:var(--ink)}
+  .guess{display:inline-flex; gap:6px; background:var(--plaster); border:1px dashed var(--sage); border-radius:var(--radius-pill); padding:2px 9px; font-size:11px; color:var(--sage-text); margin-top:4px}
+  .guess .go{font-weight:600; color:var(--forest)}
+  .vacts{display:flex; flex-direction:column; gap:5px; min-width:132px}
+  .expand{border-top:1px dashed var(--line); background:var(--plaster); padding:12px 13px; margin:9px 12px; border-radius:var(--radius-sm)}
+  .eh{font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); font-weight:600; margin:0 0 8px}
+  .vres{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; background:var(--paper); margin-bottom:6px}
+  .vres i.tw{width:20px; height:20px; border-radius:4px; background:linear-gradient(135deg,var(--pacific),var(--forest)); display:inline-block}
+  .vres .vn{font-weight:600; font-size:13px} .vres .vsub{font-family:var(--font-mono); font-size:10px; color:var(--ink-2)}
+  .vres .sp{flex:1}
+  .cform{display:grid; grid-template-columns:1fr 1fr; gap:8px 11px}
+  .cform .full{grid-column:1/-1}
+  .cform label{font-family:var(--font-mono); font-size:9.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); display:block; margin:0 0 3px; font-weight:600}
+  .cform .in{border:1px solid var(--line); background:var(--paper); border-radius:6px; padding:6px 9px; font-size:13px; color:var(--ink)} .cform .in.hint{color:var(--ink-2)}
+
+  /* venue detail sheet */
+  .vgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:9px; padding:6px 4px}
+  .vcard{border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--paper); padding:11px}
+  .vcard .vn{font-weight:600; font-size:14px} .vcard .vsub{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2); margin-top:2px}
+  .vcard .strip{display:flex; gap:3px; margin-top:8px}
+  .vcard .strip i{width:26px; height:26px; border-radius:4px; background:linear-gradient(135deg,var(--pacific),var(--forest))}
+  .vcard.active-open{outline:2px solid var(--pacific)}
+
+  .poolstrip{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+  .poolcard{width:96px}
+  .poolcard .pi{height:64px; border-radius:6px; background:linear-gradient(135deg,var(--pacific),var(--forest)); position:relative}
+  .poolcard .picontrols{display:flex; justify-content:space-between; margin-top:4px; font-size:11px; color:var(--ink-2)}
+  .poolcard .picontrols .x{color:var(--terra-text)}
+  .candgrid{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0}
+  .cand{width:96px} .cand .pi{height:64px; border-radius:6px; background:linear-gradient(135deg,var(--tile-light),var(--gold))}
+  .cand .ca{display:flex; gap:5px; margin-top:4px} .cand .ca span{font-size:10.5px; font-weight:600; padding:2px 6px; border-radius:5px; border:1px solid var(--line)}
+  .cand .ca .ap{background:var(--forest); color:#fff; border-color:var(--forest)}
+
+  .attached-list{border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--paper); overflow:hidden; margin:6px 0}
+  .attached-list .al{display:flex; align-items:center; gap:10px; padding:8px 11px; border-top:1px solid var(--line); font-size:13px}
+  .attached-list .al:first-child{border-top:none}
+  .attached-list .al .alt{flex:1; font-weight:500}
+  .attached-list .al .det{font-size:11px; font-weight:600; color:var(--pacific); border:1px solid var(--line); border-radius:5px; padding:3px 8px; background:var(--paper)}
+  .alhead{font-family:var(--font-mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); font-weight:600; padding:8px 11px; background:var(--plaster)}
+
+  /* index table */
+  .idx{width:100%; border-collapse:collapse; margin:12px 4px; font-size:13.5px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden}
+  .idx th,.idx td{text-align:left; padding:9px 11px; border-bottom:1px solid var(--line); vertical-align:top}
+  .idx th{font-family:var(--font-mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-2); background:var(--plaster-2); font-weight:600}
+  .idx td:first-child{white-space:nowrap}
+  .idx tr:last-child td{border-bottom:none}
+  .idx .why2{color:var(--ink-2); font-size:12.5px}
+  .idxcap{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--sage-text); font-weight:600; margin:20px 4px 2px}
+
+  .foot{margin-top:44px; padding-top:18px; border-top:2px solid var(--ink)}
+  .foot h3{font-family:var(--font-display); font-weight:600; font-size:19px; margin:0 0 8px}
+  .foot .oq{background:var(--paper); border:1px dashed var(--ink-2); border-radius:var(--radius-sm); padding:11px 14px; margin:8px 0; font-size:13.5px; color:var(--ink-2)}
+  .foot .oq b{color:var(--ink)}
+  .foot .next{font-family:var(--font-mono); font-size:12px; color:var(--ink-2); line-height:1.8; margin-top:14px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="mast">
+    <span class="tag">Comprehensive mockup · for detailed review</span>
+    <h1>Cockpit enhancements: everything surfaced, in one view</h1>
+    <p>Two surfaces, every change we've found. Anything with a real interface is rendered in place. Behavioral, logic, and hygiene fixes (which have no pixels) are pinned as annotations on the surface they touch. Still-open calls carry a dashed OPEN pin for you to settle during review. Each section ends with a change-index checklist. Nothing here is built yet, and the Venues tab itself is still a Phase-2 deploy.</p>
+  </div>
+
+  <div class="legend">
+    <h3>How to read this · pin colors</h3>
+    <div class="rows2">
+      <div class="legkey"><span class="pin pc">correctness</span> wrong live data or a wrong mental model</div>
+      <div class="legkey"><span class="pin pcost">cost</span> touches the Google photo budget</div>
+      <div class="legkey"><span class="pin pa">automation</span> saves clicks / operator time</div>
+      <div class="legkey"><span class="pin pacc">a11y</span> WCAG 2.2 AA build floor</div>
+      <div class="legkey"><span class="pin ph">hygiene</span> cleanup / governance, no user surface</div>
+      <div class="legkey"><span class="pin popen">OPEN</span> a call I'm handing to you</div>
+    </div>
+    <p class="how"><b>Rendered</b> = the change drawn where it lives. <b>Annotation callout</b> = a fix with no visible surface, described in context. Sheets are shown expanded inline (not as pop-over modals) so you can review everything in one scroll.</p>
+  </div>
+
+  <!-- =================================================================== -->
+  <!-- SECTION 1 — LIVE CATALOG                                            -->
+  <!-- =================================================================== -->
+  <div class="sec"><span class="k">§1</span><h2>Live catalog</h2><span class="rt">14 changes · /admin/catalog</span></div>
+
+  <div class="cockpit">
+    <div class="topbar"><span class="brand">SB Daymaker <span>· cockpit</span></span><span class="spacer"></span><span class="who">jim · admin</span></div>
+    <div class="tabs">
+      <a href="#">Queue <span class="cnt">7</span></a><a href="#">Coverage</a>
+      <a href="#" class="active">Live catalog</a><a href="#">Venues</a><a href="#">Hero plan</a>
+    </div>
+    <div class="cbody">
+
+      <!-- header + corrected subhead -->
+      <div class="surfacelabel">Page header</div>
+      <div class="subhead">
+        <span class="pin pc">LC-1</span>
+        <span class="strike">Edits go back through the Queue; the live version stays up until you re-approve.</span><br>
+        <b style="color:var(--ink)">Everything currently published. Edits here go live immediately, no review step. To change a start time, reject and re-ingest in the Queue.</b>
+      </div>
+
+      <!-- filter + bulk -->
+      <div class="surfacelabel">Filter bar + bulk actions <span class="pin pa">LC-3</span></div>
+      <div class="filterbar">
+        <div class="chipset"><button class="on">All</button><button>T1</button><button>T2</button><button>T3</button></div>
+        <span style="font-size:12.5px;color:var(--ink-2)">All vibes ▾ · All zones ▾</span>
+        <span class="srch">🔍 <input placeholder="Search title…"></span>
+      </div>
+      <div class="bulkbar">
+        <span class="sel">8 selected</span>
+        <span class="bb">★ Hero-eligible</span><span class="bb">Add tag…</span><span class="bb">Remove tag…</span>
+        <span class="bb">Set weight…</span><span class="bb">Redraft tonight</span><span class="bb danger">Archive</span>
+        <span class="bb" style="margin-left:auto;background:transparent;border:none;color:#C9E0E6">Clear</span>
+      </div>
+
+      <!-- error banner variant -->
+      <div class="surfacelabel">Error state, distinct from empty <span class="pin pc">LC-2</span></div>
+      <div class="errbanner">⚠ <b>Couldn't refresh the list.</b> Showing the last results. <span class="retry">Retry</span></div>
+
+      <!-- rows -->
+      <div class="surfacelabel">Result rows <span class="pin pc">LC-4</span> <span class="pin pc">LC-5</span></div>
+      <div class="crow">
+        <span class="ck on"></span><span class="thumb real"></span>
+        <div class="cinfo"><div class="ct">Santa Barbara Bowl: Hozier <span class="tier t1">T1</span></div><div class="cmeta">Sat, Jul 19 · 7:00 PM · waterfront · catch_a_show</div></div>
+        <div class="cacts"><span class="star">★</span><span class="wn">wt 0</span><span class="mini">Edit</span><span class="mini">Delete</span></div>
+      </div>
+      <div class="crow pending">
+        <span class="ck"></span><span class="thumb real"></span>
+        <div class="cinfo"><div class="ct">1st Thursday Art Walk <span class="tier t2">T2</span> <span class="badge-pending">Pending edit in Queue</span></div><div class="cmeta">Recurring · 1st Thu · downtown · arts_culture</div></div>
+        <div class="cacts"><span class="star">★</span><span class="wn">wt +2</span><span class="mini">Edit</span><span class="mini">Delete</span></div>
+      </div>
+      <div class="ann c"><span class="pin pc">LC-5</span><div class="txt"><b>Hero star: await + revert.</b> Today the star flips optimistically and never checks the write. Make it await the response and revert with an error toast on failure, matching the WeightNudge control right beside it. <span class="eff">S</span></div></div>
+
+      <!-- edit sheet -->
+      <div class="surfacelabel">Edit sheet (shown expanded for review)</div>
+      <div class="sheet">
+        <div class="sh"><span class="sht">Edit: Santa Barbara Bowl: Hozier</span><span class="tagmini">focus trapped</span><span class="pin pacc">LC-7</span></div>
+        <div class="sb">
+
+          <!-- image picker -->
+          <div class="picker">
+            <div class="ph">Photo <span class="pin pcost">LC-8</span> <span class="pin pa">LC-9</span></div>
+            <div class="bigthumb"><span class="srcpill">google · 2/5</span><div class="nav"><span>‹</span><span>›</span></div></div>
+            <div class="budget-chip"><span class="dot"></span>Google photo budget: <b>342 / 500</b> this month</div>
+            <div class="btnrow">
+              <span class="b free">Fetch free candidates<span class="sub">Wikimedia + Pexels · no cost</span></span>
+              <span class="b paid">Fetch via Google<span class="sub">1 paid call · counts to budget</span></span>
+              <span class="b best">Apply best</span>
+              <span class="b primary">Use this photo</span>
+            </div>
+            <div class="ann cost" style="margin:10px 0 0"><span class="pin pcost">LC-8</span><div class="txt"><b>Capped is not empty.</b> When a fetch returns nothing because the cap is hit, say "Monthly photo budget reached, resets on the 1st," not "No photos found." <span class="eff">M</span></div></div>
+            <div class="ann a" style="margin:8px 0 0"><span class="pin pa">LC-9</span><div class="txt"><b>Keep fetched candidates + undo.</b> Don't discard fetched options when the sheet closes, and attach an Undo to the "Use this photo" toast (it goes live instantly with no confirm today). <span class="eff">S-M</span></div></div>
+          </div>
+
+          <div class="fld"><label>Title</label><div class="in">Santa Barbara Bowl: Hozier</div></div>
+          <div class="fld"><label>Blurb</label><div class="in area">An evening at the Bowl under the oaks, the best seat in town for a show.</div></div>
+          <div class="fld">
+            <label>Neighborhood <span class="pin pc">LC-6</span></label>
+            <div class="in">waterfront ▾</div>
+            <div class="ann c" style="margin-top:6px"><span class="pin pc">LC-6</span><div class="txt"><b>Recompute nearby_zone on change.</b> Editing neighborhood must re-derive nearby_zone (it powers public Near Me) using the same rule ingest uses, or the zone silently desyncs. <span class="eff">M</span></div></div>
+          </div>
+          <div class="fld">
+            <label>Occasion tags</label>
+            <div class="tagtoggles">
+              <span class="tt on">catch_a_show</span><span class="tt">date_night</span><span class="tt">nightlife</span>
+              <span class="tt off">family_day</span><span class="tt">arts_culture</span>
+            </div>
+          </div>
+          <div class="gatebox">
+            Changes apply to the live site immediately, no review step. Start time isn't editable here.
+            <span class="pin popen">LC-11</span> <b>Open:</b> add a narrow, audited "correct time" field, or keep the reject-and-re-ingest lock? Your call, depends how often times are wrong.
+          </div>
+        </div>
+        <div class="sheetfoot">
+          <span class="b" style="border-color:var(--line)">Cancel</span>
+          <span class="b primary">Save changes</span>
+          <span class="redraft"><span class="pin pa" style="background:transparent;color:var(--purple);border:none;padding:0">LC-10</span>↻ Redraft blurb + tags tonight</span>
+        </div>
+      </div>
+      <div class="ann a"><span class="pin pa">LC-10</span><div class="txt"><b>Queued re-enrich, not live AI.</b> "Redraft tonight" inserts an enrich directive (mirrors restock_directives) for the nightly worker. Respects batch-AI-only: no Claude call fires from the click; the fresh draft lands in tomorrow's Queue. <span class="eff">M</span></div></div>
+
+      <!-- hygiene cluster -->
+      <div class="surfacelabel">Hygiene &amp; governance (no visible surface)</div>
+      <div class="ann h"><span class="pin ph">LC-12</span><div class="txt"><b>Delete stray duplicate files.</b> <code>delete/route 2.ts</code> and <code>WeightNudge 2.tsx</code> are inert editor artifacts, confusing in the tree. <span class="eff">S</span></div></div>
+      <div class="ann h"><span class="pin ph">LC-13</span><div class="txt"><b>Wire or remove <code>find-more-images</code>.</b> A complete free-source route with zero callers. Either add it as a "search wider (free)" fallback in the picker, or delete it. <span class="eff">S</span></div></div>
+      <div class="ann h"><span class="pin ph">LC-14</span><div class="txt"><b>Fix stale comment + reconcile schema doc.</b> ImagePicker's comment still says "stubbed" route; <code>sbdaymaker_schema.sql</code> omits venues / venue_photos / image_spend / photo_options. Point the contract at the migrations. <span class="eff">S</span></div></div>
+
+    </div>
+  </div>
+
+  <div class="idxcap">§1 change index — Live catalog</div>
+  <table class="idx">
+    <thead><tr><th>Pin</th><th>Change</th><th>Type</th><th>Effort</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pin pc">LC-1</span></td><td>Correct the subhead</td><td>Correctness</td><td>S</td><td class="why2">Header currently claims a review step that doesn't exist.</td></tr>
+      <tr><td><span class="pin pc">LC-2</span></td><td>Error state ≠ empty state</td><td>Correctness</td><td>S</td><td class="why2">Failed refresh is currently silent and looks like "no results."</td></tr>
+      <tr><td><span class="pin pa">LC-3</span></td><td>Multi-select + bulk bar</td><td>Automation</td><td>L</td><td class="why2">Safe ops only: hero, tags, weight, redraft, archive. Biggest time win.</td></tr>
+      <tr><td><span class="pin pc">LC-4</span></td><td>Surface pending-edit badge</td><td>Correctness</td><td>S</td><td class="why2">CSS rule already exists; closes an edit-collision blind spot.</td></tr>
+      <tr><td><span class="pin pc">LC-5</span></td><td>Hero toggle await + revert</td><td>Correctness</td><td>S</td><td class="why2">Only fire-and-forget mutation on the page.</td></tr>
+      <tr><td><span class="pin pc">LC-6</span></td><td>Recompute nearby_zone on edit</td><td>Correctness</td><td>M</td><td class="why2">The real data-integrity bug; corrupts public Near Me.</td></tr>
+      <tr><td><span class="pin pacc">LC-7</span></td><td>Edit-sheet focus trap</td><td>A11y</td><td>S-M</td><td class="why2">Modal leaks focus; AA floor gap.</td></tr>
+      <tr><td><span class="pin pcost">LC-8</span></td><td>Budget chip + honest buttons + capped≠empty</td><td>Cost</td><td>M</td><td class="why2">Paid call can fire invisibly from a "free"-looking button.</td></tr>
+      <tr><td><span class="pin pa">LC-9</span></td><td>Apply-best + keep fetches + undo</td><td>Automation</td><td>S-M</td><td class="why2">Shrinks the most-touched workflow; stops discarding fetches.</td></tr>
+      <tr><td><span class="pin pa">LC-10</span></td><td>Queued "redraft tonight"</td><td>Automation</td><td>M</td><td class="why2">Re-run enrich within batch-AI-only.</td></tr>
+      <tr><td><span class="pin popen">LC-11</span></td><td>Editable start time?</td><td>Open</td><td>M</td><td class="why2">Your call; protects the green trust chip today.</td></tr>
+      <tr><td><span class="pin ph">LC-12</span></td><td>Delete stray files</td><td>Hygiene</td><td>S</td><td class="why2">Inert duplicates.</td></tr>
+      <tr><td><span class="pin ph">LC-13</span></td><td>Wire/remove find-more-images</td><td>Hygiene</td><td>S</td><td class="why2">Dead route.</td></tr>
+      <tr><td><span class="pin ph">LC-14</span></td><td>Stale comment + schema drift</td><td>Governance</td><td>S</td><td class="why2">Contract file out of sync with live schema.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- =================================================================== -->
+  <!-- SECTION 2 — VENUES                                                  -->
+  <!-- =================================================================== -->
+  <div class="sec"><span class="k">§2</span><h2>Venues tab</h2><span class="rt">16 changes · /admin/venues</span></div>
+
+  <div class="cockpit">
+    <div class="topbar"><span class="brand">SB Daymaker <span>· cockpit</span></span><span class="spacer"></span><span class="who">jim · admin</span></div>
+    <div class="tabs">
+      <a href="#">Queue <span class="cnt">7</span></a><a href="#">Coverage</a>
+      <a href="#">Live catalog</a><a href="#" class="active">Venues</a><a href="#">Hero plan</a>
+    </div>
+    <div class="cbody">
+
+      <!-- catcher pane -->
+      <div class="surfacelabel">New pane: no-venue-match catcher <span class="pin pa">V-1</span></div>
+      <div class="pane">
+        <span class="newflag">New</span>
+        <div class="pane-head">
+          <h4>No venue match <span class="n">· 14 on a motif</span>
+            <span class="pin popen">V-6</span></h4>
+          <p>Events that matched no venue and are showing a motif. Attach or create a venue and the pool photo fills in. <b>OPEN (V-6):</b> live as a pane here, or its own tab if the all-tiers list runs long?</p>
+        </div>
+
+        <!-- weak-guess row -->
+        <div class="vrow">
+          <span class="thumb" style="width:40px;height:40px"></span>
+          <div class="vrinfo"><div class="vt">Cumbia Night with Los Hijos <span class="tier t1">T1</span></div>
+            <div class="vmeta">Sat, Jul 12 · 9:00 PM · 1221 State St · src: sbindependent</div>
+            <div class="guess">Closest guess: <span class="go">SOhO Music Club</span> · low confidence · <b>Attach</b> <span class="pin popen">V-5</span></div>
+          </div>
+          <div class="vacts"><span class="b primary" style="font-size:12px">Attach to venue</span><span class="b" style="font-size:12px">Create venue</span><span class="b" style="font-size:11.5px;color:var(--ink-2)">Leave on motif</span></div>
+        </div>
+
+        <!-- attach-to-existing open -->
+        <div class="vrow open">
+          <span class="thumb" style="width:40px;height:40px"></span>
+          <div class="vrinfo"><div class="vt">First Friday: Ceramics Opening <span class="tier t1">T1</span></div>
+            <div class="vmeta">Fri, Aug 1 · 5:00 PM · 7 W Anapamu St · src: submissions</div>
+            <div class="why"><b>Why no match:</b> no registered venue at this address; title hit no name pattern. <span class="pin pa">V-2</span></div>
+          </div>
+          <div class="vacts"><span class="b primary" style="font-size:12px;background:var(--pacific-dark);border-color:var(--pacific-dark)">Attach to venue ▴</span><span class="b" style="font-size:12px">Create venue</span><span class="b" style="font-size:11.5px;color:var(--ink-2)">Leave on motif</span></div>
+        </div>
+        <div class="expand">
+          <p class="eh">Attach to an existing venue <span class="pin pa">V-2</span></p>
+          <div class="vres"><i class="tw"></i><i class="tw"></i><i class="tw"></i><span><div class="vn">Anapamu Arts Collective</div><div class="vsub">3 approved photos · 0.3 mi</div></span><span class="sp"></span><span class="b primary" style="font-size:11.5px">Attach</span></div>
+          <div class="vres"><i class="tw" style="background:var(--plaster-2)"></i><span><div class="vn">The Arts Fund Gallery</div><div class="vsub">no pool yet · 0.2 mi</div></span><span class="sp"></span><span class="b" style="font-size:11.5px">Attach</span></div>
+        </div>
+
+        <!-- create-venue open -->
+        <div class="vrow open">
+          <span class="thumb" style="width:40px;height:40px"></span>
+          <div class="vrinfo"><div class="vt">Trivia Tuesdays at Lama Dog <span class="tier t2">T2</span></div>
+            <div class="vmeta">Recurring · Tue 7:00 PM · 116 Santa Barbara St · src: recurringRegistry</div>
+            <div class="why"><b>Why no match:</b> venue not registered yet. <span class="pin pa">V-3</span></div>
+          </div>
+          <div class="vacts"><span class="b" style="font-size:12px">Attach to venue</span><span class="b primary" style="font-size:12px;background:var(--forest);border-color:var(--forest)">Create venue ▴</span><span class="b" style="font-size:11.5px;color:var(--ink-2)">Leave on motif</span></div>
+        </div>
+        <div class="expand">
+          <p class="eh">Create a venue from this event <span class="pin pa">V-3</span></p>
+          <div class="cform">
+            <div class="full"><label>Display name</label><div class="in">Lama Dog Tap Room</div></div>
+            <div class="full" style="display:flex;gap:8px;align-items:flex-end"><div style="flex:1"><label>Google place ID</label><div class="in hint">not set</div></div><span class="b" style="font-size:11.5px">Look up automatically</span></div>
+            <div><label>Latitude</label><div class="in hint">auto from lookup</div></div>
+            <div><label>Longitude</label><div class="in hint">auto from lookup</div></div>
+            <div class="full" style="display:flex;gap:8px;align-items:center;margin-top:2px"><span class="b primary" style="font-size:12px;background:var(--forest);border-color:var(--forest)">Create &amp; attach</span><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--gold-text)">place ID enables Google photos later · no cost now</span></div>
+          </div>
+        </div>
+
+        <div class="ann open" style="margin:10px 12px"><span class="pin popen">V-4</span><div class="txt"><b>"Leave on motif" persists.</b> Today's dismissals are client-only and reappear on reload. Persist the choice so intentional-motif events (library, program venues) stop coming back. <b>Open:</b> confirm you want this stored. <span class="eff">S</span></div></div>
+      </div>
+
+      <!-- venue grid -->
+      <div class="surfacelabel">Venues grid</div>
+      <div class="vgrid">
+        <div class="vcard"><div class="vn">SB Bowl</div><div class="vsub">12 things · 5 photos</div><div class="strip"><i></i><i></i><i></i><i></i></div></div>
+        <div class="vcard active-open"><div class="vn">SOhO Music Club</div><div class="vsub">8 things · 4 photos</div><div class="strip"><i></i><i></i><i></i></div></div>
+        <div class="vcard"><div class="vn">Granada</div><div class="vsub">0 things · 5 photos</div><div class="strip"><i></i><i></i><i></i></div></div>
+      </div>
+      <div class="ann a"><span class="pin pa">V-11</span><div class="txt"><b>Add "New venue" here.</b> Today venues are only created as a side effect of the catalog's fetch. Add a first-class create control so registering a venue doesn't require the catalog detour. <span class="eff">S</span></div></div>
+
+      <!-- venue detail sheet -->
+      <div class="surfacelabel">Venue detail sheet: SOhO Music Club (shown expanded)</div>
+      <div class="sheet">
+        <div class="sh"><span class="sht">SOhO Music Club</span><span class="tagmini">focus trapped</span><span class="pin pacc">V-14</span></div>
+        <div class="sb">
+
+          <!-- attached events list -->
+          <div class="fld">
+            <label>Attached events <span class="pin pa">V-7</span> <span class="pin pc">V-8</span></label>
+            <div class="attached-list">
+              <div class="alhead">8 events inherit this pool</div>
+              <div class="al"><span class="tier t1">T1</span><span class="alt">Cumbia Night with Los Hijos</span><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2)">Jul 12</span><span class="det">Open</span><span class="det">Detach</span></div>
+              <div class="al"><span class="tier t1">T1</span><span class="alt">Salsa Sundays</span><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2)">weekly</span><span class="det">Open</span><span class="det">Detach</span></div>
+              <div class="al"><span class="tier t2">T2</span><span class="alt">Jazz Jam Mondays</span><span style="font-family:var(--font-mono);font-size:10.5px;color:var(--ink-2)">weekly</span><span class="det">Open</span><span class="det">Detach</span></div>
+            </div>
+          </div>
+
+          <!-- photo pool -->
+          <div class="fld">
+            <label>Approved pool (4) <span class="pin pc">V-9</span> <span class="pin pacc">V-13</span></label>
+            <div class="poolstrip">
+              <div class="poolcard"><div class="pi"></div><div class="picontrols"><span>◀ ▶</span><span class="x" title="remove" aria-label="Remove photo">✕</span></div></div>
+              <div class="poolcard"><div class="pi"></div><div class="picontrols"><span>◀ ▶</span><span class="x" title="remove" aria-label="Remove photo">✕</span></div></div>
+              <div class="poolcard"><div class="pi"></div><div class="picontrols"><span>◀ ▶</span><span class="x" title="remove" aria-label="Remove photo">✕</span></div></div>
+              <div class="poolcard"><div class="pi"></div><div class="picontrols"><span>◀ ▶</span><span class="x" title="remove" aria-label="Remove photo">✕</span></div></div>
+            </div>
+          </div>
+
+          <!-- fetch + budget -->
+          <div class="fld">
+            <label>Add candidates <span class="pin pcost">V-10</span></label>
+            <div class="budget-chip warn"><span class="dot"></span>Google photo budget: <b>468 / 500</b> this month</div>
+            <div class="btnrow">
+              <span class="b free">Fetch free candidates<span class="sub">Wikimedia + Pexels · no cost</span></span>
+              <span class="b paid">Fetch via Google<span class="sub">1 paid call · near cap</span></span>
+            </div>
+            <div class="candgrid" style="margin-top:10px">
+              <div class="cand"><div class="pi"></div><div class="ca"><span class="ap">Approve</span><span>Reject</span></div></div>
+              <div class="cand"><div class="pi"></div><div class="ca"><span class="ap">Approve</span><span>Reject</span></div></div>
+            </div>
+          </div>
+
+          <div class="fld">
+            <label>Venue fields</label>
+            <div class="in" style="margin-bottom:8px">Name · radius · place ID · lat · lng</div>
+          </div>
+        </div>
+        <div class="sheetfoot">
+          <span class="b" style="border-color:var(--line)">Save</span>
+          <span class="b" style="border-color:var(--tile-light);color:var(--terra-text)">Archive venue…</span>
+          <span class="pin popen" style="align-self:center">V-12</span>
+          <span style="font-size:11.5px;color:var(--ink-2);align-self:center">confirm dialog before archive</span>
+        </div>
+      </div>
+
+      <!-- venues behavioral annotations -->
+      <div class="surfacelabel">Behavioral &amp; governance fixes (no visible surface)</div>
+      <div class="ann c"><span class="pin pc">V-9</span><div class="txt"><b>Remove-photo cleanup.</b> Removing a pool photo doesn't touch events already serving its URL, so a "removed" photo can stay live indefinitely. On remove, re-pick or flag the affected events. <span class="eff">M</span></div></div>
+      <div class="ann pc"><span class="pin pc">V-16</span><div class="txt"><b>Revalidate on place_id / coordinate edit.</b> A venue edit only revalidates the public site on archive today, so a corrected place_id doesn't propagate promptly. Revalidate on those edits too. <span class="eff">S</span></div></div>
+      <div class="ann acc"><span class="pin pacc">V-13</span><div class="txt"><b>Label the remove "✕".</b> The approved-photo remove button is a bare glyph with no aria-label (catalog's Delete is labelled). Add one. <span class="eff">S</span></div></div>
+      <div class="ann acc"><span class="pin pacc">V-14</span><div class="txt"><b>Venue-sheet focus trap.</b> Same gap as the catalog sheet: no trap, autofocus, or restore. Reuse the shared hook. <span class="eff">S</span></div></div>
+      <div class="ann h"><span class="pin ph">V-15</span><div class="txt"><b>Consistent audit trail.</b> photos/remove and photos/reorder skip audit_log while edit/match/approve write it. Log all six for a complete trail. <span class="eff">S</span></div></div>
+
+    </div>
+  </div>
+
+  <div class="idxcap">§2 change index — Venues tab</div>
+  <table class="idx">
+    <thead><tr><th>Pin</th><th>Change</th><th>Type</th><th>Effort</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pin pa">V-1</span></td><td>No-venue-match catcher pane</td><td>Automation</td><td>L</td><td class="why2">Surfaces the silent misses; closes the original Tier-1 gap.</td></tr>
+      <tr><td><span class="pin pa">V-2</span></td><td>Attach to existing (search)</td><td>Automation</td><td>M</td><td class="why2">Manual attach for events that didn't fuzzy-match.</td></tr>
+      <tr><td><span class="pin pa">V-3</span></td><td>Create venue from here</td><td>Automation</td><td>M</td><td class="why2">Removes the catalog detour for a new venue.</td></tr>
+      <tr><td><span class="pin popen">V-4</span></td><td>Persist "leave on motif"</td><td>Open</td><td>S</td><td class="why2">Stops intentional-motif events reappearing.</td></tr>
+      <tr><td><span class="pin popen">V-5</span></td><td>Weak-guess one-click</td><td>Open</td><td>S</td><td class="why2">Keep the low-confidence suggestion, or every miss stays manual?</td></tr>
+      <tr><td><span class="pin popen">V-6</span></td><td>Pane vs. own tab</td><td>Open</td><td>—</td><td class="why2">Placement call at all-tiers volume.</td></tr>
+      <tr><td><span class="pin pa">V-7</span></td><td>Per-venue attached-events list</td><td>Automation</td><td>M</td><td class="why2">Count-only today; can't audit a bad attach.</td></tr>
+      <tr><td><span class="pin pc">V-8</span></td><td>Detach / re-assign an event</td><td>Correctness</td><td>M</td><td class="why2">No detach control exists anywhere today.</td></tr>
+      <tr><td><span class="pin pc">V-9</span></td><td>Remove-photo cleanup</td><td>Correctness</td><td>M</td><td class="why2">Removed photo can stay live on events indefinitely.</td></tr>
+      <tr><td><span class="pin pcost">V-10</span></td><td>Budget readout on fetch</td><td>Cost</td><td>S</td><td class="why2">Primary deliberate-spend surface; reuses catalog LC-8.</td></tr>
+      <tr><td><span class="pin pa">V-11</span></td><td>Add-venue-from-here</td><td>Automation</td><td>S</td><td class="why2">First-class create control.</td></tr>
+      <tr><td><span class="pin popen">V-12</span></td><td>Archive confirm dialog</td><td>Open/Correctness</td><td>S</td><td class="why2">Archive is one click, no confirm today.</td></tr>
+      <tr><td><span class="pin pacc">V-13</span></td><td>Label remove "✕"</td><td>A11y</td><td>S</td><td class="why2">Bare glyph, no aria-label.</td></tr>
+      <tr><td><span class="pin pacc">V-14</span></td><td>Venue-sheet focus trap</td><td>A11y</td><td>S</td><td class="why2">Same modal gap as catalog.</td></tr>
+      <tr><td><span class="pin ph">V-15</span></td><td>Audit-log on remove/reorder</td><td>Governance</td><td>S</td><td class="why2">Two of six routes skip the trail.</td></tr>
+      <tr><td><span class="pin pc">V-16</span></td><td>Revalidate on place_id edit</td><td>Correctness</td><td>S</td><td class="why2">Only archive revalidates today.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- =================================================================== -->
+  <div class="foot">
+    <h3>The open calls, collected for your review</h3>
+    <div class="oq"><b>LC-11 · Editable start time.</b> Add a narrow, audited correction field, or keep the reject-and-re-ingest lock that protects the green trust chip? Depends how often times are actually wrong.</div>
+    <div class="oq"><b>V-4 · Persist "leave on motif."</b> Store the dismiss so intentional-motif events stop reappearing (small schema add), yes or no?</div>
+    <div class="oq"><b>V-5 · Weak-guess one-click.</b> Keep the low-confidence "Attach to SOhO" suggestion, or make every miss a clean manual attach for less logic?</div>
+    <div class="oq"><b>V-6 · Pane vs. tab.</b> The catcher as a pane inside Venues, or its own tab if the all-tiers list runs long?</div>
+
+    <p class="next">Next step is yours. Point me at the pins you want to build first and I'll turn that set into a phased, paste-ready Claude Code spec, mockup-first for anything still visual. Reminder on sequence: the Venues tab is still uncommitted (Phase 2 deploy) and best landed in production before new work stacks on top of it.</p>
+  </div>
+
+</div>
+</body>
+</html>

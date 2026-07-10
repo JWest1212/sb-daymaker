@@ -3,6 +3,7 @@ import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SavesProvider } from "@/components/saves/SavesProvider";
 import { ItinerariesProvider } from "@/components/plan/ItinerariesProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { SvgDefs } from "@/components/visuals";
 import { Analytics } from "@vercel/analytics/react";
 // CSS load order is the cascade order: tokens first, then Tailwind + token-var
 // overrides (globals), then the component layer.
@@ -76,6 +77,7 @@ export default function RootLayout({
       className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="min-h-full">
+        <SvgDefs />
         <SavesProvider>
           <ItinerariesProvider>{children}</ItinerariesProvider>
         </SavesProvider>

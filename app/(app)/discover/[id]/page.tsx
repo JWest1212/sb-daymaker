@@ -10,6 +10,7 @@ import {
   shortGuideTitle,
 } from "@/lib/guides";
 import { getPublishedThings } from "@/lib/things";
+import { getVenuePhotoPools } from "@/lib/venues";
 import { cascade } from "@/lib/explore";
 import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
@@ -62,7 +63,7 @@ export default async function GuidePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, things] = await Promise.all([getGuide(id), getPublishedThings()]);
+  const [result, things, venuePools] = await Promise.all([getGuide(id), getPublishedThings(), getVenuePhotoPools()]);
 
   if (!result) {
     return (
@@ -155,7 +156,7 @@ export default async function GuidePage({
               <h2 className="sbd-disc__title">What&rsquo;s on right now</h2>
             </div>
             {happenings.length > 0 ? (
-              <CascadeFeed items={happenings} horizon="today" />
+              <CascadeFeed items={happenings} horizon="today" venuePools={venuePools} />
             ) : (
               <EmptyState
                 icon="🌙"

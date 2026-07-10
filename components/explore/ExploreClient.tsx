@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
+import type { PoolPhoto } from "@/lib/venuePool";
 import {
   cascade,
   filterByLens,
@@ -33,6 +34,7 @@ export function ExploreClient({
   weather,
   nowMs,
   pinnedHeroId = null,
+  venuePools = {},
 }: {
   things: Thing[];
   tod: TimeOfDay;
@@ -42,6 +44,9 @@ export function ExploreClient({
   /** Founder's hero pin for today (server-resolved). Overrides the ranker when the
    *  pinned thing is present in the current view; otherwise the ranker picks. */
   pinnedHeroId?: string | null;
+  /** Card Imagery Build Spec Phase 2 §5.4 — approved venue photo pools, keyed by
+   *  venue_id; threaded to CascadeFeed for the per-feed dedupe pass. */
+  venuePools?: Record<string, PoolPhoto[]>;
 }) {
   const { isSaved, toggle } = useSaves();
   const { openTour } = useTour();
@@ -119,6 +124,7 @@ export function ExploreClient({
           items={feed}
           horizon={horizon}
           onClearFilters={() => { setLens(null); setZone(null); }}
+          venuePools={venuePools}
         />
 
         <footer className="sbd-foot">

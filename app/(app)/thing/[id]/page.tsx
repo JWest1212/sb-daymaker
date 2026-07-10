@@ -5,6 +5,7 @@ import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { Tag, EmptyState } from "@/components/ui";
 import { DetailSaveButton } from "@/components/detail/DetailSaveButton";
 import { BackButton } from "@/components/detail/BackButton";
+import { DetailPhoto } from "@/components/detail/DetailPhoto";
 import { prettify } from "@/components/explore/derive";
 
 export const metadata: Metadata = { title: "Detail — SB Daymaker" };
@@ -65,12 +66,10 @@ export default async function ThingPage({
     <div className="sbd-detail">
       <BackButton />
 
-      <div className={`sbd-detail__media sbd-media--${TONE_BY_TYPE[t.type] ?? "gold"}`}>
-        {t.photo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="sbd-card__img" src={t.photo_url} alt="" />
-        ) : null}
-      </div>
+      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} />
+      {t.photo_url && t.photo_source !== "owned" && t.photo_attribution ? (
+        <p className="sbd-detail__attribution">{t.photo_attribution}</p>
+      ) : null}
 
       <h1 className="sbd-detail__title">{t.title}</h1>
 

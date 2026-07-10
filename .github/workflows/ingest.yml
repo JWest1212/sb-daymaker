@@ -35,6 +35,10 @@ on:
         description: 'Re-resolve PUBLISHED rows too (IMAGE_BACKFILL_PUBLISHED=1) — Card Imagery Phase 0, Jim-authorized broader pass. May overwrite a founder-picked photo (no way to detect one).'
         type: boolean
         default: false
+      image_backfill_food:
+        description: 'Re-resolve published food/drink rows through the new direct-Google routing (IMAGE_BACKFILL_FOOD=1) — Card Imagery Phase 1 §4.5, scoped/forced'
+        type: boolean
+        default: false
       weight_backfill:
         description: 'Auto-downweight civic filler on existing rows (WEIGHT_BACKFILL=1)'
         type: boolean
@@ -49,6 +53,10 @@ on:
         default: '3'
       voice_backfill:
         description: 'Re-draft published blurbs in the new knowing-local-friend voice (VOICE_BACKFILL=1)'
+        type: boolean
+        default: false
+      venue_seed:
+        description: 'One-off: seed the venues table from marqueeVenues.ts + Tier-1 address clusters (VENUE_SEED=1) — Card Imagery Phase 2 §5.2'
         type: boolean
         default: false
 
@@ -75,10 +83,12 @@ jobs:
           IMAGE_BACKFILL: ${{ inputs.image_backfill == true && '1' || '' }}
           IMAGE_FORCE: ${{ inputs.image_force == true && '1' || '' }}
           IMAGE_BACKFILL_PUBLISHED: ${{ inputs.image_backfill_published == true && '1' || '' }}
+          IMAGE_BACKFILL_FOOD: ${{ inputs.image_backfill_food == true && '1' || '' }}
           WEIGHT_BACKFILL: ${{ inputs.weight_backfill == true && '1' || '' }}
           REPEAT_BACKFILL: ${{ inputs.repeat_backfill == true && '1' || '' }}
           REPEAT_THRESHOLD: ${{ inputs.repeat_threshold }}
           VOICE_BACKFILL: ${{ inputs.voice_backfill == true && '1' || '' }}
+          VENUE_SEED: ${{ inputs.venue_seed == true && '1' || '' }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
@@ -88,6 +98,12 @@ jobs:
           # (free image sources only / placeholders / digest skipped), never a hard failure.
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+          # Card Imagery Phase 2 §7: runaway-guard cap, shared with the closure checker.
+          # ingest/images.ts falls back to 500 if this is unset — set explicitly per spec.
+          # A repo VARIABLE, not a secret (Jim's choice, confirmed 2026-07-09) — vars.*,
+          # not secrets.* (a cap number isn't sensitive; every other line here is a real
+          # credential, hence secrets.*).
+          IMAGE_MONTHLY_CALL_CAP: ${{ vars.IMAGE_MONTHLY_CALL_CAP }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           DIGEST_TO: ${{ secrets.DIGEST_TO }}
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}

@@ -1,9 +1,39 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { OccasionKey } from "@/lib/occasions";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { Pill, DateEyebrow, PlacePill } from "./Pill";
 import { CardActions } from "./CardActions";
 import { SBIcon } from "./SBIcon";
+import { MOTIFS, BigTypeArt, BIGTYPE_TINT_CLASS } from "@/components/visuals";
+import type { MotifKey } from "@/lib/visualAssignment";
+
+/** Card Imagery Build Spec Phase 3 §6.2 — the motif tier's render-order input.
+ *  `undefined`/no match means "no motif assigned" — the card falls through to the
+ *  pre-existing occasion-gradient fallback (now the last-resort catch). Derived
+ *  from a `Thing` by `components/explore/derive.ts`'s `cardVisual()` so callers
+ *  don't hand-assemble this shape themselves. */
+export interface CardVisual {
+  kind: "motif" | "bigtype";
+  key: string | null;
+  startsAt: string | null;
+  neighborhood: string | null;
+  nearbyZone: string | null;
+  category: string | null;
+}
+
+/** Card Imagery Build Spec Phase 2 §5.5 — "fallback resilience": a Google
+ *  `serving_url` can 403/404 between nightly refreshes (no cheap server-side way to
+ *  detect that ahead of render), so the client falls back to the gradient itself.
+ *  Resets whenever the photo URL changes so a fresh pick gets its own chance to
+ *  load rather than inheriting a prior URL's failure. */
+export function usePhotoFallback(photo: string | undefined): [boolean, () => void] {
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [photo]);
+  return [broken, () => setBroken(true)];
+}
 
 type MediaTone = "gold" | "sage" | "pacific";
 
@@ -58,11 +88,12 @@ export function PickCard({
   href?: string;
   photo?: string;
 }) {
+  const [broken, markBroken] = usePhotoFallback(photo);
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
       <div className={`sbd-pick__media sbd-media--${tone}`}>
-        {photo ? (
-          <img className="sbd-card__img" src={photo} alt="" loading="lazy" />
+        {photo && !broken ? (
+          <img className="sbd-card__img" src={photo} alt="" loading="lazy" onError={markBroken} />
         ) : null}
         {occasionKey ? (
           <span className="sbd-pick__tag">
@@ -105,8 +136,12 @@ export function PickCard({
 /**
  * ListCard — left-rail card: 108px image rail running the full card height,
  * text column (title → blurb → meta) to its right. Vibe pill sits on the
- * photo top-left over a scrim. No-photo fallback: occasion-color gradient +
- * centered icon. Used by Today briefs, This Week rows, and Tier-2/3.
+ * photo top-left over a scrim. Render order when there's no photo (Card
+ * Imagery Build Spec Phase 3 §6.2): motif -> bigtype -> occasion-color
+ * gradient + centered icon (the pre-existing fallback, now the last resort —
+ * every Tier-1 event and every resolver miss carries a `visual` since Phase 3,
+ * so this only fires if one is somehow missing). Used by Today briefs, This
+ * Week rows, and Tier-2/3.
  */
 export function ListCard({
   id,
@@ -117,6 +152,7 @@ export function ListCard({
   tone = "sage",
   href,
   photo,
+  visual,
 }: {
   id: string;
   title: string;
@@ -126,36 +162,53 @@ export function ListCard({
   tone?: MediaTone; // kept for API compat; occasion color takes precedence in fallback
   href?: string;
   photo?: string;
+  visual?: CardVisual | null;
 }) {
   const occ = occasionKey ? OCCASION_BY_KEY[occasionKey] : null;
-  const nophoto = !photo;
+  const [broken, markBroken] = usePhotoFallback(photo);
+  const nophoto = !photo || broken;
+
+  const motif = nophoto && visual?.kind === "motif" && visual.key ? MOTIFS[visual.key as MotifKey] : undefined;
+  const showBigType = nophoto && !motif && visual?.kind === "bigtype";
+  const showGradient = nophoto && !motif && !showBigType;
+  const tintClass = motif ? motif.tintClass : showBigType ? BIGTYPE_TINT_CLASS : undefined;
 
   return (
     <article className="sbd-card sbd-card--interactive sbd-listcard">
-      {/* Rail: 108px image (or fallback gradient) running the full card height */}
+      {/* Rail: 108px image (or motif/bigtype/gradient fallback) running the full card height */}
       <div
-        className={`sbd-listcard__rail${nophoto ? " sbd-listcard__rail--nophoto" : ""}`}
+        className={`sbd-listcard__rail${showGradient ? " sbd-listcard__rail--nophoto" : ""}${tintClass ? ` ${tintClass}` : ""}`}
         style={
-          nophoto && occ
+          showGradient && occ
             ? ({ "--occ-color": occ.color } as React.CSSProperties)
             : undefined
         }
       >
-        {photo && (
+        {photo && !broken && (
           <img
             className="sbd-card__img"
             src={photo}
             alt=""
             loading="lazy"
+            onError={markBroken}
           />
         )}
-        {/* Centered icon for no-photo cards */}
-        {nophoto && (
+        {motif && <motif.Art />}
+        {showBigType && (
+          <BigTypeArt
+            startsAt={visual?.startsAt ?? null}
+            neighborhood={visual?.neighborhood ?? null}
+            nearbyZone={visual?.nearbyZone ?? null}
+            category={visual?.category ?? null}
+          />
+        )}
+        {/* Centered icon for the last-resort gradient fallback only */}
+        {showGradient && (
           <span className="sbd-listcard__fallmark" aria-hidden="true">
             {occ ? occ.icon : <SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
           </span>
         )}
-        {/* Dark top gradient — pill legibility on any photo or gradient bg */}
+        {/* Dark top gradient — pill legibility on any photo, motif, or gradient bg */}
         <div className="sbd-listcard__scrim" aria-hidden="true" />
         {/* Occasion pill, top-left, over scrim */}
         {occasionKey && (

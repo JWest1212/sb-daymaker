@@ -11,6 +11,7 @@ const TABS = [
   { href: "/admin/catalog", label: "Live catalog", showCount: false },
   { href: "/admin/heroes", label: "Hero plan", showCount: false },
   { href: "/admin/edition-draft", label: "Edition draft", showCount: false },
+  { href: "/admin/venues", label: "Venues", showCount: false },
 ] as const;
 
 /** Cockpit v2 shell chrome: pacific-dark topbar + the four-tab strip.

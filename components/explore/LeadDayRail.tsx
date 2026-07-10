@@ -1,6 +1,6 @@
 import { ListCard } from "@/components/ui";
 import { groupByDay } from "@/lib/explore";
-import { cardBlurb, cardFacts } from "./derive";
+import { cardBlurb, cardFacts, cardVisual } from "./derive";
 import type { Thing } from "@/lib/things";
 
 const SB_TZ = "America/Los_Angeles";
@@ -50,6 +50,7 @@ export function LeadDayRail({ items }: { items: Thing[] }) {
                     when={cardFacts(t).join(" · ")}
                     href={`/thing/${t.id}`}
                     photo={t.photo_url ?? undefined}
+                    visual={cardVisual(t)}
                   />
                 </div>
               ))}
