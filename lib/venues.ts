@@ -1,0 +1,34 @@
+// lib/venues.ts
+//
+// Card Imagery Build Spec Phase 2 §5.4 — public-side venue photo pool read, for the
+// feed's per-feed dedupe pass. Mirrors lib/things.ts's getPublishedThings(): the
+// anon/publishable key, RLS-gated (public_read_venue_photos exposes only
+// approved=true rows). Small dataset (a few hundred rows at most) — safe to fetch
+// in full alongside the things fetch.
+
+import { getSupabase } from "./supabase";
+import type { PoolPhoto } from "./venuePool";
+
+/** venue_id -> its approved photo pool, ordered by sort_order. Only venues with at
+ *  least one approved photo appear (an empty/absent pool is simply not a key). */
+export async function getVenuePhotoPools(): Promise<Record<string, PoolPhoto[]>> {
+  const sb = getSupabase();
+  if (!sb) return {};
+  const { data, error } = await sb
+    .from("venue_photos")
+    .select("venue_id, source, serving_url, attribution, sort_order")
+    .order("sort_order", { ascending: true });
+  if (error || !data) return {};
+
+  const pools: Record<string, PoolPhoto[]> = {};
+  for (const row of data) {
+    if (!row.serving_url) continue;
+    const venueId = row.venue_id as string;
+    (pools[venueId] ??= []).push({
+      url: row.serving_url as string,
+      source: row.source as PoolPhoto["source"],
+      attribution: (row.attribution as string) ?? null,
+    });
+  }
+  return pools;
+}

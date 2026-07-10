@@ -1,0 +1,544 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { VenuesData, VenueRow, MatchProposal } from "@/lib/venuesServer";
+import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
+
+const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
+
+/** "google" -> "Google", "wikimedia" -> "Wikimedia" — the source pill always
+ *  spells the source out (not just a color cue), 2026-07-10 addendum. */
+function sourceLabel(source: string): string {
+  return source.charAt(0).toUpperCase() + source.slice(1);
+}
+
+function PhotoStrip({
+  venue, onFetch, onFetchGoogle, onApprove, onRemove, onReorder, fetching,
+}: {
+  venue: VenueRow;
+  onFetch: () => void;
+  /** 2026-07-10 addendum: an always-available override (Jim's ask) — Wikimedia
+   *  stays the default via onFetch, but Google is never gated behind a
+   *  quantity threshold; it's just a deliberate second click, always there. */
+  onFetchGoogle: () => void;
+  onApprove: (photoId: string) => void;
+  onRemove: (photoId: string) => void;
+  onReorder: (photoId: string, dir: "up" | "down") => void;
+  fetching: boolean;
+}) {
+  return (
+    <>
+      <div className="photostrip-heading">
+        <h4>Approved pool ({venue.approvedPhotos.length})</h4>
+      </div>
+      {venue.approvedPhotos.length === 0 ? (
+        <p className="empty-note">No approved photos yet — fetch candidates below and approve a few (3–5 is the target pool size).</p>
+      ) : (
+        <div className="approvedstrip">
+          {venue.approvedPhotos.map((p, i) => (
+            <div className="approvedcard" key={p.id}>
+              <div className="ac-media">
+                {p.serving_url ? <img src={p.serving_url} alt="" /> : null}
+                <span className={`cc-src ${p.source}`}>{sourceLabel(p.source)}</span>
+                <div className="acbtns">
+                  <button className="btn btn-quiet btn-sm" disabled={i === 0} onClick={() => onReorder(p.id, "up")} aria-label="Move earlier">◀</button>
+                  <button className="btn btn-quiet btn-sm" disabled={i === venue.approvedPhotos.length - 1} onClick={() => onReorder(p.id, "down")} aria-label="Move later">▶</button>
+                  <button className="btn btn-reject btn-sm" onClick={() => onRemove(p.id)}>✕</button>
+                </div>
+              </div>
+              {p.attribution ? <p className="cc-caption">{p.attribution}</p> : null}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="photostrip-heading">
+        <h4>Candidates ({venue.candidatePhotos.length})</h4>
+        <button className="btn btn-edit btn-sm" onClick={onFetch} disabled={fetching || (!venue.place_id && !venue.lat)}>
+          {fetching ? "Fetching…" : "Fetch candidates"}
+        </button>
+        <button
+          className="btn btn-quiet btn-sm"
+          onClick={onFetchGoogle}
+          disabled={fetching || !venue.place_id}
+          title={!venue.place_id ? "Add a place_id in the editor above first" : undefined}
+        >
+          {fetching ? "Fetching…" : "Fetch via Google"}
+        </button>
+      </div>
+      {!venue.place_id ? (
+        <p className="empty-note" style={{ marginTop: -4, fontWeight: 600 }}>
+          ⚠ &ldquo;Fetch via Google&rdquo; is greyed out — this venue has no place_id yet. Add one in the editor
+          above (Google&rsquo;s Place ID Finder, linked below, can look it up).
+        </p>
+      ) : null}
+      <p className="empty-note" style={{ marginTop: -4 }}>
+        Wikimedia first (free, never expires) — Google only fetches automatically when Wikimedia comes up thin, or
+        when you click &ldquo;Fetch via Google&rdquo; yourself. Google returns the same up-to-10 photos every time
+        (there's no &ldquo;load more&rdquo; on its end) and each click spends real cap budget, so re-clicking it
+        won&rsquo;t turn up anything new unless Google's own listing for this place has changed.
+      </p>
+      {!venue.place_id && !venue.lat ? (
+        <p className="empty-note">This venue has no coordinates either, so &ldquo;Fetch candidates&rdquo; is also greyed out — add at least one via the editor above.</p>
+      ) : venue.candidatePhotos.length === 0 ? (
+        <p className="empty-note">No candidates fetched yet.</p>
+      ) : (
+        <div className="candidategrid">
+          {venue.candidatePhotos.map((p) => (
+            <div className="candidatecard" key={p.id}>
+              <div className="cc-media">
+                {p.serving_url ? <img src={p.serving_url} alt="" /> : null}
+                <span className={`cc-src ${p.source}`}>{sourceLabel(p.source)}</span>
+                <div className="ccbtns">
+                  <button className="btn btn-approve btn-sm" onClick={() => onApprove(p.id)}>Approve</button>
+                  <button className="btn btn-reject btn-sm" onClick={() => onRemove(p.id)}>Reject</button>
+                </div>
+              </div>
+              {p.attribution ? <p className="cc-caption">{p.attribution}</p> : null}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+function VenueDetailSheet({
+  venue, onClose, onSave, onArchive, onFetch, onFetchGoogle, onApprove, onRemove, onReorder, fetching,
+}: {
+  venue: VenueRow;
+  onClose: () => void;
+  onSave: (patch: { display_name?: string; radius_m?: number; place_id?: string | null; lat?: number | null; lng?: number | null }) => void;
+  onArchive: () => void;
+  onFetch: () => void;
+  onFetchGoogle: () => void;
+  onApprove: (photoId: string) => void;
+  onRemove: (photoId: string) => void;
+  onReorder: (photoId: string, dir: "up" | "down") => void;
+  fetching: boolean;
+}) {
+  const [name, setName] = useState(venue.display_name);
+  const [radius, setRadius] = useState(String(venue.radius_m));
+  const [placeId, setPlaceId] = useState(venue.place_id ?? "");
+  const [lat, setLat] = useState(venue.lat != null ? String(venue.lat) : "");
+  const [lng, setLng] = useState(venue.lng != null ? String(venue.lng) : "");
+  useEffect(() => {
+    setName(venue.display_name); setRadius(String(venue.radius_m));
+    setPlaceId(venue.place_id ?? "");
+    setLat(venue.lat != null ? String(venue.lat) : "");
+    setLng(venue.lng != null ? String(venue.lng) : "");
+  }, [venue.id, venue.display_name, venue.radius_m, venue.place_id, venue.lat, venue.lng]);
+
+  return (
+    <>
+      <div className="scrim show" onClick={onClose} />
+      <div className="sheet show sheet--wide" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+        <h3 id="vTitle">{venue.display_name}<button className="x" aria-label="Close" onClick={onClose}>✕</button></h3>
+        <div className="sbody">
+          <div className="veditor-row">
+            <label className="veditor-field">
+              Display name
+              <input value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            <label className="veditor-field" style={{ maxWidth: 120 }}>
+              Radius (m)
+              <input type="number" min={25} value={radius} onChange={(e) => setRadius(e.target.value)} />
+            </label>
+          </div>
+          <label className="veditor-field">
+            Google place_id (needed to fetch Google candidates)
+            <input value={placeId} onChange={(e) => setPlaceId(e.target.value)} placeholder="ChIJ…" />
+          </label>
+          <div className="veditor-row">
+            <label className="veditor-field">
+              Latitude (needed to fetch Wikimedia candidates)
+              <input value={lat} onChange={(e) => setLat(e.target.value)} placeholder="34.4208" />
+            </label>
+            <label className="veditor-field">
+              Longitude
+              <input value={lng} onChange={(e) => setLng(e.target.value)} placeholder="-119.6982" />
+            </label>
+          </div>
+          {!venue.place_id && !venue.lat ? (
+            <p className="empty-note">
+              No place_id or coordinates yet — nothing to fetch from until at least one is set. Find a place_id via
+              Google&rsquo;s <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noreferrer">Place ID Finder</a>, or coordinates via any map.
+            </p>
+          ) : null}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="btn btn-approve btn-sm"
+              onClick={() => onSave({
+                display_name: name,
+                radius_m: Number(radius) || venue.radius_m,
+                place_id: placeId.trim() || null,
+                lat: lat.trim() ? Number(lat) : null,
+                lng: lng.trim() ? Number(lng) : null,
+              })}
+            >
+              Save
+            </button>
+            <button className="btn btn-quiet btn-sm" onClick={onArchive}>Archive venue</button>
+          </div>
+
+          <PhotoStrip
+            venue={venue}
+            onFetch={onFetch}
+            onFetchGoogle={onFetchGoogle}
+            onApprove={onApprove}
+            onRemove={onRemove}
+            onReorder={onReorder}
+            fetching={fetching}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function VenuesView({ initial }: { initial: VenuesData }) {
+  const [data, setData] = useState<VenuesData>(initial);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [archivedOpen, setArchivedOpen] = useState(false);
+  const [strongMatches, setStrongMatches] = useState<StrongMatch[] | null>(null);
+  const [weakMatches, setWeakMatches] = useState<WeakMatch[]>([]);
+  const [placeIdNoMatches, setPlaceIdNoMatches] = useState<NoMatch[]>([]);
+  const [placeIdDismissed, setPlaceIdDismissed] = useState<Set<string>>(new Set());
+  const [retryQueries, setRetryQueries] = useState<Record<string, string>>({});
+  const [lookingUpPlaceIds, setLookingUpPlaceIds] = useState(false);
+  const [retryingVenueId, setRetryingVenueId] = useState<string | null>(null);
+
+  const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3200); }, []);
+
+  const refresh = useCallback(async (): Promise<VenuesData | null> => {
+    const res: VenuesData | null = await fetch("/api/admin/venues").then((r) => r.json()).catch(() => null);
+    if (res) setData(res);
+    return res;
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && detailId) setDetailId(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [detailId]);
+
+  const approveMatch = useCallback(async (m: MatchProposal) => {
+    const res = await fetch("/api/admin/venues/match", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ thing_id: m.thing_id, venue_id: m.venue_id }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) { showToast(`Attached to ${m.venue_display_name}`); refresh(); }
+    else showToast(res?.error ?? "Attach failed");
+  }, [refresh, showToast]);
+
+  const dismissMatch = useCallback((thingId: string) => {
+    setDismissed((prev) => new Set(prev).add(thingId));
+  }, []);
+
+  const doFetch = useCallback(async (venue: VenueRow, includeGoogle = false) => {
+    setFetching(true);
+    const res = await fetch("/api/admin/venues/photos/fetch", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ venue_id: venue.id, include_google: includeGoogle }),
+    }).then((r) => r.json()).catch(() => null);
+    setFetching(false);
+    if (res?.ok) {
+      showToast(
+        res.googleFetched
+          ? `Found ${res.count} candidate(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
+          : `Found ${res.wikimediaCount} Wikimedia candidate(s) — Google not fetched (click "Fetch via Google" for more)`,
+      );
+    } else showToast(res?.error ?? "Fetch failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doApprove = useCallback(async (photoId: string) => {
+    const res = await fetch("/api/admin/venues/photos/approve", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo_id: photoId }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) showToast("Approved");
+    else showToast(res?.error ?? "Approve failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doRemove = useCallback(async (photoId: string) => {
+    const res = await fetch("/api/admin/venues/photos/remove", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo_id: photoId }),
+    }).then((r) => r.json()).catch(() => null);
+    if (!res?.ok) showToast(res?.error ?? "Remove failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doReorder = useCallback(async (photoId: string, dir: "up" | "down") => {
+    const res = await fetch("/api/admin/venues/photos/reorder", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo_id: photoId, direction: dir }),
+    }).then((r) => r.json()).catch(() => null);
+    if (!res?.ok) showToast(res?.error ?? "Reorder failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doSave = useCallback(async (venueId: string, patch: { display_name?: string; radius_m?: number; place_id?: string | null; lat?: number | null; lng?: number | null }) => {
+    const res = await fetch("/api/admin/venues/edit", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: venueId, ...patch }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) showToast("Saved"); else showToast(res?.error ?? "Save failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doArchive = useCallback(async (venueId: string) => {
+    const res = await fetch("/api/admin/venues/edit", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: venueId, status: "archived" }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) { showToast("Archived"); setDetailId(null); } else showToast(res?.error ?? "Archive failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doUnarchive = useCallback(async (venueId: string, name: string) => {
+    const res = await fetch("/api/admin/venues/edit", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: venueId, status: "active" }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) showToast(`${name} restored`); else showToast(res?.error ?? "Restore failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const doLookupPlaceIds = useCallback(async () => {
+    setLookingUpPlaceIds(true);
+    const res = await fetch("/api/admin/venues/lookup-place-ids", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })
+      .then((r) => r.json()).catch(() => null);
+    setLookingUpPlaceIds(false);
+    if (res?.ok) {
+      setStrongMatches(res.strongMatches);
+      setWeakMatches(res.weakMatches ?? []);
+      setPlaceIdNoMatches(res.noMatches ?? []);
+      setPlaceIdDismissed(new Set());
+      setRetryQueries({});
+      showToast(
+        `${res.strongMatches.length} strong match(es), ${res.weakMatches?.length ?? 0} weak, ` +
+          `${res.noMatches?.length ?? 0} with no result`,
+      );
+    } else showToast(res?.error ?? "Lookup failed");
+  }, [showToast]);
+
+  const applyPlaceCandidate = useCallback(async (venueId: string, venueName: string, c: PlaceCandidate) => {
+    const res = await fetch("/api/admin/venues/edit", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ venue_id: venueId, place_id: c.place_id, lat: c.lat, lng: c.lng }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) { showToast(`${venueName} updated`); setPlaceIdDismissed((prev) => new Set(prev).add(venueId)); refresh(); }
+    else showToast(res?.error ?? "Save failed");
+  }, [refresh, showToast]);
+
+  const skipPlaceId = useCallback((venueId: string) => {
+    setPlaceIdDismissed((prev) => new Set(prev).add(venueId));
+  }, []);
+
+  const retryWeakMatch = useCallback(async (venueId: string) => {
+    const query = retryQueries[venueId]?.trim();
+    if (!query) return;
+    setRetryingVenueId(venueId);
+    const res = await fetch("/api/admin/venues/lookup-place-ids", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: venueId, query }),
+    }).then((r) => r.json()).catch(() => null);
+    setRetryingVenueId(null);
+    if (!res?.ok) { showToast(res?.error ?? "Retry failed"); return; }
+    if (res.strongMatches?.length) {
+      setWeakMatches((prev) => prev.filter((w) => w.venue_id !== venueId));
+      setStrongMatches((prev) => [...(prev ?? []), ...res.strongMatches]);
+      showToast("Found a strong match — review it below");
+    } else if (res.weakMatches?.length) {
+      setWeakMatches((prev) => prev.map((w) => (w.venue_id === venueId ? res.weakMatches[0] : w)));
+      showToast("Still no confident business match — try a different search");
+    } else {
+      showToast("No match found for that search");
+    }
+  }, [retryQueries, showToast]);
+
+  const visibleMatches = data.matches.filter((m) => !dismissed.has(m.thing_id));
+  const visibleStrongMatches = (strongMatches ?? []).filter((p) => !placeIdDismissed.has(p.venue_id));
+  const visibleWeakMatches = weakMatches.filter((w) => !placeIdDismissed.has(w.venue_id));
+  const detailVenue = data.venues.find((v) => v.id === detailId) ?? null;
+
+  return (
+    <div className="wrap" style={{ display: "block", maxWidth: 1180 }}>
+      <div className="vhead">
+        <h1 className="qtitle">Venues<span className="count"> {data.venues.length} active</span></h1>
+      </div>
+      <p className="vsub">
+        Founder-curated venues + photo pools (Card Imagery Phase 2). Approve a fuzzy match to attach a thing to a
+        venue; curate 3–5 approved photos per venue so its events rotate through real, vetted photos instead of a
+        generic auto-pick.
+      </p>
+
+      <div className="vsection">
+        <h2 className="vsection-title">Matches to review ({visibleMatches.length})</h2>
+        {visibleMatches.length === 0 ? (
+          <p className="empty-note">Nothing to review — every published/needs_review thing either has no address, is already attached, or scores no match against a known venue.</p>
+        ) : (
+          <div className="matchlist">
+            {visibleMatches.slice(0, 40).map((m) => (
+              <div className="pickrow" key={m.thing_id}>
+                <div>
+                  <div className="ttl">{m.title}</div>
+                  <div className="pm">{TIER_LABEL[m.happening_tier] ?? "T?"} · {m.address} · proposed: <span className="venuename">{m.venue_display_name}</span> (score {m.score.toFixed(1)})</div>
+                </div>
+                <div className="btnrow">
+                  <button className="btn btn-approve btn-sm" onClick={() => approveMatch(m)}>Approve</button>
+                  <button className="btn btn-quiet btn-sm" onClick={() => dismissMatch(m.thing_id)}>Not a match</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="vsection">
+        <h2 className="vsection-title">Place ID lookup</h2>
+        <p className="vsub" style={{ marginBottom: 8 }}>
+          Automatically finds a Google place_id for every venue missing one (needed for &ldquo;Fetch via Google&rdquo;
+          to work). Nothing is saved until you approve a proposed match.
+        </p>
+        <button className="btn btn-edit btn-sm" onClick={doLookupPlaceIds} disabled={lookingUpPlaceIds}>
+          {lookingUpPlaceIds ? "Looking up…" : "Look up place_ids for venues missing one"}
+        </button>
+        {strongMatches !== null ? (
+          <div className="matchlist" style={{ marginTop: 10 }}>
+            {visibleStrongMatches.length === 0 && visibleWeakMatches.length === 0 ? (
+              <p className="empty-note">Nothing left to review.</p>
+            ) : (
+              <>
+                {visibleStrongMatches.map((p) => (
+                  <div className="pickrow" key={p.venue_id}>
+                    <div>
+                      <div className="ttl">{p.venue_display_name}</div>
+                      <div className="pm">matched: <span className="venuename">{p.proposed_name}</span> — {p.proposed_address}</div>
+                    </div>
+                    <div className="btnrow">
+                      <button className="btn btn-approve btn-sm" onClick={() => applyPlaceCandidate(p.venue_id, p.venue_display_name, { place_id: p.proposed_place_id, lat: p.proposed_lat, lng: p.proposed_lng, name: p.proposed_name, address: p.proposed_address })}>Approve</button>
+                      <button className="btn btn-quiet btn-sm" onClick={() => skipPlaceId(p.venue_id)}>Skip</button>
+                    </div>
+                  </div>
+                ))}
+                {visibleWeakMatches.map((w) => (
+                  <div className="pickrow weakmatch" key={w.venue_id}>
+                    <div style={{ width: "100%" }}>
+                      <div className="ttl">{w.venue_display_name}
+                        <span className="weakflag"> ⚠ weak match — probably just a geocoded address, not a real business</span>
+                      </div>
+                      {w.nearbyCandidates.length > 0 ? (
+                        <>
+                          <div className="pm">Found nearby, pick one if it&rsquo;s the right place:</div>
+                          {w.nearbyCandidates.map((c, i) => (
+                            <div className="pickrow" key={i} style={{ background: "transparent", border: "none", padding: "4px 0" }}>
+                              <div className="pm"><span className="venuename">{c.name}</span> — {c.address}</div>
+                              <div className="btnrow">
+                                <button className="btn btn-approve btn-sm" onClick={() => applyPlaceCandidate(w.venue_id, w.venue_display_name, c)}>Use this</button>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="pm">No named places found nearby either.</div>
+                      )}
+                      <div className="pm" style={{ marginTop: 6 }}>
+                        Or use the bare address match: {w.addressOnlyMatch.address}
+                        <button className="btn btn-quiet btn-sm" style={{ marginLeft: 8 }} onClick={() => applyPlaceCandidate(w.venue_id, w.venue_display_name, w.addressOnlyMatch)}>Use address match</button>
+                      </div>
+                      <div className="veditor-row" style={{ marginTop: 8 }}>
+                        <label className="veditor-field">
+                          Know the real name? Search again
+                          <input
+                            value={retryQueries[w.venue_id] ?? ""}
+                            onChange={(e) => setRetryQueries((prev) => ({ ...prev, [w.venue_id]: e.target.value }))}
+                            placeholder="e.g. Santa Barbara Public Library, Santa Barbara CA"
+                          />
+                        </label>
+                        <button
+                          className="btn btn-edit btn-sm" style={{ alignSelf: "flex-end" }}
+                          disabled={retryingVenueId === w.venue_id || !retryQueries[w.venue_id]?.trim()}
+                          onClick={() => retryWeakMatch(w.venue_id)}
+                        >
+                          {retryingVenueId === w.venue_id ? "Searching…" : "Search again"}
+                        </button>
+                      </div>
+                      <button className="btn btn-quiet btn-sm" style={{ marginTop: 6 }} onClick={() => skipPlaceId(w.venue_id)}>Skip this venue</button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            {placeIdNoMatches.length > 0 ? (
+              <p className="empty-note">
+                No Google match at all for: {placeIdNoMatches.map((n) => n.venue_display_name).join(", ")}.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="vsection">
+        <h2 className="vsection-title">Venues ({data.venues.length})</h2>
+        <div className="venuegrid">
+          {data.venues.map((v) => (
+            <button className="vcard" key={v.id} onClick={() => setDetailId(v.id)}>
+              <span className="vname">{v.display_name}</span>
+              <span className="vmeta">{v.attachedCount} thing{v.attachedCount === 1 ? "" : "s"} attached</span>
+              <span className={`vmeta${v.approvedPhotos.length === 0 ? " warn" : ""}`}>
+                {v.approvedPhotos.length} approved photo{v.approvedPhotos.length === 1 ? "" : "s"}
+              </span>
+              <div className="vthumbrow">
+                {v.approvedPhotos.slice(0, 4).map((p) => (
+                  <div className="vthumb" key={p.id}>{p.serving_url ? <img src={p.serving_url} alt="" /> : null}</div>
+                ))}
+                {v.approvedPhotos.length === 0 ? <div className="vthumb-empty">none</div> : null}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {data.archivedVenues.length > 0 ? (
+        <div className="vsection">
+          <button
+            className="btn btn-quiet btn-sm"
+            onClick={() => setArchivedOpen((o) => !o)}
+            aria-expanded={archivedOpen}
+          >
+            {archivedOpen ? "Hide" : "Show"} archived venues ({data.archivedVenues.length})
+          </button>
+          {archivedOpen ? (
+            <div className="matchlist" style={{ marginTop: 10 }}>
+              {data.archivedVenues.map((v) => (
+                <div className="pickrow" key={v.id}>
+                  <div className="ttl">{v.display_name}</div>
+                  <div className="btnrow">
+                    <button className="btn btn-approve btn-sm" onClick={() => doUnarchive(v.id, v.display_name)}>Un-archive</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {detailVenue ? (
+        <VenueDetailSheet
+          venue={detailVenue}
+          onClose={() => setDetailId(null)}
+          onSave={(patch) => doSave(detailVenue.id, patch)}
+          onArchive={() => doArchive(detailVenue.id)}
+          onFetch={() => doFetch(detailVenue)}
+          onFetchGoogle={() => doFetch(detailVenue, true)}
+          onApprove={doApprove}
+          onRemove={doRemove}
+          onReorder={doReorder}
+          fetching={fetching}
+        />
+      ) : null}
+
+      {toast ? <div className="toast show" role="status">{toast}</div> : null}
+    </div>
+  );
+}
