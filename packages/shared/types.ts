@@ -29,7 +29,12 @@ export type OccasionTag =
   | 'date_night' | 'family_day' | 'nightlife' | 'catch_a_show' | 'arts_culture'
   | 'outdoors_active' | 'wine_food' | 'free_sb' | 'hosting_visitors' | 'solo';
 
-export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeholder';
+export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeholder' | 'motif';
+
+/** Card Imagery Build Spec Phase 3 §6.1 — the motif tier. `visual_key` is only set
+ *  for kind `'motif'`; a `'bigtype'` card computes its own text at render time from
+ *  other structured fields, so it has no registry key. */
+export type VisualKind = 'motif' | 'bigtype';
 
 /**
  * How an adapter proves a start time. The gate consults this to decide whether a
@@ -104,6 +109,11 @@ export interface Candidate {
   buy_url?: string;
   source_url: string;             // required
   place_id?: string;
+  /** Card Imagery Build Spec Phase 2 §5.2 — set ONLY on an exact place_id match
+   *  against an active `venues` row (the "auto-attaches" case). A fuzzy/proximity
+   *  match is never written here directly — it queues for founder review in the
+   *  cockpit's Venues tab instead, which writes things.venue_id on approval. */
+  venue_id?: string;
   reason_to_go?: string;          // required for T3
   local_note?: string;
   is_21_plus?: boolean;           // carried for the family_day negative rule (enrich.ts)
@@ -118,6 +128,15 @@ export interface Candidate {
   photo_url?: string;             // current pick = photo_options[0] at land time
   photo_source?: PhotoSource;     // provenance shown as the card's source-pill
   photo_options?: { url: string; source: PhotoSource; width?: number; height?: number; attribution?: string }[];
+  /** Credit line for the current pick (Card Imagery Build Spec Phase 1 §4.3) —
+   *  the chosen photo_options[] entry's own `attribution`, carried up so land.ts/the
+   *  backfills can persist it to things.photo_attribution. Never set for 'owned'. */
+  photo_attribution?: string;
+  /** Card Imagery Build Spec Phase 3 §6.2 — set alongside `photo_source: 'motif'`
+   *  by `resolveImages()`/the backfills' Tier-1 fast path, never elsewhere. */
+  visual_kind?: VisualKind;
+  visual_key?: string;
+  visual_seed?: number;
   // AI-written fields, filled later by enrich.ts (never here):
   blurb?: string;
   blurb_long?: string;
