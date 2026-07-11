@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { VenuesData, VenueRow, MatchProposal, NoMatchThing } from "@/lib/venuesServer";
 import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
+import type { AttachedThing } from "@/app/api/admin/venues/[id]/things/route";
 import { BudgetChip } from "../BudgetChip";
 
 const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
@@ -109,7 +110,7 @@ function PhotoStrip({
 }
 
 function VenueDetailSheet({
-  venue, onClose, onSave, onArchive, onFetch, onFetchGoogle, onApprove, onRemove, onReorder, fetching,
+  venue, onClose, onSave, onArchive, onFetch, onFetchGoogle, onApprove, onRemove, onReorder, onDetached, onToast, fetching,
 }: {
   venue: VenueRow;
   onClose: () => void;
@@ -120,6 +121,10 @@ function VenueDetailSheet({
   onApprove: (photoId: string) => void;
   onRemove: (photoId: string) => void;
   onReorder: (photoId: string, dir: "up" | "down") => void;
+  /** V-8 — fired after a successful detach so the parent can refresh the grid
+   *  card's attachedCount; this sheet manages its own list's optimistic removal. */
+  onDetached: () => void;
+  onToast: (msg: string) => void;
   fetching: boolean;
 }) {
   const [name, setName] = useState(venue.display_name);
@@ -127,12 +132,45 @@ function VenueDetailSheet({
   const [placeId, setPlaceId] = useState(venue.place_id ?? "");
   const [lat, setLat] = useState(venue.lat != null ? String(venue.lat) : "");
   const [lng, setLng] = useState(venue.lng != null ? String(venue.lng) : "");
+  const [attached, setAttached] = useState<AttachedThing[] | null>(null);
+  // Derived, not its own state — avoids a synchronous setState at the top of
+  // the fetch effect below (same shape as BudgetChip.tsx's fetch-on-mount).
+  const [attachedForVenueId, setAttachedForVenueId] = useState<string | null>(null);
+  const loadingAttached = attachedForVenueId !== venue.id;
   useEffect(() => {
     setName(venue.display_name); setRadius(String(venue.radius_m));
     setPlaceId(venue.place_id ?? "");
     setLat(venue.lat != null ? String(venue.lat) : "");
     setLng(venue.lng != null ? String(venue.lng) : "");
   }, [venue.id, venue.display_name, venue.radius_m, venue.place_id, venue.lat, venue.lng]);
+
+  // V-7 — fetched lazily per sheet open, not baked into the main loader's
+  // upfront payload (which already carries every venue).
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/admin/venues/${venue.id}/things`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.ok) setAttached(res.things);
+        setAttachedForVenueId(venue.id);
+      })
+      .catch(() => { if (!cancelled) setAttachedForVenueId(venue.id); });
+    return () => { cancelled = true; };
+  }, [venue.id]);
+
+  const handleDetach = async (thingId: string) => {
+    const res = await fetch("/api/admin/venues/detach", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ thing_id: thingId }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) {
+      setAttached((prev) => (prev ? prev.filter((t) => t.id !== thingId) : prev));
+      onToast("Detached");
+      onDetached();
+    } else {
+      onToast(res?.error ?? "Detach failed");
+    }
+  };
 
   return (
     <>
@@ -183,8 +221,41 @@ function VenueDetailSheet({
             >
               Save
             </button>
-            <button className="btn btn-quiet btn-sm" onClick={onArchive}>Archive venue</button>
+            <button
+              className="btn btn-quiet btn-sm"
+              onClick={() => {
+                if (window.confirm(`Archive "${venue.display_name}"?\n\nIts attached things keep their venue_id and last photo, they just stop rotating/matching further. Reversible from the archived-venues list.`)) onArchive();
+              }}
+            >
+              Archive venue
+            </button>
           </div>
+
+          <div className="photostrip-heading">
+            <h4>Attached things ({venue.attachedCount})</h4>
+          </div>
+          {loadingAttached ? (
+            <p className="empty-note">Loading…</p>
+          ) : !attached?.length ? (
+            <p className="empty-note">Nothing attached yet.</p>
+          ) : (
+            <div className="matchlist">
+              {attached.map((t) => (
+                <div className="pickrow" key={t.id}>
+                  <div>
+                    <div className="ttl">
+                      <a href={`/thing/${t.id}`} target="_blank" rel="noreferrer">{t.title}</a>{" "}
+                      <span className={`tier t${t.happening_tier}`}>{TIER_LABEL[t.happening_tier] ?? "T?"}</span>
+                    </div>
+                    <div className="pm">{t.when}{t.status !== "published" ? ` · ${t.status}` : ""}</div>
+                  </div>
+                  <div className="btnrow">
+                    <button className="btn btn-quiet btn-sm" onClick={() => handleDetach(t.id)}>Detach</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           <PhotoStrip
             venue={venue}
@@ -227,6 +298,8 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [createName, setCreateName] = useState("");
   const [createLookup, setCreateLookup] = useState<{ status: "loading" | "done"; note?: string } | null>(null);
+  const [addingVenue, setAddingVenue] = useState(false);
+  const [newVenueName, setNewVenueName] = useState("");
 
   const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3200); }, []);
 
@@ -287,7 +360,12 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     const res = await fetch("/api/admin/venues/photos/remove", {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo_id: photoId }),
     }).then((r) => r.json()).catch(() => null);
-    if (!res?.ok) showToast(res?.error ?? "Remove failed");
+    if (res?.ok) {
+      // V-9 — a removed approved photo can re-resolve things that were serving it.
+      if (res.reassigned) showToast(`Removed — ${res.reassigned} thing(s) re-picked from the remaining pool`);
+    } else {
+      showToast(res?.error ?? "Remove failed");
+    }
     await refresh();
   }, [refresh, showToast]);
 
@@ -314,6 +392,28 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     if (res?.ok) { showToast("Archived"); setDetailId(null); } else showToast(res?.error ?? "Archive failed");
     await refresh();
   }, [refresh, showToast]);
+
+  // V-11 — a first-class "New venue" control (previously venues only ever
+  // got created indirectly, via a catalog auto-create or the catcher's
+  // "Create venue from here"). Shares the same /venues/create route, just
+  // without a from_thing_id to attach.
+  const doAddVenue = useCallback(async () => {
+    if (!newVenueName.trim()) return;
+    const res = await fetch("/api/admin/venues/create", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ display_name: newVenueName.trim() }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) {
+      showToast(`Created ${res.venue.display_name}`);
+      setAddingVenue(false); setNewVenueName("");
+      refresh();
+    } else showToast(res?.error ?? "Create failed");
+  }, [newVenueName, showToast, refresh]);
+
+  // V-8 — refresh() re-pulls attachedCount for the grid card; the sheet's own
+  // attached-events list (VenueDetailSheet) manages its optimistic removal
+  // itself since it owns that fetch.
+  const doDetach = useCallback(async () => { await refresh(); }, [refresh]);
 
   const doUnarchive = useCallback(async (venueId: string, name: string) => {
     const res = await fetch("/api/admin/venues/edit", {
@@ -702,7 +802,21 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       </div>
 
       <div className="vsection">
-        <h2 className="vsection-title">Venues ({data.venues.length})</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <h2 className="vsection-title" style={{ margin: 0 }}>Venues ({data.venues.length})</h2>
+          <button className="btn btn-edit btn-sm" onClick={() => setAddingVenue((o) => !o)}>+ New venue</button>
+        </div>
+        {addingVenue ? (
+          <div className="veditor-row" style={{ marginBottom: 12 }}>
+            <label className="veditor-field">
+              Display name
+              <input value={newVenueName} onChange={(e) => setNewVenueName(e.target.value)} placeholder="e.g. The Granada Theatre" />
+            </label>
+            <button className="btn btn-approve btn-sm" style={{ alignSelf: "flex-end" }} disabled={!newVenueName.trim()} onClick={doAddVenue}>
+              Create
+            </button>
+          </div>
+        ) : null}
         <div className="venuegrid">
           {data.venues.map((v) => (
             <button className="vcard" key={v.id} onClick={() => setDetailId(v.id)}>
@@ -757,6 +871,8 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
           onApprove={doApprove}
           onRemove={doRemove}
           onReorder={doReorder}
+          onDetached={doDetach}
+          onToast={showToast}
           fetching={fetching}
         />
       ) : null}
