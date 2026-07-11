@@ -19,10 +19,11 @@ import { classifyWeight } from './weight';
 import {
   resolveImages, isDirectGoogleFoodCandidate, refreshGoogleMediaUri,
   wikimediaGeosearch, rankWikimediaCandidates, loadVenuePools, matchVenueForCandidate,
-  monthKey, loadSpend, saveSpend, CAP, type ResolveStats,
+  monthKey, loadSpend, saveSpend, CAP, findFreeCandidates,
+  type ResolveStats, type ImageOption,
 } from './images';
 import { detectClosures } from './adapters/googlePlaces';
-import { consumeDirectives } from './restock';
+import { consumeDirectives, finalizeRunNowDirective } from './restock';
 import { consumeEnrichDirectives } from './enrichDirectives';
 import { sendDigest, type VenueFallbackEvent } from './digest';
 import { getDb } from './db';
@@ -36,6 +37,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 const WINDOW_DAYS = 45;
 const DRY = process.env.DRY_RUN === '1';
+const DIRECTIVE_ID = process.env.DIRECTIVE_ID || null; // C2b restock Run-now: finalize only this directive
 const BACKFILL = process.env.ENRICH_BACKFILL === '1';
 const IMAGE_BACKFILL = process.env.IMAGE_BACKFILL === '1';
 const IMAGE_BACKFILL_PUBLISHED = process.env.IMAGE_BACKFILL_PUBLISHED === '1';
@@ -1006,6 +1008,55 @@ async function handleDeadVenuePhoto(
   return { venueName, replacement: replacementUrl ? 'wikimedia' : 'none' };
 }
 
+// Images desk (cockpit Images tab, 2026-07-11), Part C — nightly free candidate
+// prefetch. Runs the Wikimedia title-search (findMoreOptions — never Google,
+// never the paid cap) for published things still sitting on a motif/placeholder
+// with no real photo_options yet, persisting whatever it finds, so the desk
+// opens with its candidate strips pre-loaded instead of fetching while Jim
+// pages. Bounded per night so the run stays inside its window; re-searching
+// last night's empties is deliberate (new Commons uploads land constantly) and
+// the cap keeps that cheap.
+const DESK_PREFETCH_CAP = 150;
+
+async function prefetchDeskCandidates(sb: SupabaseClient): Promise<{ searched: number; widened: number }> {
+  const base = () =>
+    sb.from('things')
+      .select('id, title, neighborhood, happening_category, lat, lng, photo_options')
+      .eq('status', 'published')
+      .or('photo_url.is.null,photo_source.in.(placeholder,motif)')
+      .limit(1000);
+  // photo_ack is the desk's "looks right as-is" dismissal — excluded when the
+  // column exists; before that migration lands, fall back to the plain scan
+  // (prefetching for a dismissed item is wasted-but-harmless, not wrong).
+  let res = await base().eq('photo_ack', false);
+  if (res.error) res = await base();
+  if (res.error) throw new Error(res.error.message);
+
+  const pending = (res.data ?? [])
+    .filter((t) => !(((t.photo_options as ImageOption[] | null) ?? []).some((o) => o.url)))
+    .slice(0, DESK_PREFETCH_CAP);
+
+  let widened = 0;
+  for (const t of pending) {
+    const existing = ((t.photo_options as ImageOption[] | null) ?? []);
+    const merged = await findFreeCandidates({
+      title: t.title as string,
+      neighborhood: (t.neighborhood as string) ?? null,
+      happening_category: (t.happening_category as string) ?? null,
+      lat: (t.lat as number) ?? null,
+      lng: (t.lng as number) ?? null,
+    }, existing);
+    // Persist only when the search actually widened the set — a no-hit search
+    // shouldn't churn the row at all (same rule as the desk's on-demand route).
+    const before = new Set(existing.filter((o) => o.url).map((o) => o.url));
+    if (merged.some((o) => o.url && !before.has(o.url))) {
+      await sb.from('things').update({ photo_options: merged }).eq('id', t.id as string);
+      widened++;
+    }
+  }
+  return { searched: pending.length, widened };
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
@@ -1135,6 +1186,20 @@ async function main() {
     return;
   }
 
+  // ---- RUN-NOW (C2b): dispatched for a single restock directive ----
+  // The full fresh pass above already landed everything; finalize just this
+  // directive and skip the nightly digest/closures/venue passes (those belong to
+  // the scheduled run). Isolated so a finalize hiccup can't fail the whole run.
+  if (sb && DIRECTIVE_ID) {
+    try {
+      const n = await finalizeRunNowDirective(sb, DIRECTIVE_ID, toLand);
+      console.log(`  restock run-now      directive ${DIRECTIVE_ID} → ${n} matching candidate(s); ${landed} landed total`);
+    } catch (err) {
+      console.log(`  restock run-now      failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    return;
+  }
+
   // ---- CLOSURES + DIGEST (live runs only) ----
   if (sb) {
     // Consume any queued restock directives against tonight's pool (informational;
@@ -1181,6 +1246,15 @@ async function main() {
       }
     } catch (err) {
       console.log(`  venue-refresh        skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Images desk Part C — nightly free Wikimedia candidate prefetch so the
+    // cockpit Images tab opens pre-loaded. Isolated so it can't sink the run.
+    try {
+      const p = await prefetchDeskCandidates(sb);
+      if (p.searched) console.log(`  desk-prefetch        searched ${p.searched} imageless thing(s) · widened ${p.widened}`);
+    } catch (err) {
+      console.log(`  desk-prefetch        skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     await sendDigest(sb, {

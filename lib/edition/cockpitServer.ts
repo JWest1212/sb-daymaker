@@ -8,7 +8,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { titleCaseNeighborhood } from "./format";
-import { whenString } from "../review";
+import { whenString, dropRetiredPhotoOptions } from "../review";
 import type { EditionSlot } from "./types";
 import type { PhotoOption } from "../review";
 import type {
@@ -41,7 +41,7 @@ function toCockpitThing(t: ThingJoinRow): CockpitThing {
     blurb_long: t.blurb_long,
     neighborhood: t.neighborhood ? titleCaseNeighborhood(t.neighborhood) : null,
     photo_url: t.photo_url,
-    photo_options: t.photo_options ?? [],
+    photo_options: dropRetiredPhotoOptions(t.photo_options ?? []),
     when: whenString(t.happening_tier, t.starts_at, t.recurring_schedules ?? []),
     happening_tier: t.happening_tier,
   };

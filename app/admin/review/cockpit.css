@@ -524,3 +524,32 @@
 .sbd-cockpit .empty-note { font-size: .8rem; color: var(--ink-2); padding: 6px 0; }
 .sbd-cockpit .empty-note a { color: var(--pacific); text-decoration: none; border-bottom: 1px dotted var(--pacific); }
 .sbd-cockpit .ed-archive-subject { max-width: 320px; }
+
+/* ============ IMAGES DESK (Images tab, 2026-07-11) ============ */
+/* current photo-state pill (motif / placeholder / no image) */
+.sbd-cockpit .idk-now { flex: none; align-self: flex-start; font-family: var(--font-mono); font-size: .62rem; letter-spacing: .06em; text-transform: uppercase; background: var(--plaster-2); color: var(--ink-2); border-radius: var(--radius-pill); padding: 4px 9px; margin-top: 3px; white-space: nowrap; }
+
+/* venue suggestion / attachment line */
+.sbd-cockpit .idk-venue { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: .84rem; background: var(--plaster); border: 1px dashed var(--line); border-radius: var(--radius-sm); padding: 8px 12px; }
+.sbd-cockpit .idk-venue b { color: var(--pacific); }
+.sbd-cockpit .idk-venue.is-attached { border-style: solid; }
+.sbd-cockpit .idk-venue .pm { font-family: var(--font-mono); font-size: .7rem; color: var(--ink-2); }
+.sbd-cockpit .idk-venue-btns { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.sbd-cockpit .idk-warn { color: var(--sev-high); font-size: .78rem; }
+
+/* candidate mini-strip — click to select, gold ring on the selected pick */
+.sbd-cockpit .idk-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+.sbd-cockpit .idk-opt { padding: 0; border: 2px solid transparent; border-radius: var(--radius-sm); overflow: hidden; width: 56px; height: 56px; background: var(--plaster-2); flex: none; }
+.sbd-cockpit .idk-opt:hover { border-color: var(--pacific); }
+.sbd-cockpit .idk-opt.is-sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold); }
+.sbd-cockpit .idk-opt img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* "Assigned this session" strip — eyeball + one-click revert */
+.sbd-cockpit .idk-strip { margin-bottom: 16px; }
+.sbd-cockpit .idk-striplist { max-height: 240px; overflow-y: auto; }
+.sbd-cockpit .idk-striprow { display: flex; align-items: center; gap: 12px; padding: 9px 16px; border-bottom: 1px solid var(--plaster-2); }
+.sbd-cockpit .idk-striprow:last-child { border-bottom: none; }
+.sbd-cockpit .idk-striprow .lthumb { width: 40px; height: 40px; }
+.sbd-cockpit .idk-thumb-venue { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.sbd-cockpit .idk-striprow .lmain { flex: 1; min-width: 0; }
+.sbd-cockpit .idk-striprow .btn { flex: none; }

@@ -119,13 +119,13 @@ describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.
     ];
     expect(rankOptions(found).map((o) => o.source)).toEqual(['owned', 'wikimedia', 'google', 'placeholder']);
   });
-  it('Phase 3: pexels is no longer in the order — a historical pexels entry (still possible in a stored photo_options list) sorts LAST among real options, not first', () => {
+  it('2026-07-11: a historical pexels entry (still possible in a stored photo_options list) is DROPPED entirely — Wikimedia/Google/owned only in selections', () => {
     const found: ImageOption[] = [
       { url: 'p', source: 'pexels' },
       { url: 'g', source: 'google' },
       { url: 'w', source: 'wikimedia' },
     ];
-    expect(rankOptions(found).map((o) => o.source)).toEqual(['wikimedia', 'google', 'pexels', 'placeholder']);
+    expect(rankOptions(found).map((o) => o.source)).toEqual(['wikimedia', 'google', 'placeholder']);
   });
   it('drops empty urls and still ends on placeholder', () => {
     expect(rankOptions([{ url: '', source: 'pexels' }]).map((o) => o.source)).toEqual(['placeholder']);

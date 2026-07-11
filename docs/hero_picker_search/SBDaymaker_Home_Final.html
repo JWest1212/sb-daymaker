@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker · Home Screen · Final (Sticky Corrected)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+  --ink:#241C16; --ink-2:#4A4038;
+  --pacific:#16586A; --pacific-dark:#0E3C49;
+  --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+  --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+  --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  --ease-out:cubic-bezier(0.16,1,0.3,1);
+  --sky-top:#8a8a86; --sky-mid:#a9a49a; --hill:#3f5560;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--plaster-2);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;padding:32px 16px 90px}
+
+.review-head{max-width:980px;margin:0 auto 26px}
+.review-head__eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--terra-text);margin-bottom:8px}
+.review-head__title{font-family:var(--font-display);font-weight:900;font-size:32px;line-height:1.1;margin-bottom:10px}
+.review-head__sub{color:var(--ink-2);font-size:15px;max-width:780px;line-height:1.55}
+.locked{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.locked__chip{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;padding:5px 11px;border-radius:999px;background:var(--forest);color:#fff}
+
+.wrap{max-width:980px;margin:0 auto;display:grid;grid-template-columns:minmax(320px,390px) 1fr;gap:32px;align-items:start}
+@media (max-width:770px){.wrap{grid-template-columns:1fr}}
+
+.phone{width:100%;max-width:390px;margin:0 auto;background:var(--plaster);border-radius:30px;overflow:hidden;position:relative;box-shadow:0 2px 4px rgba(36,28,22,.08),0 22px 60px rgba(36,28,22,.18);border:1px solid var(--line)}
+.phone__scroll{height:720px;overflow-y:auto;position:relative;scrollbar-width:thin}
+.phone__scroll::-webkit-scrollbar{width:5px}
+.phone__scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+/* ---------- STICKY ZONE 1: header (pins, live behavior) ---------- */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 15px 10px;background:var(--plaster);position:sticky;top:0;z-index:20;gap:10px}
+.hdr__brand{display:flex;align-items:center;gap:9px;min-width:0}
+.hdr__logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(160deg,#2b6d82,#0E3C49 55%,#20516a);position:relative;flex:0 0 auto;overflow:hidden}
+.hdr__logo::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:radial-gradient(circle,#F4C542,#E0A82E)}
+.hdr__logo::after{content:"";position:absolute;bottom:0;left:0;right:0;height:12px;background:#0E3C49}
+.hdr__names{line-height:1;min-width:0}
+.hdr__kick{font-family:var(--font-body);font-weight:700;font-size:8.5px;letter-spacing:.16em;color:var(--pacific);text-transform:uppercase;margin-bottom:2px}
+.hdr__mark{font-family:var(--font-display);font-weight:900;font-size:18px;color:var(--ink);letter-spacing:-.01em}
+.hdr__mark span{color:var(--terracotta)}
+.search-icon{flex:0 0 auto;width:40px;height:40px;border-radius:999px;border:1.5px solid var(--line);background:var(--paper);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-2);transition:border-color .14s,color .14s}
+.search-icon:hover{border-color:var(--pacific);color:var(--pacific)}
+
+/* search overlay + scrim */
+.scrim{position:absolute;inset:0;background:rgba(36,28,22,.42);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:24}
+.scrim.is-open{opacity:1;pointer-events:auto}
+.searchpanel{position:absolute;top:0;left:0;right:0;z-index:25;transform:translateY(-100%);transition:transform .24s var(--ease-out)}
+.searchpanel.is-open{transform:translateY(0)}
+.searchpanel__bar{background:var(--paper);padding:12px 15px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 12px rgba(36,28,22,.1)}
+.searchpanel__field{flex:1;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--pacific);background:var(--plaster)}
+.searchpanel__field input{border:none;background:none;outline:none;width:100%;font-size:13.5px;color:var(--ink)}
+.searchpanel__cancel{font-family:var(--font-body);font-weight:600;font-size:13px;color:var(--pacific);background:none;border:none;cursor:pointer}
+.searchpanel__results{background:var(--paper);margin:0 15px;border-radius:0 0 16px 16px;box-shadow:0 10px 24px rgba(36,28,22,.16);overflow:hidden;border:1px solid var(--line);border-top:none}
+.searchpanel__meta{font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-2);padding:9px 14px 5px}
+.sr{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--plaster-2);cursor:pointer}
+.sr:hover{background:var(--plaster)}
+.sr__tag{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.05em;padding:3px 7px;border-radius:999px;flex:0 0 auto}
+.sr__tag--event{background:var(--pacific);color:#fff}
+.sr__tag--venue{background:var(--sage);color:#fff}
+.sr__tag--tag{background:var(--plaster-2);color:var(--ink-2)}
+.sr__name{font-size:12.5px;color:var(--ink);font-weight:500}
+
+/* ---------- SCROLLING CONTENT: value-prop hero over EXISTING skyline ---------- */
+/* NOTE: this block does NOT pin. It scrolls up and away. The skyline art here is a
+   crude CSS stand-in; in production it is the untouched /hero/sb-skyline.svg. */
+.vphero{position:relative;margin:0 12px 0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;overflow:hidden;min-height:274px;background:linear-gradient(180deg,var(--sky-top),var(--sky-mid) 44%,#b7ad9d 60%,#c8bda8)}
+.vphero__flag{position:absolute;top:8px;right:8px;z-index:5;font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;text-transform:uppercase;color:#fff;background:rgba(36,28,22,.55);padding:3px 8px;border-radius:6px;line-height:1.3;text-align:right}
+.vphero__date{position:relative;z-index:3;padding:14px 16px 0;font-family:var(--font-mono);font-weight:500;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:#fff;text-shadow:0 1px 3px rgba(36,28,22,.35)}
+.vphero__chips{position:relative;z-index:3;display:flex;gap:7px;padding:9px 16px 0}
+.vphero__chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#fff;background:rgba(36,28,22,.28);backdrop-filter:blur(4px);padding:4px 10px;border-radius:999px}
+.vphero__vp{position:relative;z-index:3;padding:16px 16px 0}
+.vphero__eyebrow{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;text-shadow:0 1px 3px rgba(36,28,22,.4)}
+.vphero__headline{font-family:var(--font-display);font-weight:900;color:#fff;line-height:1.07;text-shadow:0 2px 10px rgba(36,28,22,.4);margin-bottom:9px;font-size:25px}
+.vphero__sub{font-family:var(--font-body);font-size:12.5px;line-height:1.42;color:rgba(255,255,255,.95);text-shadow:0 1px 6px rgba(36,28,22,.45);max-width:92%}
+.vphero__skyline{position:absolute;left:0;right:0;bottom:0;height:108px;z-index:2}
+.vphero__hills{position:absolute;bottom:32px;left:0;right:0;height:64px;background:var(--hill);clip-path:polygon(0 60%,14% 35%,28% 52%,42% 22%,56% 45%,70% 28%,84% 50%,100% 34%,100% 100%,0 100%)}
+.vphero__ground{position:absolute;bottom:0;left:0;right:0;height:42px;background:linear-gradient(180deg,#6f7d54,#5a6a45)}
+.vphero__mission{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);width:50px;height:44px;background:#e9ddc4;border-radius:3px}
+.vphero__mission::before{content:"";position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:11px solid #b6472f}
+.vphero__tower{position:absolute;bottom:36px;left:36%;width:15px;height:56px;background:#e9ddc4;border-radius:2px}
+.vphero__tower::before{content:"";position:absolute;top:-8px;left:0;width:15px;height:8px;background:#b6472f;border-radius:2px 2px 0 0}
+.vphero__wharf{position:absolute;bottom:8px;right:22px;width:66px;height:5px;background:#4a3a2c;border-radius:2px}
+.vphero__boat{position:absolute;bottom:13px;right:38px;width:15px;height:8px;background:#E0A82E;border-radius:0 0 8px 8px}
+
+/* ---------- STICKY ZONE 2: doors + horizon (pin under the header) ---------- */
+.controls{position:sticky;top:56px;z-index:15;background:var(--plaster);margin:0 12px 0;padding-top:2px}
+.stickynote{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--pacific);padding:9px 4px 4px;letter-spacing:.05em}
+.stickynote::before{content:"⇡";font-size:12px}
+.doorstrip{display:flex;gap:8px;padding-bottom:6px}
+.doorpill{flex:1;position:relative;border:none;cursor:pointer;border-radius:var(--radius-md);overflow:hidden;height:56px;display:flex;align-items:flex-end;padding:8px 9px;box-shadow:var(--shadow-card)}
+.doorpill__img{position:absolute;inset:0;background-size:cover;background-position:center}
+.doorpill__scrim{position:absolute;inset:0}
+.doorpill__label{position:relative;font-family:var(--font-display);font-weight:900;font-size:13px;color:#fff;text-shadow:0 1px 5px rgba(36,28,22,.6);line-height:1.02}
+.doorpill__kick{position:relative;display:block;font-family:var(--font-mono);font-size:7px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.9);margin-bottom:2px;text-shadow:0 1px 4px rgba(36,28,22,.6)}
+.doorpill--place .doorpill__img{background-image:url('https://images.unsplash.com/photo-1449034446853-66c86144b0ad?w=250')}
+.doorpill--vibe .doorpill__img{background-image:url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=250')}
+.doorpill--activity .doorpill__img{background-image:url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=250')}
+.doorpill--place .doorpill__scrim{background:linear-gradient(180deg,rgba(14,60,73,.15),rgba(14,60,73,.72))}
+.doorpill--vibe .doorpill__scrim{background:linear-gradient(180deg,rgba(120,60,120,.15),rgba(120,60,120,.68))}
+.doorpill--activity .doorpill__scrim{background:linear-gradient(180deg,rgba(158,63,32,.15),rgba(158,63,32,.72))}
+.horizonrow{display:flex;align-items:center;gap:7px;padding:6px 0 10px;border-bottom:1px solid var(--line)}
+.horizonseg{display:flex;background:var(--plaster-2);border-radius:999px;padding:3px;flex:1}
+.horizonseg__btn{flex:1;font-family:var(--font-body);font-weight:600;font-size:11.5px;padding:7px 4px;border:none;background:none;border-radius:999px;color:var(--ink-2);cursor:pointer}
+.horizonseg__btn.is-on{background:var(--paper);color:var(--pacific);box-shadow:0 1px 2px rgba(36,28,22,.08)}
+
+/* section + feed */
+.sechead{padding:13px 15px 6px}
+.sechead__label{font-family:var(--font-display);font-weight:900;font-size:18px;color:var(--ink);border-bottom:2px solid var(--terracotta);display:inline-block;padding-bottom:3px}
+.sechead__dek{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--ink-2);margin-top:7px}
+.feed{padding:8px 12px 14px}
+
+.pick{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);margin-bottom:11px;position:relative}
+.pick__media{height:132px;position:relative;background-size:cover;background-position:center;background-image:url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600')}
+.pick__mediascrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(36,28,22,0) 40%,rgba(36,28,22,.32))}
+.pick__heart{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:999px;background:rgba(252,250,245,.88);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--terracotta)}
+.pick__body{padding:12px 14px 14px}
+.pick__eyebrow{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra-text);margin-bottom:5px}
+.pick__title{font-family:var(--font-display);font-weight:900;font-size:20px;line-height:1.1;color:var(--ink);margin-bottom:5px}
+.pick__meta{font-size:12px;color:var(--pacific);font-weight:600;margin-bottom:6px}
+.pick__blurb{font-size:12px;color:var(--ink-2);line-height:1.42}
+.rib1{position:absolute;top:0;left:0;z-index:3;background:var(--terracotta);color:#fff;font-family:var(--font-body);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px 6px 12px;border-radius:16px 0 12px 0;box-shadow:0 2px 6px rgba(36,28,22,.25);display:flex;align-items:center;gap:6px}
+.rib1::before{content:"★";font-size:11px;color:var(--gold)}
+
+.mini{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);padding:10px;margin-bottom:8px;display:flex;gap:11px;box-shadow:0 1px 2px rgba(36,28,22,.05);position:relative}
+.mini__thumb{width:58px;height:58px;border-radius:var(--radius-sm);flex:0 0 auto;background-size:cover;background-position:center;position:relative}
+.mini__cat{position:absolute;top:4px;left:4px;font-family:var(--font-body);font-weight:700;font-size:7px;letter-spacing:.05em;text-transform:uppercase;color:#fff;background:var(--purple);padding:2px 5px;border-radius:999px}
+.mini__txt{flex:1 1 auto;min-width:0}
+.mini__when{font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--terra-text);margin-bottom:2px}
+.mini__name{font-family:var(--font-display);font-weight:600;font-size:13.5px;line-height:1.12;color:var(--ink);margin-bottom:2px}
+.mini__sub{font-size:11px;color:var(--ink-2);line-height:1.32;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+.tierrow{margin:2px 0 8px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+.tierrow__label{font-family:var(--font-display);font-weight:900;font-size:14px}
+.tierrow__meta{font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+
+.botnav{position:sticky;bottom:0;display:flex;background:var(--pacific-dark);padding:10px 0 9px;z-index:15}
+.botnav__item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:var(--font-body);font-weight:600;font-size:10px;color:rgba(255,255,255,.7)}
+.botnav__item.is-on{color:var(--gold)}
+.botnav__ico{width:21px;height:21px;border-radius:5px;border:1.5px solid currentColor;opacity:.9}
+
+.notes{font-size:13px;line-height:1.55;color:var(--ink-2)}
+.notes h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pacific);margin:0 0 6px}
+.notes .item{margin-bottom:15px}
+.notes .item b{color:var(--ink);font-weight:600}
+.notes .try{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:12.5px}
+.notes .try b{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra-text);display:block;margin-bottom:4px}
+.notes .guard{background:#fbf1ea;border:1px solid var(--tile-light);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:12.5px;color:var(--ink-2)}
+.notes .guard b{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--terra-text);display:block;margin-bottom:4px}
+.pinmap{list-style:none;margin:6px 0 0;padding:0}
+.pinmap li{display:flex;gap:9px;align-items:flex-start;margin-bottom:7px;font-size:12.5px}
+.pinmap .badge{flex:0 0 auto;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:999px;margin-top:1px}
+.pinmap .badge--pin{background:var(--pacific);color:#fff}
+.pinmap .badge--scroll{background:var(--plaster-2);color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<div class="review-head">
+  <div class="review-head__eyebrow">SB Daymaker · Final Assembled · Sticky Corrected</div>
+  <h1 class="review-head__title">The reworked Explore home</h1>
+  <p class="review-head__sub">Sticky behavior fixed to match your spec: the header pins (live behavior), the discovery doors + time filter pin beneath it, and the value-prop skyline scrolls up and away. The production skyline SVG is untouched.</p>
+  <div class="locked">
+    <span class="locked__chip">✓ Header pins</span>
+    <span class="locked__chip">✓ Doors + time filter pin</span>
+    <span class="locked__chip">✓ Skyline hero scrolls away</span>
+    <span class="locked__chip">✓ Existing SVG untouched</span>
+    <span class="locked__chip">✓ R1 pick</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="phone"><div class="phone__scroll" id="scroll">
+
+    <div class="scrim" id="scrim" onclick="closeSearch()"></div>
+    <div class="searchpanel" id="searchpanel">
+      <div class="searchpanel__bar">
+        <div class="searchpanel__field">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="searchInput" placeholder="Search events, venues, tags…">
+        </div>
+        <button class="searchpanel__cancel" onclick="closeSearch()">Cancel</button>
+      </div>
+      <div class="searchpanel__results" id="searchResults" style="display:none">
+        <div class="searchpanel__meta">3 matches for "jazz"</div>
+        <div class="sr"><span class="sr__tag sr__tag--event">Event</span><span class="sr__name">Sunset jazz sessions, Funk Zone</span></div>
+        <div class="sr"><span class="sr__tag sr__tag--venue">Venue</span><span class="sr__name">SOhO Music Club</span></div>
+        <div class="sr"><span class="sr__tag sr__tag--tag">Tag</span><span class="sr__name">Live music › Jazz</span></div>
+      </div>
+    </div>
+
+    <!-- STICKY ZONE 1 -->
+    <div class="hdr">
+      <div class="hdr__brand"><div class="hdr__logo"></div><div class="hdr__names"><div class="hdr__kick">Santa Barbara</div><div class="hdr__mark">Day<span>maker</span></div></div></div>
+      <div class="search-icon" onclick="openSearch()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+    </div>
+
+    <!-- SCROLLING: value prop over existing skyline (does NOT pin) -->
+    <div class="vphero">
+      <div class="vphero__flag">existing SVG<br>do not modify</div>
+      <div class="vphero__date">Saturday, July 11 · Good morning</div>
+      <div class="vphero__chips"><span class="vphero__chip">⛅ 66°</span><span class="vphero__chip">◐ Sunset 8:13</span></div>
+      <div class="vphero__vp">
+        <div class="vphero__eyebrow">Your knowing local friend</div>
+        <div class="vphero__headline">Everything worth doing in Santa Barbara, in one place.</div>
+        <div class="vphero__sub">Scattered across a dozen sites, gathered here and curated by someone who knows the town. Find it, save it, make a plan.</div>
+      </div>
+      <div class="vphero__skyline"><div class="vphero__hills"></div><div class="vphero__ground"></div><div class="vphero__tower"></div><div class="vphero__mission"></div><div class="vphero__wharf"></div><div class="vphero__boat"></div></div>
+    </div>
+
+    <!-- STICKY ZONE 2: doors + horizon -->
+    <div class="controls">
+      <div class="stickynote">stays as you scroll</div>
+      <div class="doorstrip">
+        <button class="doorpill doorpill--place"><div class="doorpill__img"></div><div class="doorpill__scrim"></div><div class="doorpill__label"><span class="doorpill__kick">Explore</span>Place</div></button>
+        <button class="doorpill doorpill--vibe"><div class="doorpill__img"></div><div class="doorpill__scrim"></div><div class="doorpill__label"><span class="doorpill__kick">Set a mood</span>Vibe</div></button>
+        <button class="doorpill doorpill--activity"><div class="doorpill__img"></div><div class="doorpill__scrim"></div><div class="doorpill__label"><span class="doorpill__kick">Pick a thing</span>Activity</div></button>
+      </div>
+      <div class="horizonrow"><div class="horizonseg"><button class="horizonseg__btn is-on">Today</button><button class="horizonseg__btn">Week</button><button class="horizonseg__btn">Month</button></div></div>
+    </div>
+
+    <div class="sechead"><div class="sechead__label">Happening Today</div><div class="sechead__dek">Plenty on today.</div></div>
+    <div class="feed">
+      <div class="pick">
+        <div class="rib1">Today's pick</div>
+        <div class="pick__media"><div class="pick__mediascrim"></div><div class="pick__heart">♡</div></div>
+        <div class="pick__body">
+          <div class="pick__eyebrow">Gray-day move</div>
+          <div class="pick__title">The Magical Music of Motown</div>
+          <div class="pick__meta">Lobero Theatre, Downtown · 8 PM</div>
+          <div class="pick__blurb">If the marine layer holds, this is where the night belongs. Grab seats before it sells.</div>
+        </div>
+      </div>
+      <div class="mini"><div class="mini__thumb" style="background-image:url('https://images.unsplash.com/photo-1533106418989-88406c7cc8ca?w=150')"><span class="mini__cat">Arts</span></div><div class="mini__txt"><div class="mini__when">All day</div><div class="mini__name">Arts &amp; Craft Faire</div><div class="mini__sub">Local artists and makers selling work in the morning light.</div></div></div>
+      <div class="mini"><div class="mini__thumb" style="background-image:url('https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=150')"></div><div class="mini__txt"><div class="mini__when">Tonight · 7:00</div><div class="mini__name">Open mic at Mercury Lounge</div><div class="mini__sub">Songwriters round in the back room. No cover.</div></div></div>
+      <div class="mini"><div class="mini__thumb" style="background-image:url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=150')"></div><div class="mini__txt"><div class="mini__when">Sun · 9:00</div><div class="mini__name">Farmers market, SB</div><div class="mini__sub">Strawberries are peaking. Get there before the crowd.</div></div></div>
+      <div class="mini"><div class="mini__thumb" style="background-image:url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=150')"></div><div class="mini__txt"><div class="mini__when">Tonight · 8:00</div><div class="mini__name">Live jazz on the patio</div><div class="mini__sub">SOhO opens the doors; walk-ins welcome.</div></div></div>
+      <div class="tierrow"><div class="tierrow__label">Every week</div><div class="tierrow__meta">14 ›</div></div>
+      <div class="tierrow"><div class="tierrow__label">Anytime in SB</div><div class="tierrow__meta">31 ›</div></div>
+    </div>
+
+    <div class="botnav"><div class="botnav__item is-on"><div class="botnav__ico"></div>Explore</div><div class="botnav__item"><div class="botnav__ico"></div>Saved</div><div class="botnav__item"><div class="botnav__ico"></div>Discover SB</div></div>
+
+  </div></div>
+
+  <div class="notes">
+    <div class="try">
+      <b>Try it — scroll the phone</b>
+      As you scroll down, the value-prop skyline slides up and out of view, while the header and the doors + time filter freeze at the top. Tap the magnifier to open deterministic search over a dimmed page.
+    </div>
+
+    <h4>What pins, what scrolls</h4>
+    <ul class="pinmap">
+      <li><span class="badge badge--pin">Pins</span><span><b>Header</b> — logo, wordmark, magnifier. Exactly today's live behavior, unchanged.</span></li>
+      <li><span class="badge badge--pin">Pins</span><span><b>Discovery doors + time filter</b> — Place / Vibe / Activity and Today / Week / Month freeze directly under the header once scrolled to.</span></li>
+      <li><span class="badge badge--scroll">Scrolls</span><span><b>Value-prop skyline</b> — the pitch text over the Santa Barbara skyline scrolls up and away like normal content. It never pins.</span></li>
+    </ul>
+
+    <div class="guard" style="margin-top:16px">
+      <b>Guardrail for the build</b>
+      The existing production skyline art at <code>/hero/sb-skyline.svg</code> is not modified by this rework. The change repositions text over it and removes the old pick card; the SVG file itself stays byte-for-byte identical. The skyline drawn here is only a crude CSS stand-in for layout — the real asset is untouched.
+    </div>
+
+    <h4>Everything else, unchanged from your locked decisions</h4>
+    <div class="item"><b>Search (top-right).</b> Deterministic, opens over a dimmed page, matches event titles, venue names, and tags only. No AI.</div>
+    <div class="item"><b>Value prop.</b> Voice 1, Fraunces, over the skyline. Date + weather chips retained.</div>
+    <div class="item"><b>Doors.</b> Tapping opens the sheet of tiles; picks collapse to a chip bar; stacked filters across all three dimensions.</div>
+    <div class="item"><b>Today's pick (R1).</b> One elevated folded-ribbon card atop the feed, sponsor-blind, one per horizon.</div>
+
+    <h4>Next step</h4>
+    <div class="item">Ready when you are: a build spec plus a paste-ready Claude Code kickoff prompt covering header/search, the value-prop hero over the untouched SVG, the two-zone sticky behavior, the sheet-and-chip discovery system with stacked filters, the horizon rehome, and the R1 pick.</div>
+  </div>
+</div>
+
+<script>
+function openSearch(){
+  document.getElementById('scrim').classList.add('is-open');
+  document.getElementById('searchpanel').classList.add('is-open');
+  var inp=document.getElementById('searchInput');
+  setTimeout(function(){inp.focus();},260);
+}
+function closeSearch(){
+  document.getElementById('scrim').classList.remove('is-open');
+  document.getElementById('searchpanel').classList.remove('is-open');
+  document.getElementById('searchResults').style.display='none';
+  document.getElementById('searchInput').value='';
+}
+document.getElementById('searchInput').addEventListener('input',function(e){
+  document.getElementById('searchResults').style.display = e.target.value.trim().length ? 'block':'none';
+});
+document.getElementById('scroll').addEventListener('scroll',function(){
+  if(document.getElementById('searchpanel').classList.contains('is-open')) closeSearch();
+});
+</script>
+
+</body>
+</html>

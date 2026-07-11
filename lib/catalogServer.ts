@@ -5,7 +5,7 @@
 
 import "server-only";
 import { getAdminSupabase } from "./supabaseAdmin";
-import { whenString } from "./review";
+import { whenString, dropRetiredPhotoOptions } from "./review";
 import { sbDay } from "./explore";
 import type { CatalogRow } from "./review";
 
@@ -113,7 +113,7 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
     photo_url: (t.photo_url as string) ?? null,
     photo_source: (t.photo_source as string) ?? "placeholder",
     photo_attribution: (t.photo_attribution as string) ?? null,
-    photo_options: (t.photo_options as CatalogRow["photo_options"]) ?? [],
+    photo_options: dropRetiredPhotoOptions((t.photo_options as CatalogRow["photo_options"]) ?? []),
     tags: ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag),
     when: whenString(tier, starts_at, (t.recurring_schedules as []) ?? []),
     pending_edit: pending.has(t.id as string),

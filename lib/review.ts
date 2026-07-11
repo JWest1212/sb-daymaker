@@ -41,6 +41,15 @@ export interface PhotoOption {
   venuePhotoId?: string;
 }
 
+/** Jim (2026-07-11): retired sources must never appear as pickable candidates —
+ *  Wikimedia / Google / owned only. Historical 'pexels' entries still survive in
+ *  older rows' stored photo_options; strip them wherever options are served to a
+ *  picker (ingest's rankOptions also scrubs them on every merge-and-persist, so
+ *  touched rows clean themselves over time). */
+export function dropRetiredPhotoOptions<T extends { source: string }>(options: T[]): T[] {
+  return options.filter((o) => o.source !== "pexels");
+}
+
 export interface QueueRow {
   id: string;
   type: string;

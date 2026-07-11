@@ -59,6 +59,10 @@ on:
         description: 'One-off: seed the venues table from marqueeVenues.ts + Tier-1 address clusters (VENUE_SEED=1) — Card Imagery Phase 2 §5.2'
         type: boolean
         default: false
+      directive_id:
+        description: 'Restock Run-now (C2b): process only this restock_directives.id — full fresh pass, finalizes just that directive, skips the nightly digest.'
+        type: string
+        default: ''
 
 jobs:
   ingest:
@@ -89,6 +93,8 @@ jobs:
           REPEAT_THRESHOLD: ${{ inputs.repeat_threshold }}
           VOICE_BACKFILL: ${{ inputs.voice_backfill == true && '1' || '' }}
           VENUE_SEED: ${{ inputs.venue_seed == true && '1' || '' }}
+          # Restock Run-now (C2b): when set, run.ts finalizes only this directive.
+          DIRECTIVE_ID: ${{ inputs.directive_id }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}

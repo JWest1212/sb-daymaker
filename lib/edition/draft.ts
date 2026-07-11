@@ -119,7 +119,9 @@ type ImageSource = Pick<DraftThing, "id" | "photo_options" | "neighborhood" | "h
  *  for a single newly-swapped-in thing. */
 export async function ensureImageOptions(sb: SupabaseClient, things: ImageSource[]): Promise<void> {
   for (const t of things) {
-    const current = (t.photo_options ?? []).filter((o) => o.url);
+    // Retired pexels entries don't count toward the minimum (Jim, 2026-07-11) —
+    // a row padded with them still gets widened, and the persist scrubs them.
+    const current = (t.photo_options ?? []).filter((o) => o.url && o.source !== "pexels");
     if (current.length >= MIN_IMAGE_OPTIONS) continue;
     const options = await discoverMoreImages({
       neighborhood: t.neighborhood,
