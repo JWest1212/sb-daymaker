@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { VenuesData, VenueRow, MatchProposal } from "@/lib/venuesServer";
+import type { VenuesData, VenueRow, MatchProposal, NoMatchThing } from "@/lib/venuesServer";
 import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
 import { BudgetChip } from "../BudgetChip";
 
 const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
+const CATCHER_PAGE_SIZE = 40;
+type CatcherTier = "all" | "1" | "2" | "3";
 
 /** "google" -> "Google", "wikimedia" -> "Wikimedia" — the source pill always
  *  spells the source out (not just a color cue), 2026-07-10 addendum. */
@@ -214,6 +216,18 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const [lookingUpPlaceIds, setLookingUpPlaceIds] = useState(false);
   const [retryingVenueId, setRetryingVenueId] = useState<string | null>(null);
 
+  // Phase 6 (V-1…V-6) — the no-match catcher.
+  const [catcherTier, setCatcherTier] = useState<CatcherTier>("all");
+  const [catcherNoAddressOnly, setCatcherNoAddressOnly] = useState(false);
+  const [catcherSearch, setCatcherSearch] = useState("");
+  const [catcherPage, setCatcherPage] = useState(1);
+  const [catcherBusy, setCatcherBusy] = useState(false);
+  const [attachingFor, setAttachingFor] = useState<string | null>(null);
+  const [attachVenueId, setAttachVenueId] = useState("");
+  const [creatingFor, setCreatingFor] = useState<string | null>(null);
+  const [createName, setCreateName] = useState("");
+  const [createLookup, setCreateLookup] = useState<{ status: "loading" | "done"; note?: string } | null>(null);
+
   const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3200); }, []);
 
   const refresh = useCallback(async (): Promise<VenuesData | null> => {
@@ -361,6 +375,87 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     }
   }, [retryQueries, showToast]);
 
+  const removeCatcherItem = useCallback((thingId: string) => {
+    setData((d) => ({ ...d, noMatchCatcher: d.noMatchCatcher.filter((t) => t.id !== thingId) }));
+  }, []);
+
+  // V-4 — persists via things.no_venue_ack; the row is gone for good, not just
+  // dismissed for this render (unlike the "Matches to review" pane's dismiss).
+  const doAck = useCallback(async (thingId: string) => {
+    setCatcherBusy(true);
+    const res = await fetch("/api/admin/venues/ack", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ thing_id: thingId }),
+    }).then((r) => r.json()).catch(() => null);
+    setCatcherBusy(false);
+    if (res?.ok) { removeCatcherItem(thingId); showToast("Left on motif"); }
+    else showToast(res?.error ?? "Couldn't dismiss");
+  }, [removeCatcherItem, showToast]);
+
+  // V-2 / V-5 — both the typeahead attach and the one-click weak-guess route
+  // through the SAME /venues/match the main "Matches to review" pane uses (it
+  // already applies a pool photo immediately when one exists).
+  const doAttach = useCallback(async (thingId: string, venueId: string, venueName: string) => {
+    setCatcherBusy(true);
+    const res = await fetch("/api/admin/venues/match", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ thing_id: thingId, venue_id: venueId }),
+    }).then((r) => r.json()).catch(() => null);
+    setCatcherBusy(false);
+    if (res?.ok) {
+      removeCatcherItem(thingId);
+      setAttachingFor(null); setAttachVenueId("");
+      showToast(`Attached to ${venueName}`);
+      refresh();
+    } else showToast(res?.error ?? "Attach failed");
+  }, [removeCatcherItem, showToast, refresh]);
+
+  // V-3 — creates + attaches in one step. If the new venue still has no
+  // place_id, reuses /venues/lookup-place-ids (single-venue mode) to try
+  // filling one in immediately; a strong match saves straight through
+  // /venues/edit, otherwise the founder fine-tunes it from the venue card below.
+  const doCreateVenue = useCallback(async (t: NoMatchThing) => {
+    if (!createName.trim()) return;
+    setCatcherBusy(true);
+    const res = await fetch("/api/admin/venues/create", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ display_name: createName.trim(), place_id: t.place_id, lat: t.lat, lng: t.lng, from_thing_id: t.id }),
+    }).then((r) => r.json()).catch(() => null);
+    setCatcherBusy(false);
+    if (!res?.ok) { showToast(res?.error ?? "Create failed"); return; }
+
+    removeCatcherItem(t.id);
+    setCreatingFor(null); setCreateName("");
+    showToast(`Created ${res.venue.display_name} and attached`);
+
+    if (!res.venue.place_id) {
+      setCreateLookup({ status: "loading" });
+      const lu = await fetch("/api/admin/venues/lookup-place-ids", {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: res.venue.id }),
+      }).then((r) => r.json()).catch(() => null);
+      if (lu?.ok && lu.strongMatches?.[0]) {
+        const m = lu.strongMatches[0];
+        await fetch("/api/admin/venues/edit", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ venue_id: res.venue.id, place_id: m.proposed_place_id, lat: m.proposed_lat, lng: m.proposed_lng }),
+        }).catch(() => null);
+        setCreateLookup({ status: "done", note: `Found and saved a place_id: ${m.proposed_name}` });
+      } else {
+        setCreateLookup({ status: "done", note: "No confident place_id match — fine-tune it from the venue card below." });
+      }
+    }
+    refresh();
+  }, [createName, removeCatcherItem, showToast, refresh]);
+
+  const filteredCatcher = data.noMatchCatcher.filter((t) => {
+    if (catcherTier !== "all" && String(t.happening_tier) !== catcherTier) return false;
+    if (catcherNoAddressOnly && t.address != null) return false;
+    if (catcherSearch && !t.title.toLowerCase().includes(catcherSearch.toLowerCase())) return false;
+    return true;
+  });
+  const catcherTotalPages = Math.max(1, Math.ceil(filteredCatcher.length / CATCHER_PAGE_SIZE));
+  const catcherPageClamped = Math.min(catcherPage, catcherTotalPages);
+  const catcherPageItems = filteredCatcher.slice((catcherPageClamped - 1) * CATCHER_PAGE_SIZE, catcherPageClamped * CATCHER_PAGE_SIZE);
+
   const visibleMatches = data.matches.filter((m) => !dismissed.has(m.thing_id));
   const visibleStrongMatches = (strongMatches ?? []).filter((p) => !placeIdDismissed.has(p.venue_id));
   const visibleWeakMatches = weakMatches.filter((w) => !placeIdDismissed.has(w.venue_id));
@@ -397,6 +492,129 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="vsection">
+        <h2 className="vsection-title">No confident match ({filteredCatcher.length})</h2>
+        <p className="vsub" style={{ marginBottom: 8 }}>
+          Unattached things that either have no address or scored no match against any known venue — they&rsquo;re
+          quietly sitting on a motif until you resolve them here.
+        </p>
+        <div className="filters" style={{ marginBottom: 4 }}>
+          <div className="filterbar" role="group" aria-label="Filter by tier">
+            {(["all", "1", "2", "3"] as CatcherTier[]).map((t) => (
+              <button key={t} className="filt" aria-pressed={catcherTier === t} onClick={() => setCatcherTier(t)}>
+                {t === "all" ? "All" : `T${t}`}
+              </button>
+            ))}
+          </div>
+          <div className="search"><span aria-hidden="true">⌕</span>
+            <input type="search" value={catcherSearch} onChange={(e) => setCatcherSearch(e.target.value)} placeholder="Search titles…" aria-label="Search unmatched things" />
+          </div>
+        </div>
+        <label className="floorchk" style={{ marginBottom: 10 }}>
+          <input type="checkbox" checked={catcherNoAddressOnly} onChange={(e) => setCatcherNoAddressOnly(e.target.checked)} />
+          No address only
+        </label>
+
+        {filteredCatcher.length === 0 ? (
+          <p className="empty-note">Nothing here — every unattached thing either scored a match above or has been resolved.</p>
+        ) : (
+          <div className="matchlist">
+            {catcherPageItems.map((t) => (
+              <div className="pickrow" key={t.id}>
+                <div style={{ width: "100%" }}>
+                  <div className="ttl">{t.title} <span className={`tier t${t.happening_tier}`}>{TIER_LABEL[t.happening_tier] ?? "T?"}</span></div>
+                  <div className="pm">{t.address ?? "no address on file"}</div>
+                  {t.weakGuess ? (
+                    <div className="pm" style={{ marginTop: 4 }}>
+                      low-confidence guess: <span className="venuename">{t.weakGuess.venue_display_name}</span> (score {t.weakGuess.score.toFixed(1)})
+                      <button
+                        className="btn btn-approve btn-sm" style={{ marginLeft: 8 }} disabled={catcherBusy}
+                        onClick={() => doAttach(t.id, t.weakGuess!.venue_id, t.weakGuess!.venue_display_name)}
+                      >
+                        Attach to {t.weakGuess.venue_display_name} (low confidence)
+                      </button>
+                    </div>
+                  ) : null}
+                  <div className="btnrow" style={{ marginTop: 8 }}>
+                    <button
+                      className="btn btn-edit btn-sm"
+                      onClick={() => { setAttachingFor(attachingFor === t.id ? null : t.id); setCreatingFor(null); }}
+                    >
+                      Attach to existing…
+                    </button>
+                    <button
+                      className="btn btn-edit btn-sm"
+                      onClick={() => { setCreatingFor(creatingFor === t.id ? null : t.id); setCreateName(t.title); setAttachingFor(null); }}
+                    >
+                      Create venue from here…
+                    </button>
+                    <button className="btn btn-quiet btn-sm" disabled={catcherBusy} onClick={() => doAck(t.id)}>
+                      Leave on motif
+                    </button>
+                  </div>
+
+                  {attachingFor === t.id ? (
+                    <div className="veditor-row" style={{ marginTop: 8 }}>
+                      <label className="veditor-field">
+                        Venue
+                        <select value={attachVenueId} onChange={(e) => setAttachVenueId(e.target.value)}>
+                          <option value="">Choose a venue…</option>
+                          {data.venues.map((v) => (
+                            <option key={v.id} value={v.id}>
+                              {v.display_name} ({v.approvedPhotos.length} photo{v.approvedPhotos.length === 1 ? "" : "s"})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="btn btn-approve btn-sm" style={{ alignSelf: "flex-end" }}
+                        disabled={!attachVenueId || catcherBusy}
+                        onClick={() => {
+                          const v = data.venues.find((x) => x.id === attachVenueId);
+                          if (v) doAttach(t.id, v.id, v.display_name);
+                        }}
+                      >
+                        Attach
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {creatingFor === t.id ? (
+                    <div className="veditor-row" style={{ marginTop: 8 }}>
+                      <label className="veditor-field">
+                        New venue name
+                        <input value={createName} onChange={(e) => setCreateName(e.target.value)} />
+                      </label>
+                      <button
+                        className="btn btn-approve btn-sm" style={{ alignSelf: "flex-end" }}
+                        disabled={!createName.trim() || catcherBusy}
+                        onClick={() => doCreateVenue(t)}
+                      >
+                        Create &amp; attach
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {catcherTotalPages > 1 ? (
+          <div className="pager">
+            <button disabled={catcherPageClamped <= 1} onClick={() => setCatcherPage(catcherPageClamped - 1)}>← Prev</button>
+            <span>Page {catcherPageClamped} of {catcherTotalPages}</span>
+            <button disabled={catcherPageClamped >= catcherTotalPages} onClick={() => setCatcherPage(catcherPageClamped + 1)}>Next →</button>
+          </div>
+        ) : null}
+
+        {createLookup ? (
+          <p className="empty-note" style={{ marginTop: 8 }}>
+            {createLookup.status === "loading" ? "Looking up a place_id for the new venue…" : createLookup.note}
+          </p>
+        ) : null}
       </div>
 
       <div className="vsection">
