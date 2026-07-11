@@ -23,6 +23,7 @@ import {
 } from './images';
 import { detectClosures } from './adapters/googlePlaces';
 import { consumeDirectives } from './restock';
+import { consumeEnrichDirectives } from './enrichDirectives';
 import { sendDigest, type VenueFallbackEvent } from './digest';
 import { getDb } from './db';
 import { MARQUEE_VENUES, matchMarqueeVenue } from './marqueeVenues';
@@ -1143,6 +1144,15 @@ async function main() {
       if (handled) console.log(`  restock              consumed ${handled} queued directive(s)`);
     } catch (err) {
       console.log(`  restock              skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Cockpit Enhancements Phase 4 (LC-10) — queued re-enrich directives. Isolated
+    // so a bad redraft can't sink the run (same pattern as restock above).
+    try {
+      const redrafted = await consumeEnrichDirectives(sb);
+      if (redrafted) console.log(`  enrich-directives    landed ${redrafted} redraft(s) as pending edits`);
+    } catch (err) {
+      console.log(`  enrich-directives    skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     const closed = await detectClosures(sb);
