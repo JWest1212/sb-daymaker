@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import { NEIGHBORHOODS, OCCASION_TAGS, type CatalogRow } from "@/lib/review";
+import { NEIGHBORHOODS, OCCASION_TAGS, type CatalogRow, type PhotoOption } from "@/lib/review";
 import { OCCASIONS, OCCASION_BY_KEY } from "@/lib/occasions";
 import { ZONES, ZONE_LABEL } from "@/lib/zones";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -11,6 +11,7 @@ import { CatalogImagePicker, type AppliedPhoto } from "./CatalogImagePicker";
 interface CatalogResult { rows: CatalogRow[]; total: number; page: number; pageSize: number; }
 type Tier = "all" | "1" | "2" | "3";
 interface Draft { title: string; blurb: string; blurb_long: string; neighborhood: string; tags: string[]; }
+interface Toast { msg: string; undo?: () => void; }
 
 const TIER_CHIP: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
 
@@ -28,12 +29,15 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const [heroOverride, setHeroOverride] = useState<Record<string, boolean>>({});
   const [editing, setEditing] = useState<CatalogRow | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
   const pageSize = initial.pageSize;
   const sheetRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(sheetRef, !!editing);
 
-  const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3600); }, []);
+  const showToast = useCallback((msg: string, undo?: () => void) => {
+    setToast({ msg, undo });
+    setTimeout(() => setToast(null), 3600);
+  }, []);
   const isHero = (r: CatalogRow) => heroOverride[r.id] ?? r.hero_eligible;
 
   useEffect(() => { const t = setTimeout(() => setQDebounced(q), 350); return () => clearTimeout(t); }, [q]);
@@ -113,6 +117,15 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const applyVenueId = useCallback((thingId: string, venueId: string) => {
     setRows((rs) => rs.map((r) => (r.id === thingId ? { ...r, venue_id: venueId } : r)));
     setEditing((e) => (e && e.id === thingId ? { ...e, venue_id: venueId } : e));
+  }, []);
+
+  // LC-9: sync a fresh fetch's candidates into row + sheet state so closing and
+  // reopening the edit sheet doesn't discard them — otherwise CatalogImagePicker
+  // remounts from editing.photo_options (only ever-applied picks), losing any
+  // fetched-but-not-yet-applied candidates from this session.
+  const applyOptions = useCallback((thingId: string, options: PhotoOption[]) => {
+    setRows((rs) => rs.map((r) => (r.id === thingId ? { ...r, photo_options: options } : r)));
+    setEditing((e) => (e && e.id === thingId ? { ...e, photo_options: options } : e));
   }, []);
 
   // Admin edits apply directly to the live row — no review queue.
@@ -251,6 +264,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
                 thingId={editing.id}
                 photoUrl={editing.photo_url}
                 photoSource={editing.photo_source}
+                photoAttribution={editing.photo_attribution}
                 options={editing.photo_options}
                 venueId={editing.venue_id}
                 placeId={editing.place_id}
@@ -258,6 +272,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
                 lng={editing.lng}
                 onApplied={(photo) => applyPhoto(editing.id, photo)}
                 onVenueAttached={(venueId) => applyVenueId(editing.id, venueId)}
+                onOptionsFetched={(options) => applyOptions(editing.id, options)}
                 onToast={showToast}
               />
               <label className="editlabel">Title
@@ -297,7 +312,12 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         </>
       ) : null}
 
-      {toast ? <div className="toast show" role="status">{toast}</div> : null}
+      {toast ? (
+        <div className="toast show" role="status">
+          {toast.msg}
+          {toast.undo ? <span className="undo" onClick={toast.undo} role="button" tabIndex={0}>Undo</span> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

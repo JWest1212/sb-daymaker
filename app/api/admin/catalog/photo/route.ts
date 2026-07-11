@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 // (/api/admin/catalog/venue-photos/fetch) — approves that venue_photos row
 // (approved=true + appended sort_order) in the SAME request, so the photo joins
 // the venue's compliant, auto-refreshed pool instead of just sitting as a raw URL
-// on this one thing. A plain Pexels/"find more options" pick has no
+// on this one thing. A plain "find more options" (Wikimedia) pick has no
 // venue_photo_id and behaves exactly as before.
 export async function POST(req: Request) {
   const user = await getAdminUser();

@@ -9,7 +9,8 @@ const SOURCE_CLASS: Record<string, string> = {
 /** Edit-mode image slot: arrow through pre-fetched alternates (no network per
  *  arrow). Empty until photo_options is filled — then it shows a one-tap
  *  "Try fetching a photo" that hits the real, cost-incurring image-fetch route
- *  (Wikimedia/Pexels free, Google Places billed — see lib/images budget). */
+ *  (Wikimedia free, Google Places billed — see lib/images budget; Pexels
+ *  retired Phase 3 §6.2). */
 export function ImagePicker({
   options, index, onCycle, onTryFetch, fetching,
 }: {

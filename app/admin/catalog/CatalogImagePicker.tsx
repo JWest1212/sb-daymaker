@@ -32,6 +32,7 @@ export function CatalogImagePicker({
   thingId,
   photoUrl,
   photoSource,
+  photoAttribution,
   options: initialOptions,
   venueId: initialVenueId,
   placeId: initialPlaceId,
@@ -39,11 +40,13 @@ export function CatalogImagePicker({
   lng: initialLng,
   onApplied,
   onVenueAttached,
+  onOptionsFetched,
   onToast,
 }: {
   thingId: string;
   photoUrl: string | null;
   photoSource: string | null;
+  photoAttribution: string | null;
   options: PhotoOption[];
   venueId: string | null;
   placeId: string | null;
@@ -54,7 +57,12 @@ export function CatalogImagePicker({
    *  exact place_id match) — lets the parent sync venue_id into its row state so a
    *  second fetch reuses the same venue instead of re-triggering creation logic. */
   onVenueAttached?: (venueId: string) => void;
-  onToast?: (msg: string) => void;
+  /** LC-9 — fired whenever a fetch (venue-backed or "Search wider") widens the
+   *  local option set, so the parent can persist it onto the row/sheet state —
+   *  otherwise closing and reopening the sheet loses every fetched-but-not-yet-
+   *  applied candidate (editing.photo_options only ever holds applied picks). */
+  onOptionsFetched?: (options: PhotoOption[]) => void;
+  onToast?: (msg: string, undo?: () => void) => void;
 }) {
   const [options, setOptions] = useState<PhotoOption[]>(initialOptions);
   const [index, setIndex] = useState(() => {
@@ -65,6 +73,7 @@ export function CatalogImagePicker({
   });
   const [busy, setBusy] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const [searchingWider, setSearchingWider] = useState(false);
   const [venueId, setVenueId] = useState(initialVenueId);
   const [needsPlaceId, setNeedsPlaceId] = useState(false);
   const [needsCoords, setNeedsCoords] = useState(false);
@@ -101,6 +110,7 @@ export function CatalogImagePicker({
       if (Array.isArray(res.options) && res.options.length) {
         setOptions(res.options);
         setIndex(0);
+        onOptionsFetched?.(res.options);
         onToast?.(
           res.googleFetched
             ? `Found ${res.count} photo(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
@@ -117,6 +127,34 @@ export function CatalogImagePicker({
       }
     } finally {
       setFetching(false);
+    }
+  };
+
+  // LC-13 — "Search wider (free)": the standalone find-more-images fallback
+  // (Wikimedia title-search, no venue/Google involved), merged into the same
+  // local option set by URL so it doesn't clobber whatever's already fetched.
+  const doSearchWider = async () => {
+    setSearchingWider(true);
+    try {
+      const res = await fetch("/api/admin/catalog/find-more-images", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ thing_id: thingId }),
+      }).then((r) => r.json()).catch(() => null);
+      if (!res?.ok) { onToast?.(res?.error ?? "Search failed"); return; }
+      const fresh: PhotoOption[] = Array.isArray(res.options) ? res.options : [];
+      const seen = new Set(options.map((o) => o.url));
+      const added = fresh.filter((o) => o.url && !seen.has(o.url));
+      if (added.length) {
+        const merged = [...options, ...added];
+        setOptions(merged);
+        onOptionsFetched?.(merged);
+        onToast?.(`Found ${added.length} more option(s)`);
+      } else {
+        onToast?.("No new options found");
+      }
+    } finally {
+      setSearchingWider(false);
     }
   };
 
@@ -182,30 +220,56 @@ export function CatalogImagePicker({
     }
   };
 
-  const useThisPhoto = async () => {
-    if (!current || busy || isLive) return;
+  // LC-9 — shared commit path for "Use this photo" and "Apply best": applies
+  // immediately (no confirm step), so every caller gets an Undo on its toast
+  // that re-applies whatever was live a moment ago.
+  const applyOption = async (opt: PhotoOption, successMsg: string) => {
+    if (busy) return;
     setBusy(true);
+    const prev: AppliedPhoto = { url: photoUrl, source: photoSource ?? "placeholder", attribution: photoAttribution };
     try {
       const res = await fetch("/api/admin/catalog/photo", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           thing_id: thingId,
-          url: current.url || null,
-          source: current.source,
-          attribution: current.attribution ?? null,
-          venue_photo_id: current.venuePhotoId,
+          url: opt.url || null,
+          source: opt.source,
+          attribution: opt.attribution ?? null,
+          venue_photo_id: opt.venuePhotoId,
         }),
       }).then((r) => r.json()).catch(() => null);
       if (res?.ok) {
-        onApplied({ url: current.url || null, source: current.source, attribution: current.attribution ?? null });
-        onToast?.(current.source === "placeholder" ? "Photo removed — showing the gradient now" : "Photo updated — live now");
+        onApplied({ url: opt.url || null, source: opt.source, attribution: opt.attribution ?? null });
+        const undo = () => {
+          fetch("/api/admin/catalog/photo", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ thing_id: thingId, url: prev.url, source: prev.source, attribution: prev.attribution }),
+          }).then((r) => r.json()).then((r2) => {
+            if (r2?.ok) { onApplied(prev); onToast?.("Reverted"); }
+            else onToast?.(r2?.error ?? "Undo failed");
+          }).catch(() => onToast?.("Undo failed"));
+        };
+        onToast?.(successMsg, undo);
       } else {
         onToast?.(res?.error ?? "Couldn't apply that photo");
       }
     } finally {
       setBusy(false);
     }
+  };
+
+  const useThisPhoto = () => {
+    if (!current || isLive) return;
+    applyOption(current, current.source === "placeholder" ? "Photo removed — showing the gradient now" : "Photo updated — live now");
+  };
+
+  const best = options[0];
+  const bestIsLive = !!best && (best.url || "") === (photoUrl ?? "") && best.source === (photoSource ?? "placeholder");
+  const applyBest = () => {
+    if (!best || bestIsLive) return;
+    applyOption(best, `Applied the top photo (${best.source}) — live now`);
   };
 
   return (
@@ -217,6 +281,9 @@ export function CatalogImagePicker({
         </button>
         <button type="button" className="btn btn-quiet btn-sm" disabled={fetching} onClick={() => doFetch(true)}>
           {fetching ? "Fetching…" : "Fetch via Google (1 paid call · counts to budget)"}
+        </button>
+        <button type="button" className="btn btn-quiet btn-sm" disabled={searchingWider} onClick={doSearchWider}>
+          {searchingWider ? "Searching…" : "Search wider (free)"}
         </button>
         <BudgetChip />
       </div>
@@ -269,9 +336,14 @@ export function CatalogImagePicker({
       {options.length > 0 ? (
         <div className="catphoto-meta">
           <span className="catphoto-attr">{current?.attribution ?? ""}</span>
-          <button type="button" className="btn btn-approve btn-sm" disabled={busy || isLive} onClick={useThisPhoto}>
-            {busy ? "Applying…" : isLive ? "Currently live" : "Use this photo"}
-          </button>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="btn btn-quiet btn-sm" disabled={busy || bestIsLive} onClick={applyBest} title="Commit the top-ranked option in one click">
+              {busy ? "Applying…" : "Apply best"}
+            </button>
+            <button type="button" className="btn btn-approve btn-sm" disabled={busy || isLive} onClick={useThisPhoto}>
+              {busy ? "Applying…" : isLive ? "Currently live" : "Use this photo"}
+            </button>
+          </div>
         </div>
       ) : null}
     </div>
