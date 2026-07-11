@@ -30,6 +30,11 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const [editing, setEditing] = useState<CatalogRow | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkSub, setBulkSub] = useState<"add-tag" | "remove-tag" | "weight" | null>(null);
+  const [bulkTag, setBulkTag] = useState("");
+  const [bulkWeight, setBulkWeight] = useState("0");
   const pageSize = initial.pageSize;
   const sheetRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(sheetRef, !!editing);
@@ -51,6 +56,11 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
 
   const fetchPage = useCallback(async (p: number) => {
     setLoading(true);
+    // LC-3: selection is scoped to what's currently loaded (this page, under the
+    // active filter) — clear it on every navigation so a stale id can't ride
+    // along into a different page/filter and get bulk-acted on unseen.
+    setSelected(new Set());
+    setBulkSub(null);
     const sp = new URLSearchParams();
     if (tier !== "all") sp.set("tier", tier);
     if (vibe) sp.set("vibe", vibe);
@@ -182,6 +192,136 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     }
   }, [showToast]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const allOnPageSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const toggleSelectAll = useCallback(() => {
+    setSelected(allOnPageSelected ? new Set() : new Set(rows.map((r) => r.id)));
+  }, [allOnPageSelected, rows]);
+
+  const clearSelection = useCallback(() => { setSelected(new Set()); setBulkSub(null); }, []);
+
+  const bulkCall = useCallback(async (op: string, extra?: Record<string, unknown>) => {
+    const ids = [...selected];
+    const res = await fetch("/api/admin/catalog/bulk", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ids, op, ...extra }),
+    }).then((r) => r.json()).catch(() => null);
+    return { ids, res };
+  }, [selected]);
+
+  const bulkHero = useCallback(async (on: boolean) => {
+    setBulkBusy(true);
+    const { ids, res } = await bulkCall(on ? "hero_on" : "hero_off");
+    setBulkBusy(false);
+    if (res?.ok) {
+      setHeroOverride((h) => { const next = { ...h }; ids.forEach((id) => { next[id] = on; }); return next; });
+      showToast(on ? `★ Hero-flagged ${ids.length} thing(s)` : `Removed hero flag from ${ids.length} thing(s)`);
+      clearSelection();
+    } else {
+      showToast(res?.error ?? "Bulk hero toggle failed");
+    }
+  }, [bulkCall, clearSelection, showToast]);
+
+  const bulkAddTag = useCallback(async () => {
+    if (!bulkTag) return;
+    setBulkBusy(true);
+    const { ids, res } = await bulkCall("add_tag", { tag: bulkTag });
+    setBulkBusy(false);
+    if (res?.ok) {
+      setRows((rs) => rs.map((r) => (ids.includes(r.id) && !r.tags.includes(bulkTag) ? { ...r, tags: [...r.tags, bulkTag] } : r)));
+      showToast(
+        res.skipped
+          ? `Added "${bulkTag}" to ${res.applied} thing(s) — skipped ${res.skipped} not allowed for it`
+          : `Added "${bulkTag}" to ${res.applied} thing(s)`,
+      );
+      clearSelection();
+    } else {
+      showToast(res?.error ?? "Bulk add tag failed");
+    }
+  }, [bulkCall, bulkTag, clearSelection, showToast]);
+
+  const bulkRemoveTag = useCallback(async () => {
+    if (!bulkTag) return;
+    setBulkBusy(true);
+    const { ids, res } = await bulkCall("remove_tag", { tag: bulkTag });
+    setBulkBusy(false);
+    if (res?.ok) {
+      setRows((rs) => rs.map((r) => (ids.includes(r.id) ? { ...r, tags: r.tags.filter((t) => t !== bulkTag) } : r)));
+      showToast(`Removed "${bulkTag}" from ${ids.length} thing(s)`);
+      clearSelection();
+    } else {
+      showToast(res?.error ?? "Bulk remove tag failed");
+    }
+  }, [bulkCall, bulkTag, clearSelection, showToast]);
+
+  const bulkSetWeight = useCallback(async () => {
+    const weight = Math.max(-5, Math.min(5, Math.round(Number(bulkWeight) || 0)));
+    setBulkBusy(true);
+    const { ids, res } = await bulkCall("set_weight", { weight });
+    setBulkBusy(false);
+    if (res?.ok) {
+      setRows((rs) => rs.map((r) => (ids.includes(r.id) ? { ...r, editorial_weight: weight } : r)));
+      showToast(`Set weight ${weight >= 0 ? `+${weight}` : weight} on ${ids.length} thing(s)`);
+      clearSelection();
+    } else {
+      showToast(res?.error ?? "Bulk set weight failed");
+    }
+  }, [bulkCall, bulkWeight, clearSelection, showToast]);
+
+  const bulkRedraft = useCallback(async () => {
+    const ids = [...selected];
+    setBulkBusy(true);
+    const res = await fetch("/api/admin/catalog/redraft", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ids }),
+    }).then((r) => r.json()).catch(() => null);
+    setBulkBusy(false);
+    if (res?.ok) {
+      showToast(`Queued ${res.queued} for tonight's redraft — no AI call now (${res.already_queued} already queued)`);
+      clearSelection();
+    } else {
+      showToast(res?.error ?? "Couldn't queue redrafts");
+    }
+  }, [selected, clearSelection, showToast]);
+
+  // Bulk archive writes live with no review — count-confirm first, Undo on the toast.
+  const bulkArchive = useCallback(async () => {
+    const ids = [...selected];
+    if (!window.confirm(`Archive ${ids.length} thing${ids.length === 1 ? "" : "s"}?\n\nThey'll be unpublished (reversible), not permanently deleted.`)) return;
+    const removed = rows.filter((r) => ids.includes(r.id));
+    setBulkBusy(true);
+    const { res } = await bulkCall("archive");
+    setBulkBusy(false);
+    if (res?.ok) {
+      setRows((rs) => rs.filter((r) => !ids.includes(r.id)));
+      setTotal((t) => Math.max(0, t - ids.length));
+      clearSelection();
+      const undo = async () => {
+        const r2 = await fetch("/api/admin/catalog/bulk", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ ids, op: "unarchive" }),
+        }).then((r) => r.json()).catch(() => null);
+        if (r2?.ok) {
+          setRows((rs) => [...removed, ...rs]);
+          setTotal((t) => t + ids.length);
+          showToast("Restored");
+        } else {
+          showToast(r2?.error ?? "Undo failed");
+        }
+      };
+      showToast(`Archived ${ids.length} thing(s)`, undo);
+    } else {
+      showToast(res?.error ?? "Bulk archive failed");
+    }
+  }, [selected, rows, bulkCall, clearSelection, showToast]);
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
@@ -214,6 +354,53 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         </div>
       </div>
 
+      {rows.length > 0 ? (
+        <label className="floorchk" style={{ marginBottom: 8 }}>
+          <input type="checkbox" checked={allOnPageSelected} onChange={toggleSelectAll} />
+          Select all {rows.length} on this page
+        </label>
+      ) : null}
+
+      {selected.size > 0 ? (
+        <div className="bulkbar" role="group" aria-label="Bulk actions">
+          <span className="sel">{selected.size} selected</span>
+          <button className="bb" disabled={bulkBusy} onClick={() => bulkHero(true)}>★ Hero on</button>
+          <button className="bb" disabled={bulkBusy} onClick={() => bulkHero(false)}>☆ Hero off</button>
+          <button className="bb" disabled={bulkBusy} onClick={() => setBulkSub(bulkSub === "add-tag" ? null : "add-tag")}>Add tag…</button>
+          <button className="bb" disabled={bulkBusy} onClick={() => setBulkSub(bulkSub === "remove-tag" ? null : "remove-tag")}>Remove tag…</button>
+          <button className="bb" disabled={bulkBusy} onClick={() => setBulkSub(bulkSub === "weight" ? null : "weight")}>Set weight…</button>
+          <button className="bb" disabled={bulkBusy} onClick={bulkRedraft}>Redraft tonight</button>
+          <button className="bb danger" disabled={bulkBusy} onClick={bulkArchive}>Archive</button>
+          <button className="bb clear" onClick={clearSelection}>Clear</button>
+
+          {bulkSub === "add-tag" || bulkSub === "remove-tag" ? (
+            <div className="bulksub">
+              <select value={bulkTag} onChange={(e) => setBulkTag(e.target.value)} aria-label="Tag">
+                <option value="">Choose a tag…</option>
+                {OCCASION_TAGS.map((t) => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
+              </select>
+              <button
+                className="bb"
+                disabled={bulkBusy || !bulkTag}
+                onClick={bulkSub === "add-tag" ? bulkAddTag : bulkRemoveTag}
+              >
+                Apply
+              </button>
+            </div>
+          ) : null}
+          {bulkSub === "weight" ? (
+            <div className="bulksub">
+              <input
+                type="number" min={-5} max={5} value={bulkWeight}
+                onChange={(e) => setBulkWeight(e.target.value)} aria-label="Weight (-5 to 5)"
+                style={{ width: 70 }}
+              />
+              <button className="bb" disabled={bulkBusy} onClick={bulkSetWeight}>Apply</button>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {fetchError ? (
         <div className="covempty is-error">
           Couldn&apos;t refresh the list. Showing the last results.
@@ -232,6 +419,9 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         <Fragment key={r.id}>
           {showHeader ? <div className="lgroup">{r.groupLabel}</div> : null}
         <div className={`lrow${r.pending_edit ? " pending" : ""}`}>
+          <span className="lcheck">
+            <input type="checkbox" checked={selected.has(r.id)} onChange={() => toggleSelect(r.id)} aria-label={`Select ${r.title}`} />
+          </span>
           {r.photo_url ? <img className="lthumb" src={r.photo_url} alt="" /> : <div className="lthumb" />}
           <div className="lmain">
             <div className="lt">

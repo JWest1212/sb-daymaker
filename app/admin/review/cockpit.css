@@ -221,8 +221,10 @@
 .sbd-cockpit .lcount { font-family: var(--font-mono); font-size: .9rem; color: var(--ink-2); font-weight: 500; }
 .sbd-cockpit .lgroup { font-family: var(--font-mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
 .sbd-cockpit .lgroup:first-of-type { margin-top: 4px; }
-.sbd-cockpit .lrow { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-card); margin-bottom: 10px; padding: 12px 16px; display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; }
+.sbd-cockpit .lrow { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-card); margin-bottom: 10px; padding: 12px 16px; display: grid; grid-template-columns: 44px 44px 1fr auto; gap: 12px; align-items: center; }
 .sbd-cockpit .lrow.pending { border-style: dashed; border-color: var(--gold); }
+.sbd-cockpit .lcheck { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; }
+.sbd-cockpit .lcheck input { width: 20px; height: 20px; accent-color: var(--pacific); cursor: pointer; }
 .sbd-cockpit .lthumb { width: 44px; height: 44px; border-radius: var(--radius-sm); flex: none; background: linear-gradient(135deg, var(--plaster-2), var(--line)); object-fit: cover; }
 .sbd-cockpit .lmain { min-width: 0; }
 .sbd-cockpit .lt { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
@@ -236,9 +238,19 @@
 .sbd-cockpit .budget-chip.is-near { background: rgba(224,168,46,.18); color: var(--gold-text); }
 /* phone: let the row's actions drop to their own full-width line */
 @media (max-width: 560px) {
-  .sbd-cockpit .lrow { grid-template-columns: 40px 1fr; }
+  .sbd-cockpit .lrow { grid-template-columns: 32px 40px 1fr; }
   .sbd-cockpit .lacts { grid-column: 1 / -1; justify-content: flex-end; }
 }
+
+/* LC-3 bulk action bar */
+.sbd-cockpit .bulkbar { background: var(--pacific-dark); color: var(--paper); border-radius: var(--radius-sm); padding: 9px 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 9px; font-size: .82rem; margin: 4px 0 12px; }
+.sbd-cockpit .bulkbar .sel { font-family: var(--font-mono); font-size: .75rem; color: #C9E0E6; }
+.sbd-cockpit .bulkbar .bb { font-size: .75rem; font-weight: 600; padding: 7px 11px; min-height: 36px; border-radius: 6px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: var(--paper); cursor: pointer; }
+.sbd-cockpit .bulkbar .bb:disabled { opacity: .5; cursor: not-allowed; }
+.sbd-cockpit .bulkbar .bb.danger { background: rgba(192,83,46,.35); border-color: var(--terracotta); }
+.sbd-cockpit .bulkbar .bb.clear { margin-left: auto; background: transparent; border: none; color: #C9E0E6; text-decoration: underline; }
+.sbd-cockpit .bulksub { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(255,255,255,.08); border-radius: 6px; padding: 8px 10px; width: 100%; margin-top: 2px; }
+.sbd-cockpit .bulksub select, .sbd-cockpit .bulksub input { font: inherit; font-size: .8rem; padding: 6px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,.3); background: var(--paper); color: var(--ink); min-height: 36px; }
 .sbd-cockpit .pager { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 16px; font-size: .82rem; color: var(--ink-2); }
 .sbd-cockpit .pager button { background: transparent; border: 1.5px solid var(--pacific); color: var(--pacific); border-radius: var(--radius-pill); padding: 6px 14px; min-height: 34px; font-weight: 600; }
 .sbd-cockpit .pager button:disabled { opacity: .4; cursor: default; }
