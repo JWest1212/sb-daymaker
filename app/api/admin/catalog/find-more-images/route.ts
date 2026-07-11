@@ -7,9 +7,10 @@ import type { Neighborhood } from "@/packages/shared/types";
 export const dynamic = "force-dynamic";
 
 // POST { thing_id } -> widen this thing's photo_options with a fresh free-source
-// search (Pexels + Wikimedia only, no Google — see findMoreOptions()'s own doc
-// comment). Read-only: nothing is persisted here. The founder still picks and
-// applies via /api/admin/catalog/photo, same split as the Queue's picker.
+// search (Wikimedia only since Phase 3 retired Pexels — see findMoreOptions()'s
+// own doc comment; never Google). Read-only: nothing is persisted here. The
+// founder still picks and applies via /api/admin/catalog/photo — LC-13 wired
+// this in as the catalog picker's "Search wider (free)" button.
 export async function POST(req: Request) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

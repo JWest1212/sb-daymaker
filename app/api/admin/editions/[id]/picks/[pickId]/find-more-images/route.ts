@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 
 // POST — widen the search for this pick's underlying thing and persist any new
 // options onto things.photo_options (spec §3.5's on-demand candidate discovery).
-// Free sources only (Pexels + Wikimedia) — no Google, so repeated clicks never
-// risk the paid cap. Writing to the canonical thing is deliberate here (unlike
-// every other edit in this module): more real photo choices is a catalog-wide
-// quality improvement, the same kind of thing ingest's own image backfill does,
-// not edition-scoped editorial content.
+// Free source only (Wikimedia — Pexels retired Phase 3 §6.2) — no Google, so
+// repeated clicks never risk the paid cap. Writing to the canonical thing is
+// deliberate here (unlike every other edit in this module): more real photo
+// choices is a catalog-wide quality improvement, the same kind of thing
+// ingest's own image backfill does, not edition-scoped editorial content.
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string; pickId: string }> }) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
