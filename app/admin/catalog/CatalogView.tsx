@@ -164,6 +164,24 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     }).catch(() => showToast("Delete failed"));
   }, [showToast]);
 
+  // LC-10 — queues a directive for tonight's worker; fires no Claude call now.
+  // The fresh draft lands as a pending edit in the Queue for a normal approve.
+  const doRedraft = useCallback(async (thingId: string) => {
+    const res = await fetch("/api/admin/catalog/redraft", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ thing_id: thingId }),
+    }).then((r) => r.json()).catch(() => null);
+    if (res?.ok) {
+      showToast(
+        res.queued
+          ? "Queued for tonight's redraft — no AI call now. It'll land in the Queue for review."
+          : "Already queued for tonight's redraft.",
+      );
+    } else {
+      showToast(res?.error ?? "Couldn't queue a redraft");
+    }
+  }, [showToast]);
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
@@ -305,6 +323,14 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
               <div className="gatebox">Changes apply to the live site immediately — no review step. (Start time isn&apos;t editable here; to change one, reject &amp; re-ingest in the Queue.)</div>
             </div>
             <div className="sfoot">
+              <button
+                className="btn btn-quiet"
+                style={{ marginRight: "auto" }}
+                onClick={() => doRedraft(editing.id)}
+                title="Queues a fresh AI blurb/tags draft for tonight's worker — no AI call now"
+              >
+                Redraft blurb + tags tonight
+              </button>
               <button className="btn btn-edit" onClick={() => { setEditing(null); setDraft(null); }}>Cancel</button>
               <button className="btn btn-approve" onClick={submitEdit}>Save changes</button>
             </div>
