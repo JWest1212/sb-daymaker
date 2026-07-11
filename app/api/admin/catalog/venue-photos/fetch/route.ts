@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { fetchCandidatesForVenue } from "@/lib/venueFetch";
-import { slugifyVenueKey } from "@/lib/venuePool";
+import { createVenue } from "@/lib/venuesServer";
 import type { PhotoOption } from "@/lib/review";
 
 export const dynamic = "force-dynamic";
@@ -62,25 +62,25 @@ export async function POST(req: Request) {
 
   if (!venue) {
     const title = (thing.title as string) ?? "Untitled";
-    let key = slugifyVenueKey(title);
-    const { data: collision } = await sb.from("venues").select("id").eq("key", key).maybeSingle();
-    if (collision) key = `${key}-${(thing_id as string).slice(0, 8)}`;
-
-    const { data: created, error: cErr } = await sb.from("venues").insert({
-      key, display_name: title,
-      place_id: (thing.place_id as string) ?? null,
-      lat: (thing.lat as number) ?? null,
-      lng: (thing.lng as number) ?? null,
-      radius_m: 150,
-    }).select("id, display_name, place_id, lat, lng").single();
-    if (cErr || !created) return NextResponse.json({ error: cErr?.message ?? "venue creation failed" }, { status: 500 });
-    venue = created as VenueRow;
+    let created;
+    try {
+      created = await createVenue(sb, {
+        display_name: title,
+        place_id: (thing.place_id as string) ?? null,
+        lat: (thing.lat as number) ?? null,
+        lng: (thing.lng as number) ?? null,
+        dedupeSeed: thing_id as string,
+      });
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : "venue creation failed" }, { status: 500 });
+    }
+    venue = created;
     venueWasCreated = true;
 
     await sb.from("things").update({ venue_id: venue.id }).eq("id", thing_id);
     await sb.from("audit_log").insert({
       entity_type: "thing", entity_id: thing_id, action: "venue_auto_created", actor: "founder",
-      payload: { venue_id: venue.id, key },
+      payload: { venue_id: venue.id, key: created.key },
     });
   }
 
