@@ -37,5 +37,11 @@ export async function POST(req: Request) {
     sb.from("venue_photos").update({ sort_order: a.sort_order }).eq("id", b.id),
   ]);
   if (e1 || e2) return NextResponse.json({ error: (e1 ?? e2)!.message }, { status: 500 });
+
+  // V-15 — consistent audit trail across all six venue mutations.
+  await sb.from("audit_log").insert({
+    entity_type: "venue_photo", entity_id: photo_id, action: "photo_reordered", actor: "founder",
+    payload: { venue_id: photo.venue_id, direction },
+  });
   return NextResponse.json({ ok: true });
 }

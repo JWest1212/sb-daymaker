@@ -37,6 +37,12 @@ export async function POST(req: Request) {
   const { error } = await sb.from("venue_photos").delete().eq("id", photo_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // V-15 — consistent audit trail across all six venue mutations.
+  await sb.from("audit_log").insert({
+    entity_type: "venue_photo", entity_id: photo_id, action: "photo_removed", actor: "founder",
+    payload: { venue_id: row.venue_id, approved: row.approved },
+  });
+
   let reassigned = 0;
   if (row.approved && row.serving_url) {
     const { data: affected } = await sb
