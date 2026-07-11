@@ -44,9 +44,13 @@ import { sbDay } from '../lib/explore';
 // 1,000 free/mo); the first (Place Details, fieldmask=photos) is Essentials-IDs-Only,
 // $0/unlimited. `onCall()` still counts BOTH toward the shared cap below (a call-
 // count runaway guard, not a dollar meter) — cheaper in practice than the cap number
-// implies. Default cap dropped 1400 -> 500; Jim sets the env var explicitly in Phase 2.
+// implies. Default cap dropped 1400 -> 500 in Phase 2; raised to 1200 (Jim,
+// 2026-07-11) for the Images-desk backlog clear — Google's photo-media free tier
+// is 1,000/mo and only ~half the counted calls are billable, so ~1200 still lands
+// ≈$0. If the env var is set anywhere (GitHub repo variable for the nightly), it
+// overrides this default and needs raising separately.
 // Counter is shared with the closure-check feature.
-const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 500);
+const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 1200);
 const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 
 export interface ImageOption {

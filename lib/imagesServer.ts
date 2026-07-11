@@ -9,13 +9,10 @@
 import "server-only";
 import { getAdminSupabase } from "./supabaseAdmin";
 import { bestVenueMatch, type MatchableThing, type MatchableVenue } from "./venuePool";
-import { dropRetiredPhotoOptions, type PhotoOption } from "./review";
+import { dropRetiredPhotoOptions, STRONG_MATCH_SCORE, type PhotoOption } from "./review";
 
-/** The auto-attach confidence floor, deliberately stricter than the Venues tab's
- *  "surface anything above zero for human review": an exact place_id hit (+100),
- *  or two name-pattern hits (+20), or one name hit plus a strong proximity bonus.
- *  A bare single name-substring hit (10) stays a suggestion, never an auto-attach. */
-export const STRONG_MATCH_SCORE = 20;
+// Re-exported for the API routes that import it from here.
+export { STRONG_MATCH_SCORE };
 
 export interface ImagesVenueOption {
   id: string;

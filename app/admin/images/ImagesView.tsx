@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ImagePicker } from "../review/ImagePicker";
 import { BudgetChip } from "../BudgetChip";
 import type { ImagesDeskData, ImagesDeskRow, ImagesVenueOption } from "@/lib/imagesServer";
-import { dropRetiredPhotoOptions, type PhotoOption } from "@/lib/review";
+import { dropRetiredPhotoOptions, STRONG_MATCH_SCORE, type PhotoOption } from "@/lib/review";
 
 // Images desk (cockpit Images tab, 2026-07-11) — the backlog worker for
 // published things without a real photo. Modeled on the Queue's keyboard-first
@@ -65,6 +65,8 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
   const [bulkProgress, setBulkProgress] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
+  const [noAddressOnly, setNoAddressOnly] = useState(false);
+  const [poolBusyId, setPoolBusyId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [active, setActive] = useState(0);
   const [picks, setPicks] = useState<Record<string, number>>({});
@@ -90,10 +92,11 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
   const visible = useMemo(
     () => rows.filter((r) => {
       if (filter !== "all" && String(r.happening_tier) !== filter) return false;
+      if (noAddressOnly && r.address != null) return false;
       if (search && !r.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     }),
-    [rows, filter, search],
+    [rows, filter, search, noAddressOnly],
   );
   const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
   const pageClamped = Math.min(page, totalPages);
@@ -105,6 +108,27 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
   // Clamp at render time (a removal can shrink the page under the cursor) —
   // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
   const activeIdx = Math.min(active, Math.max(0, pageItems.length - 1));
+
+  const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
+
+  // The pool-build worklist: venues (attached or strongly suggested) that a
+  // cluster of queue items shares but that have NO approved photos yet — one
+  // approved photo there covers the whole cluster, free, forever.
+  const poolTargets = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows) {
+      let vid: string | null = null;
+      if (r.venue_id) { if (r.venue_approved_count === 0) vid = r.venue_id; }
+      else if (r.suggestion && r.suggestion.approved_count === 0 && r.suggestion.score >= STRONG_MATCH_SCORE) vid = r.suggestion.venue_id;
+      if (vid) counts.set(vid, (counts.get(vid) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .filter(([, n]) => n >= 2)
+      .map(([id, n]) => ({ venue: venueById.get(id), count: n }))
+      .filter((x): x is { venue: ImagesVenueOption; count: number } => !!x.venue)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+  }, [rows, venueById]);
 
   const removeRow = useCallback((id: string) => {
     setRows((rs) => rs.filter((r) => r.id !== id));
@@ -361,27 +385,48 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     showToast(`${entries.length} assigned · ${targets.length - entries.length} left for manual review`);
   }, [pageItems, autoRunning, processAutoResults, showToast]);
 
-  // The whole-backlog variant: chains the free Wikimedia search (so items with
-  // no candidates yet still get a fair shot) + auto-assign, in chunks, across
-  // EVERY filtered row — not just the current page. All free.
+  // The whole-backlog variant: per chunk it (1) LOCATES items with no place_id
+  // via the free-tier Text Search — the root-cause unlock for geosearch + venue
+  // matching, (2) runs the free Wikimedia search for anything with no candidates
+  // yet, then (3) auto-assigns. Across EVERY filtered row, not just the page.
   const autoAssignAll = useCallback(async () => {
     const snapshot = visible;
     const targets = snapshot.map((r) => r.id);
     if (!targets.length || autoRunning) return;
     const okGo = window.confirm(
       `Auto-assign the best free image for ALL ${targets.length} item(s) in this view?\n\n` +
-        "Runs the free Wikimedia search first for anything with no candidates yet, then assigns: strong venue matches " +
-        "use their approved pool, otherwise the top Wikimedia result. No paid Google calls. Every assignment lands in " +
-        "the reviewed strip with one-click revert. A large backlog can take a few minutes — keep the tab open.",
+        "First locates items missing a place_id (free-tier lookup, strong matches only), then runs the free Wikimedia " +
+        "search, then assigns: strong venue matches use their approved pool, otherwise the top Wikimedia result. " +
+        "No paid photo calls. Every assignment lands in the reviewed strip with one-click revert. " +
+        "A large backlog can take several minutes — keep the tab open.",
     );
     if (!okGo) return;
     setAutoRunning(true);
+    const needLocate = new Set(snapshot.filter((r) => !r.place_id).map((r) => r.id));
     const needSearch = new Set(snapshot.filter((r) => !realOptions(r).length).map((r) => r.id));
     needSearch.forEach((id) => prefetchRequested.current.add(id));
     let assignedCount = 0;
+    let locatedCount = 0;
     try {
       for (let i = 0; i < targets.length; i += 60) {
         const chunk = targets.slice(i, i + 60);
+        const locateIds = chunk.filter((id) => needLocate.has(id));
+        for (let j = 0; j < locateIds.length; j += 25) {
+          const batch = locateIds.slice(j, j + 25);
+          setBulkProgress(`Locating ${i + j + batch.length}/${targets.length}…`);
+          const loc = await post("/api/admin/images/locate", { thing_ids: batch });
+          if (loc?.ok) {
+            locatedCount += loc.located ?? 0;
+            const byId = new Map((loc.results as { id: string; located: boolean; place_id?: string; lat?: number; lng?: number }[]).map((x) => [x.id, x]));
+            setRows((rs) => rs.map((r) => {
+              const l = byId.get(r.id);
+              return l?.located ? { ...r, place_id: l.place_id ?? r.place_id, lat: l.lat ?? r.lat, lng: l.lng ?? r.lng } : r;
+            }));
+            // A fresh place_id/coords means the earlier "no candidates" search
+            // is stale — let the prefetch stage re-run for these.
+            for (const x of loc.results as { id: string; located: boolean }[]) if (x.located) needSearch.add(x.id);
+          }
+        }
         const searchIds = chunk.filter((id) => needSearch.has(id));
         for (let j = 0; j < searchIds.length; j += 8) {
           const batch = searchIds.slice(j, j + 8);
@@ -399,34 +444,114 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
       setBulkProgress(null);
       setAutoRunning(false);
     }
-    showToast(`${assignedCount} assigned across ${targets.length} item(s) — review the strip, then Auto-Google the rest`);
+    showToast(
+      `${assignedCount} assigned across ${targets.length} item(s)` +
+        (locatedCount ? ` (${locatedCount} newly located)` : "") +
+        " — review the strip, then Auto-Google the rest",
+    );
   }, [visible, autoRunning, processAutoResults, showToast]);
 
   // The paid, opt-in second pass for what free assignment skipped: top-1 Google
   // photo per item, auto-approved into the venue pool, hard-stopped at the cap.
-  const autoGooglePage = useCallback(async () => {
-    const snapshot = pageItems;
+  // Runs across the whole filtered view in chunks; stops early on a cap hit.
+  const autoGoogleAll = useCallback(async () => {
+    const snapshot = visible;
     const targets = snapshot.map((r) => r.id);
     if (!targets.length || autoRunning) return;
     const okGo = window.confirm(
-      `Auto-Google ${targets.length} item(s) on this page?\n\n` +
-        "Fetches only the TOP Google photo per item (1 billable call each), auto-approves it into the venue pool " +
-        "(compliant nightly refresh), and applies it. Items with no place_id are skipped, never guessed. " +
+      `Auto-Google ALL ${targets.length} item(s) in this view?\n\n` +
+        "Fetches only the TOP Google photo per item (~1 billable call each), auto-approves it into the venue pool " +
+        "(compliant nightly refresh), and applies it. Items with no confident place match are skipped, never guessed. " +
         "Stops hard at the monthly cap — watch the budget chip.",
     );
     if (!okGo) return;
     setAutoRunning(true);
-    setBulkProgress("Fetching from Google…");
-    const res = await post("/api/admin/images/auto-google", { thing_ids: targets });
+    let assignedCount = 0;
+    let processed = 0;
+    let capHit = false;
+    try {
+      for (let i = 0; i < targets.length; i += 60) {
+        const chunk = targets.slice(i, i + 60);
+        setBulkProgress(`Google ${Math.min(i + chunk.length, targets.length)}/${targets.length}…`);
+        const res = await post("/api/admin/images/auto-google", { thing_ids: chunk });
+        if (!res?.ok) { showToast(res?.error ?? "Auto-Google failed"); break; }
+        assignedCount += processAutoResults(res.results as AutoResult[], snapshot).length;
+        processed = Math.min(i + chunk.length, targets.length);
+        if (res.capHit) { capHit = true; break; }
+      }
+    } finally {
+      setBulkProgress(null);
+      setAutoRunning(false);
+    }
+    showToast(
+      `${assignedCount} assigned via Google/pool across ${processed} item(s)` +
+        (capHit ? " — stopped at the monthly budget cap" : ""),
+    );
+  }, [visible, autoRunning, processAutoResults, showToast]);
+
+  // Pool-build: one approved photo at a shared venue covers its whole cluster.
+  // Server approves the best candidate + applies to attached items; the client
+  // then auto-assigns the strongly-suggested (unattached) cluster members.
+  const buildPool = useCallback(async (target: { venue: ImagesVenueOption; count: number }, includeGoogle: boolean) => {
+    if (poolBusyId || autoRunning) return;
+    setPoolBusyId(target.venue.id);
+    const snapshot = rows;
+    const res = await post("/api/admin/images/pool-build", { venue_id: target.venue.id, include_google: includeGoogle });
+    setPoolBusyId(null);
+    if (!res?.ok) { showToast(res?.error ?? "Pool build failed"); return; }
+    if (!res.approved) {
+      showToast(`${target.venue.display_name}: ${res.reason ?? "no pool photo found"}${includeGoogle ? "" : " — try “with Google”"}`);
+      return;
+    }
+    setVenues((vs) => vs.map((v) => (v.id === target.venue.id ? { ...v, approved_count: Math.max(1, v.approved_count) } : v)));
+    const appliedResults: AutoResult[] = (res.applied ?? []).map((a: { id: string; url: string; source: string; attribution: string | null; prev: AutoResult["prev"] }) => ({
+      id: a.id, action: "venue_pool", url: a.url, source: a.source, attribution: a.attribution,
+      venue_id: target.venue.id, venue_name: target.venue.display_name, attached_now: false, prev: a.prev,
+    }));
+    let assignedCount = processAutoResults(appliedResults, snapshot).length;
+    const suggestIds = snapshot
+      .filter((r) => !r.venue_id && r.suggestion?.venue_id === target.venue.id && r.suggestion.score >= STRONG_MATCH_SCORE)
+      .map((r) => r.id).slice(0, 60);
+    if (suggestIds.length) {
+      const aa = await post("/api/admin/images/auto-assign", { thing_ids: suggestIds });
+      if (aa?.ok) assignedCount += processAutoResults(aa.results as AutoResult[], snapshot).length;
+    }
+    // Remaining rows tied to this venue now know it has an approved photo.
+    setRows((rs) => rs.map((r) =>
+      r.venue_id === target.venue.id
+        ? { ...r, venue_approved_count: Math.max(1, r.venue_approved_count) }
+        : r.suggestion?.venue_id === target.venue.id
+          ? { ...r, suggestion: { ...r.suggestion, approved_count: Math.max(1, r.suggestion.approved_count) } }
+          : r,
+    ));
+    showToast(
+      `${target.venue.display_name}: pool photo approved · ${assignedCount} item(s) assigned` +
+        (res.capHit ? " · budget cap hit" : ""),
+    );
+  }, [poolBusyId, autoRunning, rows, processAutoResults, showToast]);
+
+  // The honest tail: coordless/venueless items that per canon SHOULD stay on the
+  // motif. Acts on the CURRENT FILTERED VIEW — filter first (e.g. Events + "No
+  // address only"), then dismiss the lot. Permanent, like the per-card M.
+  const ackAllView = useCallback(async () => {
+    const targets = visible.map((r) => r.id);
+    if (!targets.length || autoRunning) return;
+    const okGo = window.confirm(
+      `Permanently dismiss ${targets.length} item(s) in this view as “fine on the motif”?\n\n` +
+        "They won't reappear in this queue. Tip: narrow the view first (e.g. Events + “No address only”) so this " +
+        "only hits items no image source can anchor to.",
+    );
+    if (!okGo) return;
+    setAutoRunning(true);
+    setBulkProgress("Dismissing…");
+    const res = await post("/api/admin/images/ack", { thing_ids: targets });
     setBulkProgress(null);
     setAutoRunning(false);
-    if (!res?.ok) { showToast(res?.error ?? "Auto-Google failed"); return; }
-    const entries = processAutoResults(res.results as AutoResult[], snapshot);
-    showToast(
-      `${entries.length} assigned via Google/pool · ${targets.length - entries.length} skipped` +
-        (res.capHit ? " · monthly budget cap reached" : ""),
-    );
-  }, [pageItems, autoRunning, processAutoResults, showToast]);
+    if (!res?.ok) { showToast(res?.error ?? "Dismiss failed"); return; }
+    const done = new Set<string>((res.acked as string[]) ?? targets);
+    setRows((rs) => rs.filter((r) => !done.has(r.id)));
+    showToast(`${done.size} left on motif — they won't reappear here`);
+  }, [visible, autoRunning, showToast]);
 
   // One-press per-card variant (⇧G): top-1 paid fetch + apply, with Undo.
   const autoGoogleOne = useCallback(async (row: ImagesDeskRow) => {
@@ -496,20 +621,56 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
             <input type="search" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); setActive(0); }}
               placeholder="Search titles…" aria-label="Search imageless things" />
           </div>
+          <label className="floorchk">
+            <input type="checkbox" checked={noAddressOnly} onChange={(e) => { setNoAddressOnly(e.target.checked); setPage(1); setActive(0); }} />
+            No address only
+          </label>
           <button className="bulk" onClick={autoAssign} disabled={autoRunning || !pageItems.length}>
             ▣ Auto-free (page)
           </button>
           <button className="bulk" onClick={autoAssignAll} disabled={autoRunning || !visible.length}>
             {bulkProgress ?? `▣ Auto-free (all ${visible.length})`}
           </button>
-          <button className="bulk" onClick={autoGooglePage} disabled={autoRunning || !pageItems.length}>
-            ▣ Auto-Google (page $)
+          <button className="bulk" onClick={autoGoogleAll} disabled={autoRunning || !visible.length}>
+            ▣ Auto-Google (all $)
+          </button>
+          <button className="bulk" onClick={ackAllView} disabled={autoRunning || !visible.length}
+            title="Permanently dismiss everything in the current filtered view as fine-on-motif">
+            Keep motif (view)
           </button>
           <BudgetChip />
         </div>
 
         {scanCapped ? (
           <p className="empty-note">Showing the first 1000 imageless items — work through these and Refresh for more.</p>
+        ) : null}
+
+        {poolTargets.length > 0 ? (
+          <div className="panel idk-strip">
+            <h3>Venue pools to build <span className="n">{poolTargets.length}</span></h3>
+            <p className="empty-note" style={{ padding: "6px 16px" }}>
+              One approved photo at a shared venue covers every queue item there — free, and it keeps auto-refreshing.
+            </p>
+            <div className="idk-striplist">
+              {poolTargets.map((pt) => (
+                <div className="idk-striprow" key={pt.venue.id}>
+                  <span className="lthumb idk-thumb-venue" aria-hidden>🏛</span>
+                  <div className="lmain">
+                    <div className="lt"><span className="ttl">{pt.venue.display_name}</span></div>
+                    <div className="lmeta"><span className="mono">{pt.count} queue item{pt.count === 1 ? "" : "s"} · no approved photos yet</span></div>
+                  </div>
+                  <button className="btn btn-edit btn-sm" disabled={poolBusyId === pt.venue.id || autoRunning}
+                    onClick={() => buildPool(pt, false)}>
+                    {poolBusyId === pt.venue.id ? "Building…" : "Build pool (free)"}
+                  </button>
+                  <button className="btn btn-quiet btn-sm" disabled={poolBusyId === pt.venue.id || autoRunning}
+                    onClick={() => buildPool(pt, true)}>
+                    with Google ($)
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : null}
 
         {assigned.length > 0 ? (
@@ -698,7 +859,9 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
             <div className="kr">Attaching a venue with approved photos assigns one instantly ($0) and keeps it auto-refreshed.</div>
             <div className="kr">Google is the only paid step and always an explicit press, counted on the budget chip.</div>
             <div className="kr">Auto-assign only acts on exact/strong venue matches and gate-passing Wikimedia picks — everything it does lands in the strip with one-click revert.</div>
-            <div className="kr">Auto-Google is the paid second pass: only the top photo per item (1 billable call), auto-approved into the venue pool, skipping anything without a place_id.</div>
+            <div className="kr">Auto-Google is the paid second pass: only the top photo per item (~1 billable call), auto-approved into the venue pool; items with no confident place match are skipped, never guessed.</div>
+            <div className="kr">&ldquo;Venue pools to build&rdquo; is the multiplier — one approved photo covers every queue item at that venue. Work it top-down before spending on Google.</div>
+            <div className="kr">&ldquo;Keep motif (view)&rdquo; is the honest tail: dated events with no address are MEANT to sit on the motif — filter to them and dismiss the lot.</div>
           </div>
         </div>
         <div className="panel">

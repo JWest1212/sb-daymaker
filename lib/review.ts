@@ -50,6 +50,14 @@ export function dropRetiredPhotoOptions<T extends { source: string }>(options: T
   return options.filter((o) => o.source !== "pexels");
 }
 
+/** Images desk — the auto-attach confidence floor, deliberately stricter than
+ *  the Venues tab's "surface anything above zero for human review": an exact
+ *  place_id hit (+100), or two name-pattern hits (+20), or one name hit plus a
+ *  strong proximity bonus. A bare single name-substring hit (10) stays a
+ *  suggestion, never an auto-attach. Lives here (client-safe) so the desk UI
+ *  and the server routes share one number. */
+export const STRONG_MATCH_SCORE = 20;
+
 export interface QueueRow {
   id: string;
   type: string;
