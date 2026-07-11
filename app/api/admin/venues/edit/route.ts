@@ -43,6 +43,10 @@ export async function POST(req: Request) {
   await sb.from("audit_log").insert({
     entity_type: "venue", entity_id: body.venue_id, action: "venue_edit", actor: "founder", payload: patch,
   });
-  if (body.status === "archived") revalidatePublic(); // an archived venue's things fall back to gradient/motif eventually
+  // V-16 — a corrected place_id/lat/lng should propagate promptly too, not just
+  // an archive (an archived venue's things fall back to gradient/motif eventually).
+  if (body.status === "archived" || body.place_id !== undefined || body.lat !== undefined || body.lng !== undefined) {
+    revalidatePublic();
+  }
   return NextResponse.json({ ok: true });
 }

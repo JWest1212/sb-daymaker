@@ -362,6 +362,8 @@
 /* picker rows (hero + restock share the sheet) */
 .sbd-cockpit .pickrow { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--plaster); }
 .sbd-cockpit .pickrow .ttl { font-weight: 600; font-size: .92rem; }
+.sbd-cockpit .pickrow .ttl a { color: var(--text-link); text-decoration: none; }
+.sbd-cockpit .pickrow .ttl a:hover { text-decoration: underline; }
 .sbd-cockpit .pickrow .pm { font-size: .72rem; color: var(--ink-2); font-family: var(--font-mono); }
 .sbd-cockpit .pickrow .pickbtn { margin-left: auto; }
 

@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { VenuesData, VenueRow, MatchProposal, NoMatchThing } from "@/lib/venuesServer";
 import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
 import type { AttachedThing } from "@/app/api/admin/venues/[id]/things/route";
 import { BudgetChip } from "../BudgetChip";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
 const CATCHER_PAGE_SIZE = 40;
@@ -47,7 +48,7 @@ function PhotoStrip({
                 <div className="acbtns">
                   <button className="btn btn-quiet btn-sm" disabled={i === 0} onClick={() => onReorder(p.id, "up")} aria-label="Move earlier">◀</button>
                   <button className="btn btn-quiet btn-sm" disabled={i === venue.approvedPhotos.length - 1} onClick={() => onReorder(p.id, "down")} aria-label="Move later">▶</button>
-                  <button className="btn btn-reject btn-sm" onClick={() => onRemove(p.id)}>✕</button>
+                  <button className="btn btn-reject btn-sm" onClick={() => onRemove(p.id)} aria-label={`Remove ${sourceLabel(p.source)} photo from the approved pool`}>✕</button>
                 </div>
               </div>
               {p.attribution ? <p className="cc-caption">{p.attribution}</p> : null}
@@ -133,6 +134,10 @@ function VenueDetailSheet({
   const [lat, setLat] = useState(venue.lat != null ? String(venue.lat) : "");
   const [lng, setLng] = useState(venue.lng != null ? String(venue.lng) : "");
   const [attached, setAttached] = useState<AttachedThing[] | null>(null);
+  // V-14 — the sheet only ever mounts while open, so the trap is active for its
+  // whole lifetime; unmount (closing) restores focus to the triggering vcard.
+  const sheetRef = useRef<HTMLDivElement | null>(null);
+  useFocusTrap(sheetRef, true);
   // Derived, not its own state — avoids a synchronous setState at the top of
   // the fetch effect below (same shape as BudgetChip.tsx's fetch-on-mount).
   const [attachedForVenueId, setAttachedForVenueId] = useState<string | null>(null);
@@ -175,7 +180,7 @@ function VenueDetailSheet({
   return (
     <>
       <div className="scrim show" onClick={onClose} />
-      <div className="sheet show sheet--wide" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+      <div className="sheet show sheet--wide" role="dialog" aria-modal="true" aria-labelledby="vTitle" ref={sheetRef}>
         <h3 id="vTitle">{venue.display_name}<button className="x" aria-label="Close" onClick={onClose}>✕</button></h3>
         <div className="sbody">
           <div className="veditor-row">
