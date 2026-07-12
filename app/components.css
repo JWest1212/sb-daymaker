@@ -380,6 +380,56 @@
   font-weight: var(--weight-semi);
   color: var(--text-link);
 }
+/* Home Rework spec §12 — R1 "Today's pick" additions: eyebrow, meta line, ribbon */
+.sbd-pick__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--terra-text);
+  margin-bottom: var(--space-1);
+}
+.sbd-pick__meta {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text-link);
+  margin-bottom: var(--space-2);
+}
+/* Phase 6 contrast audit: --paper on plain --terracotta measures 4.46:1 — just
+   under the 4.5:1 normal-text minimum. An 8% black mix (imperceptible hue
+   shift) brings it to 5.1:1. The star was --gold on terracotta at a failing
+   2.17:1; lightening gold enough to pass would wash it out past recognition,
+   so it's --paper too (matches the label, both comfortably AA) rather than a
+   half-measure that still fails. */
+.sbd-pick__ribbon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: color-mix(in srgb, var(--terracotta), black 8%);
+  color: var(--paper);
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 6px 14px 6px 12px;
+  border-radius: var(--radius-lg) 0 var(--radius-md) 0;
+  box-shadow: 0 2px 6px rgba(36, 28, 22, 0.25);
+}
+.sbd-pick__ribbon-star {
+  color: var(--paper);
+  font-size: 11px;
+}
+/* W1.3b Layer 2 — the static parachute card has no media band (no DB row, no
+   photo), so its body needs its own top padding to clear the ribbon. */
+.sbd-pick__body--static {
+  padding-top: calc(var(--space-5) + 22px);
+}
 
 /* LIST card — left-rail layout: 108px image flush left (full card height),
    text column (title → blurb → meta row) stacked to the right.
@@ -2505,10 +2555,10 @@
   overflow: hidden;
   /* full-bleed within the horizontally-padded shell main */
   margin: 0 calc(-1 * var(--space-5));
-  /* Elongated so the pick card sits up top and the full SB skyline gets its own
-     clear band beneath it (both visible at once). 352px floor reserves the
-     re-dressed card (worst-case 2-line clamp + CTA row) against the skyline
-     band — see "One Front Page" spec §3.2. */
+  /* Elongated so the value-prop band sits up top and the full SB skyline gets its
+     own clear band beneath it (both visible at once). 352px floor reserves the
+     value-prop copy (Home Rework spec §10/§13) against the skyline band — carried
+     over from the old pick card's same floor ("One Front Page" spec §3.2). */
   padding: var(--space-3) var(--space-5) 0;
   min-height: 352px;
   display: flex;
@@ -2692,138 +2742,285 @@
   white-space: nowrap;
 }
 
-/* Hero pick card (side-by-side) — compacted for S4-B so the skyline reads above it */
-.sbd-hero__pick {
-  position: relative;
-  z-index: 4; /* marquee card on top of the whole scene (spec §3.1) */
-  margin-top: var(--space-2);
-  display: flex;
-  align-items: stretch;
-  background: var(--bg);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
-  animation: heroCardIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+/* Value-prop band (Home Rework spec §10/§13) — replaces the old hero pick card.
+   Sits inside .sbd-hero__sky (z-index 3), so it inherits the same stacking above
+   the sun/skyline. The sky gradient's darkest stop always lands at 0% (top),
+   which is exactly where this sits in every variant/gray-day.
+   Phase 6 contrast audit (computed against each variant's 0% stop, text-shadow
+   doesn't count toward the WCAG number so this is foreground-vs-background only):
+   --paper headline/subline: 7.6:1 (morning/afternoon, the worst case) up to
+   16:1 (night) — clears AA everywhere with room to spare.
+   --gold eyebrow AS-IS only hit 3.7:1 against morning/afternoon's --pacific
+   stop (fails the 4.5:1 normal-text minimum — --text-xs bold doesn't qualify as
+   "large text"). Lightened via color-mix (no new hex) to 4.9:1 there, 6.2–10.3:1
+   on the other three variants. */
+.sbd-hero__vp {
+  margin-top: var(--space-3);
+  max-width: 100%;
 }
-.sbd-hero__pick-img {
-  position: relative;
-  width: 84px;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.sbd-hero__pick-heart {
-  position: absolute;
-  top: var(--space-1);
-  right: var(--space-1);
-}
-.sbd-hero__pick-body {
-  padding: var(--space-2) var(--space-3);
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1px;
-}
-.sbd-hero__pick-eyebrow {
+.sbd-hero__vp-eyebrow {
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-weight: var(--weight-bold);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--terra-text);
+  color: color-mix(in srgb, var(--gold), white 35%);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  margin-bottom: var(--space-2);
 }
-/* W1.3b — soft note shown only when the hero pick is an evergreen fallback
-   (empty filtered view). Small text → ink-2 per the accessibility usage rule. */
-.sbd-hero__pick-note {
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semi);
-  color: var(--ink-2);
-  margin-bottom: 2px;
-}
-.sbd-hero__pick-title {
+/* Measured with a real headless-browser render (getClientRects line-counting)
+   across 320-428px, not estimated: --text-lg is the largest token that holds
+   2 lines at 360px+; --text-xl already wraps to 3 lines at 360-390px (confirmed
+   the regression reported after trying it) and only reaches 2 lines at 414px+.
+   For this exact copy length, --text-lg is the practical ceiling. */
+.sbd-hero__vp-headline {
   font-family: var(--font-display);
+  font-weight: var(--weight-black);
   font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  color: var(--text);
-  /* Clamp to 2 lines: keeps the pick card compact so the skyline reads above
-     it, while still showing the full title in the common case (S4-B). */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  line-height: 1.15;
+  color: var(--paper);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+  margin-bottom: var(--space-2);
 }
-.sbd-hero__pick-meta {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  color: var(--text-link); /* = --pacific, 7.1:1 on the card (spec §2.2.2) */
-}
-/* CTA affordance — text inside the card's single tap target, never a nested
-   link. Sits at the card foot; +1 line is the card's only height growth. */
-.sbd-hero__pick-cta {
-  margin-top: 2px;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-  color: var(--terra-text);
+/* Sized down from --text-sm so the subline wraps to 2 lines instead of 3. */
+.sbd-hero__vp-sub {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 
-/* ---- Control row — single row: horizon (flex:1) + Tune button ---------- */
-.sbd-ctrl {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-3);
-  align-items: center;
-  margin-top: var(--space-4);
+/* ---- Discovery controls (Home Rework spec §8/§11) — doors + chips + horizon,
+   pinned directly beneath the header. Reuses the header-height token every
+   sticky section header already relies on (Phase 0 finding: no new CSS var
+   needed). Sits between the header (z-index 40) and sticky section headers
+   (z-index 18) so stacking always resolves correctly. */
+.sbd-disco {
+  position: sticky;
+  top: var(--sbd-header-h);
+  z-index: 30;
+  background: var(--bg);
+  margin: 0 calc(-1 * var(--space-5));
+  padding: var(--space-3) var(--space-5) var(--space-2);
+  border-bottom: 1px solid var(--border);
 }
-.sbd-ctrl__horizon {
+
+/* Doors — three equal-width photographic pills. Each door's background layers a
+   dimension-tinted scrim OVER a photo in one background-image (comma-separated
+   layers): if the photo 404s (true for all three until real photography lands —
+   spec §6.3), the gradient alone still renders, no onError/JS needed. */
+:root {
+  --sbd-door-scrim-place: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pacific) 15%, transparent),
+    color-mix(in srgb, var(--pacific-dark) 80%, transparent)
+  );
+  --sbd-door-scrim-vibe: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--purple) 15%, transparent),
+    color-mix(in srgb, var(--purple) 80%, transparent)
+  );
+  --sbd-door-scrim-activity: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--terracotta) 15%, transparent),
+    color-mix(in srgb, var(--terracotta) 80%, transparent)
+  );
+}
+.sbd-doors {
+  display: flex;
+  gap: var(--space-2);
+}
+.sbd-door {
   flex: 1;
   min-width: 0;
-}
-/* Horizon selector spans full width with equal-width segments */
-.sbd-ctrl__horizon .sbd-seg {
+  min-height: 64px;
+  position: relative;
   display: flex;
-  width: 100%;
-}
-.sbd-ctrl__horizon .sbd-seg__btn {
-  flex: 1;
-  text-align: center;
-}
-.sbd-ctrl__tune {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  height: 44px;
-  padding: 0 14px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  text-align: left;
+  border: none;
+  border-radius: var(--radius-md);
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--shadow-card);
+  padding: var(--space-2) var(--space-3);
   cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: var(--weight-bold);
-  color: var(--ink);
-  white-space: nowrap;
-  flex-shrink: 0;
 }
-.sbd-ctrl__tune.is-active {
-  border-color: var(--pacific);
+/* Phase 6 contrast audit — background-image ALONE isn't enough: the scrim
+   gradient's stops are colors mixed with *transparent* (designed to tint a
+   photo), so with no photo loaded (true for all doors/tiles until real
+   photography lands, §6.3) there was nothing solid behind them and the door
+   read as a near-invisible tint over the page background instead of a
+   "token-colored tile." These background-color bases fix that AND double as
+   the contrast fix: --purple/--terracotta measured 4.0:1/4.5:1 for --paper
+   text (both are documented "large/UI only" tokens, i.e. not meant for this
+   size of text) — darkened 15% here brings both to 4.8:1+. --pacific-dark
+   was already fine (11.4:1) and is used as-is. */
+.sbd-door--place,
+.sbd-tile--place {
+  background-color: var(--pacific-dark);
 }
-.sbd-ctrl__tune:focus-visible {
+.sbd-door--vibe,
+.sbd-tile--vibe {
+  background-color: color-mix(in srgb, var(--purple), black 15%);
+}
+.sbd-door--activity,
+.sbd-tile--activity {
+  background-color: color-mix(in srgb, var(--terracotta), black 15%);
+}
+.sbd-door:focus-visible {
   outline: 3px solid var(--pacific);
   outline-offset: 2px;
 }
-.sbd-ctrl__tune-dot {
+.sbd-door__kick {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  margin-bottom: 2px;
+}
+.sbd-door__label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-black);
+  font-size: var(--text-sm);
+  color: var(--paper);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
+  line-height: 1.05;
+}
+
+/* Chip bar — collapsed active-filter chips, one per active dimension */
+.sbd-chipbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sbd-chipbar::-webkit-scrollbar {
+  display: none;
+}
+.sbd-fchip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-2) 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  white-space: nowrap;
+}
+.sbd-fchip--place {
+  background: color-mix(in srgb, var(--pacific) 14%, var(--surface));
+  color: var(--pacific-dark);
+}
+.sbd-fchip--vibe {
+  background: color-mix(in srgb, var(--purple) 16%, var(--surface));
+  color: var(--purple);
+}
+.sbd-fchip--activity {
+  background: color-mix(in srgb, var(--terracotta) 14%, var(--surface));
+  color: var(--terra-text);
+}
+.sbd-fchip__x {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
+  border: none;
   border-radius: 50%;
-  background: var(--pacific);
-  color: var(--paper);
-  font-size: 10px;
-  font-weight: var(--weight-bold);
+  background: rgba(0, 0, 0, 0.08);
+  color: inherit;
+  font-size: 15px;
   line-height: 1;
+  cursor: pointer;
+}
+.sbd-fchip__x:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 1px;
+}
+.sbd-fchip-reset {
+  flex: 0 0 auto;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sbd-fchip-reset:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+
+/* Horizon segment — rehomed from the retired ControlRow, spanning full width */
+.sbd-horizon {
+  margin-top: var(--space-2);
+}
+.sbd-horizon .sbd-seg {
+  display: flex;
+  width: 100%;
+}
+.sbd-horizon .sbd-seg__btn {
+  flex: 1;
+  text-align: center;
+}
+
+/* Discovery sheet tile grid (the bottom sheet's contents) */
+.sbd-tilegrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.sbd-tile {
+  position: relative;
+  min-height: 84px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  text-align: left;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  background-size: cover;
+  background-position: center;
+  padding: var(--space-2);
+  cursor: pointer;
+}
+.sbd-tile.is-active {
+  border-color: var(--pacific);
+}
+.sbd-tile:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-tile__label {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  color: var(--paper);
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
+}
+.sbd-tile__count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 /* ---- Cascade feed ------------------------------------------------------- */
@@ -2857,6 +3054,18 @@
 }
 .sbd-feed-section__list--inner {
   margin-top: var(--space-4);
+}
+/* Home Rework spec §14 — visually-hidden aria-live region (feed result count) */
+.sbd-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Section header — shared by static lead and collapsible tiers */
@@ -3433,109 +3642,6 @@
   color: var(--text-link);
 }
 
-/* ---- Tune sheet — vibe + location merged -------------------------------- */
-.sbd-tune-section {
-  margin-bottom: var(--space-5);
-}
-.sbd-tune-section:last-of-type {
-  margin-bottom: 0;
-}
-.sbd-tune-section__hd {
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: var(--weight-bold);
-  color: var(--ink);
-  margin: 0 0 var(--space-3);
-}
-.sbd-tune-any {
-  width: 100%;
-  min-height: var(--tap-min);
-  margin-bottom: var(--space-3);
-  padding: 0 var(--space-4);
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: var(--weight-semi);
-  cursor: pointer;
-  text-align: left;
-}
-.sbd-tune-any.is-active {
-  border-color: var(--pacific);
-  color: var(--pacific);
-}
-.sbd-tune-any:focus-visible {
-  outline: 3px solid var(--pacific);
-  outline-offset: 2px;
-}
-.sbd-tune-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
-}
-.sbd-tune-opt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 72px;
-  padding: var(--space-3) var(--space-2);
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  cursor: pointer;
-  text-align: center;
-}
-.sbd-tune-opt.is-active {
-  border-color: var(--pacific);
-  border-width: 2px;
-}
-.sbd-tune-opt:focus-visible {
-  outline: 3px solid var(--pacific);
-  outline-offset: 2px;
-}
-.sbd-tune-opt__tile {
-  display: block;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-.sbd-tune-opt__label {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semi);
-  color: var(--ink);
-  line-height: 1.2;
-}
-.sbd-tune-foot {
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--line);
-  margin-top: var(--space-3);
-}
-.sbd-tune-submit {
-  width: 100%;
-  min-height: 52px;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: var(--pacific);
-  color: var(--paper);
-  font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: var(--weight-bold);
-  cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
-}
-.sbd-tune-submit:hover {
-  background: var(--pacific-dark);
-}
-.sbd-tune-submit:focus-visible {
-  outline: 3px solid var(--pacific);
-  outline-offset: 2px;
-}
-
 /* Empty state "Show everything" reset button */
 .sbd-empty__reset {
   display: inline-flex;
@@ -3555,6 +3661,20 @@
 .sbd-empty__reset:focus-visible {
   outline: 3px solid var(--pacific);
   outline-offset: 2px;
+}
+/* Home Rework spec §11.4 — stacked-filter empty state's two recovery actions */
+.sbd-empty__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sbd-empty__reset--ghost {
+  border-color: var(--line);
+  color: var(--ink-2);
+}
+.sbd-empty__reset--ghost:focus-visible {
+  outline-color: var(--pacific);
 }
 
 /* ==========================================================================
@@ -5240,8 +5360,7 @@
   z-index: 1;
 }
 .sbd-pick__acts,
-.sbd-pick__heart,
-.sbd-hero__pick-heart {
+.sbd-pick__heart {
   z-index: 2;
 }
 /* ListCard right column: heart stacked above share */
@@ -5979,17 +6098,6 @@ textarea.sbd-field__input {
     box-shadow: 0 0 64px 22px color-mix(in srgb, var(--gold) 60%, transparent);
   }
 }
-@keyframes heroCardIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ==========================================================================
    PHASE 1 PRIMITIVES — SBIcon, CardActions, Pill, DateEyebrow, PlacePill
    Plus shared CSS utilities: column rule, reveal stagger.
@@ -6092,6 +6200,179 @@ textarea.sbd-field__input {
   margin-top: 6px;
 }
 
+/* ---- Header search (Home Rework spec §9) --------------------------------- */
+.sbd-search-btn {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.sbd-search-btn:hover {
+  border-color: var(--pacific);
+  color: var(--pacific);
+}
+.sbd-search-btn:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+
+.sbd-search-scrim {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+.sbd-search-scrim.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sbd-search-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 121;
+  transform: translateY(-100%);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.sbd-search-panel.is-open {
+  transform: translateY(0);
+}
+.sbd-search-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--paper);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) var(--space-5) 12px;
+  box-shadow: 0 4px 12px rgba(36, 28, 22, 0.1);
+}
+.sbd-search-panel__field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--pacific);
+  background: var(--plaster);
+  color: var(--ink-2);
+}
+.sbd-search-panel__field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ink);
+}
+.sbd-search-panel__cancel {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border: none;
+  background: none;
+  font-family: var(--font-body);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  color: var(--pacific);
+  cursor: pointer;
+}
+.sbd-search-panel__cancel:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.sbd-search-panel__meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  background: var(--paper);
+  padding: 0 var(--space-5);
+  min-height: 1.2em;
+}
+.sbd-search-panel__meta:not(:empty) {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+.sbd-search-panel__results {
+  list-style: none;
+  margin: 0 var(--space-5) var(--space-3);
+  padding: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: 0 10px 24px rgba(36, 28, 22, 0.16);
+  overflow: hidden;
+}
+.sbd-search-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  border-top: 1px solid var(--plaster-2);
+  background: none;
+  text-align: left;
+  font-family: var(--font-body);
+  color: var(--ink);
+  cursor: pointer;
+  text-decoration: none;
+}
+.sbd-search-row:hover {
+  background: var(--plaster);
+}
+.sbd-search-row:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: -2px;
+}
+.sbd-search-row__tag {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+.sbd-search-row__tag--event {
+  background: var(--pacific);
+  color: var(--paper);
+}
+.sbd-search-row__tag--venue {
+  background: var(--sage);
+  color: var(--paper);
+}
+.sbd-search-row__tag--tag {
+  background: var(--plaster-2);
+  color: var(--ink-2);
+}
+.sbd-search-row__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+}
+.sbd-search-row__overflow {
+  padding: var(--space-2) var(--space-4);
+  border-top: 1px solid var(--plaster-2);
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+
 /* ---- Reveal stagger (feed cards fade in once on scroll) ------------------ */
 .sbd-reveal {
   opacity: 0;
@@ -6124,13 +6405,14 @@ textarea.sbd-field__input {
   .sbd-hero__sun {
     animation: none;
   }
-  .sbd-hero__pick {
-    animation: none;
-  }
   /* Reveal: always visible; observer won't run under reduced-motion */
   .sbd-reveal {
     opacity: 1;
     transform: none;
+    transition: none;
+  }
+  .sbd-search-scrim,
+  .sbd-search-panel {
     transition: none;
   }
 }

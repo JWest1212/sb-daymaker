@@ -33,6 +33,7 @@ function thing(id: string, over: Partial<Thing> = {}): Thing {
     visual_seed: null,
     venue_id: null,
     tags: [],
+    activities: [],
     happyHours: [],
     recurring: [],
     ...over,

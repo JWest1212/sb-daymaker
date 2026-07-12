@@ -1,11 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
-import { SaveHeart } from "@/components/ui";
-import { cardPlace, heroCta, heroEyebrow, heroTime } from "./derive";
+import { isGrayDay } from "./derive";
 import { ConditionChips } from "./ConditionChips";
 
 const TOD_LABEL: Record<TimeOfDay, string> = {
@@ -15,61 +9,24 @@ const TOD_LABEL: Record<TimeOfDay, string> = {
   night: "After dark",
 };
 
-// W1.3b Layer 2 — the hero's last-resort parachute when the published pool has
-// zero evergreen things (cold DB / upstream fetch failure). Hardcoded because
-// it's the safety net, not content; renders CTA-only (no save heart — not a DB row).
-const COURTHOUSE_FALLBACK = {
-  eyebrow: "Always worth it",
-  title: "The Courthouse clock tower",
-  line: "The best free view in town — hand-painted ceilings on the way up, the whole city and the sea at the top.",
-  cta: "Find your way there →",
-  href: "/discover",
-};
-
-function isGrayDay(weather: Weather | null): boolean {
-  if (!weather || weather.isClear) return false;
-  const c = weather.condition.toLowerCase();
-  return c.includes("cloud") || c.includes("rain") || c.includes("fog");
-}
-
 function variant(tod: TimeOfDay, weather: Weather | null): string {
   return isGrayDay(weather) ? "gray" : tod;
 }
 
+/** Home Rework spec §10 — the daily pick card is retired from here (it returns in
+ *  Phase 5 as the elevated "Today's pick" atop the feed); this is now a pure
+ *  value-prop band over the untouched skyline. No client state left, so this is a
+ *  server component again. */
 export function Hero({
   tod,
   dateLabel,
   weather,
-  pick,
-  saved,
-  onToggleSave,
-  fallbackNote = false,
-  staticFallback = false,
 }: {
   tod: TimeOfDay;
   dateLabel: string;
   weather: Weather | null;
-  pick: Thing | null;
-  saved: boolean;
-  onToggleSave: () => void;
-  /** Layer 1: `pick` is a deterministic evergreen fallback — show the soft note. */
-  fallbackNote?: boolean;
-  /** Layer 2: no thing at all — render the hardcoded static parachute card. */
-  staticFallback?: boolean;
 }) {
-  const gray = isGrayDay(weather);
   const v = variant(tod, weather);
-
-  // Card Imagery Build Spec Phase 2 §5.5 — same broken-image fallback as the card
-  // rail (components/ui/Card.tsx): a Google serving_url can 403/404 between nightly
-  // refreshes; resets whenever the pick's photo_url changes.
-  const [photoBroken, setPhotoBroken] = useState(false);
-  useEffect(() => setPhotoBroken(false), [pick?.photo_url]);
-
-  // Re-dressed pick meta: `{venue} · {time}` (spec §2.2.2). Never the bare city.
-  const meta = pick
-    ? [cardPlace(pick), heroTime(pick)].filter(Boolean).join(" · ")
-    : "";
 
   return (
     <section className={`sbd-hero sbd-hero--${v}`}>
@@ -90,7 +47,8 @@ export function Hero({
       {/* H2: hand-styled Santa Barbara skyline (Riviera hillside, Mission,
           Courthouse, wharf, Lil' Toot). Golden-hour buildings under a changing
           sky — scene colors are baked into the asset by design (spec §3.4). The
-          hero's overflow:hidden crops the transparent upper sky at both widths. */}
+          hero's overflow:hidden crops the transparent upper sky at both widths.
+          Home Rework spec §1 guardrail: this asset is untouched, byte-for-byte. */}
       <img
         className="sbd-hero__range"
         src="/hero/sb-skyline.svg"
@@ -104,61 +62,19 @@ export function Hero({
           <span className="sbd-hero__daypart"> · {TOD_LABEL[tod]}</span>
         </div>
         <ConditionChips weather={weather} />
-      </div>
 
-      {pick ? (
-        <div className="sbd-hero__pick">
-          <div className="sbd-hero__pick-img sbd-media--gold">
-            {pick.photo_url && !photoBroken ? (
-              <img
-                className="sbd-card__img"
-                src={pick.photo_url}
-                alt=""
-                loading="lazy"
-                onError={() => setPhotoBroken(true)}
-              />
-            ) : null}
-            <span className="sbd-hero__pick-heart">
-              <SaveHeart
-                overlay
-                saved={saved}
-                onToggle={onToggleSave}
-                title={pick.title}
-              />
-            </span>
-          </div>
-          <div className="sbd-hero__pick-body">
-            {/* W1.3b Layer 1: shown only when this pick is an evergreen fallback. */}
-            {fallbackNote ? (
-              <p className="sbd-hero__pick-note">
-                Nothing matches that exactly today — but this is always worth it.
-              </p>
-            ) : null}
-            <div className="sbd-hero__pick-eyebrow">{heroEyebrow(pick, gray)}</div>
-            <div className="sbd-hero__pick-title">
-              <Link href={`/thing/${pick.id}`} className="sbd-stretch">
-                {pick.title}
-              </Link>
-            </div>
-            {meta ? <div className="sbd-hero__pick-meta">{meta}</div> : null}
-            <div className="sbd-hero__pick-cta">{heroCta(pick)}</div>
-          </div>
+        {/* Home Rework spec §10/§13 — locked Voice 1 copy, verbatim. */}
+        <div className="sbd-hero__vp">
+          <div className="sbd-hero__vp-eyebrow">A local perspective on what&rsquo;s happening</div>
+          <h1 className="sbd-hero__vp-headline">
+            Everything worth doing in Santa Barbara, in one place.
+          </h1>
+          <p className="sbd-hero__vp-sub">
+            Scattered across a dozen sites, gathered here and curated by someone
+            who knows the town. Find it, save it, make a plan.
+          </p>
         </div>
-      ) : staticFallback ? (
-        // W1.3b Layer 2: hardcoded parachute — CTA to Discover, no save heart.
-        <div className="sbd-hero__pick">
-          <div className="sbd-hero__pick-body">
-            <div className="sbd-hero__pick-eyebrow">{COURTHOUSE_FALLBACK.eyebrow}</div>
-            <div className="sbd-hero__pick-title">
-              <Link href={COURTHOUSE_FALLBACK.href} className="sbd-stretch">
-                {COURTHOUSE_FALLBACK.title}
-              </Link>
-            </div>
-            <div className="sbd-hero__pick-meta">{COURTHOUSE_FALLBACK.line}</div>
-            <div className="sbd-hero__pick-cta">{COURTHOUSE_FALLBACK.cta}</div>
-          </div>
-        </div>
-      ) : null}
+      </div>
     </section>
   );
 }

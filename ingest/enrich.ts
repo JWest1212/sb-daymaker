@@ -14,13 +14,21 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Candidate, OccasionTag, PriceBand, Tod } from '../packages/shared/types';
+import type { ActivityTag, Candidate, OccasionTag, PriceBand, Tod } from '../packages/shared/types';
 
 const MODEL = 'claude-haiku-4-5';
 
 const OCCASION_TAGS: OccasionTag[] = [
   'date_night', 'family_day', 'nightlife', 'catch_a_show', 'arts_culture',
   'outdoors_active', 'wine_food', 'free_sb', 'hosting_visitors', 'solo',
+];
+
+// Home Rework spec §6.1 — mirrors lib/activities.ts's ACTIVITY_KEYS verbatim
+// (duplicated rather than imported, same pattern as OCCASION_TAGS above: this
+// worker package stays independent of the app's `lib/`).
+const ACTIVITY_TAGS: ActivityTag[] = [
+  'live-music', 'arts-galleries', 'food-drink', 'outdoors', 'markets',
+  'family-kids', 'clubs-groups', 'film-talks', 'wellness-fitness', 'nightlife',
 ];
 
 // Exported only so enrich.test.ts can assert the prompt practices what it preaches
@@ -49,6 +57,9 @@ For each item return:
   specific, never a list of themes.
 - blurb_long: 2–4 sentences for the detail screen, same voice.
 - tags: 1–3 occasion tags chosen ONLY from the allowed list, each with a confidence 0–1.
+- activities: zero or more activity tags chosen ONLY from the allowed list. An activity
+  is a concrete "what you'd be doing" label (live music, a market, a hike), not a mood.
+  Leave it empty rather than forcing a tag that doesn't clearly fit.
 
 Tagging rubric (a tag is a promise about the occasion, not a "maybe": be selective):
 - Alcohol-primary venues (breweries, taprooms, wine tasting rooms, bars, cocktail
@@ -124,6 +135,14 @@ interface ModelItem {
   blurb?: string;
   blurb_long?: string;
   tags?: { tag: OccasionTag; confidence: number }[];
+  activities?: ActivityTag[];
+}
+
+/** Drop any activity outside the controlled vocabulary and de-dupe. Belt-and-suspenders:
+ *  the tool schema's enum should already constrain the model, but this matches the
+ *  defensive posture of applyNegativeRules (§6.2: "reject and drop... at write time"). */
+export function filterActivities(activities: ActivityTag[]): ActivityTag[] {
+  return [...new Set(activities.filter((a) => ACTIVITY_TAGS.includes(a)))];
 }
 
 /** Merge model output back onto candidates — PURE. starts_at is left byte-identical. */
@@ -138,6 +157,7 @@ export function mergeEnrichment(cands: Candidate[], modelItems: ModelItem[]): Ca
       blurb: m.blurb?.trim() || c.blurb,
       blurb_long: m.blurb_long?.trim() || c.blurb_long,
       proposed_tags: tags,
+      proposed_activities: filterActivities(m.activities ?? []),
     };
   });
 }
@@ -171,8 +191,12 @@ const enrichTool: Anthropic.Tool = {
                 required: ['tag', 'confidence'],
               },
             },
+            activities: {
+              type: 'array',
+              items: { type: 'string', enum: ACTIVITY_TAGS },
+            },
           },
-          required: ['id', 'blurb', 'blurb_long', 'tags'],
+          required: ['id', 'blurb', 'blurb_long', 'tags', 'activities'],
         },
       },
     },

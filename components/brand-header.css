@@ -19,6 +19,7 @@
 .sbd-brandhdr__row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 11px;
   padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 11px;
 }

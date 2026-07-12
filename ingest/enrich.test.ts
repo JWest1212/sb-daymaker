@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildItems, applyNegativeRules, mergeEnrichment, SYSTEM } from './enrich';
-import type { Candidate, OccasionTag } from '../packages/shared/types';
+import { buildItems, applyNegativeRules, filterActivities, mergeEnrichment, SYSTEM } from './enrich';
+import type { ActivityTag, Candidate, OccasionTag } from '../packages/shared/types';
 
 function cand(over: Partial<Candidate>): Candidate {
   return {
@@ -46,6 +46,29 @@ describe('mergeEnrichment — AI only adds voice + tags, never edits a start', (
   it('passes through candidates the model omitted, unchanged', () => {
     const c = cand({ id: 'missing' });
     expect(mergeEnrichment([c], [])[0]).toBe(c);
+  });
+
+  // Home Rework spec §6.2 — Activity taxonomy, AI-proposed alongside occasion tags.
+  it('carries proposed_activities through, filtered to the controlled vocabulary', () => {
+    const [after] = mergeEnrichment([cand({ id: 'c' })], [
+      { id: 'c', blurb: 'x', blurb_long: 'y', tags: [], activities: ['live-music', 'made-up' as ActivityTag] },
+    ]);
+    expect(after.proposed_activities).toEqual(['live-music']);
+  });
+  it('defaults to an empty array when the model omits activities', () => {
+    const [after] = mergeEnrichment([cand({ id: 'd' })], [
+      { id: 'd', blurb: 'x', blurb_long: 'y', tags: [] },
+    ]);
+    expect(after.proposed_activities).toEqual([]);
+  });
+});
+
+describe('filterActivities', () => {
+  it('drops values outside the controlled vocabulary', () => {
+    expect(filterActivities(['outdoors', 'invented' as ActivityTag])).toEqual(['outdoors']);
+  });
+  it('de-dupes', () => {
+    expect(filterActivities(['nightlife', 'nightlife'])).toEqual(['nightlife']);
   });
 });
 

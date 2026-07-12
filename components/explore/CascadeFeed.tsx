@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
-import { ListCard, EmptyState, SBIcon } from "@/components/ui";
+import { ListCard, PickCard, EmptyState, SBIcon } from "@/components/ui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { Thing } from "@/lib/things";
+import type { Weather } from "@/lib/weather";
 import type { Horizon } from "@/lib/explore";
 import { dedupeFeedVenuePhotos, type PoolPhoto } from "@/lib/venuePool";
-import { cardBlurb, cardFacts, cardVisual } from "./derive";
+import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
@@ -16,6 +17,86 @@ const HORIZON_LABEL: Record<Horizon, string> = {
   week: "Happening This Week",
   month: "Happening This Month",
 };
+
+// Home Rework spec §12 — the R1 ribbon label maps to the current horizon.
+const PICK_RIBBON_LABEL: Record<Horizon, string> = {
+  today: "Today's pick",
+  week: "This week's pick",
+  month: "This month's pick",
+};
+
+// W1.3b Layer 2 — the pick's last-resort parachute when the published pool has
+// zero evergreen things (cold DB / upstream fetch failure). Hardcoded because
+// it's the safety net, not content; no save heart — not a DB row.
+const STATIC_FALLBACK = {
+  eyebrow: "Always worth it",
+  title: "The Courthouse clock tower",
+  line: "The best free view in town — hand-painted ceilings on the way up, the whole city and the sea at the top.",
+  href: "/discover",
+};
+
+/** Home Rework spec §12 — the elevated "Today's pick" (R1), atop the lead
+ *  section. Sponsor-blind: `pick` is chosen upstream (ExploreClient) purely from
+ *  the founder pin / pickAutoHero / evergreen-fallback chain, never from
+ *  sponsor/featured status. Ribbon is decorative; the card's accessible name is
+ *  still just the title (PickCard's stretched link), same as every other card. */
+function TodayPick({
+  pick,
+  isFallback,
+  isStatic,
+  horizon,
+  weather,
+}: {
+  pick: Thing | null;
+  isFallback: boolean;
+  isStatic: boolean;
+  horizon: Horizon;
+  weather: Weather | null;
+}) {
+  const ribbonLabel = PICK_RIBBON_LABEL[horizon];
+
+  if (isStatic) {
+    return (
+      <article className="sbd-card sbd-pick sbd-pick--static">
+        <span className="sbd-pick__ribbon" aria-hidden="true">
+          <span className="sbd-pick__ribbon-star">★</span>
+          {ribbonLabel}
+        </span>
+        <div className="sbd-pick__body sbd-pick__body--static">
+          <div className="sbd-pick__eyebrow">{STATIC_FALLBACK.eyebrow}</div>
+          <h3 className="sbd-pick__title">
+            <Link href={STATIC_FALLBACK.href} className="sbd-stretch">
+              {STATIC_FALLBACK.title}
+            </Link>
+          </h3>
+          <div className="sbd-pick__meta">{STATIC_FALLBACK.line}</div>
+        </div>
+      </article>
+    );
+  }
+
+  if (!pick) return null;
+
+  const meta = [cardPlace(pick), heroTime(pick)].filter(Boolean).join(" · ");
+  const contextEyebrow = isFallback
+    ? "Nothing matches that exactly today — but this is always worth it."
+    : heroEyebrow(pick, isGrayDay(weather));
+
+  return (
+    <PickCard
+      id={pick.id}
+      href={`/thing/${pick.id}`}
+      title={pick.title}
+      blurb={cardBlurb(pick)}
+      occasionKey={pick.tags[0]}
+      meta={meta || undefined}
+      contextEyebrow={contextEyebrow}
+      ribbonLabel={ribbonLabel}
+      photo={pick.photo_url ?? undefined}
+      tone="gold"
+    />
+  );
+}
 
 function deriveLeadDek(horizon: Horizon, count: number): string | null {
   if (horizon === "today") {
@@ -58,11 +139,19 @@ function LeadSection({
   horizon,
   monthShownCount,
   onMonthShowMore,
+  pick,
+  pickIsFallback,
+  pickIsStatic,
+  weather,
 }: {
   tier1: Thing[];
   horizon: Horizon;
   monthShownCount: number;
   onMonthShowMore: () => void;
+  pick: Thing | null;
+  pickIsFallback: boolean;
+  pickIsStatic: boolean;
+  weather: Weather | null;
 }) {
   return (
     <section className="sbd-feed-section">
@@ -72,6 +161,15 @@ function LeadSection({
         dek={deriveLeadDek(horizon, tier1.length)}
         sticky={horizon === "today"}
       />
+      {pick || pickIsStatic ? (
+        <TodayPick
+          pick={pick}
+          isFallback={pickIsFallback}
+          isStatic={pickIsStatic}
+          horizon={horizon}
+          weather={weather}
+        />
+      ) : null}
       {horizon === "today" && <TodayLead tier1={tier1} />}
       {horizon === "week" && <LeadDayRail items={tier1} />}
       {horizon === "month" && (
@@ -90,12 +188,34 @@ function LeadSection({
 export function CascadeFeed({
   items: rawItems,
   horizon,
+  pick = null,
+  pickIsFallback = false,
+  pickIsStatic = false,
+  weather = null,
   onClearFilters,
+  hasActiveFilters = false,
+  onShowClosestMatches,
   venuePools,
 }: {
   items: Thing[];
   horizon: Horizon;
+  /** Home Rework spec §12 — the elevated "Today's pick" (R1), sponsor-blind,
+   *  computed upstream in ExploreClient. Excluded from `items` below so it never
+   *  double-renders. */
+  pick?: Thing | null;
+  /** W1.3b Layer 1 — `pick` is a deterministic evergreen fallback, not a real match. */
+  pickIsFallback?: boolean;
+  /** W1.3b Layer 2 — no thing at all; render the hardcoded static parachute card. */
+  pickIsStatic?: boolean;
+  weather?: Weather | null;
   onClearFilters?: () => void;
+  /** Home Rework spec §11.4 — at least one of Place/Vibe/Activity is active, so an
+   *  empty result gets the stacked-filter empty state (two recovery actions)
+   *  instead of the generic one. */
+  hasActiveFilters?: boolean;
+  /** Drops the most-recently-added filter (repeatedly, if needed) until something
+   *  shows, or all filters are gone. Required when `hasActiveFilters` is true. */
+  onShowClosestMatches?: () => void;
   /** Card Imagery Build Spec Phase 2 §5.4 — approved venue photo pools, keyed by
    *  venue_id. Optional: callers that don't pass one (there are none left, but the
    *  type stays permissive) simply skip the per-feed dedupe pass. */
@@ -153,15 +273,44 @@ export function CascadeFeed({
   const tier1 = items.filter((t) => t.happening_tier === 1);
   const tier2 = items.filter((t) => t.happening_tier === 2);
   const tier3 = items.filter((t) => t.happening_tier === 3);
+  const hasLead = tier1.length > 0 || pick != null || pickIsStatic;
 
-  if (tier1.length === 0 && tier2.length === 0 && tier3.length === 0) {
+  if (tier1.length === 0 && tier2.length === 0 && tier3.length === 0 && !hasLead) {
     return (
       <div style={{ marginTop: "var(--space-6)" }}>
+        <div className="sbd-sr-only" aria-live="polite">
+          0 things found
+        </div>
         <EmptyState
           icon={<SBIcon name="reset" size={28} stroke="var(--sage)" />}
-          message="Nothing matches that combination. Try a wider time or a different vibe."
+          message={
+            hasActiveFilters
+              ? "Nothing matches all of those. Try loosening one."
+              : "Nothing matches that combination. Try a wider time or a different vibe."
+          }
           action={
-            onClearFilters ? (
+            hasActiveFilters ? (
+              <div className="sbd-empty__actions">
+                {onShowClosestMatches ? (
+                  <button
+                    type="button"
+                    className="sbd-empty__reset"
+                    onClick={onShowClosestMatches}
+                  >
+                    Show the closest matches
+                  </button>
+                ) : null}
+                {onClearFilters ? (
+                  <button
+                    type="button"
+                    className="sbd-empty__reset sbd-empty__reset--ghost"
+                    onClick={onClearFilters}
+                  >
+                    Clear filters
+                  </button>
+                ) : null}
+              </div>
+            ) : onClearFilters ? (
               <button
                 type="button"
                 className="sbd-empty__reset"
@@ -176,14 +325,23 @@ export function CascadeFeed({
     );
   }
 
+  const totalCount = tier1.length + tier2.length + tier3.length + (pick ? 1 : 0);
+
   return (
     <div ref={feedRef}>
-      {tier1.length > 0 && (
+      <div className="sbd-sr-only" aria-live="polite">
+        {totalCount} {totalCount === 1 ? "thing" : "things"} found
+      </div>
+      {hasLead && (
         <LeadSection
           tier1={tier1}
           horizon={horizon}
           monthShownCount={monthShownCount}
           onMonthShowMore={onMonthShowMore}
+          pick={pick}
+          pickIsFallback={pickIsFallback}
+          pickIsStatic={pickIsStatic}
+          weather={weather}
         />
       )}
 
