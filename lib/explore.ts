@@ -1,6 +1,7 @@
 import type { Thing } from "./things";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
+import type { ActivityKey } from "./activities";
 
 export type Horizon = "today" | "week" | "month";
 
@@ -160,6 +161,14 @@ export function pickEvergreenFallback(things: Thing[], sbDateKey: string): Thing
 export function filterByLens(things: Thing[], tag: OccasionKey | null): Thing[] {
   if (!tag) return things;
   return things.filter((t) => t.tags.includes(tag));
+}
+
+/** Home Rework spec §11.4 — the Activity door's filter, stacked with filterByLens.
+ *  A thing with no activities (not yet enriched, or genuinely none) simply never
+ *  matches a specific activity — same "no tag = no match" behavior as filterByLens. */
+export function filterByActivity(things: Thing[], activity: ActivityKey | null): Thing[] {
+  if (!activity) return things;
+  return things.filter((t) => t.activities.includes(activity));
 }
 
 /** Stable sort that bubbles items in the chosen zone to the top. */

@@ -32,3 +32,16 @@ export async function getVenuePhotoPools(): Promise<Record<string, PoolPhoto[]>>
   }
   return pools;
 }
+
+/** Home Rework spec §9.2/§18 — venue id -> display name, for header search's
+ *  "Venue" group. RLS (public_read_venues) already restricts this to active rows. */
+export async function getVenueNames(): Promise<Record<string, string>> {
+  const sb = getSupabase();
+  if (!sb) return {};
+  const { data, error } = await sb.from("venues").select("id, display_name");
+  if (error || !data) return {};
+
+  const names: Record<string, string> = {};
+  for (const row of data) names[row.id as string] = row.display_name as string;
+  return names;
+}

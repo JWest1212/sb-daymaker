@@ -9,7 +9,8 @@ export type IconName =
   | "sliders"
   | "sun"
   | "reset"
-  | "chevron";
+  | "chevron"
+  | "search";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   heart: (
@@ -41,6 +42,12 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   reset: <path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v4h4" />,
   chevron: <path d="M9 6l6 6-6 6" />,
+  search: (
+    <>
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.35-4.35" />
+    </>
+  ),
 };
 
 export function SBIcon({

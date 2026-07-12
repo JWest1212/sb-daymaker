@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Thing, RecurringSchedule, HappyHourWindow } from "./things";
-import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero, groupByWeek, ordinal } from "./explore";
+import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero, groupByWeek, ordinal, filterByActivity } from "./explore";
 
 // SB weekday reference instants (SB = America/Los_Angeles):
 const THU = new Date("2026-07-02T19:00:00Z").getTime(); // Thu noon SB
@@ -37,6 +37,7 @@ function thing(over: Partial<Thing> = {}): Thing {
     visual_seed: null,
     venue_id: null,
     tags: [],
+    activities: [],
     happyHours: [],
     recurring: [],
     ...over,
@@ -296,5 +297,21 @@ describe("groupByWeek — Month lead sticky header grouping", () => {
     const last = weeks[weeks.length - 1];
     expect(last.weekLabel).toBeNull();
     expect(last.items.map((t) => t.id)).toEqual(["undated"]);
+  });
+});
+
+// Home Rework spec §11.4 — the Activity door's filter, stacked with filterByLens.
+describe("filterByActivity", () => {
+  it("passes everything through when no activity is selected", () => {
+    const things = [thing({ id: "a", activities: ["outdoors"] }), thing({ id: "b", activities: [] })];
+    expect(filterByActivity(things, null).map((t) => t.id)).toEqual(["a", "b"]);
+  });
+  it("keeps only things tagged with the selected activity", () => {
+    const things = [
+      thing({ id: "a", activities: ["outdoors", "markets"] }),
+      thing({ id: "b", activities: ["live-music"] }),
+      thing({ id: "c", activities: [] }),
+    ];
+    expect(filterByActivity(things, "outdoors").map((t) => t.id)).toEqual(["a"]);
   });
 });

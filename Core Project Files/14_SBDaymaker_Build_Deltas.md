@@ -6,6 +6,103 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-07-11 — Home Rework: header search, value-prop hero, discovery doors, Today's pick
+
+Source: `docs/hero_picker_search/15_SBDaymaker_Home_Rework_Spec.md` (delta spec) +
+`SBDaymaker_Home_Final.html` (approved mockup). Full six-phase rebuild of the
+Explore home screen, built on branch `feat/home-rework`, one phase at a time
+with a stop-and-show gate after each.
+
+**Built:**
+1. **Header search** — `SearchButton`/`SearchPanel` (deterministic, grouped
+   events/venues/tags, capped at 5/group), `lib/search.ts`, `app/api/search/route.ts`
+   (public GET, in-memory per-IP rate limit — no accounts/sessions exist to key a
+   real limiter off). Venue search resolved via a new `venues.display_name` join
+   (`lib/venues.ts: getVenueNames()`) rather than the neighborhood `cardPlace()`
+   derives — the spec assumed the latter, live code didn't support it.
+2. **Value-prop hero** — `Hero.tsx`'s pick card is gone; skyline SVG and all
+   atmosphere layers are byte-identical. Hero is a server component again (no
+   client state left).
+3. **Activity taxonomy** — `lib/activities.ts` (10-key registry, mirrors
+   `lib/occasions.ts`/`lib/zones.ts`), `things.activities text[]` (additive,
+   **migration not yet applied — see below**), `ingest/enrich.ts` batch schema
+   extended, `filterByActivity` in `lib/explore.ts`.
+4. **Discovery controls** — `DiscoveryDoors`/`DiscoverySheet`/`DiscoveryChips`/
+   `HorizonSegment`/`DiscoveryControls` (sticky, reuses the existing
+   `--sbd-header-h` token — no new CSS variable). Stacked 3-dimension filtering
+   (Vibe → Activity → cascade → Place) with the required empty-state recovery
+   UI ("Show the closest matches" drops the most-recently-added filter until
+   something shows; "Clear filters" resets). **Retired `ControlRow`/`TuneSheet`**
+   and their CSS entirely (confirmed zero remaining references before deleting).
+5. **Today's pick (R1)** — `PickCard` (`components/ui/Card.tsx`) extended with
+   `ribbonLabel`/`contextEyebrow`/`meta`; had zero live consumers before this.
+   `CascadeFeed` renders it atop the Tier-1 lead section. The old Hero's
+   3-layer "never blank" fallback (founder pin → `pickAutoHero` → evergreen →
+   static parachute) moved into `ExploreClient`, feeding this instead — with one
+   behavior change from the old Hero: **the evergreen/static fallback layers
+   are skipped whenever a Vibe/Place/Activity filter is active and empty**, so
+   the dedicated stacked-filter empty state owns that case instead of an
+   unrelated evergreen pick appearing next to a filter it doesn't match.
+
+**Accessibility issues found and fixed during the Phase 6 pass** (computed WCAG
+contrast ratios, not eyeballed):
+- Value-prop eyebrow (`--gold` on the sky gradient's lightest morning/afternoon
+  stop) measured 3.7:1, under the 4.5:1 normal-text minimum (`--text-xs` bold
+  doesn't qualify as "large text"). Lightened via `color-mix(in srgb, var(--gold), white 35%)` → 4.9–10.3:1 across all variants.
+- R1 ribbon: `--paper` label on plain `--terracotta` measured 4.46:1 (just
+  under); the gold star measured 2.17:1 (badly under, and no amount of
+  lightening gets gold there without losing the hue). Ribbon background
+  darkened 8% (`color-mix(..., black 8%)`, +paper text → 5.1:1); the star is
+  `--paper` too rather than a still-failing "less bad" gold.
+- Discovery doors/sheet tiles: the fallback scrim (`color-mix(..., transparent)`,
+  designed to tint a photo) had nothing solid behind it when no photo loads —
+  true for every door/tile right now — so it read as a near-invisible tint over
+  the page background instead of spec §6.3's "token-colored tile." Added solid
+  `background-color` bases; also caught `--purple`/`--terracotta` (both
+  documented "large/UI only" in the tokens file) failing 4.5:1 for this text
+  size — darkened 15% to fix.
+- `BottomSheet` (shared by `DiscoverySheet` and every other sheet in the app —
+  Plan, Saved, Welcome Tour) didn't restore focus to its trigger on close,
+  unlike `lib/useFocusTrap.ts`'s established pattern. Fixed in the shared
+  component, so every consumer gets it, not just the new one.
+- Added a visually-hidden `aria-live="polite"` region for the feed's result
+  count (spec §14 asked for this alongside search's, which already had one).
+
+**Verification:** every phase verified against the user's own already-running
+dev server (curl + reading its live logs), including two real-data confirmations
+worth noting: `q=soho` correctly matched both an event and the venue "Soho
+Restaurant & Music Club" via the new join, and a live founder hero pin in the
+DB resolved to the correct pick — confirmed by cross-referencing the rendered
+`pinnedHeroId` payload against the pick's thing id. No screenshot tooling is
+available in this environment (no `chromium-cli`/Playwright installed, and
+installing one was judged out of scope for a one-off) — Jim confirmed the
+rendered result visually himself at each phase. 572/572 vitest, `tsc` clean,
+production build green throughout.
+
+**Not yet done — flagged, not silently skipped:**
+- **`supabase/migrations/20260711_activities.sql` has not been applied.**
+  `getPublishedThings()` tries the richer select and falls back on error (same
+  pattern `getThing()` already uses for `local_note`), so the site works either
+  way — but Activity filtering has no real data until Jim pastes the migration
+  and a backfill/nightly run populates it.
+- Door/tile photography doesn't exist yet (spec §6.3): 3 door images
+  (`/tiles/door/{place,vibe,activity}.jpg`) + 10 zone + 10 occasion + 10
+  activity tile images. Every door/tile currently renders as a solid
+  token-tinted color with the label only, by design.
+- Activity vocabulary (§18 #5) hasn't been explicitly re-confirmed with Jim
+  since Phase 1 — worth a final look before the first real backfill run, since
+  changing keys after backfill means re-enriching.
+- The Build-your-day CTA's redundancy question (§18 #3) wasn't revisited — out
+  of scope for this build.
+
+**Files touched:** ~20 files across `lib/`, `components/explore/`,
+`components/ui/`, `app/`, `ingest/`, `packages/shared/types.ts`. New:
+`lib/activities.ts`, `lib/search.ts`, `lib/tiles.ts`, `app/api/search/route.ts`,
+`DiscoveryDoors/Sheet/Chips/Controls.tsx`, `HeaderSearch.tsx`,
+`HorizonSegment.tsx`. Deleted: `ControlRow.tsx`, `TuneSheet.tsx`.
+
+---
+
 ## 2026-07-10 — Card Imagery Phase 3 addendum: venue-pool match now beats the Tier-1 no-photo default
 
 Source: Jim's question after the Phase 3 stop-and-show — "did you backfill any

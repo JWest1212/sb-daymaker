@@ -1,6 +1,7 @@
 import { getSupabase } from "./supabase";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
+import type { ActivityKey } from "./activities";
 
 export type ThingType = "place" | "event" | "firstlook" | "happyhour";
 
@@ -58,6 +59,11 @@ export interface Thing {
    *  any), the join key for the venue photo pool + per-feed dedupe (lib/venuePool.ts). */
   venue_id: string | null;
   tags: OccasionKey[];
+  /** Home Rework spec §6 — the Activity taxonomy (supabase/migrations/
+   *  20260711_activities.sql, additive, not yet applied as of Phase 4). Defaults to
+   *  `[]` — both when a thing genuinely has none, and (via getPublishedThings'
+   *  fallback select) when the migration hasn't landed on this DB yet. */
+  activities: ActivityKey[];
   happyHours: HappyHourWindow[];
   recurring: RecurringSchedule[];
 }
@@ -73,6 +79,9 @@ const RELATIONS = `thing_tags ( tag ),
   recurring_schedules ( category, day_of_week, start_time, end_time, label )`;
 const SELECT = `${BASE_COLS}, ${RELATIONS}`;
 const SELECT_DETAIL = `${BASE_COLS}, local_note, photo_attribution, ${RELATIONS}`;
+// Home Rework spec §6 — same "select the new column, fall back if it 400s"
+// pattern getThing() already uses for local_note/photo_attribution below.
+const SELECT_WITH_ACTIVITIES = `${BASE_COLS}, activities, ${RELATIONS}`;
 
 function mapThing(row: Record<string, unknown>): Thing {
   return {
@@ -104,6 +113,7 @@ function mapThing(row: Record<string, unknown>): Thing {
     visual_seed: (row.visual_seed as number) ?? null,
     venue_id: (row.venue_id as string) ?? null,
     tags: ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag),
+    activities: (row.activities as ActivityKey[]) ?? [],
     happyHours: (row.happy_hour_windows as HappyHourWindow[]) ?? [],
     recurring: (row.recurring_schedules as RecurringSchedule[]) ?? [],
   };
@@ -114,12 +124,17 @@ function mapThing(row: Record<string, unknown>): Thing {
 export async function getPublishedThings(): Promise<Thing[]> {
   const sb = getSupabase();
   if (!sb) return [];
-  const { data, error } = await sb
+  // Prefer the select with `activities`; fall back if the migration hasn't been
+  // applied yet (same pattern getThing() uses for local_note/photo_attribution).
+  const primary = await sb
     .from("things")
-    .select(SELECT)
+    .select(SELECT_WITH_ACTIVITIES)
     .order("happening_tier", { ascending: true });
-  if (error || !data) return [];
-  return data.map((r) => mapThing(r as Record<string, unknown>));
+  const result = primary.error
+    ? await sb.from("things").select(SELECT).order("happening_tier", { ascending: true })
+    : primary;
+  if (result.error || !result.data) return [];
+  return result.data.map((r) => mapThing(r as Record<string, unknown>));
 }
 
 /** A single published thing by id (or null). */

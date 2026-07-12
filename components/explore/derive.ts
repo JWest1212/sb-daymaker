@@ -1,7 +1,16 @@
 import type { Thing } from "@/lib/things";
+import type { Weather } from "@/lib/weather";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
+
+/** Shared by Hero (sky variant) and the R1 "Today's pick" card's contextual
+ *  eyebrow (heroEyebrow below) — moved here so both can import one definition. */
+export function isGrayDay(weather: Weather | null): boolean {
+  if (!weather || weather.isClear) return false;
+  const c = weather.condition.toLowerCase();
+  return c.includes("cloud") || c.includes("rain") || c.includes("fog");
+}
 
 const TONES = ["gold", "sage", "pacific"] as const;
 export type Tone = (typeof TONES)[number];

@@ -54,6 +54,9 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     // matchVenueForCandidate); a fuzzy match is never auto-written, even at land
     // time — it queues for founder review in the cockpit's Venues tab instead.
     venue_id: c.venue_id ?? null,
+    // Home Rework spec §6.2 — Activity taxonomy, AI-proposed alongside occasion tags.
+    // Requires supabase/migrations/20260711_activities.sql applied first.
+    activities: c.proposed_activities ?? [],
     local_note: c.local_note ?? null,
     last_confirmed: c.last_confirmed,
     source: c.source_url,

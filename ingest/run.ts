@@ -64,27 +64,33 @@ function gateDrop(sourceKey: string, r: RawCandidate, reason: DropRecord['reason
 }
 
 /** One-time / on-demand: enrich existing published/needs_review rows that are MISSING
- *  something — no blurb OR zero occasion tags (W2.2: backfill the untagged ~179).
+ *  something — no blurb, zero occasion tags (W2.2: backfill the untagged ~179), or zero
+ *  Activity tags (Home Rework spec §6.2: pre-Activity-taxonomy rows).
  *  starts_at is never written; and a blurb is written ONLY when the row had none, so
- *  founder-edited blurbs are never overwritten (tags-only enrich for already-blurbed
- *  rows). Idempotent: landTags ignores duplicates. */
+ *  founder-edited blurbs are never overwritten (tags/activities-only enrich for
+ *  already-blurbed rows). Idempotent: landTags ignores duplicates; the activities
+ *  update only ever fires on a row whose activities was empty going in.
+ *  REQUIRES supabase/migrations/20260711_activities.sql applied first — the select
+ *  below will fail on a DB that doesn't have the `activities` column yet. */
 async function backfillEnrich() {
   const sb = getDb();
   const { data, error } = await sb
     .from('things')
-    .select('id, type, title, blurb, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed, status, thing_tags ( tag )')
+    .select('id, type, title, blurb, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed, status, activities, thing_tags ( tag )')
     .in('status', ['published', 'needs_review']);
   if (error) throw new Error(`backfill select: ${error.message}`);
   const all = data ?? [];
 
-  // A row needs enrichment if it has no blurb OR no occasion tags yet.
+  // A row needs enrichment if it has no blurb, no occasion tags, or no activities yet.
   const tagCount = (r: Record<string, unknown>) => ((r.thing_tags as unknown[]) ?? []).length;
-  const rows = all.filter((r) => r.blurb == null || tagCount(r) === 0);
-  // Rows that already have a blurb: enrich for TAGS only — never overwrite their blurb.
+  const activityCount = (r: Record<string, unknown>) => ((r.activities as unknown[]) ?? []).length;
+  const rows = all.filter((r) => r.blurb == null || tagCount(r) === 0 || activityCount(r) === 0);
+  // Rows that already have a blurb: enrich for TAGS/ACTIVITIES only — never overwrite their blurb.
   const hadBlurb = new Set(rows.filter((r) => r.blurb != null).map((r) => r.id as string));
+  const hadActivities = new Set(rows.filter((r) => activityCount(r) > 0).map((r) => r.id as string));
   console.log(
-    `\n[enrich-backfill] ${all.length} published/needs_review rows · ${rows.length} missing blurb or tags ` +
-      `(${rows.length - hadBlurb.size} need a blurb, ${hadBlurb.size} tags-only)\n`,
+    `\n[enrich-backfill] ${all.length} published/needs_review rows · ${rows.length} missing blurb/tags/activities ` +
+      `(${rows.length - hadBlurb.size} need a blurb, ${rows.length - hadActivities.size} need activities)\n`,
   );
   if (!rows.length) return;
 
@@ -111,17 +117,24 @@ async function backfillEnrich() {
 
   const enriched = await enrich(cands, { sb });
   let updated = 0;
+  let activitiesWritten = 0;
   for (const c of enriched) {
-    if (!c.blurb || hadBlurb.has(c.id)) continue; // only fill a MISSING blurb
-    const { error: upErr } = await sb
-      .from('things')
-      .update({ blurb: c.blurb, blurb_long: c.blurb_long ?? null }) // NOT starts_at
-      .eq('id', c.id);
+    const fillBlurb = c.blurb && !hadBlurb.has(c.id);
+    const fillActivities = !hadActivities.has(c.id) && (c.proposed_activities?.length ?? 0) > 0;
+    if (!fillBlurb && !fillActivities) continue;
+    const payload: Record<string, unknown> = {};
+    if (fillBlurb) {
+      payload.blurb = c.blurb;
+      payload.blurb_long = c.blurb_long ?? null;
+    }
+    if (fillActivities) payload.activities = c.proposed_activities; // NOT starts_at, ever
+    const { error: upErr } = await sb.from('things').update(payload).eq('id', c.id);
     if (upErr) throw new Error(`backfill update ${c.id}: ${upErr.message}`);
-    updated++;
+    if (fillBlurb) updated++;
+    if (fillActivities) activitiesWritten++;
   }
   const tagged = await landTags(sb, enriched);
-  console.log(`\n[enrich-backfill] wrote ${updated} missing blurbs · inserted ${tagged} tags`);
+  console.log(`\n[enrich-backfill] wrote ${updated} missing blurbs · ${activitiesWritten} activities backfills · inserted ${tagged} tags`);
 }
 
 /** Card Imagery Build Spec Phase 0 §3.1.6 — one-off, read-only coverage report from

@@ -25,9 +25,14 @@ export function BottomSheet({
   children: ReactNode;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
+
+    // Home Rework spec §11.2/§14 — focus returns to whatever opened the sheet
+    // (e.g. a Discovery door) on close. Same pattern as lib/useFocusTrap.ts.
+    triggerRef.current = document.activeElement as HTMLElement | null;
 
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -64,6 +69,7 @@ export function BottomSheet({
     return () => {
       document.body.style.overflow = prevOverflow;
       document.removeEventListener("keydown", onKey);
+      triggerRef.current?.focus();
     };
   }, [open, onClose]);
 

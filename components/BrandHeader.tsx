@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { HeaderSearch } from "@/components/explore/HeaderSearch";
 import "./brand-header.css";
 
 /** Global brand header — "Golden Hour" design. Sticky, AA-compliant, server component.
-    Rendered once in the (app) group layout; appears on every browse page. */
+    Rendered once in the (app) group layout; appears on every browse page.
+    Home Rework spec §9 — gains a deterministic search control, top-right. */
 export default function BrandHeader() {
   return (
     <header className="sbd-brandhdr">
@@ -23,6 +25,7 @@ export default function BrandHeader() {
             </span>
           </span>
         </Link>
+        <HeaderSearch />
       </div>
       <div className="sbd-brandhdr__horizon" aria-hidden="true" />
     </header>

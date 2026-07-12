@@ -29,6 +29,13 @@ export type OccasionTag =
   | 'date_night' | 'family_day' | 'nightlife' | 'catch_a_show' | 'arts_culture'
   | 'outdoors_active' | 'wine_food' | 'free_sb' | 'hosting_visitors' | 'solo';
 
+// Home Rework spec §6.1 — the Activity door's controlled vocabulary. Mirrors
+// lib/activities.ts's ActivityKey (kept independent here, same pattern as
+// OccasionTag above, so this package has no dependency on `lib/`).
+export type ActivityTag =
+  | 'live-music' | 'arts-galleries' | 'food-drink' | 'outdoors' | 'markets'
+  | 'family-kids' | 'clubs-groups' | 'film-talks' | 'wellness-fitness' | 'nightlife';
+
 export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeholder' | 'motif';
 
 /** Card Imagery Build Spec Phase 3 §6.1 — the motif tier. `visual_key` is only set
@@ -141,6 +148,10 @@ export interface Candidate {
   blurb?: string;
   blurb_long?: string;
   proposed_tags?: { tag: OccasionTag; confidence: number }[];
+  /** Home Rework spec §6.2 — zero or more Activity keys, AI-proposed alongside
+   *  proposed_tags. Written verbatim to things.activities (a plain array column,
+   *  unlike proposed_tags which lands in the thing_tags join table). */
+  proposed_activities?: ActivityTag[];
 }
 
 export type DropReason =

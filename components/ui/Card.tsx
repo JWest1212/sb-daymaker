@@ -64,6 +64,13 @@ function CardTitle({
  * PickCard — editorial feature card: 140px media band, occasion pill (top-left),
  * CardActions scrim cluster (top-right), optional DateEyebrow above title,
  * Fraunces 25px title, secondary text blurb, facts row.
+ *
+ * Home Rework spec §12/§15 — `ribbonLabel` turns this into the R1 "Today's pick"
+ * card (elevated atop the feed lead section): a folded-corner ribbon over the
+ * media, plus a `contextEyebrow` (the old hero's heroEyebrow()) and `meta` (the
+ * old hero's "{place} · {time}" line) between the title and blurb. The ribbon is
+ * decorative (aria-hidden) — the card's accessible name is still just the title,
+ * via CardTitle's stretched link, same as every other card.
  */
 export function PickCard({
   id,
@@ -73,6 +80,9 @@ export function PickCard({
   place,
   facts = [],
   when,
+  meta,
+  contextEyebrow,
+  ribbonLabel,
   tone = "gold",
   href,
   photo,
@@ -84,6 +94,12 @@ export function PickCard({
   place?: string;
   facts?: string[];
   when?: string;
+  /** R1 — a single "{place} · {time}" line between the title and blurb. */
+  meta?: string;
+  /** R1 — the contextual eyebrow (e.g. "Catch a show", "Gray-day move") above the title. */
+  contextEyebrow?: string;
+  /** R1 — folded-corner ribbon label ("Today's pick" or its horizon variant). Sponsor-blind: set purely from horizon, never from sponsor/featured status. */
+  ribbonLabel?: string;
   tone?: MediaTone;
   href?: string;
   photo?: string;
@@ -91,6 +107,12 @@ export function PickCard({
   const [broken, markBroken] = usePhotoFallback(photo);
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
+      {ribbonLabel ? (
+        <span className="sbd-pick__ribbon" aria-hidden="true">
+          <span className="sbd-pick__ribbon-star">★</span>
+          {ribbonLabel}
+        </span>
+      ) : null}
       <div className={`sbd-pick__media sbd-media--${tone}`}>
         {photo && !broken ? (
           <img className="sbd-card__img" src={photo} alt="" loading="lazy" onError={markBroken} />
@@ -114,12 +136,15 @@ export function PickCard({
         onImage
       />
       <div className="sbd-pick__body">
-        {when ? (
-          <DateEyebrow>{when}</DateEyebrow>
-        ) : null}
+        {contextEyebrow ? <div className="sbd-pick__eyebrow">{contextEyebrow}</div> : null}
         <CardTitle href={href} className="sbd-pick__title">
           {title}
         </CardTitle>
+        {meta ? (
+          <div className="sbd-pick__meta">{meta}</div>
+        ) : when ? (
+          <DateEyebrow>{when}</DateEyebrow>
+        ) : null}
         <p className="sbd-pick__blurb">{blurb}</p>
         {facts.length > 0 ? (
           <div className="sbd-pick__facts">
