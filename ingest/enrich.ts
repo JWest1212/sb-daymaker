@@ -15,6 +15,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ActivityTag, Candidate, OccasionTag, PriceBand, Tod } from '../packages/shared/types';
+import { ACTIVITY_KEYS } from '../lib/activities';
 
 const MODEL = 'claude-haiku-4-5';
 
@@ -23,13 +24,9 @@ const OCCASION_TAGS: OccasionTag[] = [
   'outdoors_active', 'wine_food', 'free_sb', 'hosting_visitors', 'solo',
 ];
 
-// Home Rework spec §6.1 — mirrors lib/activities.ts's ACTIVITY_KEYS verbatim
-// (duplicated rather than imported, same pattern as OCCASION_TAGS above: this
-// worker package stays independent of the app's `lib/`).
-const ACTIVITY_TAGS: ActivityTag[] = [
-  'live-music', 'arts-galleries', 'food-drink', 'outdoors', 'markets',
-  'family-kids', 'clubs-groups', 'film-talks', 'wellness-fitness', 'nightlife',
-];
+// Home Rework spec §6.1 — single source of truth is lib/activities.ts; this
+// worker package no longer maintains its own mirrored copy.
+const ACTIVITY_TAGS: ActivityTag[] = ACTIVITY_KEYS;
 
 // Exported only so enrich.test.ts can assert the prompt practices what it preaches
 // (no em dash inside an instruction that bans em dashes).

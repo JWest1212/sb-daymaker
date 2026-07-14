@@ -12,10 +12,10 @@ export const DOOR_META: Record<
     tile: "/tiles/door/place.jpg",
   },
   vibe: {
-    kicker: "Set a mood",
-    label: "Vibe",
-    sheetTitle: "What's the mood?",
-    ariaLabel: "Filter by vibe",
+    kicker: "PERFECT FOR",
+    label: "Occasion",
+    sheetTitle: "What are you up to?",
+    ariaLabel: "Filter by occasion",
     tile: "/tiles/door/vibe.jpg",
   },
   activity: {

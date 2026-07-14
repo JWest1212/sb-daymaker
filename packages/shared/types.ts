@@ -4,6 +4,8 @@
 // worker AND the Next.js app. This is why TypeScript is end-to-end: the gate's
 // output is the cockpit's input, checked at compile time. (Doc 11 §3.)
 
+import type { ActivityKey } from '../../lib/activities';
+
 export type ThingType = 'place' | 'event' | 'firstlook' | 'happyhour';
 export type Status = 'draft' | 'needs_review' | 'published' | 'archived';
 export type Tier = 1 | 2 | 3;
@@ -29,12 +31,10 @@ export type OccasionTag =
   | 'date_night' | 'family_day' | 'nightlife' | 'catch_a_show' | 'arts_culture'
   | 'outdoors_active' | 'wine_food' | 'free_sb' | 'hosting_visitors' | 'solo';
 
-// Home Rework spec §6.1 — the Activity door's controlled vocabulary. Mirrors
-// lib/activities.ts's ActivityKey (kept independent here, same pattern as
-// OccasionTag above, so this package has no dependency on `lib/`).
-export type ActivityTag =
-  | 'live-music' | 'arts-galleries' | 'food-drink' | 'outdoors' | 'markets'
-  | 'family-kids' | 'clubs-groups' | 'film-talks' | 'wellness-fitness' | 'nightlife';
+// Home Rework spec §6.1 — the Activity door's controlled vocabulary. Single
+// source of truth is lib/activities.ts's ActivityKey; aliased here under the
+// historical name so existing Candidate/enrich call sites don't change.
+export type ActivityTag = ActivityKey;
 
 export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeholder' | 'motif';
 

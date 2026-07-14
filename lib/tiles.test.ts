@@ -72,7 +72,7 @@ describe("tilesFor", () => {
   it("dispatches to the right builder per dimension", () => {
     const things = [thing({ id: "a", nearby_zone: "mesa" })];
     expect(tilesFor("place", things).find((t) => t.key === "mesa")?.count).toBe(1);
-    expect(tilesFor("vibe", things)).toHaveLength(10);
+    expect(tilesFor("vibe", things)).toHaveLength(6);
     expect(tilesFor("activity", things)).toHaveLength(10);
   });
 });

@@ -6,7 +6,7 @@
 
 import type { Thing } from "./things";
 import { ZONES } from "./zones";
-import { OCCASIONS } from "./occasions";
+import { DOOR_OCCASIONS } from "./occasions";
 import { ACTIVITIES } from "./activities";
 
 export interface Tile {
@@ -26,7 +26,7 @@ export function placeTiles(inHorizon: Thing[]): Tile[] {
 }
 
 export function vibeTiles(inHorizon: Thing[]): Tile[] {
-  return OCCASIONS.map((o) => ({
+  return DOOR_OCCASIONS.map((o) => ({
     key: o.key,
     label: o.label,
     image: `/tiles/vibe/${o.key}.jpg`,

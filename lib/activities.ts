@@ -12,10 +12,10 @@ export type ActivityKey =
   | "outdoors"
   | "markets"
   | "family-kids"
-  | "clubs-groups"
   | "film-talks"
   | "wellness-fitness"
-  | "nightlife";
+  | "nightlife"
+  | "community-festivals";
 
 export interface Activity {
   key: ActivityKey;
@@ -33,10 +33,10 @@ export const ACTIVITIES: Activity[] = [
   { key: "outdoors", label: "Outdoors", description: "Hikes, beaches, and open air.", tile: "/tiles/activity/outdoors.jpg" },
   { key: "markets", label: "Markets", description: "Farmers markets and maker fairs.", tile: "/tiles/activity/markets.jpg" },
   { key: "family-kids", label: "Family & kids", description: "All-ages, kid-friendly programming.", tile: "/tiles/activity/family-kids.jpg" },
-  { key: "clubs-groups", label: "Clubs & groups", description: "Meetups, classes, and running clubs.", tile: "/tiles/activity/clubs-groups.jpg" },
   { key: "film-talks", label: "Film & talks", description: "Screenings, lectures, and author talks.", tile: "/tiles/activity/film-talks.jpg" },
   { key: "wellness-fitness", label: "Wellness & fitness", description: "Yoga, studios, and active recovery.", tile: "/tiles/activity/wellness-fitness.jpg" },
   { key: "nightlife", label: "Nightlife", description: "Bars, late sets, and after-dark spots.", tile: "/tiles/activity/nightlife.jpg" },
+  { key: "community-festivals", label: "Community & Festivals", description: "Fairs, festivals, and community gatherings.", tile: "/tiles/activity/community-festivals.jpg" },
 ];
 
 export const ACTIVITY_BY_KEY: Record<ActivityKey, Activity> = Object.fromEntries(

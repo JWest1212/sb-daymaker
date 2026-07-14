@@ -39,3 +39,19 @@ export const OCCASIONS: Occasion[] = [
 export const OCCASION_BY_KEY: Record<OccasionKey, Occasion> = Object.fromEntries(
   OCCASIONS.map((o) => [o.key, o]),
 ) as Record<OccasionKey, Occasion>;
+
+// Doc 22 §2.2 — the Occasion door's tile vocabulary. `catch_a_show`,
+// `arts_culture`, `outdoors_active`, `wine_food` are now served by the Activity
+// door and drop out of this list, but stay in OCCASIONS/OCCASION_BY_KEY above so
+// existing thing_tags data still renders (card pills, admin tools, search).
+// `dog_friendly` and `rainy_day` join once their data exists (Doc 22 Phases 4-5).
+const DOOR_OCCASION_KEYS: OccasionKey[] = [
+  "date_night",
+  "family_day",
+  "nightlife",
+  "hosting_visitors",
+  "solo",
+  "free_sb",
+];
+
+export const DOOR_OCCASIONS: Occasion[] = DOOR_OCCASION_KEYS.map((k) => OCCASION_BY_KEY[k]);
