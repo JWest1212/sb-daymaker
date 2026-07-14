@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Findability & Tagging: Before vs After</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+    --line:#D8CDB8; --terra-text:#9E3F20; --sage-text:#566049; --gold-text:#7A5E13;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+    --radius-md:12px; --radius-lg:16px; --radius-sm:7px; --radius-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0; background:var(--plaster); color:var(--ink); font-family:var(--font-body); font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+
+  .eyebrow{font-family:var(--font-mono); font-size:12px; font-weight:500; letter-spacing:.14em; text-transform:uppercase; color:var(--pacific); margin:0 0 10px;}
+
+  /* HERO */
+  .hero{padding:52px 0 38px; border-bottom:1px solid var(--line);}
+  .hero h1{font-family:var(--font-display); font-weight:900; line-height:1.03; font-size:clamp(2.2rem,8.5vw,3.3rem); margin:0 0 16px; letter-spacing:-.01em;}
+  .hero h1 em{font-style:normal; color:var(--terracotta);}
+  .hero .lede{font-size:clamp(1.05rem,4.3vw,1.22rem); color:var(--ink-2); max-width:40ch; margin:0;}
+
+  /* DOORS strip */
+  .doors{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:26px;}
+  .door{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); box-shadow:var(--shadow-card); padding:14px 12px; text-align:center;}
+  .door .dk{font-family:var(--font-mono); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--pacific); font-weight:500; display:block; margin-bottom:4px;}
+  .door .dl{font-family:var(--font-display); font-weight:600; font-size:1.05rem; line-height:1.1;}
+  .door .dr{font-family:var(--font-mono); font-size:10px; color:var(--ink-2); margin-top:6px; display:block; letter-spacing:.02em;}
+  .door--place{border-top:3px solid var(--sage);}
+  .door--occ{border-top:3px solid var(--terracotta);}
+  .door--act{border-top:3px solid var(--gold);}
+
+  /* SECTION */
+  .section{padding:42px 0; border-bottom:1px solid var(--line);}
+  .section h2{font-family:var(--font-display); font-weight:600; font-size:clamp(1.55rem,6vw,2.05rem); line-height:1.12; margin:0 0 10px; letter-spacing:-.005em;}
+  .section .intro{color:var(--ink-2); max-width:58ch; margin:0 0 24px; font-size:1.02rem;}
+
+  /* BEFORE / AFTER split for the core concept */
+  .split{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:760px){ .split{grid-template-columns:1fr 1fr; gap:18px; align-items:start;} }
+  .col{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:20px 18px;}
+  .col--now{border-top:4px solid var(--terracotta);}
+  .col--next{border-top:4px solid var(--pacific);}
+  .tag{font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; font-weight:700; padding:5px 10px; border-radius:var(--radius-pill); display:inline-block; margin-bottom:12px;}
+  .tag--now{background:#F3DED4; color:var(--terra-text);}
+  .tag--next{background:#D6E7EC; color:var(--pacific-dark);}
+  .col h3{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0 0 14px;}
+
+  /* thing chip + door mailboxes visual */
+  .thingchip{display:inline-flex; align-items:center; gap:8px; background:var(--ink); color:var(--paper); border-radius:var(--radius-pill); padding:7px 14px 7px 12px; font-size:13px; font-weight:600; margin:0 auto 4px; }
+  .thingchip svg{width:14px;height:14px;color:var(--gold);}
+  .center{text-align:center;}
+  .fall{display:flex; justify-content:center; padding:8px 0 10px; color:var(--sage);}
+  .fall svg{width:18px;height:18px;}
+
+  .boxes{display:grid; grid-template-columns:repeat(4,1fr); gap:6px;}
+  .box{border:1px dashed var(--line); border-radius:var(--radius-sm); padding:9px 5px; text-align:center; font-size:10.5px; color:var(--ink-2); font-weight:500; line-height:1.2; min-height:46px; display:flex; align-items:center; justify-content:center;}
+  .box.hit{border-style:solid; background:#E9F1F0; border-color:#9DC3C0; color:var(--pacific-dark); font-weight:700;}
+  .junk{margin-top:8px; border:2px solid #E7C3B2; background:#FBEDE6; border-radius:var(--radius-sm); padding:11px; text-align:center;}
+  .junk b{color:var(--terra-text); font-size:13px;}
+  .junk span{display:block; font-size:12px; color:var(--ink-2); margin-top:3px;}
+  .invisible{margin-top:10px; font-size:12.5px; color:var(--terra-text); font-weight:600; display:flex; gap:7px; align-items:flex-start; line-height:1.4;}
+  .invisible svg{width:14px;height:14px;flex:none;margin-top:2px;}
+  .placed{margin-top:10px; font-size:12.5px; color:var(--pacific-dark); font-weight:600; display:flex; gap:7px; align-items:flex-start; line-height:1.4;}
+  .placed svg{width:14px;height:14px;flex:none;margin-top:2px;}
+
+  /* TWO-PASS PIPELINE */
+  .flow{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:22px 18px 24px;}
+  .pass{border:1px solid var(--line); border-radius:var(--radius-md); padding:16px 15px;}
+  .pass--det{background:#ECF1EC; border-color:#C2D3C2;}
+  .pass--ai{background:#FBEEE6; border-color:#E7CBB6;}
+  .pass--gate{background:var(--ink); border-color:var(--ink);}
+  .pass__k{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; font-weight:700; margin-bottom:3px;}
+  .pass--det .pass__k{color:var(--sage-text);}
+  .pass--ai .pass__k{color:var(--terra-text);}
+  .pass--gate .pass__k{color:var(--gold);}
+  .pass__t{font-family:var(--font-display); font-weight:600; font-size:1.12rem; line-height:1.15;}
+  .pass--gate .pass__t{color:var(--paper);}
+  .pass__sub{font-size:13px; color:var(--ink-2); margin-top:4px; line-height:1.45;}
+  .pass--gate .pass__sub{color:#D9CFC2;}
+  .costpill{float:right; font-family:var(--font-mono); font-size:9.5px; font-weight:700; letter-spacing:.06em; padding:3px 8px; border-radius:var(--radius-pill); text-transform:uppercase;}
+  .cost--free{background:#D8E8D8; color:var(--sage-text);}
+  .cost--cheap{background:#F3DFCF; color:var(--terra-text);}
+  .cost--you{background:#F5E6BE; color:var(--gold-text);}
+
+  .taglist{display:flex; flex-wrap:wrap; gap:6px; margin-top:11px;}
+  .t{font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:var(--radius-pill); font-family:var(--font-body);}
+  .t--det{background:#fff; border:1px solid #C2D3C2; color:var(--sage-text);}
+  .t--ai{background:#fff; border:1px solid #E7CBB6; color:var(--terra-text);}
+
+  .down{display:flex; justify-content:center; padding:7px 0; color:var(--sage);}
+  .down svg{width:16px;height:16px;}
+
+  .branch{display:grid; gap:7px; margin-top:10px;}
+  .b{display:flex; align-items:center; gap:9px; border-radius:var(--radius-sm); padding:9px 11px; font-size:12.5px; background:rgba(252,250,245,.09); border:1px solid rgba(252,250,245,.16); color:var(--paper);}
+  .b .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .b b{font-weight:700;} .b span{color:#D9CFC2;}
+  .dot--auto{background:#9BBF6B;} .dot--rev{background:var(--gold);} .dot--hold{background:#8a7f72;}
+
+  /* WHERE YOUR TIME GOES */
+  .timecard{background:var(--pacific-dark); color:var(--paper); border-radius:var(--radius-lg); padding:30px 22px;}
+  .timecard .eyebrow{color:var(--gold);}
+  .timecard h2{font-family:var(--font-display); font-weight:600; color:var(--paper); font-size:clamp(1.45rem,6vw,1.95rem); margin:0 0 20px; line-height:1.15;}
+  .lane{display:flex; gap:12px; align-items:flex-start; padding:13px 0; border-top:1px solid rgba(252,250,245,.14);}
+  .lane:first-of-type{border-top:none;}
+  .lane__ic{width:34px;height:34px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;}
+  .lane__ic svg{width:19px;height:19px;}
+  .ic--auto{background:rgba(155,191,107,.22);} .ic--auto svg{color:#B7D68E;}
+  .ic--you{background:rgba(224,168,46,.20);} .ic--you svg{color:var(--gold);}
+  .lane__b b{display:block; font-size:15px; color:var(--paper);}
+  .lane__b span{font-size:13px; color:#D9CFC2; line-height:1.45;}
+
+  /* DECISIONS ledger */
+  .ledger{display:grid; grid-template-columns:1fr; gap:11px;}
+  @media(min-width:620px){ .ledger{grid-template-columns:1fr 1fr 1fr;} }
+  .dec{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); padding:15px 15px; border-left:3px solid var(--pacific);}
+  .dec .dq{font-size:12.5px; color:var(--ink-2); line-height:1.4; margin-bottom:8px;}
+  .dec .da{font-family:var(--font-display); font-weight:600; font-size:1.02rem; line-height:1.15; color:var(--pacific-dark);}
+
+  footer{padding:32px 0 58px; color:var(--ink-2); font-size:14px;}
+  footer .rule{height:1px; background:var(--line); margin-bottom:18px;}
+  footer code{font-family:var(--font-mono); font-size:12.5px; color:var(--pacific-dark);}
+
+  @media (prefers-reduced-motion:no-preference){
+    .rise{opacity:0; transform:translateY(10px); animation:rise .6s cubic-bezier(0.16,1,0.3,1) forwards;}
+    @keyframes rise{to{opacity:1;transform:none;}}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">SB Daymaker · Findability &amp; Tagging · Visual Brief</p>
+    <h1>Having the event isn't enough.<br>Each door has to <em>find</em> it.</h1>
+    <p class="lede">Three doors, three ways a thing gets sorted. Get the sorting right and every filter returns the right picks. Get it wrong and events you already have go invisible.</p>
+
+    <div class="doors">
+      <div class="door door--place"><span class="dk">Explore</span><span class="dl">Place</span><span class="dr">reads a zone</span></div>
+      <div class="door door--occ"><span class="dk">Perfect for</span><span class="dl">Occasion</span><span class="dr">reads tags</span></div>
+      <div class="door door--act"><span class="dk">Pick a thing</span><span class="dl">Activity</span><span class="dr">reads category</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- CORE CONCEPT: mailboxes -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">The core idea, using the Place door</p>
+    <h2>Every event needs the right box</h2>
+    <p class="intro">The Place door is 8 mailboxes, one per neighborhood. A thing has to sit in the right one. Today some land in a junk drawer marked "somewhere in SB," and the door can't see inside it.</p>
+
+    <div class="split">
+      <!-- NOW -->
+      <div class="col col--now">
+        <span class="tag tag--now">Today</span>
+        <h3>Some events sit in the junk drawer</h3>
+        <div class="center">
+          <span class="thingchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2"/></svg>A wine dinner in Montecito</span>
+        </div>
+        <div class="fall" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+        <div class="boxes">
+          <div class="box">Downtown</div><div class="box">Funk</div><div class="box">Waterfront</div><div class="box">Mesa</div>
+          <div class="box">Mission</div><div class="box">Uptown</div><div class="box">Goleta</div><div class="box">Montecito</div>
+        </div>
+        <div class="junk"><b>&#8681; falls through to "other"</b><span>address wasn't matched to a zone</span></div>
+        <p class="invisible"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><path d="M4 4l16 16"/></svg><span>Invisible to the Place door, even though we already have the event.</span></p>
+      </div>
+
+      <!-- NEXT -->
+      <div class="col col--next">
+        <span class="tag tag--next">After the sweep</span>
+        <h3>Every event lands in its box</h3>
+        <div class="center">
+          <span class="thingchip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 8h14l-1 12H6zM9 8V6a3 3 0 016 0v2"/></svg>A wine dinner in Montecito</span>
+        </div>
+        <div class="fall" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M6 13l6 6 6-6"/></svg></div>
+        <div class="boxes">
+          <div class="box">Downtown</div><div class="box">Funk</div><div class="box">Waterfront</div><div class="box">Mesa</div>
+          <div class="box">Mission</div><div class="box">Uptown</div><div class="box">Goleta</div><div class="box hit">Montecito &#10003;</div>
+        </div>
+        <div class="junk" style="border-color:#B9D4D3; background:#E9F1F0;"><b style="color:var(--pacific-dark)">venue name &#8594; zone</b><span>"Coast Village Road" reads as Montecito, no API, no cost</span></div>
+        <p class="placed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span>Findable in Place. "Other" is now reserved for things that truly have no zone.</span></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TWO-PASS TAGGING -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">How a thing gets tagged for all three doors</p>
+    <h2>Two passes, then one gate</h2>
+    <p class="intro">The safe, factual tags get stamped by rules for free. The judgment tags get proposed by AI. Then one gate checks a thing is actually findable before it publishes. Your review time lands in exactly one place.</p>
+
+    <div class="flow">
+      <!-- PASS 1 -->
+      <div class="pass pass--det">
+        <span class="costpill cost--free">Free · no review</span>
+        <div class="pass__k">Pass 1 · Rules</div>
+        <div class="pass__t">Facts get stamped automatically</div>
+        <div class="pass__sub">Anything the data already knows. No AI, no cost, high trust.</div>
+        <div class="taglist">
+          <span class="t t--det">Zone (from venue)</span>
+          <span class="t t--det">Activity bucket (from category)</span>
+          <span class="t t--det">Free in SB (from price)</span>
+          <span class="t t--det">Rainy Day (from indoor)</span>
+          <span class="t t--det">Dog Friendly (from venue list)</span>
+          <span class="t t--det">Exclusion rules</span>
+        </div>
+      </div>
+
+      <div class="down" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+      <!-- PASS 2 -->
+      <div class="pass pass--ai">
+        <span class="costpill cost--cheap">Pennies · auto-applies</span>
+        <div class="pass__k">Pass 2 · AI judgment</div>
+        <div class="pass__t">The "what's it good for" tags</div>
+        <div class="pass__sub">Your call: when unsure, AI tags it, so sheets stay full. Confidence is stored on every tag.</div>
+        <div class="taglist">
+          <span class="t t--ai">Date Night</span>
+          <span class="t t--ai">Nightlife</span>
+          <span class="t t--ai">Hosting Visitors</span>
+          <span class="t t--ai">Solo Outing</span>
+          <span class="t t--ai">Family Day</span>
+        </div>
+      </div>
+
+      <div class="down" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+      <!-- GATE -->
+      <div class="pass pass--gate">
+        <span class="costpill cost--you">Your 15 min</span>
+        <div class="pass__k">Findability gate</div>
+        <div class="pass__t">Is this thing actually findable?</div>
+        <div class="pass__sub">Checks it has a real zone, a bucket, and its qualifying tags before it can publish.</div>
+        <div class="branch">
+          <div class="b"><span class="dot dot--auto"></span><b>Findable + confident</b>&nbsp;<span>publishes itself</span></div>
+          <div class="b"><span class="dot dot--rev"></span><b>Missing a zone or unsure</b>&nbsp;<span>your quick review</span></div>
+          <div class="b"><span class="dot dot--hold"></span><b>Can't be placed yet</b>&nbsp;<span>held, not shown</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHERE DISPLAY PRECISION LIVES -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">Your "tag it when unsure" call, made safe</p>
+    <h2>Full at the sheet, precise at the top</h2>
+    <p class="intro">Tagging leans generous so sheets never run empty. Precision is preserved where it's seen: confidence orders each sheet, so speculative matches sit low and never headline.</p>
+    <div class="split">
+      <div class="col col--next" style="border-top-color:var(--sage)">
+        <span class="tag" style="background:#E1E8DC; color:var(--sage-text)">The rule that protects trust</span>
+        <h3>Completeness in, precision out</h3>
+        <p style="margin:0 0 12px; font-size:14.5px; color:var(--ink-2); line-height:1.5;">Generous tagging fills the sheet. Confidence sorts it. The strong, obvious picks lead; the maybes sit at the bottom where they help coverage without misleading anyone.</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; align-items:center; gap:9px; background:#E9F1F0; border:1px solid #B9D4D3; border-radius:var(--radius-sm); padding:9px 11px; font-size:13px; font-weight:600; color:var(--pacific-dark);"><span style="font-family:var(--font-mono); font-size:11px;">0.95</span> Clearly a date-night pick</div>
+          <div style="display:flex; align-items:center; gap:9px; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-sm); padding:9px 11px; font-size:13px; color:var(--ink-2);"><span style="font-family:var(--font-mono); font-size:11px;">0.71</span> A solid maybe</div>
+          <div style="display:flex; align-items:center; gap:9px; background:var(--paper); border:1px dashed var(--line); border-radius:var(--radius-sm); padding:9px 11px; font-size:13px; color:var(--ink-2);"><span style="font-family:var(--font-mono); font-size:11px;">0.55</span> Speculative, sits at the bottom</div>
+        </div>
+      </div>
+      <div class="col col--now" style="border-top-color:var(--sage-text)">
+        <span class="tag" style="background:#E1E8DC; color:var(--sage-text)">Hard floors that always win</span>
+        <h3>The exclusions never bend</h3>
+        <p style="margin:0 0 12px; font-size:14.5px; color:var(--ink-2); line-height:1.5;">Generous never overrides a negative rule. These are stamped in code and beat any AI guess.</p>
+        <div style="display:flex; flex-direction:column; gap:7px; font-size:13.5px; font-weight:600; color:var(--ink);">
+          <div style="display:flex; gap:9px; align-items:center;"><span style="color:var(--terra-text)">&#10007;</span> 21+ &#8594; never Family Day</div>
+          <div style="display:flex; gap:9px; align-items:center;"><span style="color:var(--terra-text)">&#10007;</span> Not free &#8594; never Free in SB</div>
+          <div style="display:flex; gap:9px; align-items:center;"><span style="color:var(--terra-text)">&#10007;</span> Leash-prohibited &#8594; never Dog Friendly</div>
+          <div style="display:flex; gap:9px; align-items:center;"><span style="color:var(--terra-text)">&#10007;</span> Outdoor-only &#8594; never Rainy Day</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHERE YOUR TIME GOES -->
+<section class="section">
+  <div class="wrap">
+    <div class="timecard">
+      <p class="eyebrow">Where your 15 minutes lands</p>
+      <h2>You approve the hard cases. The rest runs itself.</h2>
+      <div class="lane">
+        <span class="lane__ic ic--auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <span class="lane__b"><b>Runs itself</b><span>Zones, factual tags, and confident judgment tags on findable things. Publishes without you.</span></span>
+      </div>
+      <div class="lane">
+        <span class="lane__ic ic--you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9M3 20l1-4 11-11 3 3-11 11z"/></svg></span>
+        <span class="lane__b"><b>Your quick review</b><span>Things missing a zone, low-confidence judgment calls, and new venues to add to the list once.</span></span>
+      </div>
+      <div class="lane">
+        <span class="lane__ic ic--you"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+        <span class="lane__b"><b>One-time spot audit</b><span>After the full backfill, a ~30-min check of the vaguest tags (Solo, Date Night) to catch over-tagging before launch.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DECISIONS LEDGER -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">Your three calls, locked</p>
+    <h2>What we're building to</h2>
+    <div class="ledger">
+      <div class="dec"><div class="dq">When AI is unsure on an occasion tag</div><div class="da">Tag it. Fuller sheets; confidence keeps the top honest.</div></div>
+      <div class="dec"><div class="dq">How Dog Friendly gets assigned</div><div class="da">Venue list first. AI expands it later.</div></div>
+      <div class="dec"><div class="dq">How far we backfill before the doors ship</div><div class="da">Full. Zones, all tags, new tags. Launch-clean.</div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="rule"></div>
+    <p><strong>Strategy view, not a build.</strong> Visual companion to the taxonomy in <code>17_SBDaymaker_Door_Taxonomy_Handoff.md</code> and the coming <code>18_SBDaymaker_Findability_Tagging_Architecture.md</code>. First build after sign-off: the neighborhood sweep + venue dictionary, since zones gate everything else. Prerequisite flagged in the gate: things stuck in <code>neighborhood = 'other'</code>/null must be resolved before zones can backfill cleanly.</p>
+  </div>
+</footer>
+
+</body>
+</html>

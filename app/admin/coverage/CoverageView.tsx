@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   shadeColumn, COVERAGE_WINDOWS, COVERAGE_FLOORS,
   type CoverageResult, type CoverageDim, type CoverageWindow,
@@ -19,7 +20,7 @@ interface Directive {
 
 const WIN_LABEL: Record<CoverageWindow, string> = { 7: "next 7d", 14: "next 14d", 30: "next 30d", 45: "next 45d" };
 
-export function CoverageView({ initial }: { initial: CoverageResult }) {
+export function CoverageView({ initial, noZoneCount }: { initial: CoverageResult; noZoneCount: number }) {
   const [dim, setDim] = useState<CoverageDim>(initial.dim);
   const [cache, setCache] = useState<Record<CoverageDim, CoverageResult | null>>({
     vibe: initial.dim === "vibe" ? initial : null,
@@ -102,6 +103,10 @@ export function CoverageView({ initial }: { initial: CoverageResult }) {
       <div className="vhead">
         <h1 className="qtitle">Coverage</h1>
         <span className="spacer" />
+        <Link href="/admin/coverage/neighborhood-sweep" className="btn btn-edit btn-sm">
+          Neighborhood Sweep &rarr;
+          {noZoneCount > 0 ? <span className="nozone-badge">{noZoneCount} no zone</span> : null}
+        </Link>
         <div className="filterbar" role="group" aria-label="Coverage dimension">
           <button className="filt" aria-pressed={dim === "vibe"} onClick={() => switchDim("vibe")}>By vibe</button>
           <button className="filt" aria-pressed={dim === "zone"} onClick={() => switchDim("zone")}>By neighborhood</button>

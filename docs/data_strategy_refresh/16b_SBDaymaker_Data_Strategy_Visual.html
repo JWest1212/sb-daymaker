@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker — Data Infrastructure: Current vs Recommended</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+    --line:#D8CDB8; --terra-text:#9E3F20; --sage-text:#566049; --gold-text:#7A5E13;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+    --radius-md:12px; --radius-lg:16px; --radius-sm:7px; --radius-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--plaster); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 20px;}
+
+  /* ---- eyebrow / labels ---- */
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; font-weight:500;
+    letter-spacing:.14em; text-transform:uppercase; color:var(--pacific);
+    margin:0 0 10px;
+  }
+
+  /* ---- HERO ---- */
+  .hero{padding:56px 0 40px; border-bottom:1px solid var(--line);}
+  .hero h1{
+    font-family:var(--font-display); font-weight:900; line-height:1.02;
+    font-size:clamp(2.3rem,9vw,3.4rem); margin:0 0 18px; color:var(--ink);
+    letter-spacing:-.01em;
+  }
+  .hero h1 em{font-style:normal; color:var(--terracotta);}
+  .hero .lede{font-size:clamp(1.05rem,4.4vw,1.25rem); color:var(--ink-2); max-width:38ch; margin:0 0 28px;}
+
+  /* ceiling metaphor */
+  .ceiling{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow-card);
+    padding:22px 20px 16px; margin-top:8px;
+  }
+  .ceiling figcaption{font-size:14px; color:var(--ink-2); margin-top:14px;}
+  .ceiling svg{display:block; width:100%; height:auto;}
+  .keyrow{display:flex; flex-wrap:wrap; gap:14px 20px; margin-top:12px;}
+  .keyrow span{display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2); font-weight:500;}
+  .swatch{width:16px; height:3px; border-radius:2px; display:inline-block;}
+
+  /* ---- SECTION ---- */
+  .section{padding:44px 0; border-bottom:1px solid var(--line);}
+  .section h2{
+    font-family:var(--font-display); font-weight:600; font-size:clamp(1.6rem,6vw,2.1rem);
+    line-height:1.12; margin:0 0 10px; letter-spacing:-.005em;
+  }
+  .section .intro{color:var(--ink-2); max-width:56ch; margin:0 0 26px; font-size:1.02rem;}
+
+  /* ---- TWO PIPELINES ---- */
+  .pipes{display:grid; grid-template-columns:1fr; gap:22px;}
+  @media(min-width:760px){ .pipes{grid-template-columns:1fr 1fr; gap:20px; align-items:start;} }
+
+  .pipe{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card); padding:20px 18px 22px;
+  }
+  .pipe--now{border-top:4px solid var(--terracotta);}
+  .pipe--next{border-top:4px solid var(--pacific);}
+  .pipe__tag{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    font-weight:700; padding:5px 10px; border-radius:var(--radius-pill); display:inline-block; margin-bottom:6px;
+  }
+  .tag--now{background:#F3DED4; color:var(--terra-text);}
+  .tag--next{background:#D6E7EC; color:var(--pacific-dark);}
+  .pipe h3{font-family:var(--font-display); font-weight:600; font-size:1.2rem; margin:6px 0 16px;}
+
+  /* flow nodes */
+  .node{
+    border:1px solid var(--line); border-radius:var(--radius-md); background:var(--plaster);
+    padding:12px 14px;
+  }
+  .node .nlabel{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--pacific); font-weight:500; display:block; margin-bottom:3px;}
+  .node .ntitle{font-weight:600; font-size:15px; line-height:1.3;}
+  .node .nsub{font-size:13px; color:var(--ink-2); margin-top:3px; line-height:1.45;}
+  .node--flag{background:#FBEDE6; border-color:#E7C3B2;}
+  .node--flag .nlabel{color:var(--terra-text);}
+  .node--good{background:#E9F1F0; border-color:#B9D4D3;}
+  .node--good .nlabel{color:var(--pacific-dark);}
+  .node--spine{background:var(--ink); border-color:var(--ink);}
+  .node--spine .ntitle{color:var(--paper);}
+  .node--spine .nlabel{color:var(--gold);}
+  .node--spine .nsub{color:#D9CFC2;}
+
+  .arrow{display:flex; justify-content:center; padding:7px 0;}
+  .arrow svg{width:16px; height:16px; color:var(--sage);}
+
+  .lanes{display:grid; grid-template-columns:1fr 1fr 1fr; gap:7px;}
+  .lane{border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--plaster); padding:9px 8px; text-align:center;}
+  .lane b{display:block; font-size:12.5px; line-height:1.25;}
+  .lane small{font-size:10.5px; color:var(--ink-2); font-family:var(--font-mono); letter-spacing:.03em;}
+  .lane--b{background:#E9F1F0; border-color:#B9D4D3;}
+
+  /* gate branch */
+  .branch{display:grid; gap:7px; margin-top:2px;}
+  .branch .b{display:flex; align-items:center; gap:9px; border:1px solid var(--line); border-radius:var(--radius-sm); padding:8px 10px; background:var(--plaster); font-size:13px;}
+  .branch .dot{width:9px; height:9px; border-radius:50%; flex:none;}
+  .b--auto{background:#E9F1F0; border-color:#B9D4D3;} .b--auto .dot{background:var(--pacific);}
+  .b--rev .dot{background:var(--gold);}
+  .b--hold{color:var(--ink-2);} .b--hold .dot{background:var(--line);}
+  .b b{font-weight:600;} .b span{color:var(--ink-2);}
+
+  .pin{
+    margin-top:14px; font-size:13px; color:var(--terra-text); font-weight:600;
+    display:flex; gap:8px; align-items:flex-start; line-height:1.4;
+  }
+  .pin--good{color:var(--pacific-dark);}
+  .pin svg{width:15px; height:15px; flex:none; margin-top:2px;}
+
+  /* ---- SHIFT CARDS ---- */
+  .shift{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card); padding:22px 20px; margin-bottom:18px;
+  }
+  .shift__n{font-family:var(--font-mono); font-size:12px; font-weight:700; color:var(--terracotta); letter-spacing:.1em;}
+  .shift h3{font-family:var(--font-display); font-weight:600; font-size:1.3rem; margin:4px 0 16px; line-height:1.15;}
+  .ba{display:grid; grid-template-columns:1fr; gap:12px; align-items:stretch;}
+  @media(min-width:620px){ .ba{grid-template-columns:1fr auto 1fr; align-items:center; gap:14px;} }
+  .ba__col{border:1px solid var(--line); border-radius:var(--radius-md); padding:14px 15px;}
+  .ba__col--now{background:#FBEDE6; border-color:#E7C3B2;}
+  .ba__col--next{background:#E9F1F0; border-color:#B9D4D3;}
+  .ba__k{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; font-weight:700; margin-bottom:6px;}
+  .ba__col--now .ba__k{color:var(--terra-text);}
+  .ba__col--next .ba__k{color:var(--pacific-dark);}
+  .ba__col p{margin:0; font-size:14.5px; line-height:1.5;}
+  .ba__col code{font-family:var(--font-mono); font-size:12.5px; background:rgba(36,28,22,.06); padding:1px 6px; border-radius:5px;}
+  .ba__mid{display:flex; justify-content:center; align-items:center; color:var(--sage);}
+  .ba__mid svg{width:26px; height:26px;}
+  @media(max-width:619px){ .ba__mid{transform:rotate(90deg); padding:2px 0;} }
+
+  .benefit{
+    margin-top:16px; display:flex; gap:11px; align-items:flex-start;
+    background:var(--plaster); border-left:3px solid var(--pacific); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+    padding:12px 15px;
+  }
+  .benefit svg{width:18px; height:18px; color:var(--pacific); flex:none; margin-top:2px;}
+  .benefit b{color:var(--pacific-dark);}
+  .benefit p{margin:0; font-size:14.5px; line-height:1.5; color:var(--ink);}
+
+  /* ---- PAYOFF ---- */
+  .payoff{background:var(--pacific-dark); color:var(--paper); border-radius:var(--radius-lg); padding:32px 24px; margin-top:6px;}
+  .payoff .eyebrow{color:var(--gold);}
+  .payoff h2{font-family:var(--font-display); font-weight:600; color:var(--paper); font-size:clamp(1.5rem,6vw,2rem); margin:0 0 22px; line-height:1.15;}
+  .budget{display:grid; gap:14px;}
+  .bud{background:rgba(252,250,245,.07); border:1px solid rgba(252,250,245,.16); border-radius:var(--radius-md); padding:15px 16px;}
+  .bud .bk{font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-bottom:9px;}
+  .bar{height:26px; border-radius:var(--radius-pill); display:flex; overflow:hidden; background:rgba(0,0,0,.22);}
+  .seg{display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600; font-family:var(--font-mono); white-space:nowrap;}
+  .seg--review{background:var(--terracotta); color:var(--paper);}
+  .seg--auto{background:var(--sage); color:#0E2018;}
+  .seg--grow{background:var(--gold); color:#3a2c07;}
+  .bud p{margin:10px 0 0; font-size:14px; color:#E7DECF; line-height:1.5;}
+
+  /* ---- SAFE / UNCHANGED ---- */
+  .safe{display:grid; grid-template-columns:1fr; gap:11px;}
+  @media(min-width:620px){ .safe{grid-template-columns:1fr 1fr;} }
+  .safe__item{display:flex; gap:11px; align-items:flex-start; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-md); padding:14px 15px;}
+  .safe__item svg{width:19px; height:19px; color:var(--sage-text); flex:none; margin-top:1px;}
+  .safe__item b{display:block; font-size:14.5px;}
+  .safe__item span{font-size:13px; color:var(--ink-2); line-height:1.45;}
+
+  footer{padding:34px 0 60px; color:var(--ink-2); font-size:14px;}
+  footer .rule{height:1px; background:var(--line); margin-bottom:20px;}
+  footer code{font-family:var(--font-mono); font-size:12.5px; color:var(--pacific-dark);}
+
+  @media (prefers-reduced-motion:no-preference){
+    .draw{stroke-dasharray:520; stroke-dashoffset:520; animation:draw 1400ms cubic-bezier(0.16,1,0.3,1) forwards;}
+    .draw--now{animation-delay:200ms;}
+    .draw--next{animation-delay:600ms;}
+    @keyframes draw{to{stroke-dashoffset:0;}}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">SB Daymaker · Data Infrastructure · Visual Brief</p>
+    <h1>Your data engine isn't broken.<br>It's <em>capped.</em></h1>
+    <p class="lede">Today, coverage grows only as fast as you hand-build sources. The fix moves the ceiling, so the engine keeps climbing while your daily effort stays flat.</p>
+
+    <figure class="ceiling">
+      <svg viewBox="0 0 560 240" role="img" aria-label="Line chart. Coverage rises then flattens into a ceiling under the current approach, but keeps climbing under the recommended approach as more sources are added.">
+        <!-- axes -->
+        <line x1="48" y1="20" x2="48" y2="200" stroke="#D8CDB8" stroke-width="1.5"/>
+        <line x1="48" y1="200" x2="536" y2="200" stroke="#D8CDB8" stroke-width="1.5"/>
+        <text x="14" y="30" font-family="'JetBrains Mono',monospace" font-size="11" fill="#4A4038" transform="rotate(-90 14 110)">coverage</text>
+        <text x="300" y="228" font-family="'JetBrains Mono',monospace" font-size="11" fill="#4A4038" text-anchor="middle">sources you add over time  &#8594;</text>
+        <!-- ceiling guide -->
+        <line x1="48" y1="96" x2="536" y2="96" stroke="#E7C3B2" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <text x="528" y="88" font-family="'JetBrains Mono',monospace" font-size="10" fill="#9E3F20" text-anchor="end">adapter ceiling</text>
+        <!-- current: rises then flattens -->
+        <path class="draw draw--now" d="M48 196 C120 150, 150 108, 220 100 C300 91, 420 96, 536 96" fill="none" stroke="#C0532E" stroke-width="3.5" stroke-linecap="round"/>
+        <!-- recommended: keeps climbing -->
+        <path class="draw draw--next" d="M48 196 C130 168, 190 120, 270 92 C360 60, 450 40, 536 26" fill="none" stroke="#16586A" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <div class="keyrow">
+        <span><i class="swatch" style="background:#C0532E"></i>Now: adapter-per-source</span>
+        <span><i class="swatch" style="background:#16586A"></i>Recommended: lanes + confidence</span>
+      </div>
+      <figcaption>Same daily effort from you. The recommended path removes the ceiling that a hand-coded adapter per source builds in.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<!-- ============ THE WHOLE PICTURE ============ -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">The whole picture</p>
+    <h2>Two versions of the nightly pipeline</h2>
+    <p class="intro">Read each one top to bottom. Warm boxes are the pinch points. Teal boxes are where the new value comes from. The black bar is the new backbone everything else hangs off.</p>
+
+    <div class="pipes">
+
+      <!-- CURRENT -->
+      <div class="pipe pipe--now">
+        <span class="pipe__tag tag--now">Today</span>
+        <h3>Coverage = speed of your hands</h3>
+
+        <div class="node node--flag">
+          <span class="nlabel">Sources live in code</span>
+          <span class="ntitle">32 hand-written adapters</span>
+          <span class="nsub">Each new source needs its own code + a deploy. The long tail never gets built.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node">
+          <span class="nlabel">Gate</span>
+          <span class="ntitle">Drop rows missing facts</span>
+          <span class="nsub">Good discipline: never invents a title, date, or address.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node">
+          <span class="nlabel">Dedupe</span>
+          <span class="ntitle">Title + same day only</span>
+          <span class="nsub">No venue signal, so it can merge two different shows or split one shown two ways.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--flag">
+          <span class="nlabel">The only AI step</span>
+          <span class="ntitle">Claude writes voice + tags</span>
+          <span class="nsub">AI does the low-value job. It never reads the messy pages where the missing events actually live.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--flag">
+          <span class="nlabel">Publishing</span>
+          <span class="ntitle">Everything waits for you</span>
+          <span class="nsub">Every event lands as "needs review." Your 15 minutes a day is the bottleneck for all of it.</span>
+        </div>
+
+        <p class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>And if a source quietly breaks, it logs as healthy "0 found." Coverage can rot with no alarm.</span></p>
+      </div>
+
+      <!-- RECOMMENDED -->
+      <div class="pipe pipe--next">
+        <span class="pipe__tag tag--next">Recommended</span>
+        <h3>Coverage = speed of your engine</h3>
+
+        <div class="node node--spine">
+          <span class="nlabel">New backbone</span>
+          <span class="ntitle">Sources table (data, not code)</span>
+          <span class="nsub">Every source is a row you can add, score, pause, and measure. No deploy to add one.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--good">
+          <span class="nlabel">Three ingestion lanes</span>
+          <div class="lanes" style="margin-top:6px">
+            <div class="lane"><b>Structured</b><small>keep</small></div>
+            <div class="lane lane--b"><b>AI extract</b><small>new</small></div>
+            <div class="lane"><b>Render</b><small>reserve</small></div>
+          </div>
+          <span class="nsub" style="margin-top:8px; display:block">One generic AI lane reads unlimited messy pages, so the long tail flows in without new adapters.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--good">
+          <span class="nlabel">Dedupe + identity</span>
+          <span class="ntitle">Venue signal + one event key</span>
+          <span class="nsub">Adds location to the match and gives every event a stable identity across sources.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--good">
+          <span class="nlabel">AI does the real work</span>
+          <span class="ntitle">Extract · normalize · tag · score</span>
+          <span class="nsub">AI pulls events off pages and rates how sure it is. Dates from AI stay "candidate" until confirmed.</span>
+        </div>
+        <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v16M6 14l6 6 6-6"/></svg></div>
+
+        <div class="node node--good" style="padding-bottom:14px">
+          <span class="nlabel">Confidence gate</span>
+          <div class="branch" style="margin-top:8px">
+            <div class="b b--auto"><span class="dot"></span><b>High &#8594; auto-publish</b>&nbsp;<span>the safe majority</span></div>
+            <div class="b b--rev"><span class="dot"></span><b>Mid &#8594; your 15 min</b>&nbsp;<span>ambiguous only</span></div>
+            <div class="b b--hold"><span class="dot"></span><b>Low &#8594; held</b>&nbsp;<span>not shown</span></div>
+          </div>
+        </div>
+
+        <p class="pin pin--good"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span>A weekly coverage report + yield alerts turn silent gaps and broken sources into a to-do list.</span></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ FIVE SHIFTS ============ -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">The five shifts that matter</p>
+    <h2>What changes, and what you get</h2>
+    <p class="intro">Each shift is small on its own. Together they turn your 15-minute ceiling from a coverage limit into a quality check, and open the door to the long tail.</p>
+
+    <!-- 1 -->
+    <div class="shift">
+      <span class="shift__n">SHIFT 01</span>
+      <h3>Sources become data, not code</h3>
+      <div class="ba">
+        <div class="ba__col ba__col--now">
+          <div class="ba__k">Now</div>
+          <p>Sources are baked into <code>registry.ts</code> and regex tables. Adding one means writing code and shipping a deploy.</p>
+        </div>
+        <div class="ba__mid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+        <div class="ba__col ba__col--next">
+          <div class="ba__k">Recommended</div>
+          <p>Every source is a row in a <code>sources</code> table with its own score, schedule, and health.</p>
+        </div>
+      </div>
+      <div class="benefit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg><p><b>Benefit:</b> this is the keystone. Prioritization, coverage analysis, and reliability learning are all impossible until sources are rows. Add a source in seconds, not a dev session.</p></div>
+    </div>
+
+    <!-- 2 -->
+    <div class="shift">
+      <span class="shift__n">SHIFT 02</span>
+      <h3>AI extracts events, not just adjectives</h3>
+      <div class="ba">
+        <div class="ba__col ba__col--now">
+          <div class="ba__k">Now</div>
+          <p>AI only writes blurbs and tags for events your adapters already caught. The long tail is invisible.</p>
+        </div>
+        <div class="ba__mid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+        <div class="ba__col ba__col--next">
+          <div class="ba__k">Recommended</div>
+          <p>A generic AI lane reads any messy page and pulls out the event: title, date, venue, price, link.</p>
+        </div>
+      </div>
+      <div class="benefit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg><p><b>Benefit:</b> the winery series, the church hall show, the pop-up market, the meetup, all the events that never justified their own adapter, finally flow in. This is the real coverage jump.</p></div>
+    </div>
+
+    <!-- 3 -->
+    <div class="shift">
+      <span class="shift__n">SHIFT 03</span>
+      <h3>A confidence score guards your time</h3>
+      <div class="ba">
+        <div class="ba__col ba__col--now">
+          <div class="ba__k">Now</div>
+          <p>Every event lands in the review queue. More coverage means more of your minutes, so coverage is capped by your time.</p>
+        </div>
+        <div class="ba__mid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+        <div class="ba__col ba__col--next">
+          <div class="ba__k">Recommended</div>
+          <p>High-confidence events from trusted sources auto-publish. Only the genuinely uncertain ones reach you.</p>
+        </div>
+      </div>
+      <div class="benefit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg><p><b>Benefit:</b> the single biggest lever on your 15 minutes. Your daily attention becomes a spot-check on the hard cases, not a gate on everything.</p></div>
+    </div>
+
+    <!-- 4 -->
+    <div class="shift">
+      <span class="shift__n">SHIFT 04</span>
+      <h3>Broken sources set off an alarm</h3>
+      <div class="ba">
+        <div class="ba__col ba__col--now">
+          <div class="ba__k">Now</div>
+          <p>A source that returns nothing logs as green "0 found." You can't tell a quiet night from a dead feed.</p>
+        </div>
+        <div class="ba__mid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+        <div class="ba__col ba__col--next">
+          <div class="ba__k">Recommended</div>
+          <p>Each source has an expected yield. Drop below it and you get an alert, from your own verified sender.</p>
+        </div>
+      </div>
+      <div class="benefit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg><p><b>Benefit:</b> the cheapest defense of your "if it's happening, we have it" promise. Coverage stops rotting invisibly.</p></div>
+    </div>
+
+    <!-- 5 -->
+    <div class="shift">
+      <span class="shift__n">SHIFT 05</span>
+      <h3>Blind spots become a weekly to-do list</h3>
+      <div class="ba">
+        <div class="ba__col ba__col--now">
+          <div class="ba__k">Now</div>
+          <p>Gaps are invisible. Today the data is 87% dated events, a thin evergreen backstop, and whole categories near zero.</p>
+        </div>
+        <div class="ba__mid" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+        <div class="ba__col ba__col--next">
+          <div class="ba__k">Recommended</div>
+          <p>A weekly report maps coverage by category, neighborhood, and date, and hands you cards for what's thin.</p>
+        </div>
+      </div>
+      <div class="benefit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg><p><b>Benefit:</b> you fix the right gaps on purpose instead of guessing, and you can measure how close you are to full coverage.</p></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ PAYOFF ============ -->
+<section class="section" style="border-bottom:none">
+  <div class="wrap">
+    <div class="payoff">
+      <p class="eyebrow">The payoff, in one idea</p>
+      <h2>Coverage per founder-minute goes up. Your minutes stay the same.</h2>
+
+      <div class="budget">
+        <div class="bud">
+          <div class="bk">Your 15 minutes today</div>
+          <div class="bar"><div class="seg seg--review" style="width:100%">100% reviewing every event</div></div>
+          <p>All your attention is spent approving events one by one. There is nothing left over, so coverage can't grow past what you can personally clear.</p>
+        </div>
+        <div class="bud">
+          <div class="bk">Your 15 minutes after the shifts</div>
+          <div class="bar"><div class="seg seg--auto" style="width:62%">auto-published</div><div class="seg seg--review" style="width:22%">spot-check</div><div class="seg seg--grow" style="width:16%">grow</div></div>
+          <p>The safe majority publishes itself. You spot-check the uncertain few and spend the freed time chasing new sources and filling gaps. Same 15 minutes, far more coverage.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT STAYS SAFE ============ -->
+<section class="section">
+  <div class="wrap">
+    <p class="eyebrow">Reassurance</p>
+    <h2>What does not change</h2>
+    <p class="intro">None of this touches the promises the product is built on. The guardrails stay exactly where they are.</p>
+    <div class="safe">
+      <div class="safe__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 4.5-3 7.5-8 9-5-1.5-8-4.5-8-9V7z"/></svg><div><b>The trust rule holds</b><span>Confidence is a quality signal, never a sponsor signal. The ranker stays sponsor-blind.</span></div></div>
+      <div class="safe__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="9"/></svg><div><b>AI never rewrites when an event happens</b><span>Structured dates are taken as-is. AI-read dates stay "candidate" until confirmed.</span></div></div>
+      <div class="safe__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v6H4zM4 14h16v6H4z"/></svg><div><b>Batch-only, no live AI</b><span>Everything still runs in the nightly job. The app stays fully deterministic at tap time.</span></div></div>
+      <div class="safe__item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 10V8a6 6 0 0112 0v2M5 10h14v10H5z"/></svg><div><b>No accounts, cost floor intact</b><span>Self-hosted extraction keeps new spend near $0. One AI vendor, tiered, to keep upkeep low.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="rule"></div>
+    <p><strong>This is the strategy view, not a build.</strong> Companion to <code>16_SBDaymaker_Data_Sourcing_Strategy_Review.md</code>. The recommended first moves, in order: build the <code>sources</code> table, add a confidence score with auto-publish, then the generic AI extraction lane. Each gets its own mockup-first delta spec before Claude Code touches anything.</p>
+  </div>
+</footer>
+
+</body>
+</html>

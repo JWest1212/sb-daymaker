@@ -81,8 +81,10 @@ function sourceRank(url: string | undefined): number {
   return 99;
 }
 
-/** Short source key for the drop log, derived from the candidate's URL. */
-function sourceKeyOf(url: string | undefined): string {
+/** Short source key for the drop log, derived from the candidate's URL. Exported
+ *  for reuse by ingest/adapters/_shared/resolveNeighborhood.ts (Doc 19 §4.1 step 3
+ *  — source-implied venue), so the two never drift apart. */
+export function sourceKeyOf(url: string | undefined): string {
   if (!url) return 'unknown';
   const MAP: Array<[RegExp, string]> = [
     [/sohosb\.com/i, 'soho'],

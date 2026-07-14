@@ -12,11 +12,29 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Candidate } from '../packages/shared/types';
 import type { DropRecord } from './dedupe';
 import { deriveNearbyZone } from '../lib/geo';
+import { categoryToActivities } from './activityBackfill';
+import { resolveNeighborhood, autoWrites, type VenueDictEntry, type ResolvableThing } from './adapters/_shared/resolveNeighborhood';
 
 /** Map a gated Candidate to a `things` row. `source` stores the URL — the seed
- *  convention, and the same string the uuid5 id is keyed on. */
-function toThingRow(c: Candidate): Record<string, unknown> {
-  const nearby_zone = deriveNearbyZone(c.neighborhood ?? null, c.lat, c.lng);
+ *  convention, and the same string the uuid5 id is keyed on. `dictionary`
+ *  defaults to empty for callers that don't need neighborhood accuracy (the
+ *  DRY_RUN title/date preview in run.ts) — landCandidates always passes the
+ *  real venue_neighborhoods dictionary. */
+function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<string, unknown> {
+  // Doc 19 §6 Phase 5 — self-heal. Runs the same waterfall the sweep and apply
+  // use; a confident match (>=0.75) overrides whatever the gate/adapter already
+  // set (a stronger signal is allowed to correct a weaker one, same as Apply),
+  // otherwise falls back to the candidate's own neighborhood unchanged.
+  const resolved = resolveNeighborhood(
+    {
+      title: c.title, address: c.address ?? null, place_id: c.place_id ?? null,
+      source_url: c.source_url, lat: c.lat ?? null, lng: c.lng ?? null,
+      neighborhood: (c.neighborhood ?? null) as ResolvableThing['neighborhood'],
+    },
+    dictionary,
+  );
+  const neighborhood = autoWrites(resolved) && resolved.neighborhood ? resolved.neighborhood : (c.neighborhood ?? null);
+  const nearby_zone = deriveNearbyZone(neighborhood, c.lat, c.lng);
   return {
     id: c.id,
     type: c.type,
@@ -28,7 +46,7 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     editorial_weight: c.editorial_weight ?? 0, // W2.1b civic-filler nudge (0 unless matched)
     happening_category: c.happening_category,
     reason_to_go: c.reason_to_go ?? null,
-    neighborhood: c.neighborhood ?? null,
+    neighborhood,
     nearby_zone,
     address: c.address,
     lat: c.lat ?? null,
@@ -54,9 +72,11 @@ function toThingRow(c: Candidate): Record<string, unknown> {
     // matchVenueForCandidate); a fuzzy match is never auto-written, even at land
     // time — it queues for founder review in the cockpit's Venues tab instead.
     venue_id: c.venue_id ?? null,
-    // Home Rework spec §6.2 — Activity taxonomy, AI-proposed alongside occasion tags.
-    // Requires supabase/migrations/20260711_activities.sql applied first.
-    activities: c.proposed_activities ?? [],
+    // Home Rework spec §6.2 — Activity taxonomy. AI-proposed tags (proposed_activities)
+    // union with the deterministic happening_category map (Doc 21 §4/§6 Phase 4
+    // self-heal), so every new thing carries activities[] even before/without the
+    // AI pass. Requires supabase/migrations/20260711_activities.sql applied first.
+    activities: [...new Set([...(c.proposed_activities ?? []), ...categoryToActivities(c.happening_category)])],
     local_note: c.local_note ?? null,
     last_confirmed: c.last_confirmed,
     source: c.source_url,
@@ -106,9 +126,15 @@ export async function finishRun(
 /** Insert needs_review rows, ignoring id conflicts. Returns the count NEWLY landed. */
 export async function landCandidates(sb: SupabaseClient, cands: Candidate[]): Promise<number> {
   if (!cands.length) return 0;
+  const { data: dictRows, error: dictErr } = await sb
+    .from('venue_neighborhoods')
+    .select('name, name_norm, neighborhood, place_id, aliases');
+  if (dictErr) throw new Error(`landCandidates dictionary read: ${dictErr.message}`);
+  const dictionary = (dictRows ?? []) as unknown as VenueDictEntry[];
+
   const { data, error } = await sb
     .from('things')
-    .upsert(cands.map(toThingRow), { onConflict: 'id', ignoreDuplicates: true })
+    .upsert(cands.map((c) => toThingRow(c, dictionary)), { onConflict: 'id', ignoreDuplicates: true })
     .select('id');
   if (error) throw new Error(`landCandidates: ${error.message}`);
   return data?.length ?? 0;

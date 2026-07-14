@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker Cockpit — Neighborhood Sweep (Mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+    --ink:#241C16; --ink-2:#4A4038;
+    --pacific:#16586A; --pacific-dark:#0E3C49;
+    --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+    --line:#D8CDB8; --terra-text:#9E3F20; --sage-text:#566049; --gold-text:#7A5E13;
+    --sev-blocker:#B23A2E; --sev-high:#C77D1E; --sev-med:#9A8A3E; --sev-low:#3E7C5A;
+    --font-display:'Fraunces',Georgia,serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --shadow-card:0 1px 2px rgba(36,28,22,.06),0 6px 20px rgba(36,28,22,.05);
+    --radius-md:12px; --radius-lg:16px; --radius-sm:7px; --radius-pill:999px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--plaster); color:var(--ink); font-family:var(--font-body); font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  .wrap{max-width:960px; margin:0 auto; padding:0 16px;}
+  .mono{font-family:var(--font-mono);}
+
+  /* ADMIN TOP BAR */
+  .topbar{background:var(--pacific-dark); color:var(--paper); padding:11px 0;}
+  .topbar .wrap{display:flex; align-items:center; gap:12px; flex-wrap:wrap;}
+  .brandmark{font-family:var(--font-display); font-weight:600; font-size:15px; letter-spacing:.01em;}
+  .crumb{font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#B9D0D6;}
+  .tabs{display:flex; gap:3px; margin-left:auto; flex-wrap:wrap;}
+  .tab{font-size:12px; font-weight:500; color:#B9D0D6; padding:5px 10px; border-radius:var(--radius-pill); white-space:nowrap;}
+  .tab.on{background:rgba(252,250,245,.14); color:var(--paper); font-weight:600;}
+
+  /* PAGE HEAD */
+  .head{padding:22px 0 10px;}
+  .head h1{font-family:var(--font-display); font-weight:600; font-size:1.7rem; margin:0 0 4px; line-height:1.1;}
+  .head p{margin:0; color:var(--ink-2); font-size:14.5px; max-width:64ch;}
+  .runrow{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:14px;}
+  .btn{font-family:var(--font-body); font-weight:600; font-size:13.5px; border-radius:var(--radius-pill); padding:9px 16px; min-height:40px; border:1.5px solid var(--pacific); background:var(--pacific); color:var(--paper); cursor:pointer;}
+  .btn.ghost{background:transparent; color:var(--pacific);}
+  .btn:focus-visible{outline:2px solid var(--pacific); outline-offset:2px;}
+  .laststamp{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-2);}
+
+  .card{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:18px 16px; margin:14px 0;}
+  .card > h2{font-family:var(--font-display); font-weight:600; font-size:1.15rem; margin:0 0 3px; display:flex; align-items:center; gap:9px;}
+  .card > .sub{margin:0 0 14px; color:var(--ink-2); font-size:13.5px;}
+  .kicker{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--pacific); font-weight:500;}
+
+  /* SUMMARY */
+  .stat4{display:grid; grid-template-columns:repeat(2,1fr); gap:9px;}
+  @media(min-width:560px){ .stat4{grid-template-columns:repeat(4,1fr);} }
+  .stat{border:1px solid var(--line); border-radius:var(--radius-md); padding:12px 13px; background:var(--plaster);}
+  .stat .n{font-family:var(--font-mono); font-weight:700; font-size:1.7rem; line-height:1; color:var(--ink);}
+  .stat .l{font-size:11.5px; color:var(--ink-2); margin-top:5px; line-height:1.25;}
+  .stat.flag{background:#FBEDE6; border-color:#E7C3B2;}
+  .stat.flag .n{color:var(--terra-text);}
+  .stat.good{background:#E9F1F0; border-color:#B9D4D3;}
+  .stat.good .n{color:var(--pacific-dark);}
+
+  .waterfall{margin-top:16px;}
+  .wrow{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--line); font-size:13.5px;}
+  .wrow:first-child{border-top:none;}
+  .wrow .wk{flex:none; width:150px; font-weight:600;}
+  .wrow .wbar{flex:1; height:14px; border-radius:var(--radius-pill); background:var(--plaster-2); overflow:hidden;}
+  .wrow .wbar i{display:block; height:100%; border-radius:var(--radius-pill);}
+  .wrow .wn{flex:none; width:44px; text-align:right; font-family:var(--font-mono); font-size:12.5px; color:var(--ink-2);}
+  .fill-dict{background:var(--sage);} .fill-addr{background:var(--pacific);} .fill-geo{background:var(--tile-light);} .fill-un{background:var(--terracotta);}
+
+  .zonedist{margin-top:16px; display:grid; grid-template-columns:1fr; gap:6px;}
+  .zrow{display:flex; align-items:center; gap:10px; font-size:12.5px;}
+  .zrow .zk{flex:none; width:150px; color:var(--ink-2);}
+  .zrow .zbar{flex:1; height:11px; background:var(--plaster-2); border-radius:var(--radius-pill); overflow:hidden;}
+  .zrow .zbar i{display:block; height:100%; background:var(--pacific); border-radius:var(--radius-pill);}
+  .zrow .zn{flex:none; width:30px; text-align:right; font-family:var(--font-mono); font-size:11.5px;}
+  .zrow.thin .zk{color:var(--terra-text); font-weight:600;}
+  .zrow.thin .zbar i{background:var(--terracotta);}
+  .thinnote{margin-top:10px; font-size:12.5px; color:var(--terra-text); display:flex; gap:7px; align-items:flex-start; line-height:1.4;}
+  .thinnote svg{width:14px;height:14px;flex:none;margin-top:2px;}
+
+  /* TRIAGE */
+  .triage{background:#FBEDE6; border-color:#E7C3B2;}
+  .tcount{font-family:var(--font-mono); font-size:11px; font-weight:700; color:var(--terra-text); background:#F3DED4; padding:3px 9px; border-radius:var(--radius-pill);}
+  .titem{border:1px solid var(--line); border-radius:var(--radius-md); background:var(--paper); padding:13px 14px; margin-bottom:10px;}
+  .titem:last-child{margin-bottom:0;}
+  .titem .tt{font-weight:600; font-size:15px; line-height:1.25;}
+  .titem .meta{font-family:var(--font-mono); font-size:11.5px; color:var(--ink-2); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 12px;}
+  .titem .meta b{color:var(--ink); font-weight:500;}
+  .suggest{margin-top:9px; font-size:12.5px; color:var(--sage-text); display:flex; align-items:center; gap:7px;}
+  .suggest .conf{font-family:var(--font-mono); background:#E1E8DC; color:var(--sage-text); padding:2px 7px; border-radius:var(--radius-pill); font-size:10.5px; font-weight:700;}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:11px;}
+  .chip{font-size:12px; font-weight:500; padding:8px 11px; min-height:40px; display:inline-flex; align-items:center; border-radius:var(--radius-pill); border:1.5px solid var(--line); background:var(--plaster); color:var(--ink); cursor:pointer; transition:transform .12s;}
+  .chip:hover{border-color:var(--pacific);}
+  .chip:focus-visible{outline:2px solid var(--pacific); outline-offset:2px;}
+  .chip.suggested{border-color:var(--sage); background:#EEF2E9;}
+  .chip.other{border-style:dashed; color:var(--ink-2);}
+  .chip.chosen{background:var(--pacific); border-color:var(--pacific); color:var(--paper); font-weight:600;}
+  .assigned{margin-top:10px; font-size:12.5px; color:var(--pacific-dark); font-weight:600; display:none; align-items:center; gap:7px;}
+  .assigned.show{display:flex;}
+  .assigned svg{width:15px;height:15px;}
+
+  /* DICTIONARY */
+  .dict{margin-top:2px;}
+  .dtable{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .dtable th{text-align:left; font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); font-weight:500; padding:6px 8px; border-bottom:1px solid var(--line);}
+  .dtable td{padding:8px 8px; border-bottom:1px solid var(--plaster-2); vertical-align:middle;}
+  .dtable tr:last-child td{border-bottom:none;}
+  .venue{font-weight:600;}
+  .zpill{font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:var(--radius-pill); background:#E9F1F0; color:var(--pacific-dark); white-space:nowrap;}
+  .src{font-family:var(--font-mono); font-size:10.5px; color:var(--ink-2);}
+  .src.founder{color:var(--gold-text);}
+  .addrow{display:flex; gap:8px; align-items:center; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); flex-wrap:wrap;}
+  .addrow input, .addrow select{font-family:var(--font-body); font-size:13px; padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--paper); color:var(--ink); min-height:40px;}
+  .addrow input{flex:1; min-width:150px;}
+  .selfheal{margin-top:12px; font-size:12.5px; color:var(--pacific-dark); background:#E9F1F0; border:1px solid #B9D4D3; border-radius:var(--radius-sm); padding:10px 12px; display:flex; gap:8px; align-items:flex-start; line-height:1.45;}
+  .selfheal svg{width:16px;height:16px;flex:none;margin-top:1px;}
+
+  .mockstamp{font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--tile-light); border:1px dashed var(--tile-light); border-radius:var(--radius-pill); padding:3px 9px;}
+  footer{padding:22px 0 54px; color:var(--ink-2); font-size:13px;}
+  footer .rule{height:1px; background:var(--line); margin-bottom:16px;}
+  footer code{font-family:var(--font-mono); font-size:12px; color:var(--pacific-dark);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="brandmark">SB Daymaker</span>
+    <span class="crumb">Cockpit</span>
+    <nav class="tabs" aria-label="Cockpit sections">
+      <span class="tab">Queue</span>
+      <span class="tab">Live Catalog</span>
+      <span class="tab">Venues</span>
+      <span class="tab on">Coverage</span>
+      <span class="tab">Hero Plan</span>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <h1>Neighborhood Sweep</h1>
+      <span class="mockstamp">Mockup · sample data</span>
+    </div>
+    <p>Make sure every published thing lands in a real zone, so nothing that is actually in Santa Barbara falls into "other," where the Place door cannot see it. Runs as a dry run first, writes nothing until you approve.</p>
+    <div class="runrow">
+      <button class="btn">Run sweep (dry run)</button>
+      <button class="btn ghost">Apply resolved &#8594;</button>
+      <span class="laststamp">last dry run: 2026-07-12 08:02 PT</span>
+    </div>
+  </div>
+
+  <!-- A · SUMMARY -->
+  <section class="card">
+    <span class="kicker">Step 1 · Measure the gap</span>
+    <h2>What the resolver found</h2>
+    <p class="sub">Read-only. Counts across the 520 published things. No writes yet.</p>
+
+    <div class="stat4">
+      <div class="stat good"><div class="n">461</div><div class="l">resolved to a zone</div></div>
+      <div class="stat flag"><div class="n">59</div><div class="l">unresolved &#8594; triage</div></div>
+      <div class="stat"><div class="n">88%</div><div class="l">auto-resolve rate</div></div>
+      <div class="stat"><div class="n">$0</div><div class="l">API cost (no geocoding)</div></div>
+    </div>
+
+    <div class="waterfall" aria-label="Resolution by method">
+      <div class="wrow"><span class="wk">Venue dictionary</span><span class="wbar"><i class="fill-dict" style="width:75%"></i></span><span class="wn">388</span></div>
+      <div class="wrow"><span class="wk">Address / street</span><span class="wbar"><i class="fill-addr" style="width:10%"></i></span><span class="wn">51</span></div>
+      <div class="wrow"><span class="wk">Neighborhood rollup</span><span class="wbar"><i class="fill-geo" style="width:4%"></i></span><span class="wn">22</span></div>
+      <div class="wrow"><span class="wk">Unresolved</span><span class="wbar"><i class="fill-un" style="width:11%"></i></span><span class="wn">59</span></div>
+    </div>
+
+    <div style="margin-top:18px;">
+      <span class="kicker">Distribution across the 8 door-zones</span>
+      <div class="zonedist" style="margin-top:8px;">
+        <div class="zrow"><span class="zk">Downtown &amp; State St</span><span class="zbar"><i style="width:100%"></i></span><span class="zn">147</span></div>
+        <div class="zrow"><span class="zk">Funk Zone</span><span class="zbar"><i style="width:52%"></i></span><span class="zn">76</span></div>
+        <div class="zrow"><span class="zk">Waterfront &amp; Harbor</span><span class="zbar"><i style="width:41%"></i></span><span class="zn">61</span></div>
+        <div class="zrow"><span class="zk">Goleta &amp; Isla Vista</span><span class="zbar"><i style="width:38%"></i></span><span class="zn">55</span></div>
+        <div class="zrow"><span class="zk">Mission &amp; Riviera</span><span class="zbar"><i style="width:26%"></i></span><span class="zn">38</span></div>
+        <div class="zrow"><span class="zk">Montecito+</span><span class="zbar"><i style="width:22%"></i></span><span class="zn">33</span></div>
+        <div class="zrow thin"><span class="zk">The Mesa</span><span class="zbar"><i style="width:8%"></i></span><span class="zn">12</span></div>
+        <div class="zrow thin"><span class="zk">Uptown &amp; Upper State</span><span class="zbar"><i style="width:5%"></i></span><span class="zn">7</span></div>
+      </div>
+      <p class="thinnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9l-8 14A2 2 0 004 21h16a2 2 0 001.7-3l-8-14a2 2 0 00-3.4 0z"/></svg><span>Uptown &amp; Upper State and The Mesa are the thinnest zones, as predicted. These feed the source-targeting work, not the sweep, flagged here so they are visible from day one.</span></p>
+    </div>
+  </section>
+
+  <!-- B · TRIAGE -->
+  <section class="card triage">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div>
+        <span class="kicker" style="color:var(--terra-text)">Step 2 · Place the residue</span>
+        <h2 style="margin-top:2px;">Triage queue</h2>
+      </div>
+      <span class="tcount">59 to place</span>
+    </div>
+    <p class="sub">Things the resolver could not place with confidence. One tap assigns a zone. The suggested chip is pre-highlighted; confirm it or pick another.</p>
+
+    <!-- item 1 -->
+    <div class="titem">
+      <div class="tt">La Cumbre Plaza Summer Concert Series</div>
+      <div class="meta"><span>venue <b>La Cumbre Plaza</b></span><span>addr <b>121 S Hope Ave</b></span><span>src <b>citySites</b></span></div>
+      <div class="suggest"><span class="conf">0.62</span> suggested from street match: Uptown &amp; Upper State</div>
+      <div class="chips" role="group" aria-label="Assign a zone">
+        <button class="chip suggested">Uptown</button>
+        <button class="chip">Downtown</button>
+        <button class="chip">Funk Zone</button>
+        <button class="chip">Waterfront</button>
+        <button class="chip">The Mesa</button>
+        <button class="chip">Mission/Riviera</button>
+        <button class="chip">Goleta/IV</button>
+        <button class="chip">Montecito+</button>
+        <button class="chip other">Regional / Online</button>
+      </div>
+      <div class="assigned"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Assigned. Adds La Cumbre Plaza to the dictionary so it self-resolves next time.</div>
+    </div>
+
+    <!-- item 2 -->
+    <div class="titem">
+      <div class="tt">Full Moon Harbor Kayak Tour</div>
+      <div class="meta"><span>venue <b>SB Harbor launch ramp</b></span><span>addr <b>Harbor Way</b></span><span>src <b>condorexpress</b></span></div>
+      <div class="suggest"><span class="conf">0.80</span> suggested from address: Waterfront &amp; Harbor</div>
+      <div class="chips" role="group" aria-label="Assign a zone">
+        <button class="chip suggested">Waterfront</button>
+        <button class="chip">Downtown</button>
+        <button class="chip">Funk Zone</button>
+        <button class="chip">The Mesa</button>
+        <button class="chip">Mission/Riviera</button>
+        <button class="chip">Uptown</button>
+        <button class="chip">Goleta/IV</button>
+        <button class="chip">Montecito+</button>
+        <button class="chip other">Regional / Online</button>
+      </div>
+      <div class="assigned"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Assigned.</div>
+    </div>
+
+    <!-- item 3 -->
+    <div class="titem">
+      <div class="tt">County Parks Volunteer Info Session (Zoom)</div>
+      <div class="meta"><span>venue <b>online</b></span><span>addr <b>none</b></span><span>src <b>sbcountyArts</b></span></div>
+      <div class="suggest"><span class="conf">0.90</span> suggested: no physical zone, keep as Regional / Online</div>
+      <div class="chips" role="group" aria-label="Assign a zone">
+        <button class="chip other suggested">Regional / Online</button>
+        <button class="chip">Downtown</button>
+        <button class="chip">Funk Zone</button>
+        <button class="chip">Waterfront</button>
+        <button class="chip">The Mesa</button>
+        <button class="chip">Mission/Riviera</button>
+        <button class="chip">Uptown</button>
+        <button class="chip">Goleta/IV</button>
+        <button class="chip">Montecito+</button>
+      </div>
+      <div class="assigned"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Kept as Regional / Online. This is a correct "other," not a miss.</div>
+    </div>
+
+    <!-- item 4 -->
+    <div class="titem">
+      <div class="tt">Trivia Tuesday at the Taproom</div>
+      <div class="meta"><span>venue <b>Third Window Brewing</b></span><span>addr <b>406 E Haley St</b></span><span>src <b>submission</b></span></div>
+      <div class="suggest"><span class="conf">0.55</span> suggested from street: Funk Zone (Haley St, below the 101)</div>
+      <div class="chips" role="group" aria-label="Assign a zone">
+        <button class="chip suggested">Funk Zone</button>
+        <button class="chip">Downtown</button>
+        <button class="chip">Waterfront</button>
+        <button class="chip">The Mesa</button>
+        <button class="chip">Mission/Riviera</button>
+        <button class="chip">Uptown</button>
+        <button class="chip">Goleta/IV</button>
+        <button class="chip">Montecito+</button>
+        <button class="chip other">Regional / Online</button>
+      </div>
+      <div class="assigned"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg> Assigned. Adds Third Window Brewing to the dictionary.</div>
+    </div>
+  </section>
+
+  <!-- C · DICTIONARY -->
+  <section class="card">
+    <span class="kicker">Step 3 · The reusable asset</span>
+    <h2>Venue dictionary</h2>
+    <p class="sub">Your local knowledge, encoded once. Venue name maps to zone, no API, no cost. This is also the seed of the venue-attribute registry that Dog Friendly and later accessibility / patio / parking reuse.</p>
+
+    <div class="dict">
+      <table class="dtable">
+        <thead><tr><th>Venue</th><th>Zone</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td class="venue">SOhO</td><td><span class="zpill">Downtown &amp; State St</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">The Granada Theatre</td><td><span class="zpill">Downtown &amp; State St</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">Lobero Theatre</td><td><span class="zpill">Downtown &amp; State St</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">MOXI</td><td><span class="zpill">Funk Zone</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">SB Museum of Natural History</td><td><span class="zpill">Mission &amp; Riviera</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">SB Botanic Garden</td><td><span class="zpill">Mission &amp; Riviera</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">Stearns Wharf</td><td><span class="zpill">Waterfront &amp; Harbor</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">Music Academy of the West</td><td><span class="zpill">Montecito+</span></td><td class="src founder">founder</td></tr>
+          <tr><td class="venue">La Cumbre Plaza</td><td><span class="zpill">Uptown &amp; Upper State</span></td><td class="src">just added &#183; triage</td></tr>
+        </tbody>
+      </table>
+
+      <div class="addrow">
+        <input type="text" placeholder="Add a venue (e.g. Carpinteria Arts Center)" aria-label="Venue name">
+        <select aria-label="Zone">
+          <option>Pick a zone</option>
+          <option>Downtown &amp; State St</option>
+          <option>Funk Zone</option>
+          <option>Waterfront &amp; Harbor</option>
+          <option>The Mesa</option>
+          <option>Mission &amp; Riviera</option>
+          <option>Uptown &amp; Upper State</option>
+          <option>Goleta &amp; Isla Vista</option>
+          <option>Montecito+</option>
+        </select>
+        <button class="btn">Add</button>
+      </div>
+
+      <div class="selfheal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7M21 3v6h-6"/></svg><span><b>Self-healing.</b> Once folded into the nightly land step, every new thing gets a zone automatically. A brand-new venue is a one-time add here, then it is solved forever. The Coverage tab surfaces anything that publishes with no zone, so the residue cannot quietly grow back.</span></div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="rule"></div>
+    <p><strong>Mockup only, not built.</strong> Visual for build spec <code>19_SBDaymaker_Neighborhood_Sweep_Spec.md</code>. Sample counts are illustrative; the real numbers come from the first dry run. Writes to the existing <code>neighborhood</code> field only, no schema change; the 8 door-zones stay a code mapping on top per Doc 18 &sect;7.1. Approve the surfaces above and I write the spec plus the Claude Code kickoff prompt.</p>
+  </footer>
+</div>
+
+<script>
+  // Mockup interactivity only: demonstrate the one-tap assign. No storage.
+  document.querySelectorAll('.titem').forEach(function(item){
+    var chips = item.querySelectorAll('.chip');
+    var done = item.querySelector('.assigned');
+    chips.forEach(function(chip){
+      chip.addEventListener('click', function(){
+        chips.forEach(function(c){ c.classList.remove('chosen'); });
+        chip.classList.add('chosen');
+        if(done){ done.classList.add('show'); }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
