@@ -44,9 +44,13 @@ import { sbDay } from '../lib/explore';
 // 1,000 free/mo); the first (Place Details, fieldmask=photos) is Essentials-IDs-Only,
 // $0/unlimited. `onCall()` still counts BOTH toward the shared cap below (a call-
 // count runaway guard, not a dollar meter) — cheaper in practice than the cap number
-// implies. Default cap dropped 1400 -> 500; Jim sets the env var explicitly in Phase 2.
+// implies. Default cap dropped 1400 -> 500 in Phase 2; raised to 1200 (Jim,
+// 2026-07-11) for the Images-desk backlog clear — Google's photo-media free tier
+// is 1,000/mo and only ~half the counted calls are billable, so ~1200 still lands
+// ≈$0. If the env var is set anywhere (GitHub repo variable for the nightly), it
+// overrides this default and needs raising separately.
 // Counter is shared with the closure-check feature.
-const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 500);
+const CAP = Number(process.env.IMAGE_MONTHLY_CALL_CAP ?? 1200);
 const GOOGLE_KEY = process.env.GOOGLE_PLACES_KEY;
 
 export interface ImageOption {
@@ -131,15 +135,15 @@ export function imageQuery(
  *  real was found — this sentinel is what "nothing found" looks like to the
  *  caller). Card Imagery Build Spec Phase 0 §3.1.1 — relevance-first: an
  *  SB-specific free source (Wikimedia) outranks Google. Phase 3 §6.2 retired
- *  Pexels from this order entirely — a source not in `order` (a historical
- *  'pexels' entry surviving in a thing's stored `photo_options`, the only way
- *  one can still reach this function) ranks LAST among real options, same
- *  demoted spot it held before retirement, not first (a naive `indexOf` of -1
- *  would incorrectly sort it ahead of everything). */
+ *  Pexels from fetching; Jim's follow-up call (2026-07-11, Images desk) retired
+ *  it from SELECTION too — a historical 'pexels' entry surviving in a thing's
+ *  stored `photo_options` (the only way one can still reach this function) is
+ *  DROPPED here, not demoted, so every merge-and-persist scrubs old rows and no
+ *  picker anywhere is ever offered one. Wikimedia / Google / owned only. */
 export function rankOptions(found: ImageOption[]): ImageOption[] {
   const order: PhotoSource[] = ['owned', 'wikimedia', 'google'];
   const rank = (s: PhotoSource) => { const i = order.indexOf(s); return i === -1 ? order.length : i; };
-  const real = found.filter((o) => o.url).sort((a, b) => rank(a.source) - rank(b.source));
+  const real = found.filter((o) => o.url && o.source !== 'pexels').sort((a, b) => rank(a.source) - rank(b.source));
   return [...real, { url: '', source: 'placeholder' as const }];
 }
 
@@ -602,6 +606,42 @@ export async function findMoreOptions(query: string, existing: ImageOption[]): P
   const wmBest = pickBestWikimedia(await wikimediaTitleSearch(query), { title: query });
   const wm = wmBest ? toWikimediaOption(wmBest) : null;
   if (wm && !seen.has(wm.url)) fresh.push(wm);
+  return rankOptions([...existingReal, ...fresh]);
+}
+
+/** Images desk (2026-07-11) — the desk's free-candidate search, deliberately
+ *  richer than the single-hit findMoreOptions above: Wikimedia GEOSEARCH when
+ *  the thing has coordinates (the resolver's own primary free path — same gate
+ *  + scorer, top 5), merged with the best title-search hit. Free, never Google.
+ *  Title-search is allowed here even for dated events because every desk pick
+ *  is founder-reviewed before/after it lands (§4.1 forbids title-search only
+ *  for UNREVIEWED auto-picks). */
+export async function findFreeCandidates(
+  c: { title: string; neighborhood?: string | null; happening_category?: string | null; lat?: number | null; lng?: number | null },
+  existing: ImageOption[],
+): Promise<ImageOption[]> {
+  const existingReal = existing.filter((o) => o.url && o.source !== 'pexels');
+  const seen = new Set(existingReal.map((o) => o.url));
+  const fresh: ImageOption[] = [];
+  const ctx = { title: c.title, neighborhood: c.neighborhood ?? undefined };
+
+  if (c.lat != null && c.lng != null) {
+    for (const w of rankWikimediaCandidates(await wikimediaGeosearch(c.lat, c.lng), ctx).slice(0, 5)) {
+      const opt = toWikimediaOption(w);
+      if (!seen.has(opt.url)) { seen.add(opt.url); fresh.push(opt); }
+    }
+  }
+
+  const query = imageQuery({
+    title: c.title,
+    neighborhood: (c.neighborhood ?? undefined) as Candidate['neighborhood'],
+    happening_category: c.happening_category ?? undefined,
+  });
+  const best = pickBestWikimedia(await wikimediaTitleSearch(query), ctx);
+  if (best) {
+    const opt = toWikimediaOption(best);
+    if (!seen.has(opt.url)) fresh.push(opt);
+  }
   return rankOptions([...existingReal, ...fresh]);
 }
 

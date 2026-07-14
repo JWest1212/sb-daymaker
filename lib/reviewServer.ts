@@ -9,7 +9,7 @@ import { getServerSupabase } from "./supabaseServer";
 import { getAdminSupabase } from "./supabaseAdmin";
 import {
   chipFor, whenString, prioritize, rollupSources,
-  isRegistryProposalSource, buildRegistrySnippet,
+  isRegistryProposalSource, buildRegistrySnippet, dropRetiredPhotoOptions,
   type QueueRow, type DropRow, type SourceRow, type PhotoOption,
 } from "./review";
 
@@ -89,7 +89,7 @@ function mapThingRow(t: ThingRaw): QueueRow {
     source,
     photo_url: (t.photo_url as string) ?? null,
     photo_source: (t.photo_source as string) ?? "placeholder",
-    photo_options: ((t.photo_options as PhotoOption[]) ?? []),
+    photo_options: dropRetiredPhotoOptions((t.photo_options as PhotoOption[]) ?? []),
     tags,
     when: whenString(tier, (t.starts_at as string) ?? null, scheds),
     chip: chipFor(tier, (t.starts_at as string) ?? null),

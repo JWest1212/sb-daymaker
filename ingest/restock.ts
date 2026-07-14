@@ -33,6 +33,31 @@ export function candidateMatchesScope(c: Candidate, kind: string, key: string): 
   return false;
 }
 
+/** Run-now (C2b) finalize: a single dispatched directive. The full fresh pass
+ *  already landed everything (main() ran the pipeline); here we just record how
+ *  many of this run's candidates fill the gap and mark that one directive done.
+ *  Never touches source. Returns the matching count. */
+export async function finalizeRunNowDirective(sb: SupabaseClient, directiveId: string, pool: Candidate[]): Promise<number> {
+  const { data: dir, error } = await sb
+    .from('restock_directives')
+    .select('id, scope_kind, scope_key, window_days, status')
+    .eq('id', directiveId)
+    .single();
+  if (error || !dir) { console.log(`  restock run-now: directive ${directiveId} not found`); return 0; }
+  const now = new Date().toISOString();
+  const d = dir as Directive;
+  const matches = pool.filter((c) => candidateMatchesScope(c, d.scope_kind, d.scope_key)).length;
+  const run_note = `Run-now: refreshed all sources — ${matches} ${String(d.scope_key).replace(/_/g, ' ')} candidate(s) for the gap now in the queue.`;
+  await sb.from('restock_directives')
+    .update({ status: 'done', finished_at: now, results_count: matches, run_note })
+    .eq('id', directiveId);
+  await sb.from('audit_log').insert({
+    entity_type: 'restock_directive', entity_id: directiveId, action: 'restock_ran_now', actor: 'system',
+    payload: { results_count: matches, scope_kind: d.scope_kind, scope_key: d.scope_key },
+  });
+  return matches;
+}
+
 /** Consume queued restock directives against tonight's candidate pool.
  *  Failure-isolated: a directive that errors is marked 'failed', never thrown.
  *  Returns the number of directives handled. */

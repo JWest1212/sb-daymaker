@@ -41,6 +41,23 @@ export interface PhotoOption {
   venuePhotoId?: string;
 }
 
+/** Jim (2026-07-11): retired sources must never appear as pickable candidates —
+ *  Wikimedia / Google / owned only. Historical 'pexels' entries still survive in
+ *  older rows' stored photo_options; strip them wherever options are served to a
+ *  picker (ingest's rankOptions also scrubs them on every merge-and-persist, so
+ *  touched rows clean themselves over time). */
+export function dropRetiredPhotoOptions<T extends { source: string }>(options: T[]): T[] {
+  return options.filter((o) => o.source !== "pexels");
+}
+
+/** Images desk — the auto-attach confidence floor, deliberately stricter than
+ *  the Venues tab's "surface anything above zero for human review": an exact
+ *  place_id hit (+100), or two name-pattern hits (+20), or one name hit plus a
+ *  strong proximity bonus. A bare single name-substring hit (10) stays a
+ *  suggestion, never an auto-attach. Lives here (client-safe) so the desk UI
+ *  and the server routes share one number. */
+export const STRONG_MATCH_SCORE = 20;
+
 export interface QueueRow {
   id: string;
   type: string;

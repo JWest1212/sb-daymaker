@@ -30,6 +30,9 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     () => queue.filter((c) => filter === "all" || String(c.happening_tier) === filter),
     [queue, filter],
   );
+  // Clamp at render time (an approval can shrink the list under the cursor) —
+  // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
+  const activeIdx = Math.min(active, Math.max(0, visible.length - 1));
 
   const isHero = useCallback(
     (item: QueueRow) => heroOverride[item.id] ?? item.hero_eligible,
@@ -180,6 +183,12 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     setFetchingId(id);
     const res = await post("/api/review/image-fetch", { id }).then((r) => r.json()).catch(() => null);
     setFetchingId(null);
+    // Fold the fetched candidates into the card so the picker appears
+    // immediately (they're also persisted server-side to photo_options).
+    if (res?.ok && Array.isArray(res.options) && res.options.length) {
+      setQueue((q) => q.map((c) => (c.id === id ? { ...c, photo_options: res.options } : c)));
+      setPicks((p) => ({ ...p, [id]: 0 }));
+    }
     showToast(res?.message ?? "No image available yet.");
   }, [showToast]);
 
@@ -209,10 +218,10 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
         else if (k === "h" && ed) { e.preventDefault(); toggleHero(ed); }
         return;
       }
-      const cur = visible[active];
+      const cur = visible[activeIdx];
       const k = e.key.toLowerCase();
-      if (k === "arrowdown") { e.preventDefault(); setActive((a) => Math.min(visible.length - 1, a + 1)); }
-      else if (k === "arrowup") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
+      if (k === "arrowdown") { e.preventDefault(); setActive(Math.min(visible.length - 1, activeIdx + 1)); }
+      else if (k === "arrowup") { e.preventDefault(); setActive(Math.max(0, activeIdx - 1)); }
       else if (k === "a" && cur) { e.preventDefault(); approve(cur); }
       else if (k === "e" && cur) { e.preventDefault(); startEdit(cur); }
       else if (k === "h" && cur) { e.preventDefault(); toggleHero(cur); }
@@ -221,9 +230,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [visible, active, editingId, queue, approve, reject, bulkGreen, cycle, startEdit, exitEdit, toggleHero]);
-
-  useEffect(() => { if (active >= visible.length) setActive(Math.max(0, visible.length - 1)); }, [visible.length, active]);
+  }, [visible, activeIdx, editingId, queue, approve, reject, bulkGreen, cycle, startEdit, exitEdit, toggleHero]);
 
   const dropBreakdown = useMemo(() => {
     const by: Record<string, number> = {};
@@ -274,7 +281,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
               <ReviewCard
                 key={item.overlay_id ?? item.id}
                 item={item}
-                active={i === active}
+                active={i === activeIdx}
                 editing={editingId === item.id}
                 hero={isHero(item)}
                 pickIndex={picks[item.id] ?? 0}

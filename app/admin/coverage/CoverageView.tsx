@@ -31,6 +31,7 @@ export function CoverageView({ initial }: { initial: CoverageResult }) {
   const [cellItems, setCellItems] = useState<CoverageCellItem[] | null>(null);
   const [restockRow, setRestockRow] = useState<{ key: string; label: string } | null>(null);
   const [restockWindow, setRestockWindow] = useState<CoverageWindow>(30);
+  const [restockWhen, setRestockWhen] = useState<"tonight" | "now">("tonight");
   const [directives, setDirectives] = useState<Directive[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -83,14 +84,18 @@ export function CoverageView({ initial }: { initial: CoverageResult }) {
 
   const confirmRestock = useCallback(async () => {
     if (!restockRow) return;
-    const body = { scope_kind: dim, scope_key: restockRow.key, window_days: restockWindow, when: "tonight" };
+    const label = `${restockRow.label} · next ${restockWindow}d`;
+    const body = { scope_kind: dim, scope_key: restockRow.key, window_days: restockWindow, when: restockWhen };
     const res = await fetch("/api/admin/restock", {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
     }).then((r) => r.json()).catch(() => null);
     setRestockRow(null);
-    if (res?.ok) { showToast(`Queued restock: ${restockRow.label} · next ${restockWindow}d`); loadDirectives(); }
+    if (res?.dispatched) showToast(`Running now: ${label} — fresh candidates land in the queue in ~10–20 min.`);
+    else if (res?.queued && res?.error) showToast(`Run-now dispatch failed (${res.error}). Queued for tonight instead.`);
+    else if (res?.ok) showToast(`Queued restock: ${label}`);
     else showToast(res?.error ? `Restock failed: ${res.error}` : "Restock failed");
-  }, [restockRow, restockWindow, dim, showToast, loadDirectives]);
+    loadDirectives();
+  }, [restockRow, restockWindow, restockWhen, dim, showToast, loadDirectives]);
 
   return (
     <div className="wrap" style={{ display: "block", maxWidth: 1180 }}>
@@ -137,7 +142,7 @@ export function CoverageView({ initial }: { initial: CoverageResult }) {
                       );
                     })}
                     <div className="restockcell">
-                      <button className="restock" onClick={() => { setRestockRow({ key: row.key, label: row.label }); setRestockWindow(30); }}>
+                      <button className="restock" onClick={() => { setRestockRow({ key: row.key, label: row.label }); setRestockWindow(30); setRestockWhen("tonight"); }}>
                         ↻ Restock
                       </button>
                     </div>
@@ -215,19 +220,21 @@ export function CoverageView({ initial }: { initial: CoverageResult }) {
                   {COVERAGE_WINDOWS.map((w) => <option key={w} value={w}>next {w} days</option>)}
                 </select>
               </div>
-              <label className="radio sel"><input type="radio" name="rswhen" defaultChecked readOnly />
+              <label className={`radio${restockWhen === "tonight" ? " sel" : ""}`}>
+                <input type="radio" name="rswhen" checked={restockWhen === "tonight"} onChange={() => setRestockWhen("tonight")} />
                 <span><span className="rt">Queue for tonight&apos;s run</span><br />
                   <span className="rd">The 2 a.m. pipeline targets this gap across the full source catalogue. Results land in tomorrow&apos;s review queue. No new cost path.</span></span>
               </label>
-              <label className="radio is-disabled"><input type="radio" name="rswhen" disabled />
-                <span><span className="rt">Run now <span className="soon">arrives in C2b</span></span><br />
-                  <span className="rd">Fires the same job on demand (~10–20 min). Wiring the GitHub dispatch is the next sub-phase.</span></span>
+              <label className={`radio${restockWhen === "now" ? " sel" : ""}`}>
+                <input type="radio" name="rswhen" checked={restockWhen === "now"} onChange={() => setRestockWhen("now")} />
+                <span><span className="rt">Run now</span><br />
+                  <span className="rd">Dispatches the ingest worker on demand (~10–20 min) via a fresh pass across all sources. Real API spend — use it for urgent gaps; the nightly queue is free.</span></span>
               </label>
               <div className="gatebox">Everything found passes the same gate as the nightly run — deterministic start-time required, dedupe against the DB, category + zone checks — and arrives in your <b>review queue</b>. Nothing goes live without your approval.</div>
             </div>
             <div className="sfoot">
               <button className="btn btn-edit" onClick={() => setRestockRow(null)}>Cancel</button>
-              <button className="btn btn-approve" onClick={confirmRestock}>Queue restock</button>
+              <button className="btn btn-approve" onClick={confirmRestock}>{restockWhen === "now" ? "Run now" : "Queue restock"}</button>
             </div>
           </div>
         </>

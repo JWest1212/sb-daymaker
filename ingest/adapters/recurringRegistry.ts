@@ -11,7 +11,8 @@
 // tier 2 carries the schedule, not a starts_at.
 
 import type { SourceAdapter } from './types';
-import type { RawCandidate, RecurringSpec, RecurFrequency, HappeningCategory, Neighborhood } from '../../packages/shared/types';
+import { seedOccasionTags } from './_shared/occasionTags';
+import type { RawCandidate, RecurringSpec, RecurFrequency, HappeningCategory, Neighborhood, OccasionTag } from '../../packages/shared/types';
 import { getDb } from '../db';
 
 interface Day { dow: number; start: string | null; end: string | null }
@@ -26,6 +27,7 @@ interface Rhythm {
   frequency: RecurFrequency;
   sourceUrl: string;
   days: Day[];
+  occasionTags?: OccasionTag[]; // override the seedOccasionTags() default when set
 }
 
 // Curated, founder-maintained. Exported so the run.ts dedupe check can compare
@@ -50,13 +52,14 @@ export const RHYTHMS: Rhythm[] = [
     days: [{ dow: 2, start: '15:00', end: '18:30' }],
   },
   {
-    slug: 'old-town-goleta-market',
-    title: 'Old Town Goleta Farmers Market',
-    venue: 'Goleta Community Center area', address: '5679 Hollister Ave, Goleta, CA 93117',
+    slug: 'sunday-goleta-farmers-market',
+    title: "Sunday Farmers' Market — Goleta",
+    venue: '7986 Calle Real', address: '7986 Calle Real, Goleta, CA 93117',
     neighborhood: 'goleta', category: 'recurring_market', frequency: 'weekly',
     reasonToGo: 'Goleta’s neighborhood market — local produce and easy parking.',
-    sourceUrl: 'https://sbfarmersmarket.org/',
+    sourceUrl: 'https://www.sbfarmersmarket.org/markets',
     days: [{ dow: 0, start: '10:00', end: '14:00' }],
+    occasionTags: ['hosting_visitors', 'free_sb', 'family_day', 'wine_food', 'outdoors_active', 'solo'],
   },
   {
     // Day known, time NOT published -> blank start + flag (demonstrates the rule).
@@ -135,6 +138,7 @@ export const recurringRegistry: SourceAdapter = {
       neighborhood: r.neighborhood,
       reasonToGo: r.reasonToGo,
       sourceUrl: r.sourceUrl,
+      occasionTags: r.occasionTags ?? seedOccasionTags({ category: r.category }),
       recurring: toRecurringSpecs(r),
       raw: { slug: r.slug },
     }));
