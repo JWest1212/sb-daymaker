@@ -2,6 +2,7 @@ import { getSupabase } from "./supabase";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
 import type { ActivityKey } from "./activities";
+import { getDogFriendlyVenueIds } from "./venues";
 
 export type ThingType = "place" | "event" | "firstlook" | "happyhour";
 
@@ -83,7 +84,16 @@ const SELECT_DETAIL = `${BASE_COLS}, local_note, photo_attribution, ${RELATIONS}
 // pattern getThing() already uses for local_note/photo_attribution below.
 const SELECT_WITH_ACTIVITIES = `${BASE_COLS}, activities, ${RELATIONS}`;
 
-function mapThing(row: Record<string, unknown>): Thing {
+function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string> = new Set()): Thing {
+  const indoor = (row.indoor as boolean) ?? false;
+  // Doc 22 §2.2 — Rainy Day is a read-time derivation from `indoor`, not a
+  // stored tag: no DDL, no batch write, always in sync with `indoor`.
+  const tags = ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag);
+  if (indoor && !tags.includes("rainy_day")) tags.push("rainy_day");
+  // Occasion Tags spec §3 — same read-time-derivation pattern, from the
+  // resolved venue's founder-marked flag instead of a thing column.
+  const venueId = row.venue_id as string | null;
+  if (venueId && dogFriendlyVenueIds.has(venueId) && !tags.includes("dog_friendly")) tags.push("dog_friendly");
   return {
     id: row.id as string,
     type: row.type as ThingType,
@@ -104,7 +114,7 @@ function mapThing(row: Record<string, unknown>): Thing {
     buy_url: (row.buy_url as string) ?? null,
     time_of_day_fit: (row.time_of_day_fit as string[]) ?? null,
     is_21_plus: (row.is_21_plus as boolean) ?? false,
-    indoor: (row.indoor as boolean) ?? false,
+    indoor,
     photo_url: (row.photo_url as string) ?? null,
     photo_source: (row.photo_source as string) ?? null,
     photo_attribution: (row.photo_attribution as string) ?? null,
@@ -112,7 +122,7 @@ function mapThing(row: Record<string, unknown>): Thing {
     visual_key: (row.visual_key as string) ?? null,
     visual_seed: (row.visual_seed as number) ?? null,
     venue_id: (row.venue_id as string) ?? null,
-    tags: ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag),
+    tags,
     activities: (row.activities as ActivityKey[]) ?? [],
     happyHours: (row.happy_hour_windows as HappyHourWindow[]) ?? [],
     recurring: (row.recurring_schedules as RecurringSchedule[]) ?? [],
@@ -126,15 +136,15 @@ export async function getPublishedThings(): Promise<Thing[]> {
   if (!sb) return [];
   // Prefer the select with `activities`; fall back if the migration hasn't been
   // applied yet (same pattern getThing() uses for local_note/photo_attribution).
-  const primary = await sb
-    .from("things")
-    .select(SELECT_WITH_ACTIVITIES)
-    .order("happening_tier", { ascending: true });
+  const [primary, dogFriendlyVenueIds] = await Promise.all([
+    sb.from("things").select(SELECT_WITH_ACTIVITIES).order("happening_tier", { ascending: true }),
+    getDogFriendlyVenueIds(),
+  ]);
   const result = primary.error
     ? await sb.from("things").select(SELECT).order("happening_tier", { ascending: true })
     : primary;
   if (result.error || !result.data) return [];
-  return result.data.map((r) => mapThing(r as Record<string, unknown>));
+  return result.data.map((r) => mapThing(r as Record<string, unknown>, dogFriendlyVenueIds));
 }
 
 /** A single published thing by id (or null). */
@@ -143,11 +153,11 @@ export async function getThing(id: string): Promise<Thing | null> {
   if (!sb) return null;
   // Prefer the detail select (with local_note); fall back to base columns if the
   // column isn't there yet (before phase7.sql runs).
-  let { data, error } = await sb
-    .from("things")
-    .select(SELECT_DETAIL)
-    .eq("id", id)
-    .maybeSingle();
+  const [detail, dogFriendlyVenueIds] = await Promise.all([
+    sb.from("things").select(SELECT_DETAIL).eq("id", id).maybeSingle(),
+    getDogFriendlyVenueIds(),
+  ]);
+  let { data, error } = detail;
   if (error) {
     ({ data, error } = await sb
       .from("things")
@@ -156,5 +166,5 @@ export async function getThing(id: string): Promise<Thing | null> {
       .maybeSingle());
   }
   if (error || !data) return null;
-  return mapThing(data as Record<string, unknown>);
+  return mapThing(data as Record<string, unknown>, dogFriendlyVenueIds);
 }

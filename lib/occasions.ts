@@ -12,7 +12,9 @@ export type OccasionKey =
   | "wine_food"
   | "free_sb"
   | "hosting_visitors"
-  | "solo";
+  | "solo"
+  | "rainy_day"
+  | "dog_friendly";
 
 export interface Occasion {
   key: OccasionKey;
@@ -34,17 +36,23 @@ export const OCCASIONS: Occasion[] = [
   { key: "free_sb",          label: "Free in SB",       pillLabel: "Free in SB",    icon: "🏷️",  color: "var(--gold)",        text: "var(--ink)"   },
   { key: "hosting_visitors", label: "Hosting Visitors", pillLabel: "Hosting",       icon: "🧑‍🤝‍🧑", color: "var(--pacific)",     text: "var(--paper)" },
   { key: "solo",             label: "Solo",             pillLabel: "Solo",          icon: "🚶",   color: "var(--ink-2)",       text: "var(--paper)" },
+  { key: "rainy_day",        label: "Rainy Day",        pillLabel: "Rainy Day",     icon: "🌧️",  color: "var(--pacific-dark)",text: "var(--paper)" },
+  { key: "dog_friendly",     label: "Dog Friendly",     pillLabel: "Dog Friendly",  icon: "🐾",   color: "var(--tile-light)",  text: "var(--ink)"   },
 ];
 
 export const OCCASION_BY_KEY: Record<OccasionKey, Occasion> = Object.fromEntries(
   OCCASIONS.map((o) => [o.key, o]),
 ) as Record<OccasionKey, Occasion>;
 
-// Doc 22 §2.2 — the Occasion door's tile vocabulary. `catch_a_show`,
+// Doc 22 §2.2 — the Occasion door's static tile vocabulary. `catch_a_show`,
 // `arts_culture`, `outdoors_active`, `wine_food` are now served by the Activity
 // door and drop out of this list, but stay in OCCASIONS/OCCASION_BY_KEY above so
 // existing thing_tags data still renders (card pills, admin tools, search).
-// `dog_friendly` and `rainy_day` join once their data exists (Doc 22 Phases 4-5).
+// `rainy_day` was originally weather-gated (shown only on gray/rain days); by
+// founder request (2026-07-14) it's now always visible, same as every other
+// entry here. `dog_friendly` (Occasion Tags spec §3) stays conditional, gated
+// inside vibeTiles itself on whether any thing in the current horizon actually
+// carries the tag — so that tile can never dead-end.
 const DOOR_OCCASION_KEYS: OccasionKey[] = [
   "date_night",
   "family_day",
@@ -52,6 +60,7 @@ const DOOR_OCCASION_KEYS: OccasionKey[] = [
   "hosting_visitors",
   "solo",
   "free_sb",
+  "rainy_day",
 ];
 
 export const DOOR_OCCASIONS: Occasion[] = DOOR_OCCASION_KEYS.map((k) => OCCASION_BY_KEY[k]);

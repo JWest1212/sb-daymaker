@@ -114,6 +114,6 @@ describe("searchThings — tags", () => {
   });
   it("matches a zone label and returns a place filter", () => {
     const r = searchThings({ query: "funk", things: [], venueNames: {} });
-    expect(r.tags).toContainEqual({ kind: "tag", id: "funk", label: "Funk Zone", filter: { dimension: "place", key: "funk" } });
+    expect(r.tags).toContainEqual({ kind: "tag", id: "funk_zone", label: "Funk Zone", filter: { dimension: "place", key: "funk_zone" } });
   });
 });

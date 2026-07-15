@@ -10,7 +10,7 @@
 import { registry } from './adapters/registry';
 import { gate } from './gate';
 import { dedupe, type DropRecord, type ExistingRow } from './dedupe';
-import { isAlreadyInRegistry } from './adapters/recurringRegistry';
+import { isAlreadyInRegistry, loadRegistryCache } from './adapters/recurringRegistry';
 import {
   startRun, finishRun, landCandidates, landTags, landRecurring, recordDrops, toThingRow, type RunRow,
 } from './land';
@@ -1089,6 +1089,11 @@ async function main() {
   let totalFetched = 0, totalGateDropped = 0;
 
   console.log(`\n[ingest] window ${win.fromISO.slice(0, 10)} .. ${win.toISO.slice(0, 10)}${DRY ? '  (DRY RUN — no writes)' : ''}\n`);
+
+  // Load the curated recurring-rhythm registry (recurring_rhythms table) once,
+  // ahead of the adapter loop — both the recurringRegistry adapter itself and
+  // the registryCandidate dedupe check below (farmersMarkets et al.) read it.
+  await loadRegistryCache();
 
   // ---- FETCH + GATE, per source, isolated ----
   for (const adapter of registry) {

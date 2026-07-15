@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   chipLabel, NEIGHBORHOODS, OCCASION_TAGS,
   type ChipKind, type QueueRow, type ReviewDraft,
@@ -34,7 +35,11 @@ function RegistrySnippetPanel({
   return (
     <div className="registry-panel" onClick={(e) => e.stopPropagation()}>
       <div className="registry-label">
-        REGISTRY RHYTHM — paste into <code>recurringRegistry.ts</code>, then reject this card
+        REGISTRY RHYTHM — copy these details into{" "}
+        <Link href="/admin/coverage/recurring-rhythms" target="_blank" onClick={(e) => e.stopPropagation()}>
+          Recurring Rhythms
+        </Link>
+        , then reject this card
       </div>
       <pre className="registry-snippet">{snippet}</pre>
       <div className="actions pt">

@@ -107,6 +107,9 @@ export function CoverageView({ initial, noZoneCount }: { initial: CoverageResult
           Neighborhood Sweep &rarr;
           {noZoneCount > 0 ? <span className="nozone-badge">{noZoneCount} no zone</span> : null}
         </Link>
+        <Link href="/admin/coverage/recurring-rhythms" className="btn btn-edit btn-sm">
+          Recurring Rhythms &rarr;
+        </Link>
         <div className="filterbar" role="group" aria-label="Coverage dimension">
           <button className="filt" aria-pressed={dim === "vibe"} onClick={() => switchDim("vibe")}>By vibe</button>
           <button className="filt" aria-pressed={dim === "zone"} onClick={() => switchDim("zone")}>By neighborhood</button>

@@ -256,8 +256,11 @@ interface RegistrySchedRow {
 const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
- * Build the paste-ready TypeScript snippet for a registry-candidate item.
- * The founder pastes this into recurringRegistry.ts. (§3.5)
+ * Build a copy-paste reference summary for a registry-candidate item — the
+ * founder pastes these values into the "Add a rhythm" form at
+ * /admin/coverage/recurring-rhythms, then rejects this card. (§3.5)
+ * Plain "Field: value" lines, not code — the destination is a web form, not
+ * a source file, since the Data Arch Redesign recurring-registry migration.
  */
 export function buildRegistrySnippet(
   item: {
@@ -271,32 +274,30 @@ export function buildRegistrySnippet(
   scheds: RegistrySchedRow[],
 ): string {
   const s = scheds[0];
-  if (!s) return '// no schedule data available';
+  if (!s) return 'no schedule data available';
 
   const daysOfWeek = scheds
     .map((r) => r.day_of_week)
-    .filter((d): d is number => d != null);
+    .filter((d): d is number => d != null)
+    .map((d) => DOW_NAMES[d] ?? String(d));
 
-  const escapedTitle = item.title.replace(/'/g, "\\'");
   const venuePart = (item.address ?? '').split(',')[0].trim();
-  const escapedVenue = venuePart.replace(/'/g, "\\'");
 
   const lines = [
-    `{`,
-    `  title: '${escapedTitle}',`,
-    `  venueName: '${escapedVenue}',`,
-    item.neighborhood ? `  neighborhood: '${item.neighborhood}',` : `  // neighborhood: '???',`,
-    `  category: '${item.happening_category ?? 'recurring_market'}',`,
-    `  frequency: '${s.frequency ?? 'weekly'}',`,
-    `  daysOfWeek: [${daysOfWeek.join(', ')}],`,
-    s.start_time ? `  startTime: '${s.start_time}',` : `  // startTime: '??:??',  // verify`,
-    s.end_time   ? `  endTime: '${s.end_time}',`   : '',
-    item.tags.length ? `  occasionTags: [${item.tags.map((t) => `'${t}'`).join(',')}],` : '',
-    item.source ? `  sourceUrl: '${item.source}',` : '',
-    `},`,
-  ].filter((l) => l !== '').join('\n');
+    `Title: ${item.title}`,
+    `Venue: ${venuePart}`,
+    `Address: ${item.address ?? '(fill in)'}`,
+    `Neighborhood: ${item.neighborhood ?? '(pick one)'}`,
+    `Category: ${item.happening_category ?? 'recurring_market'}`,
+    `Frequency: ${s.frequency ?? 'weekly'}`,
+    `Day(s) of week: ${daysOfWeek.join(', ')}`,
+    `Start time: ${s.start_time ?? '(unknown — leave blank, check "time TBD")'}`,
+    s.end_time ? `End time: ${s.end_time}` : '',
+    item.tags.length ? `Tags: ${item.tags.join(', ')}` : '',
+    item.source ? `Source URL: ${item.source}` : '',
+  ].filter((l) => l !== '');
 
-  return lines;
+  return lines.join('\n');
 }
 
 /** Latest run per source -> a green/amber/red health row. */

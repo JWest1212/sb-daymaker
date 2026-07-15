@@ -40,12 +40,29 @@ function thing(over: Partial<Thing> = {}): Thing {
 }
 
 describe("placeTiles", () => {
-  it("returns one tile per zone, with a live count", () => {
-    const things = [thing({ id: "a", nearby_zone: "funk" }), thing({ id: "b", nearby_zone: "funk" }), thing({ id: "c", nearby_zone: "goleta" })];
+  it("returns one tile per door zone, counted from neighborhood", () => {
+    const things = [
+      thing({ id: "a", neighborhood: "funk_zone" }),
+      thing({ id: "b", neighborhood: "funk_zone" }),
+      thing({ id: "c", neighborhood: "goleta" }),
+    ];
     const tiles = placeTiles(things);
-    expect(tiles.find((t) => t.key === "funk")?.count).toBe(2);
-    expect(tiles.find((t) => t.key === "goleta")?.count).toBe(1);
-    expect(tiles.find((t) => t.key === "downtown")?.count).toBe(0);
+    expect(tiles).toHaveLength(8);
+    expect(tiles.find((t) => t.key === "funk_zone")?.count).toBe(2);
+    expect(tiles.find((t) => t.key === "goleta_isla_vista")?.count).toBe(1);
+    expect(tiles.find((t) => t.key === "downtown_state")?.count).toBe(0);
+  });
+
+  it("collapses the two joined neighborhoods into one door zone each", () => {
+    const things = [thing({ id: "a", neighborhood: "mission_canyon" }), thing({ id: "b", neighborhood: "riviera" })];
+    const tiles = placeTiles(things);
+    expect(tiles.find((t) => t.key === "mission_riviera")?.count).toBe(2);
+  });
+
+  it("doesn't count 'other' or unset neighborhoods toward any zone", () => {
+    const things = [thing({ id: "a", neighborhood: "other" }), thing({ id: "b", neighborhood: null })];
+    const tiles = placeTiles(things);
+    expect(tiles.every((t) => t.count === 0)).toBe(true);
   });
 });
 
@@ -56,6 +73,22 @@ describe("vibeTiles", () => {
     expect(tiles.find((t) => t.key === "solo")?.count).toBe(2);
     expect(tiles.find((t) => t.key === "free_sb")?.count).toBe(1);
     expect(tiles.find((t) => t.key === "nightlife")?.count).toBe(0);
+  });
+
+  it("always shows the Rainy Day tile, any day (2026-07-14: no longer weather-gated)", () => {
+    const things = [thing({ id: "a", tags: ["rainy_day"] })];
+    const tiles = vibeTiles(things);
+    expect(tiles).toHaveLength(7);
+    expect(tiles.find((t) => t.key === "rainy_day")?.count).toBe(1);
+  });
+
+  it("self-gates the Dog Friendly tile — never dead-ends, appears only once a thing carries the tag", () => {
+    const noneMarked = [thing({ id: "a", tags: ["solo"] })];
+    expect(vibeTiles(noneMarked).find((t) => t.key === "dog_friendly")).toBeUndefined();
+
+    const oneMarked = [thing({ id: "a", tags: ["solo"] }), thing({ id: "b", tags: ["dog_friendly"] })];
+    const tiles = vibeTiles(oneMarked);
+    expect(tiles.find((t) => t.key === "dog_friendly")?.count).toBe(1);
   });
 });
 
@@ -70,9 +103,9 @@ describe("activityTiles", () => {
 
 describe("tilesFor", () => {
   it("dispatches to the right builder per dimension", () => {
-    const things = [thing({ id: "a", nearby_zone: "mesa" })];
+    const things = [thing({ id: "a", neighborhood: "mesa" })];
     expect(tilesFor("place", things).find((t) => t.key === "mesa")?.count).toBe(1);
-    expect(tilesFor("vibe", things)).toHaveLength(6);
+    expect(tilesFor("vibe", things)).toHaveLength(7);
     expect(tilesFor("activity", things)).toHaveLength(10);
   });
 });

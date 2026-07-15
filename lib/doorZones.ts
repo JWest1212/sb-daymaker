@@ -7,6 +7,7 @@
 // against and its triage chips write through.
 
 import type { Neighborhood } from "../packages/shared/types";
+import type { Thing } from "./things";
 
 export type DoorZoneKey =
   | "downtown_state"
@@ -63,4 +64,21 @@ export const DOOR_ZONE_CANONICAL_NEIGHBORHOOD: Partial<Record<DoorZoneKey, Neigh
  *  for the two collapsed zones, else the door zone's single neighborhood. */
 export function canonicalNeighborhoodForZone(key: DoorZoneKey): Neighborhood {
   return DOOR_ZONE_CANONICAL_NEIGHBORHOOD[key] ?? DOOR_ZONE_BY_KEY[key].neighborhoods[0];
+}
+
+/** Doc 22 §2.1 — the Place door's own stable sort, bubbling things in the
+ *  chosen door zone to the top. Place is a sort, not a filter (a mis-mapped
+ *  thing never disappears, just doesn't bubble). Deliberately separate from
+ *  nearMeSort() in lib/explore.ts (protected, untouched) — that one drives the
+ *  genuine geolocation Near Me sort on Saved and stays on nearby_zone. */
+export function sortByDoorZone(things: Thing[], zone: DoorZoneKey | null): Thing[] {
+  if (!zone) return things;
+  return things
+    .map((t, i) => [t, i] as const)
+    .sort((a, b) => {
+      const na = doorZoneForNeighborhood(a[0].neighborhood) === zone ? 0 : 1;
+      const nb = doorZoneForNeighborhood(b[0].neighborhood) === zone ? 0 : 1;
+      return na - nb || a[1] - b[1];
+    })
+    .map((x) => x[0]);
 }

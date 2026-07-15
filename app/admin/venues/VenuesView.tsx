@@ -306,6 +306,10 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const [addingVenue, setAddingVenue] = useState(false);
   const [newVenueName, setNewVenueName] = useState("");
 
+  // Occasion Tags spec §3.3 — the Dog Friendly checklist.
+  const [dogSearch, setDogSearch] = useState("");
+  const [dogSavingId, setDogSavingId] = useState<string | null>(null);
+
   const showToast = useCallback((m: string) => { setToast(m); setTimeout(() => setToast(null), 3200); }, []);
 
   const refresh = useCallback(async (): Promise<VenuesData | null> => {
@@ -387,6 +391,17 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ venue_id: venueId, ...patch }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) showToast("Saved"); else showToast(res?.error ?? "Save failed");
+    await refresh();
+  }, [refresh, showToast]);
+
+  const toggleDogFriendly = useCallback(async (venue: VenueRow) => {
+    setDogSavingId(venue.id);
+    const res = await fetch("/api/admin/venues/edit", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ venue_id: venue.id, dog_friendly: !venue.dog_friendly }),
+    }).then((r) => r.json()).catch(() => null);
+    setDogSavingId(null);
+    if (!res?.ok) showToast(res?.error ?? "Save failed");
     await refresh();
   }, [refresh, showToast]);
 
@@ -562,6 +577,17 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const catcherPageItems = filteredCatcher.slice((catcherPageClamped - 1) * CATCHER_PAGE_SIZE, catcherPageClamped * CATCHER_PAGE_SIZE);
 
   const visibleMatches = data.matches.filter((m) => !dismissed.has(m.thing_id));
+
+  // Occasion Tags spec §3.3 — suggested-first, then alphabetical, then filtered by search.
+  const dogChecklist = [...data.venues]
+    .filter((v) => !dogSearch || v.display_name.toLowerCase().includes(dogSearch.toLowerCase()))
+    .sort((a, b) => {
+      if (a.dog_friendly !== b.dog_friendly) return a.dog_friendly ? -1 : 1;
+      if (a.dogFriendlySuggested !== b.dogFriendlySuggested) return a.dogFriendlySuggested ? -1 : 1;
+      return a.display_name.localeCompare(b.display_name);
+    });
+  const dogFriendlyCount = data.venues.filter((v) => v.dog_friendly).length;
+  const dogSuggestedUnconfirmedCount = data.venues.filter((v) => v.dogFriendlySuggested && !v.dog_friendly).length;
   const visibleStrongMatches = (strongMatches ?? []).filter((p) => !placeIdDismissed.has(p.venue_id));
   const visibleWeakMatches = weakMatches.filter((w) => !placeIdDismissed.has(w.venue_id));
   const detailVenue = data.venues.find((v) => v.id === detailId) ?? null;
@@ -838,6 +864,36 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
               </div>
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="vsection">
+        <h2 className="vsection-title">Dog Friendly checklist ({dogFriendlyCount} marked)</h2>
+        <p className="vsub">
+          Mark the venues you know allow dogs — beaches, patios, trails, open-air tasting rooms. A thing
+          at a dog-friendly venue shows under the Dog Friendly door automatically, live — no separate step.
+          {dogSuggestedUnconfirmedCount > 0 ? (
+            <> <b>{dogSuggestedUnconfirmedCount} suggested</b> below (name or category match) — check the ones that are actually right, the rest need no action.</>
+          ) : null}
+        </p>
+        <div className="search" style={{ marginBottom: 10 }}>
+          <span aria-hidden="true">⌕</span>
+          <input type="search" value={dogSearch} onChange={(e) => setDogSearch(e.target.value)} placeholder="Search venues…" aria-label="Search venues for Dog Friendly checklist" />
+        </div>
+        <div className="doglist">
+          {dogChecklist.map((v) => (
+            <label key={v.id} className={`dogrow${v.dog_friendly ? " on" : ""}`}>
+              <input
+                type="checkbox" checked={v.dog_friendly} disabled={dogSavingId === v.id}
+                onChange={() => toggleDogFriendly(v)}
+                aria-label={`${v.dog_friendly ? "Unmark" : "Mark"} ${v.display_name} as dog friendly`}
+              />
+              <span className="dname">{v.display_name}</span>
+              <span className="dmeta">{v.attachedCount} thing{v.attachedCount === 1 ? "" : "s"}</span>
+              {!v.dog_friendly && v.dogFriendlySuggested ? <span className="dsuggest">suggested</span> : null}
+            </label>
+          ))}
+          {dogChecklist.length === 0 ? <p className="empty-note">No venues match &quot;{dogSearch}&quot;.</p> : null}
         </div>
       </div>
 

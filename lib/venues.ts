@@ -45,3 +45,15 @@ export async function getVenueNames(): Promise<Record<string, string>> {
   for (const row of data) names[row.id as string] = row.display_name as string;
   return names;
 }
+
+/** Occasion Tags spec §3 — the ids of founder-marked dog-friendly venues.
+ *  lib/things.ts joins this in at read time (same pattern as `indoor` ->
+ *  `rainy_day`, Doc 22 §2.2): a thing at one of these venues is stamped
+ *  `dog_friendly` live, no stored tag, always in sync with the venue flag. */
+export async function getDogFriendlyVenueIds(): Promise<Set<string>> {
+  const sb = getSupabase();
+  if (!sb) return new Set();
+  const { data, error } = await sb.from("venues").select("id").eq("dog_friendly", true);
+  if (error || !data) return new Set();
+  return new Set(data.map((row) => row.id as string));
+}

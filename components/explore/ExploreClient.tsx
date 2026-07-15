@@ -10,7 +10,6 @@ import {
   cascade,
   filterByActivity,
   filterByLens,
-  nearMeSort,
   pickAutoHero,
   pickEvergreenFallback,
   sbDay,
@@ -18,7 +17,7 @@ import {
   type Horizon,
 } from "@/lib/explore";
 import { OCCASION_BY_KEY, type OccasionKey } from "@/lib/occasions";
-import { ZONE_LABEL, type Zone } from "@/lib/zones";
+import { DOOR_ZONE_BY_KEY, sortByDoorZone, type DoorZoneKey } from "@/lib/doorZones";
 import { ACTIVITY_BY_KEY, type ActivityKey } from "@/lib/activities";
 import type { Dimension } from "@/lib/tiles";
 import { trackEvent } from "@/lib/analytics";
@@ -54,7 +53,7 @@ export function ExploreClient({
 }) {
   const { openTour } = useTour();
   const [vibe, setVibe] = useState<OccasionKey | null>(null);
-  const [place, setPlace] = useState<Zone | null>(null);
+  const [place, setPlace] = useState<DoorZoneKey | null>(null);
   const [activity, setActivity] = useState<ActivityKey | null>(null);
   const [horizon, setHorizon] = useState<Horizon>("today");
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
@@ -67,7 +66,7 @@ export function ExploreClient({
   // change: doors/sheet taps, chip removal, and the header-search tag bridge.
   const applyFilter = (dimension: Dimension, key: string | null) => {
     if (dimension === "vibe") setVibe(key as OccasionKey | null);
-    else if (dimension === "place") setPlace(key as Zone | null);
+    else if (dimension === "place") setPlace(key as DoorZoneKey | null);
     else setActivity(key as ActivityKey | null);
     setFilterOrder((prev) => {
       const rest = prev.filter((d) => d !== dimension);
@@ -86,7 +85,7 @@ export function ExploreClient({
     const placeParam = searchParams.get("place");
     if (!vibeParam && !placeParam) return;
     if (vibeParam && vibeParam in OCCASION_BY_KEY) applyFilter("vibe", vibeParam);
-    if (placeParam && placeParam in ZONE_LABEL) applyFilter("place", placeParam);
+    if (placeParam && placeParam in DOOR_ZONE_BY_KEY) applyFilter("place", placeParam);
     router.replace("/", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -101,7 +100,7 @@ export function ExploreClient({
   const ordered = useMemo(() => {
     const lensed = filterByLens(inHorizon, vibe);
     const activityFiltered = filterByActivity(lensed, activity);
-    return nearMeSort(cascade(activityFiltered), place);
+    return sortByDoorZone(cascade(activityFiltered), place);
   }, [inHorizon, vibe, activity, place]);
 
   const hasActiveFilters = vibe !== null || place !== null || activity !== null;
@@ -139,7 +138,7 @@ export function ExploreClient({
   // Canonical door order (Place, Vibe, Activity), independent of filterOrder
   // (which tracks recency for the closest-matches recovery, not display order).
   const chips: ActiveChip[] = [
-    ...(place ? [{ dimension: "place" as const, label: ZONE_LABEL[place] }] : []),
+    ...(place ? [{ dimension: "place" as const, label: DOOR_ZONE_BY_KEY[place].label }] : []),
     ...(vibe ? [{ dimension: "vibe" as const, label: OCCASION_BY_KEY[vibe].label }] : []),
     ...(activity ? [{ dimension: "activity" as const, label: ACTIVITY_BY_KEY[activity].label }] : []),
   ];
@@ -165,7 +164,7 @@ export function ExploreClient({
       if (dim === "vibe") v = null;
       else if (dim === "place") p = null;
       else a = null;
-      const candidate = nearMeSort(cascade(filterByActivity(filterByLens(inHorizon, v), a)), p);
+      const candidate = sortByDoorZone(cascade(filterByActivity(filterByLens(inHorizon, v), a)), p);
       if (candidate.length > 0) break;
     }
     setVibe(v);

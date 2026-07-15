@@ -161,8 +161,10 @@
 /* inline editor (Edit mode) */
 .sbd-cockpit .editfields, .sbd-cockpit .editmeta { display: flex; flex-direction: column; gap: 8px; }
 .sbd-cockpit .editlabel { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
-.sbd-cockpit .edit-textarea, .sbd-cockpit .edit-select { font-family: var(--font-body); font-size: .9rem; color: var(--ink); background: var(--plaster); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; width: 100%; resize: vertical; }
+.sbd-cockpit .edit-textarea, .sbd-cockpit .edit-select, .sbd-cockpit .edit-input { font-family: var(--font-body); font-size: .9rem; color: var(--ink); background: var(--plaster); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; width: 100%; resize: vertical; min-height: 40px; }
 .sbd-cockpit .edit-select { max-width: 240px; }
+.sbd-cockpit .chk { display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; color: var(--ink); }
+.sbd-cockpit .chk input { width: 18px; height: 18px; accent-color: var(--pacific); }
 .sbd-cockpit .locknote { font-size: .7rem; color: var(--ink-2); font-style: italic; margin-top: 4px; }
 .sbd-cockpit .tagtoggles { display: flex; flex-wrap: wrap; gap: 6px; }
 .sbd-cockpit .tagtoggle { font-size: .72rem; padding: 4px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--paper); color: var(--ink-2); font-weight: 500; text-transform: capitalize; min-height: 30px; }
@@ -487,6 +489,16 @@
 .sbd-cockpit .vthumb img { width: 100%; height: 100%; object-fit: cover; }
 .sbd-cockpit .vthumb-empty { width: 40px; height: 40px; border-radius: 6px; border: 1px dashed var(--line); flex: none; display: flex; align-items: center; justify-content: center; font-size: .6rem; color: var(--ink-2); }
 
+/* Occasion Tags spec §3.3 — the Dog Friendly checklist */
+.sbd-cockpit .doglist { display: flex; flex-direction: column; gap: 2px; max-height: 480px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius-md); padding: 4px; }
+.sbd-cockpit .dogrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); min-height: 44px; cursor: pointer; }
+.sbd-cockpit .dogrow:hover { background: var(--plaster); }
+.sbd-cockpit .dogrow.on { background: rgba(22,88,106,.06); }
+.sbd-cockpit .dogrow input { width: 18px; height: 18px; accent-color: var(--pacific); flex: none; }
+.sbd-cockpit .dogrow .dname { flex: 1; font-size: .88rem; }
+.sbd-cockpit .dogrow .dmeta { font-size: .72rem; color: var(--ink-2); font-family: var(--font-mono); }
+.sbd-cockpit .dogrow .dsuggest { font-size: .66rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--gold-text); background: rgba(201,155,53,.14); padding: 2px 8px; border-radius: var(--radius-pill); }
+
 .sbd-cockpit .veditor-field { display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; }
 .sbd-cockpit .veditor-field input { font-family: var(--font-body); font-size: .92rem; text-transform: none; letter-spacing: normal; color: var(--ink); background: var(--plaster); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 8px 10px; min-height: 38px; }
 .sbd-cockpit .veditor-row { display: flex; gap: 10px; }
@@ -630,3 +642,8 @@
 
 /* Coverage tab — Doc 19 §6 Phase 5 "published with no zone" watch count */
 .sbd-cockpit .nozone-badge { font-family: var(--font-mono); font-size: .68rem; font-weight: 700; color: var(--terra-text); background: rgba(192,83,46,.14); padding: 1px 8px; border-radius: var(--radius-pill); margin-left: 8px; }
+
+/* ============ RECURRING RHYTHMS (Coverage tab, Data Arch Redesign) ============ */
+.sbd-cockpit .rr-inactive-row { opacity: .5; }
+.sbd-cockpit .rr-dayrow { display: flex; gap: 12px; flex-wrap: wrap; }
+.sbd-cockpit .rr-dayrow > * { flex: 1; min-width: 140px; }

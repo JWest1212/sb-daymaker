@@ -24,6 +24,7 @@ export async function POST(req: Request) {
   const body = (await req.json()) as {
     venue_id?: string; display_name?: string; radius_m?: number; name_patterns?: string[];
     status?: "active" | "archived"; place_id?: string | null; lat?: number | null; lng?: number | null;
+    dog_friendly?: boolean;
   };
   if (!body.venue_id) return NextResponse.json({ error: "venue_id required" }, { status: 400 });
 
@@ -36,6 +37,9 @@ export async function POST(req: Request) {
   if (body.place_id !== undefined) patch.place_id = body.place_id || null;
   if (body.lat !== undefined) patch.lat = body.lat;
   if (body.lng !== undefined) patch.lng = body.lng;
+  // Occasion Tags spec §3 — read at land/render time (things.venue_id -> here),
+  // no thing_tags row to backfill; a flip here is live the moment revalidatePublic() fires.
+  if (body.dog_friendly !== undefined) patch.dog_friendly = body.dog_friendly;
 
   const { error } = await sb.from("venues").update(patch).eq("id", body.venue_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -45,7 +49,7 @@ export async function POST(req: Request) {
   });
   // V-16 — a corrected place_id/lat/lng should propagate promptly too, not just
   // an archive (an archived venue's things fall back to gradient/motif eventually).
-  if (body.status === "archived" || body.place_id !== undefined || body.lat !== undefined || body.lng !== undefined) {
+  if (body.status === "archived" || body.place_id !== undefined || body.lat !== undefined || body.lng !== undefined || body.dog_friendly !== undefined) {
     revalidatePublic();
   }
   return NextResponse.json({ ok: true });

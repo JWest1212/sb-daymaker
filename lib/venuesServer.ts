@@ -36,6 +36,16 @@ export interface VenueRow {
   attachedCount: number;
   approvedPhotos: ApprovedPhoto[];
   candidatePhotos: CandidatePhoto[];
+  /** Data Arch Redesign — Occasion Tags spec §3. Founder-marked; a thing at a
+   *  dog_friendly venue is stamped `dog_friendly` live (lib/things.ts), the
+   *  same read-time-derivation pattern as `indoor` -> `rainy_day` (Doc 22 §2.2). */
+  dog_friendly: boolean;
+  /** Heuristic pre-fill only (§3.3) — never written to the DB on its own. A venue
+   *  whose attached things are majority outdoor_activity/scenic_chill, or whose
+   *  name matches an obvious dog-welcoming keyword (beach, park, patio, trail...).
+   *  The cockpit checklist uses this to pre-check a starter set for the founder
+   *  to confirm/correct, not to silently mark venues dog-friendly on its own. */
+  dogFriendlySuggested: boolean;
 }
 
 export interface MatchProposal {
@@ -97,20 +107,25 @@ const MAX_MATCH_PROPOSALS = 200; // a display cap — the scoring pass itself no
 // this returns rather than hard-slicing and hiding the rest.
 const MAX_UNATTACHED_SCAN = 1000;
 
+// Occasion Tags spec §3.3 — the "obvious starter set" name heuristic: known
+// dog-welcoming venue types. Paired with the majority-outdoor-category signal
+// above; either one flags dogFriendlySuggested. Pure UI hint, never auto-saved.
+const DOG_FRIENDLY_KEYWORDS = /beach|park|trail|patio|garden|harbor|plaza|promenade|pier|preserve|greenway|creek|courtyard|outdoor|winery|vineyard|tasting room/i;
+
 export async function loadVenuesData(): Promise<VenuesData> {
   const sb = getAdminSupabase();
   if (!sb) return { venues: [], matches: [], archivedVenues: [], noMatchCatcher: [] };
 
   const [venuesRes, photosRes, attachedRes, unmatchedRes, archivedRes] = await Promise.all([
     sb.from("venues")
-      .select("id, key, display_name, place_id, lat, lng, radius_m, name_patterns")
+      .select("id, key, display_name, place_id, lat, lng, radius_m, name_patterns, dog_friendly")
       .eq("status", "active")
       .order("display_name", { ascending: true }),
     sb.from("venue_photos")
       .select("id, venue_id, source, serving_url, attribution, approved, sort_order")
       .order("sort_order", { ascending: true }),
     sb.from("things")
-      .select("venue_id")
+      .select("venue_id, happening_category")
       .not("venue_id", "is", null)
       .in("status", ["published", "needs_review"]),
     sb.from("things")
@@ -126,9 +141,13 @@ export async function loadVenuesData(): Promise<VenuesData> {
   ]);
 
   const attachedCounts = new Map<string, number>();
+  const attachedCategories = new Map<string, string[]>();
   for (const t of attachedRes.data ?? []) {
     const id = t.venue_id as string;
     attachedCounts.set(id, (attachedCounts.get(id) ?? 0) + 1);
+    const cats = attachedCategories.get(id) ?? [];
+    cats.push(t.happening_category as string);
+    attachedCategories.set(id, cats);
   }
 
   const photosByVenue = new Map<string, { approved: ApprovedPhoto[]; candidates: CandidatePhoto[] }>();
@@ -153,13 +172,20 @@ export async function loadVenuesData(): Promise<VenuesData> {
   const venueRows = venuesRes.data ?? [];
   const venues: VenueRow[] = venueRows.map((v) => {
     const bucket = photosByVenue.get(v.id as string);
+    const id = v.id as string;
+    const cats = attachedCategories.get(id) ?? [];
+    const outdoorish = cats.filter((c) => c === "outdoor_activity" || c === "scenic_chill").length;
+    const categorySuggests = cats.length > 0 && outdoorish / cats.length >= 0.5;
+    const nameSuggests = DOG_FRIENDLY_KEYWORDS.test(v.display_name as string) || DOG_FRIENDLY_KEYWORDS.test(v.key as string);
     return {
-      id: v.id as string, key: v.key as string, display_name: v.display_name as string,
+      id, key: v.key as string, display_name: v.display_name as string,
       place_id: (v.place_id as string) ?? null, lat: (v.lat as number) ?? null, lng: (v.lng as number) ?? null,
       radius_m: (v.radius_m as number) ?? 150, name_patterns: (v.name_patterns as string[]) ?? [],
-      attachedCount: attachedCounts.get(v.id as string) ?? 0,
+      attachedCount: attachedCounts.get(id) ?? 0,
       approvedPhotos: bucket?.approved ?? [],
       candidatePhotos: bucket?.candidates ?? [],
+      dog_friendly: (v.dog_friendly as boolean) ?? false,
+      dogFriendlySuggested: categorySuggests || nameSuggests,
     };
   });
 

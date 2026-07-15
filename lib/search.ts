@@ -5,7 +5,7 @@
 
 import type { Thing } from "./things";
 import { OCCASIONS, type OccasionKey } from "./occasions";
-import { ZONES, type Zone } from "./zones";
+import { DOOR_ZONES, type DoorZoneKey } from "./doorZones";
 
 export type SearchHitKind = "event" | "venue" | "tag";
 
@@ -17,7 +17,7 @@ export interface SearchHit {
   href?: string;
   /** Tags only — which dimension + key to set (Home Rework spec §9.2 "Tags" group).
    *  Activity is added once Phase 4 gives ExploreClient an `activity` filter to set. */
-  filter?: { dimension: "vibe"; key: OccasionKey } | { dimension: "place"; key: Zone };
+  filter?: { dimension: "vibe"; key: OccasionKey } | { dimension: "place"; key: DoorZoneKey };
 }
 
 export interface SearchResults {
@@ -99,7 +99,7 @@ function searchVenues(
 function searchTags(q: string): { hits: SearchHit[]; overflow: number } {
   const ranked = [
     ...OCCASIONS.map((o) => ({ id: o.key, label: o.label, rank: matchRank(o.label, q), filter: { dimension: "vibe" as const, key: o.key } })),
-    ...ZONES.map((z) => ({ id: z.zone, label: z.label, rank: matchRank(z.label, q), filter: { dimension: "place" as const, key: z.zone } })),
+    ...DOOR_ZONES.map((z) => ({ id: z.key, label: z.label, rank: matchRank(z.label, q), filter: { dimension: "place" as const, key: z.key } })),
   ]
     .filter((r): r is typeof r & { rank: 0 | 1 } => r.rank !== null)
     .sort((a, b) => (a.rank !== b.rank ? a.rank - b.rank : a.label.localeCompare(b.label)))
