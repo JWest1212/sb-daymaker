@@ -54,14 +54,24 @@ describe('dedupe', () => {
     expect(drops[0].detail).toContain('already in DB');
   });
 
-  it('on a same-day near-match, keeps the venue-owned (SOhO) over Ticketmaster', () => {
+  it('on a same-day near-match, keeps the higher-authority source (SOhO over Ticketmaster)', () => {
     const tm = cand({ id: 'tm', title: 'Molly Miller Trio', source_url: 'https://www.ticketmaster.com/event/123' });
     const soho = cand({ id: 'soho', title: 'Molly Miller Trio (Live)', source_url: 'https://tickets.sohosb.com/e/molly-miller-trio' });
-    const { keep, drops } = dedupe([tm, soho]);
+    const authority = new Map([['ticketmaster', 0.90], ['soho', 1.00]]); // matches supabase/migrations/20260715_sources.sql
+    const { keep, drops } = dedupe([tm, soho], [], authority);
     expect(keep).toHaveLength(1);
     expect(keep[0].source_url).toContain('sohosb.com');
     expect(drops).toHaveLength(1);
     expect(drops[0].source).toBe('ticketmaster');
+  });
+
+  it('resolves a Phase-2-added source correctly regardless of batch order (regression: these used to fall back to a raw hostname string that could never match a sources.key, so they always lost ties)', () => {
+    const authority = new Map([['alcazar', 0.94], ['eventbrite', 0.40]]);
+    const alcazar = cand({ id: 'alc', title: 'Comedy Night', source_url: 'https://thealcazar.org/events/comedy-night' });
+    const eb = cand({ id: 'eb', title: 'Comedy Night (SB)', source_url: 'https://www.eventbrite.com/e/comedy-night-12345' });
+    const { keep } = dedupe([eb, alcazar], [], authority); // fed in reverse-authority order on purpose
+    expect(keep).toHaveLength(1);
+    expect(keep[0].id).toBe('alc');
   });
 
   it('does NOT dedupe similar titles on different days', () => {

@@ -29,61 +29,15 @@ export interface ExistingRow {
 
 const NEAR_THRESHOLD = 0.55;
 
-// Canonical-source preference (§4 / Doc 16): lower rank wins.
-// Existing pairwise order is preserved (soho beats TM, etc.); new venue-direct
-// adapters slot in between soho (0) and ticketmaster (10). Aggregators are losers.
-// NOTE: doc 16 proposes SOURCE_PRIORITY as a string-key array (as const) but the
-// code uses URL-pattern matching — keeping the code structure (flag: §0 mismatch).
-const SOURCE_RANK: Array<[RegExp, number]> = [
-  // venue-direct ticketing (authoritative for their own events)
-  [/sohosb\.com/i,                                    0],
-  [/sbbowl\.com/i,                                    1],
-  [/lobero\.org/i,                                    2],
-  [/granadasb\.com|granada-sb\.com|thegranada\.com/i, 3],
-  [/arlingtontheatresb\.com|thearlington\.com/i,       4],
-  [/musicacademy\.org/i,                              5],
-  [/alcazartheater\.com|thealcazar\.org/i,            6],
-  [/centerstagetheater\.org/i,                        7],
-  [/carpinteriaartscenter\.org/i,                     8],
-  [/etcsb\.org/i,                                     8], // New Vic (ETC)
-  // Wave 3 venue/operator-direct
-  [/figmtnbrew\.com/i,                                9],
-  [/darganssb\.com/i,                                 9],
-  [/condorexpress\.com/i,                             9],
-  [/iceinparadise\.org/i,                             9],
-  [/sblandtrust\.org/i,                               9],
-  // structured ticketing APIs
-  [/ticketmaster\.com|livenation\.com|axs\.com/i,     10],
-  // institution-direct
-  [/moxi\.org/i,                                      15],
-  [/sbnature\.org|nhmlac\.org/i,                      16], // natural history
-  [/sbbotanicgarden\.org/i,                           17],
-  [/sbma\.net/i,                                      18],
-  [/events\.ucsb\.edu/i,                              20],
-  [/sbplibrary\.org|goletavalleylibrary/i,            21],
-  // curated local listings / civic
-  [/independent\.com/i,                               30],
-  [/santabarbaraca\.com|santabarbaraca\.gov/i,        31],
-  [/cityofgoleta\.org/i,                              32],
-  [/carpinteriaca\.gov|carpinteria\.ca\.us/i,          33],
-  [/downtownsb\.org/i,                                34],
-  [/santabarbaraca\.com\/visit/i,                     35], // visit SB
-  [/coastalview\.com/i,                               36],
-  [/sbac\.ca\.gov/i,                                  37], // sbcountyArts
-  // broad aggregators (dedupe losers; backstop fill)
-  [/eventbrite\.com/i,                                50],
-  [/allevents\.in/i,                                  51],
-  [/seatgeek\.com/i,                                  52],
-];
-
-function sourceRank(url: string | undefined): number {
-  for (const [re, rank] of SOURCE_RANK) if (url && re.test(url)) return rank;
-  return 99;
-}
-
 /** Short source key for the drop log, derived from the candidate's URL. Exported
  *  for reuse by ingest/adapters/_shared/resolveNeighborhood.ts (Doc 19 §4.1 step 3
- *  — source-implied venue), so the two never drift apart. */
+ *  — source-implied venue), so the two never drift apart.
+ *  Data Arch Redesign 23 Phase 2: this MAP used to cover only 13 of the 33
+ *  sources (canonical-source preference fell back to a raw hostname string for
+ *  the rest, which could never match a `sources.key`). Extended here to cover
+ *  every adapter so authorityOf() below resolves correctly for all of them.
+ *  The first 13 entries are UNCHANGED from before this migration — resolveNeighborhood.ts's
+ *  SOURCE_KEY_NEIGHBORHOOD dict depends on their exact output strings. */
 export function sourceKeyOf(url: string | undefined): string {
   if (!url) return 'unknown';
   const MAP: Array<[RegExp, string]> = [
@@ -100,9 +54,41 @@ export function sourceKeyOf(url: string | undefined): string {
     [/downtownsb\.org/i, 'downtownSB'],
     [/eventbrite\.com/i, 'eventbrite'],
     [/sbfarmersmarket\.org/i, 'farmersMarkets'],
+    // added Phase 2 — previously unmapped, fell back to a raw hostname string
+    [/musicacademy\.org/i, 'musicacademy'],
+    [/alcazartheater\.com|thealcazar\.org/i, 'alcazar'],
+    [/centerstagetheater\.org/i, 'centerstage'],
+    [/carpinteriaartscenter\.org/i, 'carpinteriaArts'],
+    [/etcsb\.org/i, 'newVic'],
+    [/figmtnbrew\.com/i, 'nightlifeRhythms'],
+    [/darganssb\.com/i, 'nightlifeRhythms'],
+    [/condorexpress\.com/i, 'outdoorsOperators'],
+    [/iceinparadise\.org/i, 'outdoorsOperators'],
+    [/sblandtrust\.org/i, 'natureProgramsFree'],
+    [/moxi\.org/i, 'moxi'],
+    [/sbnature\.org|nhmlac\.org/i, 'naturalHistory'],
+    [/sbbotanicgarden\.org/i, 'botanicGarden'],
+    [/sbma\.net/i, 'sbma'],
+    [/cityofgoleta\.org/i, 'goletaCivic'],
+    [/carpinteriaca\.gov|carpinteria\.ca\.us/i, 'carpinteriaCivic'],
+    [/coastalview\.com/i, 'coastalView'],
+    [/sbac\.ca\.gov/i, 'sbcountyArts'],
+    [/allevents\.in/i, 'allevents'],
+    [/seatgeek\.com/i, 'seatgeek'],
   ];
   for (const [re, key] of MAP) if (re.test(url)) return key;
   try { return new URL(url).host.replace(/^www\./, ''); } catch { return 'unknown'; }
+}
+
+/** Data Arch Redesign 23 Phase 2: canonical-source preference now reads
+ *  `sources.authority` (higher wins) instead of the retired hardcoded
+ *  SOURCE_RANK regex table (lower-wins rank numbers). `byKey` is loaded once
+ *  per run from the `sources` table by the caller (ingest/run.ts) and passed
+ *  in — dedupe.ts stays DB-free. A source missing from `byKey` (shouldn't
+ *  happen once `sources` is fully seeded) sorts last, same as the old
+ *  table's rank-99 fallback for an unrecognized URL. */
+export function sourceAuthority(url: string | undefined, byKey: Map<string, number>): number {
+  return byKey.get(sourceKeyOf(url)) ?? 0;
 }
 
 export function trigrams(s: string): Set<string> {
@@ -129,14 +115,18 @@ function sameDay(a: string | null, b: string | null): boolean {
 export function dedupe(
   cands: Candidate[],
   existing: ExistingRow[] = [],
+  authorityByKey: Map<string, number> = new Map(),
 ): { keep: Candidate[]; drops: DropRecord[] } {
   const drops: DropRecord[] = [];
   const keep: Candidate[] = [];
   const existingIds = new Set(existing.map((e) => e.id));
 
   // Process canonical sources first so a near-dupe from a weaker source is the
-  // one that gets dropped.
-  const ordered = [...cands].sort((a, b) => sourceRank(a.source_url) - sourceRank(b.source_url));
+  // one that gets dropped. Higher authority = more canonical = processed first
+  // (replaces the retired SOURCE_RANK table, where a lower rank number won).
+  const ordered = [...cands].sort(
+    (a, b) => sourceAuthority(b.source_url, authorityByKey) - sourceAuthority(a.source_url, authorityByKey),
+  );
   const keptIds = new Set<string>();
 
   for (const c of ordered) {

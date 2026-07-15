@@ -300,6 +300,49 @@ export function buildRegistrySnippet(
   return lines.join('\n');
 }
 
+/** Data Arch Redesign 23 Phase 4 — a source's health judged against ITS OWN
+ *  baseline (`sources.expected_yield`), never a global threshold. This is the
+ *  fix for the exact gap `rollupSources()` above has: a source whose normal
+ *  yield is 0 never false-alarms (no baseline yet = nothing to compare
+ *  against), while a source that normally lands 20 and quietly drops to 1
+ *  reads as a real problem instead of the old "warn"/"ok" global heuristic. */
+export interface SourceHealthRow {
+  key: string;
+  label: string;
+  status: string; // 'active' | 'paused' | 'retired' | 'candidate'
+  expected_yield: number;
+  last_yield: number | null;
+  last_ok_at: string | null;
+  consecutive_empty: number;
+}
+
+export type SourceHealth = "ok" | "below_baseline" | "paused";
+
+/** "Materially below" baseline, per Doc 16 §3.9/§3.10 — a fraction, not a hard
+ *  zero, so a source that normally lands 20 and drops to 2 still trips this
+ *  even though 2 isn't literally zero. Sources with no established baseline
+ *  yet (`expected_yield` 0) can never trip it — nothing to compare against. */
+const BELOW_BASELINE_FRACTION = 0.34;
+
+export function sourceHealth(s: Pick<SourceHealthRow, "status" | "expected_yield" | "last_yield">): SourceHealth {
+  if (s.status !== "active") return "paused"; // covers 'paused' | 'retired' | 'candidate' alike
+  if (s.expected_yield > 0 && (s.last_yield ?? 0) < s.expected_yield * BELOW_BASELINE_FRACTION) return "below_baseline";
+  return "ok";
+}
+
+/** Sorts problems first: below-baseline, then paused, then healthy; each
+ *  group by worst-first (fewest days of runway to auto-pause / lowest yield). */
+export function rankSourceHealth(rows: SourceHealthRow[]): (SourceHealthRow & { health: SourceHealth })[] {
+  const withHealth = rows.map((r) => ({ ...r, health: sourceHealth(r) }));
+  const order: Record<SourceHealth, number> = { below_baseline: 0, paused: 1, ok: 2 };
+  return withHealth.sort((a, b) => {
+    const byGroup = order[a.health] - order[b.health];
+    if (byGroup) return byGroup;
+    if (a.health === "below_baseline") return b.consecutive_empty - a.consecutive_empty;
+    return a.label.localeCompare(b.label);
+  });
+}
+
 /** Latest run per source -> a green/amber/red health row. */
 export function rollupSources(
   runs: { source: string; landed: number; fetched: number; ok: boolean; started_at: string }[],

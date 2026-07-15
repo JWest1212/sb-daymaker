@@ -7,6 +7,10 @@ import {
   type CoverageResult, type CoverageDim, type CoverageWindow,
   type CoverageCellItem, type CellShade,
 } from "@/lib/coverage";
+import type { SourceHealthItem } from "@/lib/sourcesServer";
+
+const HEALTH_BADGE: Record<string, string> = { below_baseline: "fail", paused: "q", ok: "done" };
+const HEALTH_LABEL: Record<string, string> = { below_baseline: "below baseline", paused: "paused", ok: "ok" };
 
 interface Directive {
   id: string;
@@ -20,7 +24,11 @@ interface Directive {
 
 const WIN_LABEL: Record<CoverageWindow, string> = { 7: "next 7d", 14: "next 14d", 30: "next 30d", 45: "next 45d" };
 
-export function CoverageView({ initial, noZoneCount }: { initial: CoverageResult; noZoneCount: number }) {
+export function CoverageView({
+  initial, noZoneCount, sourceHealth,
+}: {
+  initial: CoverageResult; noZoneCount: number; sourceHealth: SourceHealthItem[];
+}) {
   const [dim, setDim] = useState<CoverageDim>(initial.dim);
   const [cache, setCache] = useState<Record<CoverageDim, CoverageResult | null>>({
     vibe: initial.dim === "vibe" ? initial : null,
@@ -109,6 +117,12 @@ export function CoverageView({ initial, noZoneCount }: { initial: CoverageResult
         </Link>
         <Link href="/admin/coverage/recurring-rhythms" className="btn btn-edit btn-sm">
           Recurring Rhythms &rarr;
+        </Link>
+        <Link href="/admin/coverage/sources" className="btn btn-edit btn-sm">
+          Sources &rarr;
+          {sourceHealth.filter((s) => s.health !== "ok").length > 0 ? (
+            <span className="nozone-badge">{sourceHealth.filter((s) => s.health !== "ok").length} flagged</span>
+          ) : null}
         </Link>
         <div className="filterbar" role="group" aria-label="Coverage dimension">
           <button className="filt" aria-pressed={dim === "vibe"} onClick={() => switchDim("vibe")}>By vibe</button>
@@ -208,6 +222,25 @@ export function CoverageView({ initial, noZoneCount }: { initial: CoverageResult
                   <span className="dt">{d.scope_key.replace(/_/g, " ")} · next {d.window_days}d</span>
                   <span className={`dirstat ${d.status === "queued" ? "q" : d.status === "running" ? "run" : d.status === "done" ? "done" : "fail"}`}>{d.status}</span>
                   {d.run_note ? <span className="ps">{d.run_note}</span> : null}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel" style={{ marginTop: 16 }}>
+            <h3>Source health <span className="n">{sourceHealth.filter((s) => s.health !== "ok").length} flagged</span></h3>
+            <div className="dirlist">
+              {sourceHealth.length === 0 ? (
+                <div className="dirrow"><span className="ps">No sources yet.</span></div>
+              ) : sourceHealth.map((s) => (
+                <div className="dirrow" key={s.key}>
+                  <span className="dt">{s.label}</span>
+                  <span className={`dirstat ${HEALTH_BADGE[s.health] ?? "q"}`}>{HEALTH_LABEL[s.health] ?? s.health}</span>
+                  <span className="ps">
+                    {s.last_yield ?? "—"} last · baseline {s.expected_yield || "—"}
+                    {s.consecutive_empty > 0 ? ` · ${s.consecutive_empty} empty in a row` : ""}
+                    {s.last_ok_at ? ` · last ok ${s.last_ok_at.slice(0, 10)}` : " · never run"}
+                  </span>
                 </div>
               ))}
             </div>

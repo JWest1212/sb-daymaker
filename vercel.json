@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/reaper", "schedule": "0 8 * * 1" },
-    { "path": "/api/cron/send-edition", "schedule": "0 14 * * 0,4" }
+    { "path": "/api/cron/send-edition", "schedule": "0 14 * * 0,4" },
+    { "path": "/api/cron/heartbeat", "schedule": "0 12 * * *" }
   ]
 }

@@ -1070,6 +1070,101 @@ async function prefetchDeskCandidates(sb: SupabaseClient): Promise<{ searched: n
   return { searched: pending.length, widened };
 }
 
+/** Data Arch Redesign 23 Phase 2 — the `sources` table now drives dedupe
+ *  authority (replaces the retired SOURCE_RANK regex table in dedupe.ts) and
+ *  which adapters actually run (status='active'; a 'paused'/'retired' source
+ *  is skipped for the night, no code change needed). Falls back to an empty
+ *  config (every adapter runs; all tie at authority 0, same as an unranked
+ *  source under the old table) if the table can't be read — keeps DRY_RUN
+ *  usable even without DB reachability, same spirit as the rest of this file's
+ *  isolated-failure pattern. */
+async function loadSourceConfig(
+  sb: SupabaseClient,
+): Promise<{ authorityByKey: Map<string, number>; inactiveKeys: Set<string> }> {
+  const { data, error } = await sb.from('sources').select('key, authority, status');
+  if (error) {
+    console.log(`  [sources] read failed, falling back to no per-source config: ${error.message}`);
+    return { authorityByKey: new Map(), inactiveKeys: new Set() };
+  }
+  const authorityByKey = new Map<string, number>();
+  const inactiveKeys = new Set<string>();
+  for (const r of data ?? []) {
+    authorityByKey.set(r.key as string, Number(r.authority));
+    if (r.status !== 'active') inactiveKeys.add(r.key as string);
+  }
+  return { authorityByKey, inactiveKeys };
+}
+
+function median(sorted: number[]): number {
+  if (!sorted.length) return 0;
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
+}
+
+// Data Arch Redesign 23 Phase 4 §5.4 — default N consecutive empties before a
+// source auto-pauses; tunable via env without a code change.
+const AUTO_PAUSE_THRESHOLD = Number(process.env.SOURCE_AUTO_PAUSE_THRESHOLD ?? 5);
+
+export interface AutoPausedSource { key: string; label: string; consecutiveEmpty: number }
+
+/** Data Arch Redesign 23 Phase 3 (baselines) + Phase 4 (auto-pause) — after
+ *  every run, refresh each source's health on its `sources` row:
+ *   - last_yield / last_ok_at always move (this run succeeded — no error —
+ *     or it wouldn't still be in `runs` by this point; see the catch block
+ *     in the fetch loop above that deletes an errored adapter's run).
+ *   - expected_yield is the median `landed` count over that source's last
+ *     BASELINE_WINDOW non-zero runs (from source_runs) — a zero-yield night
+ *     is deliberately excluded from its own baseline, so one bad night can't
+ *     drag down the very number it's later measured against.
+ *   - consecutive_empty resets to 0 on any landed>0 run, else increments.
+ *   - auto-pause: once consecutive_empty reaches AUTO_PAUSE_THRESHOLD on a
+ *     still-active source, flip status to 'paused' so the run budget stops
+ *     being spent on it — surfaced back to the caller for tonight's digest.
+ *  Isolated per-source (one failed update can't take down the others) and the
+ *  whole step is wrapped by the caller so it can't sink the run. */
+async function updateSourceBaselines(sb: SupabaseClient, runs: Map<string, RunRow>): Promise<AutoPausedSource[]> {
+  const BASELINE_WINDOW = 14;
+  const autoPaused: AutoPausedSource[] = [];
+  for (const run of runs.values()) {
+    const { data: history, error } = await sb
+      .from('source_runs')
+      .select('landed')
+      .eq('source', run.source)
+      .eq('ok', true)
+      .gt('landed', 0)
+      .order('started_at', { ascending: false })
+      .limit(BASELINE_WINDOW);
+    if (error) { console.log(`  [sources] baseline read failed for ${run.source}: ${error.message}`); continue; }
+
+    const expectedYield = median((history ?? []).map((r) => r.landed as number).sort((a, b) => a - b));
+    const { data: cur, error: curErr } = await sb
+      .from('sources').select('label, status, consecutive_empty').eq('key', run.source).maybeSingle();
+    if (curErr) { console.log(`  [sources] baseline read failed for ${run.source}: ${curErr.message}`); continue; }
+    const consecutiveEmpty = run.landed > 0 ? 0 : ((cur?.consecutive_empty as number) ?? 0) + 1;
+    const shouldAutoPause = consecutiveEmpty >= AUTO_PAUSE_THRESHOLD && cur?.status === 'active';
+    if (shouldAutoPause) {
+      autoPaused.push({ key: run.source, label: (cur?.label as string) ?? run.source, consecutiveEmpty });
+    }
+
+    const { error: upErr } = await sb
+      .from('sources')
+      .update({
+        last_yield: run.landed,
+        last_ok_at: new Date().toISOString(),
+        ...(shouldAutoPause ? { status: 'paused' } : {}),
+        expected_yield: expectedYield,
+        consecutive_empty: consecutiveEmpty,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('key', run.source);
+    if (upErr) { console.log(`  [sources] baseline write failed for ${run.source}: ${upErr.message}`); continue; }
+    if (shouldAutoPause) {
+      console.log(`  [sources] AUTO-PAUSED ${run.source} — ${consecutiveEmpty} consecutive empty runs`);
+    }
+  }
+  return autoPaused;
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
@@ -1082,6 +1177,11 @@ async function main() {
 
   const win = window();
   const sb = DRY ? null : getDb();
+
+  // Data Arch Redesign 23 Phase 2 — sources-as-data. See loadSourceConfig() comment.
+  const { authorityByKey, inactiveKeys } = sb
+    ? await loadSourceConfig(sb)
+    : { authorityByKey: new Map<string, number>(), inactiveKeys: new Set<string>() };
 
   type Tagged = { cand: Candidate; sourceKey: string };
   const gated: Tagged[] = [];
@@ -1097,6 +1197,10 @@ async function main() {
 
   // ---- FETCH + GATE, per source, isolated ----
   for (const adapter of registry) {
+    if (inactiveKeys.has(adapter.key)) {
+      console.log(`  ${adapter.label.padEnd(20)} SKIPPED (source paused/retired in the sources table)`);
+      continue;
+    }
     const run: RunRow = sb ? await startRun(sb, adapter.key) : { id: 0, source: adapter.key, fetched: 0, qualified: 0, dropped: 0, landed: 0 };
     runs.set(adapter.key, run);
     try {
@@ -1143,7 +1247,7 @@ async function main() {
       .lte('starts_at', win.toISO);
     existing = (data ?? []) as ExistingRow[];
   }
-  const { keep: deduped, drops: dedupeDrops } = dedupe(gated.map((g) => g.cand), existing);
+  const { keep: deduped, drops: dedupeDrops } = dedupe(gated.map((g) => g.cand), existing, authorityByKey);
 
   // ---- ENRICH (one batched Claude call: voice + tags; never touches starts_at) ----
   const keep = DRY ? deduped : await enrich(deduped, { sb: sb! });
@@ -1172,6 +1276,7 @@ async function main() {
 
   // ---- LAND ----
   let landed = 0;
+  let autoPausedSources: AutoPausedSource[] = [];
   if (sb) {
     if (dedupeDrops.length) {
       // record each dedupe drop under its source's run (run_id may be null if its run errored)
@@ -1186,6 +1291,14 @@ async function main() {
     await landTags(sb, toLand);
     await landRecurring(sb, toLand);
     for (const run of runs.values()) await finishRun(sb, run, true);
+
+    // Data Arch Redesign 23 Phase 3 — isolated so a baseline hiccup can't sink
+    // the run (same pattern as restock/closures/venue-match below).
+    try {
+      autoPausedSources = await updateSourceBaselines(sb, runs);
+    } catch (err) {
+      console.log(`  [sources] baseline update skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   // ---- SUMMARY ----
@@ -1283,6 +1396,7 @@ async function main() {
       runs: [...runs.values()],
       closed,
       venueFallbacks,
+      autoPausedSources,
     });
   }
 }

@@ -6,6 +6,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { sendEmail } from '../lib/email';
+import { sourceHealth, type SourceHealthRow } from '../lib/review';
 import type { ResolveStats } from './images';
 import type { RunRow } from './land';
 
@@ -33,6 +34,9 @@ export interface DigestSummary {
    *  confirmed-dead Google venue photos auto-replaced this run, so he can
    *  re-review the stand-in and go find a better photo himself if he wants one. */
   venueFallbacks?: VenueFallbackEvent[];
+  /** Data Arch Redesign 23 Phase 4 §5.4 — sources auto-paused THIS run for
+   *  hitting the consecutive-empty threshold. */
+  autoPausedSources?: { key: string; label: string; consecutiveEmpty: number }[];
 }
 
 export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<void> {
@@ -42,7 +46,7 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
   const since = new Date(Date.now() - 2 * 3600_000).toISOString(); // this run's window
   const recentCutoff = new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10); // 14-day noise cap
 
-  const [{ count: queued }, dropsRes, runsRes, failedEditionsRes, heldEditionsRes] = await Promise.all([
+  const [{ count: queued }, dropsRes, runsRes, failedEditionsRes, heldEditionsRes, sourcesRes] = await Promise.all([
     sb.from('things').select('*', { count: 'exact', head: true }).eq('status', 'needs_review'),
     sb.from('ingest_drops').select('reason').gte('created_at', since),
     sb.from('source_runs').select('source, landed, fetched, ok, error, started_at').gte('started_at', since),
@@ -56,6 +60,9 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
     // operator explicitly asked for that edition to NOT go out. Surface it every
     // night it's still on hold, since it's easy to forget one is sitting there.
     sb.from('editions').select('edition_date, edition_type, skip_reason').eq('status', 'skipped').order('edition_date'),
+    // Data Arch Redesign 23 Phase 4 §5.2 — per-source-baseline silent-miss check,
+    // distinct from `down` below (which is only about a run that errored).
+    sb.from('sources').select('key, label, status, expected_yield, last_yield, last_ok_at, consecutive_empty').eq('status', 'active'),
   ]);
 
   const drops = dropsRes.data ?? [];
@@ -70,6 +77,9 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
   const rejectedRelevance = img?.rejectedRelevance ?? 0;
   const failedEditions = failedEditionsRes.data ?? [];
   const heldEditions = heldEditionsRes.data ?? [];
+  const belowBaseline = ((sourcesRes.data ?? []) as SourceHealthRow[])
+    .filter((r) => sourceHealth(r) === 'below_baseline');
+  const autoPausedSources = s.autoPausedSources ?? [];
 
   const site = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.sbdaymaker.com';
   const subject = `SB Daymaker — ${queued ?? 0} in review queue (${s.landed} new tonight)`;
@@ -95,6 +105,10 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
       ${overCap ? line('⚠ Over photo cap', `${overCap} cards → placeholder (resets next month)`) : ''}
       ${s.closed ? line('Closed & archived', String(s.closed)) : ''}
       ${down.length ? line('⚠ Sources down', down.map((d) => d.source).join(', ')) : ''}
+      ${belowBaseline.length ? line('🔻 Below own baseline',
+        belowBaseline.map((r) => `${r.label} (${r.last_yield ?? 0}/${r.expected_yield} typical)`).join(', ')) : ''}
+      ${autoPausedSources.length ? line('⏸ Auto-paused tonight',
+        autoPausedSources.map((p) => `${p.label} (${p.consecutiveEmpty} empty runs in a row)`).join(', ')) : ''}
       ${failedEditions.length ? line('🔴 Edition assembly failed',
         failedEditions.map((e) => `${e.edition_date} (${e.edition_type}): ${e.skip_reason ?? 'unknown'}`).join('; ')) : ''}
       ${heldEditions.length ? line('⏸ Edition on hold',
@@ -106,6 +120,7 @@ export async function sendDigest(sb: SupabaseClient, s: DigestSummary): Promise<
     <a href="${site}/admin/review" style="display:inline-block;background:#16586A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the queue →</a>
     ${(failedEditions.length || heldEditions.length) ? `<a href="${site}/admin/edition-draft" style="display:inline-block;margin-left:10px;background:#B0592A;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review the edition →</a>` : ''}
     ${s.venueFallbacks?.length ? `<a href="${site}/admin/venues" style="display:inline-block;margin-left:10px;background:#7E8B6B;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review venue photos →</a>` : ''}
+    ${(belowBaseline.length || autoPausedSources.length) ? `<a href="${site}/admin/coverage" style="display:inline-block;margin-left:10px;background:#B23A2E;color:#FCFAF5;text-decoration:none;font-weight:600;padding:11px 20px;border-radius:999px">Review source health →</a>` : ''}
   </div>`;
 
   const ok = await sendEmail({ to, subject, html });

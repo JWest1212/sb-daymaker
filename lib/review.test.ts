@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { chipFor, whenString, sbWhen, prioritize, rollupSources } from "./review";
+import { chipFor, whenString, sbWhen, prioritize, rollupSources, sourceHealth, rankSourceHealth } from "./review";
 
 describe("chipFor — trust chip from tier + starts_at", () => {
   it("dated Tier-1 -> green", () => expect(chipFor(1, "2026-07-09T20:00:00-07:00")).toBe("green"));
@@ -52,5 +52,32 @@ describe("rollupSources — latest run per source -> health", () => {
     const by = Object.fromEntries(out.map((s) => [s.source, s.status]));
     expect(by).toEqual({ soho: "ok", ticketmaster: "fail", google_places: "warn" });
     expect(out.find((s) => s.source === "soho")!.landed).toBe(4); // newest run kept
+  });
+});
+
+describe("sourceHealth — Phase 4, judged against the source's OWN baseline", () => {
+  it("a source with no baseline yet (expected_yield 0) never false-alarms, even at 0 landed", () => {
+    expect(sourceHealth({ status: "active", expected_yield: 0, last_yield: 0 })).toBe("ok");
+  });
+  it("flags a source that normally lands 20 and quietly drops to 1 (the exact green-0/0 gap this fixes)", () => {
+    expect(sourceHealth({ status: "active", expected_yield: 20, last_yield: 1 })).toBe("below_baseline");
+  });
+  it("does not flag a source landing comfortably close to its own baseline", () => {
+    expect(sourceHealth({ status: "active", expected_yield: 20, last_yield: 18 })).toBe("ok");
+  });
+  it("a paused/retired/candidate source reports paused regardless of yield", () => {
+    expect(sourceHealth({ status: "paused", expected_yield: 20, last_yield: 20 })).toBe("paused");
+  });
+});
+
+describe("rankSourceHealth — problems surface first", () => {
+  it("sorts below_baseline, then paused, then ok; worst (highest consecutive_empty) first within a group", () => {
+    const rows = [
+      { key: "a", label: "A", status: "active", expected_yield: 10, last_yield: 9, last_ok_at: null, consecutive_empty: 0 },
+      { key: "b", label: "B", status: "paused", expected_yield: 10, last_yield: 0, last_ok_at: null, consecutive_empty: 6 },
+      { key: "c", label: "C", status: "active", expected_yield: 10, last_yield: 0, last_ok_at: null, consecutive_empty: 3 },
+      { key: "d", label: "D", status: "active", expected_yield: 10, last_yield: 1, last_ok_at: null, consecutive_empty: 4 },
+    ];
+    expect(rankSourceHealth(rows).map((r) => r.key)).toEqual(["d", "c", "b", "a"]);
   });
 });
