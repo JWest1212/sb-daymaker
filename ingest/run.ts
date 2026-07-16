@@ -32,6 +32,8 @@ import { bestVenueMatch, extractVenueNameFromAddress, slugifyVenueKey, pickFromP
 import { assignVisual } from '../lib/visualAssignment';
 import { haversineMeters } from '../lib/geo';
 import { sbDay } from '../lib/explore';
+import { sourceKeyOf } from './dedupe';
+import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -47,6 +49,13 @@ const REPEAT_BACKFILL = process.env.REPEAT_BACKFILL === '1';
 const VOICE_BACKFILL = process.env.VOICE_BACKFILL === '1';
 // Card Imagery Build Spec Phase 2 §5.2 — one-off venue registry seed.
 const VENUE_SEED = process.env.VENUE_SEED === '1';
+// Data Arch Redesign 24 Phase 1 — compute-only preview of data_confidence
+// across the current catalog. Writes nothing.
+const CONFIDENCE_DRYRUN = process.env.CONFIDENCE_DRYRUN === '1';
+// One-off: actually persist data_confidence for the whole existing catalog
+// (the columns now exist). After this, the nightly run keeps it current on
+// its own — see recomputeConfidenceScores() near the digest step below.
+const CONFIDENCE_BACKFILL = process.env.CONFIDENCE_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -590,6 +599,127 @@ async function backfillWeights() {
     updated++;
   }
   console.log(`[weight-backfill] downweighted ${updated} civic item(s) to −3 (audit rows written)`);
+}
+
+/** Data Arch Redesign 24 — sources.authority/reliability/lane keyed by
+ *  sources.key, for the confidence scorer. Kept separate from
+ *  loadSourceConfig() (dedupe's authority-only map) so a read failure here
+ *  can't affect dedupe's canonical-source ordering. */
+async function loadSourceMetaByKey(sb: SupabaseClient): Promise<Map<string, SourceMeta>> {
+  const { data, error } = await sb.from('sources').select('key, authority, reliability, lane');
+  if (error) throw new Error(`confidence sources read: ${error.message}`);
+  const byKey = new Map<string, SourceMeta>();
+  for (const r of data ?? []) {
+    byKey.set(r.key as string, {
+      authority: Number(r.authority), reliability: Number(r.reliability), lane: r.lane as string,
+    });
+  }
+  return byKey;
+}
+
+interface ScoredThing {
+  id: string; title: string; status: string; sourceKey: string;
+  score: number; breakdown: import('./confidence').ConfidenceBreakdown;
+}
+
+/** Scores every published/needs_review thing against the current catalog data.
+ *  Pure computation — the caller decides whether to print it (dry run) or
+ *  write it (recomputeConfidenceScores). */
+async function scoreCatalog(sb: SupabaseClient): Promise<ScoredThing[]> {
+  const sourceByKey = await loadSourceMetaByKey(sb);
+  const { data: rows, error } = await sb
+    .from('things')
+    .select(`id, title, status, happening_tier, starts_at, address, blurb, photo_url, photo_source,
+      nearby_zone, activities, last_confirmed, source, source_count,
+      recurring_schedules ( day_of_week, start_time )`)
+    .in('status', ['published', 'needs_review']);
+  if (error) throw new Error(`confidence things read: ${error.message}`);
+
+  return (rows ?? []).map((r) => {
+    const scheds = (r.recurring_schedules as { day_of_week: number | null; start_time: string | null }[]) ?? [];
+    const scheduleConfirmed = scheds.some((s) => s.day_of_week != null && !!s.start_time);
+    const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
+    const t: ThingForConfidence = {
+      happening_tier: Number(r.happening_tier),
+      starts_at: (r.starts_at as string) ?? null,
+      address: (r.address as string) ?? null,
+      blurb: (r.blurb as string) ?? null,
+      photo_url: (r.photo_url as string) ?? null,
+      photo_source: (r.photo_source as string) ?? null,
+      nearby_zone: (r.nearby_zone as string) ?? null,
+      activities: (r.activities as string[]) ?? null,
+      last_confirmed: (r.last_confirmed as string) ?? null,
+      source_count: (r.source_count as number) ?? 1,
+      scheduleConfirmed,
+    };
+    const { score, breakdown } = computeDataConfidence(t, sourceByKey.get(sourceKey));
+    return { id: r.id as string, title: r.title as string, status: r.status as string, sourceKey, score, breakdown };
+  });
+}
+
+function printConfidenceHistogram(scored: ScoredThing[], label: string): void {
+  const buckets = new Array(10).fill(0);
+  for (const s of scored) buckets[Math.min(9, Math.floor(s.score * 10))]++;
+  console.log(`\n[${label}] ${scored.length} rows scored (published + needs_review)\n`);
+  console.log('score band     count   bar');
+  buckets.forEach((n, i) => {
+    const lo = (i / 10).toFixed(1);
+    const hi = ((i + 1) / 10).toFixed(1);
+    console.log(`${lo}–${hi}          ${String(n).padStart(4)}   ${'#'.repeat(n)}`);
+  });
+}
+
+/** Data Arch Redesign 24 Phase 1 — compute data_confidence for every published/
+ *  needs_review thing using the current catalog's real data, WITHOUT writing
+ *  anything. Prints a histogram + a handful of worked examples so the
+ *  weighting can be eyeballed before it's turned on for real. */
+async function backfillConfidenceDryRun() {
+  const sb = getDb();
+  const scored = await scoreCatalog(sb);
+  printConfidenceHistogram(scored, 'confidence-dryrun');
+
+  const byScore = [...scored].sort((a, b) => b.score - a.score);
+  const examples = [
+    byScore[0],
+    byScore[Math.floor(byScore.length * 0.25)],
+    byScore[Math.floor(byScore.length * 0.5)],
+    byScore[Math.floor(byScore.length * 0.75)],
+    byScore[byScore.length - 1],
+  ].filter(Boolean);
+
+  console.log('\n[confidence-dryrun] worked examples (best, ~p25, ~p50, ~p75, worst):\n');
+  for (const e of examples) {
+    console.log(`  ${e.score.toFixed(2)}  "${e.title}"  [${e.status}, source=${e.sourceKey}]`);
+    console.log(`         source_trust=${e.breakdown.sourceTrust.toFixed(2)} extraction=${e.breakdown.extractionMethod.toFixed(2)} completeness=${e.breakdown.fieldCompleteness.toFixed(2)} cross_source=${e.breakdown.crossSourceAgreement.toFixed(2)} recency=${e.breakdown.recency.toFixed(2)} findability=${e.breakdown.findability.toFixed(2)}`);
+  }
+  console.log('');
+}
+
+/** Data Arch Redesign 24 Phase 1 — actually persist data_confidence for every
+ *  published/needs_review thing. Called both by the one-off CONFIDENCE_BACKFILL
+ *  flag (rescoring the whole existing catalog once) and automatically at the
+ *  end of every regular nightly run (see the "confidence" step near the
+ *  digest call below), so scores stay current as fields change. source_count
+ *  is read but never written here — spec 26's dedupe owns that column. */
+async function recomputeConfidenceScores(sb: SupabaseClient): Promise<number> {
+  const scored = await scoreCatalog(sb);
+  let updated = 0;
+  for (const s of scored) {
+    const { error } = await sb.from('things').update({ data_confidence: s.score }).eq('id', s.id);
+    if (error) { console.log(`  [confidence] update failed for ${s.id}: ${error.message}`); continue; }
+    updated++;
+  }
+  return updated;
+}
+
+/** One-off CLI entry point (CONFIDENCE_BACKFILL=1): write scores for the whole
+ *  existing catalog once, then print the resulting (now-persisted) histogram. */
+async function backfillConfidenceScores() {
+  const sb = getDb();
+  const updated = await recomputeConfidenceScores(sb);
+  console.log(`\n[confidence-backfill] wrote data_confidence for ${updated} thing(s)`);
+  const scored = await scoreCatalog(sb);
+  printConfidenceHistogram(scored, 'confidence-backfill (persisted)');
 }
 
 /** Mobile/image addendum Part C, one-time / on-demand: re-draft EVERY published
@@ -1174,6 +1304,8 @@ async function main() {
   if (REPEAT_BACKFILL) return backfillRepeatImages();
   if (VOICE_BACKFILL) return backfillVoice();
   if (VENUE_SEED) return seedVenueRegistry();
+  if (CONFIDENCE_DRYRUN) return backfillConfidenceDryRun();
+  if (CONFIDENCE_BACKFILL) return backfillConfidenceScores();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -1386,6 +1518,15 @@ async function main() {
       if (p.searched) console.log(`  desk-prefetch        searched ${p.searched} imageless thing(s) · widened ${p.widened}`);
     } catch (err) {
       console.log(`  desk-prefetch        skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Data Arch Redesign 24 Phase 1 — keep data_confidence current every night.
+    // Isolated so a scoring hiccup can't sink the run (same pattern as above).
+    try {
+      const scoredCount = await recomputeConfidenceScores(sb);
+      console.log(`  confidence           scored ${scoredCount} thing(s)`);
+    } catch (err) {
+      console.log(`  confidence           skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     await sendDigest(sb, {

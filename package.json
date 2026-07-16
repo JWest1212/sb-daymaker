@@ -12,7 +12,9 @@
     "ingest": "tsx ingest/run.ts",
     "ingest:dry": "DRY_RUN=1 tsx ingest/run.ts",
     "enrich:backfill": "ENRICH_BACKFILL=1 tsx ingest/run.ts",
-    "voice:backfill": "VOICE_BACKFILL=1 tsx ingest/run.ts"
+    "voice:backfill": "VOICE_BACKFILL=1 tsx ingest/run.ts",
+    "confidence:dryrun": "CONFIDENCE_DRYRUN=1 tsx ingest/run.ts",
+    "confidence:backfill": "CONFIDENCE_BACKFILL=1 tsx ingest/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
