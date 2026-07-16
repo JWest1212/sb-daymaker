@@ -63,6 +63,9 @@ const CONFIDENCE_GATE_SHADOW = process.env.CONFIDENCE_GATE_SHADOW === '1';
 // Data Arch Redesign 24 Phase 3 — run the real gate once, on demand (the
 // nightly run also does this automatically every night; see main()).
 const CONFIDENCE_GATE_APPLY = process.env.CONFIDENCE_GATE_APPLY === '1';
+// Data Arch Redesign 24 Phase 5 — run the rescue pass once, on demand (the
+// nightly run also does this automatically every night; see main()).
+const CONFIDENCE_RESCUE = process.env.CONFIDENCE_RESCUE === '1';
 
 function window() {
   const from = new Date();
@@ -94,8 +97,13 @@ async function backfillEnrich() {
   const sb = getDb();
   const { data, error } = await sb
     .from('things')
-    .select('id, type, title, blurb, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed, status, activities, thing_tags ( tag )')
-    .in('status', ['published', 'needs_review']);
+    .select('id, type, title, blurb, happening_tier, happening_category, neighborhood, address, price_band, time_of_day_fit, is_21_plus, source, reason_to_go, local_note, last_confirmed, status, activities, data_confidence, thing_tags ( tag )')
+    .in('status', ['published', 'needs_review'])
+    // Data Arch Redesign 24 Phase 5 — "low-confidence and stale re-checked
+    // first" (§5): worst rows attempted first, so a truncated batch (an AI
+    // timeout, a future row cap) upgrades the neediest records, not whichever
+    // happened to sort first in the DB.
+    .order('data_confidence', { ascending: true, nullsFirst: true });
   if (error) throw new Error(`backfill select: ${error.message}`);
   const all = data ?? [];
 
@@ -220,8 +228,11 @@ async function backfillImages() {
   const force = process.env.IMAGE_FORCE === '1'; // re-resolve every row (skip cache), refresh alternates
   let q = sb
     .from('things')
-    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source, venue_id')
-    .eq('status', 'needs_review');
+    .select('id, type, title, happening_tier, happening_category, neighborhood, address, price_band, place_id, photo_source, venue_id, data_confidence')
+    .eq('status', 'needs_review')
+    // Data Arch Redesign 24 Phase 5 — low-confidence/stale rows first (§5), same
+    // rationale as backfillEnrich's ordering above.
+    .order('data_confidence', { ascending: true, nullsFirst: true });
   if (!force) q = q.or('photo_source.is.null,photo_source.eq.placeholder');
   const { data, error } = await q;
   if (error) throw new Error(`image-backfill select: ${error.message}`);
@@ -639,7 +650,12 @@ async function scoreCatalog(sb: SupabaseClient): Promise<ScoredThing[]> {
     .select(`id, title, status, happening_tier, starts_at, address, blurb, photo_url, photo_source,
       nearby_zone, activities, last_confirmed, source, source_count,
       recurring_schedules ( day_of_week, start_time )`)
-    .in('status', ['published', 'needs_review']);
+    // Data Arch Redesign 24 Phase 5 — 'draft' here means ONLY applyPublishGate's
+    // held band (the only writer of things.status='draft' in the live pipeline;
+    // confirmed via grep before relying on this). Held things must keep scoring
+    // every night, not freeze at their hold-time score, or a later run filling in
+    // a missing field/fresher confirmation could never rescue them (spec 24 §5).
+    .in('status', ['published', 'needs_review', 'draft']);
   if (error) throw new Error(`confidence things read: ${error.message}`);
 
   return (rows ?? []).map((r) => {
@@ -838,6 +854,51 @@ async function runPublishGateOnce() {
   const sb = getDb();
   const result = await applyPublishGate(sb);
   console.log(`\n[publish-gate] published ${result.published} · held ${result.held} · left in review ${result.reviewed}\n`);
+}
+
+/** Data Arch Redesign 24 Phase 5 — rescue: a held thing whose RESCORED
+ *  confidence has climbed back above the hold floor (a later run filled in a
+ *  missing field, refreshed last_confirmed, or — once spec 26 lands — a
+ *  second source corroborated it) returns to needs_review. Deliberately never
+ *  jumps straight to published, even if it would now also clear the
+ *  auto-publish bar — anything that was ever below the safety floor gets a
+ *  human's first look at least once. Run this AFTER applyPublishGate in the
+ *  same night's sequence: a rescued item sits in needs_review for the rest of
+ *  tonight and only becomes auto-publish-eligible starting tomorrow's gate
+ *  pass, never the same night it's rescued. */
+async function rescueHeldThings(sb: SupabaseClient): Promise<number> {
+  const sourceByKey = await loadSourceMetaByKey(sb);
+  const { data: rows, error } = await sb
+    .from('things')
+    .select('id, data_confidence, source')
+    .eq('status', 'draft');
+  if (error) throw new Error(`rescue read: ${error.message}`);
+
+  let rescued = 0;
+  for (const r of rows ?? []) {
+    const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
+    const meta = sourceByKey.get(sourceKey);
+    const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
+    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+    if (band === 'hold') continue; // still below floor — stays held, not deleted (spec 24 §5)
+
+    const { error: upErr } = await sb.from('things').update({ status: 'needs_review' }).eq('id', r.id).eq('status', 'draft');
+    if (upErr) { console.log(`  [rescue] failed for ${r.id}: ${upErr.message}`); continue; }
+    await sb.from('audit_log').insert({
+      entity_type: 'thing', entity_id: r.id, action: 'auto_rescue', actor: 'rule',
+      payload: { data_confidence: confidence, source: sourceKey },
+    });
+    rescued++;
+  }
+  return rescued;
+}
+
+/** One-off CLI entry point (CONFIDENCE_RESCUE=1): run the rescue pass once,
+ *  on demand — same function the nightly run calls automatically (see main()). */
+async function runRescueOnce() {
+  const sb = getDb();
+  const rescued = await rescueHeldThings(sb);
+  console.log(`\n[rescue] ${rescued} held thing(s) upgraded back to needs_review\n`);
 }
 
 /** Mobile/image addendum Part C, one-time / on-demand: re-draft EVERY published
@@ -1426,6 +1487,7 @@ async function main() {
   if (CONFIDENCE_BACKFILL) return backfillConfidenceScores();
   if (CONFIDENCE_GATE_SHADOW) return confidenceGateShadowReport();
   if (CONFIDENCE_GATE_APPLY) return runPublishGateOnce();
+  if (CONFIDENCE_RESCUE) return runRescueOnce();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -1659,6 +1721,17 @@ async function main() {
       console.log(`  publish-gate         published ${gateResult.published} · held ${gateResult.held} · left in review ${gateResult.reviewed}`);
     } catch (err) {
       console.log(`  publish-gate         skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Data Arch Redesign 24 Phase 5 — rescue held things whose rescored
+    // confidence has climbed back above the hold floor. Runs AFTER the gate
+    // above, on purpose: a rescued item waits in needs_review for the rest of
+    // tonight and only becomes auto-publish-eligible on tomorrow's gate pass.
+    try {
+      const rescuedCount = await rescueHeldThings(sb);
+      console.log(`  rescue               ${rescuedCount} held thing(s) upgraded back to needs_review`);
+    } catch (err) {
+      console.log(`  rescue               skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     await sendDigest(sb, {

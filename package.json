@@ -16,7 +16,8 @@
     "confidence:dryrun": "CONFIDENCE_DRYRUN=1 tsx ingest/run.ts",
     "confidence:backfill": "CONFIDENCE_BACKFILL=1 tsx ingest/run.ts",
     "confidence:gate-shadow": "CONFIDENCE_GATE_SHADOW=1 tsx ingest/run.ts",
-    "confidence:gate-apply": "CONFIDENCE_GATE_APPLY=1 tsx ingest/run.ts"
+    "confidence:gate-apply": "CONFIDENCE_GATE_APPLY=1 tsx ingest/run.ts",
+    "confidence:rescue": "CONFIDENCE_RESCUE=1 tsx ingest/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
