@@ -2875,15 +2875,6 @@
   outline: 3px solid var(--pacific);
   outline-offset: 2px;
 }
-.sbd-door__kick {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-  margin-bottom: 2px;
-}
 .sbd-door__label {
   font-family: var(--font-display);
   font-weight: var(--weight-black);
@@ -2892,7 +2883,6 @@
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
   line-height: 1.05;
 }
-
 /* Chip bar — collapsed active-filter chips, one per active dimension */
 .sbd-chipbar {
   display: flex;

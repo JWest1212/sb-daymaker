@@ -133,7 +133,7 @@
   /* mobile (base) <600 · tablet 600–1023 · desktop ≥1024 · wide ≥1280       */
 
   /* ---- LAYOUT / STICKY OFFSETS ------------------------------------------ */
-  --sbd-header-h: 62px; /* rendered height of BrandHeader (row + 3px hairline, no notch) */
+  --sbd-header-h: calc(62px + env(safe-area-inset-top, 0px)); /* rendered height of BrandHeader (row + 3px hairline), incl. notch/dynamic-island inset */
 }
 
 /* Reduced motion: kill loops, keep instant feedback.  (WCAG 2.2 AA floor) */
