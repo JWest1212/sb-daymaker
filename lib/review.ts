@@ -82,6 +82,11 @@ export interface QueueRow {
   tags: string[];
   when: string; // pre-formatted mono string
   chip: ChipKind;
+  /** Data Arch Redesign 24 Phase 4 — the trust score (0-1, null if not yet
+   *  scored) and the 1-3 weakest, plain-language reasons behind it (Doc 24
+   *  §4's "why it's here"), e.g. "no photo yet", "single source". */
+  data_confidence: number | null;
+  confidence_reasons: string[];
   /** Set when this is a registry-candidate rhythm (§3.5). Contains the ready-to-paste
    *  TypeScript snippet the founder adds to recurringRegistry.ts. Never auto-published. */
   registrySnippet?: string;
@@ -208,6 +213,17 @@ export function chipLabel(chip: ChipKind): string {
   return chip === "green" ? "Deterministic start" : chip === "amber" ? "Confirm cadence" : "Evergreen";
 }
 
+/** Data Arch Redesign 24 Phase 4 — confidence display tier for the Queue badge.
+ *  Thresholds are display-only (not the publish gate itself, which lives in
+ *  ingest/publishGate.ts) but chosen to roughly track it, so "high" reads as
+ *  "about what auto-publishes" and "low" reads as "about what gets held." */
+export type ConfidenceTier = "high" | "mid" | "low";
+export function confidenceTier(score: number): ConfidenceTier {
+  if (score >= 0.85) return "high";
+  if (score >= 0.35) return "mid";
+  return "low";
+}
+
 /** The mono "when" string: dated start, recurring cadence, or evergreen. */
 export function whenString(tier: number, starts_at: string | null, scheds: Sched[]): string {
   if (starts_at) return sbWhen(starts_at);
@@ -222,9 +238,16 @@ export function whenString(tier: number, starts_at: string | null, scheds: Sched
   return `${day} · ${time}`.trim();
 }
 
-/** Doc 11 §9 order: dated rows by soonest start, then start-less (T3) by newest. */
-export function prioritize<T extends { starts_at: string | null }>(rows: T[]): T[] {
+/** Data Arch Redesign 24 §4 order: highest data_confidence first ("the most-
+ *  likely-good sit at top — fast approvals first"), then Doc 11 §9's original
+ *  order (dated rows by soonest start, then start-less by newest) as the
+ *  tiebreak within a confidence tier. Rows with no score yet (undefined, not
+ *  a real 0) sort by date alone, same as before this field existed. */
+export function prioritize<T extends { starts_at: string | null; data_confidence?: number | null }>(rows: T[]): T[] {
   return [...rows].sort((a, b) => {
+    const ca = a.data_confidence ?? -1;
+    const cb = b.data_confidence ?? -1;
+    if (ca !== cb) return cb - ca;
     if (a.starts_at && b.starts_at) return a.starts_at.localeCompare(b.starts_at);
     if (a.starts_at) return -1;
     if (b.starts_at) return 1;

@@ -6,6 +6,7 @@ import { filterTags, type EditPayload, type QueueRow, type ReviewDraft } from "@
 import { ReviewCard } from "./ReviewCard";
 import { DroppedPanel } from "./DroppedPanel";
 import { SourceHealth } from "./SourceHealth";
+import { ConfidenceMetrics } from "./ConfidenceMetrics";
 
 const COMMIT_MS = 2600;
 type Filter = "all" | "1" | "2" | "3";
@@ -307,6 +308,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
         </main>
 
         <aside className="side">
+          <ConfidenceMetrics metrics={initial.metrics} />
           <SourceHealth sources={initial.sources} />
           <DroppedPanel drops={initial.drops} />
           <div className="panel">

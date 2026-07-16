@@ -151,3 +151,45 @@ export function computeDataConfidence(
     breakdown.findability * CONFIDENCE_WEIGHTS.findability;
   return { score: Math.round(clamp01(raw) * 100) / 100, breakdown };
 }
+
+/** Doc 24 §4 — the Queue's "why it's here": the 1-3 weakest, specific,
+ *  plain-language facts behind a score (e.g. "no photo yet", "single
+ *  source"), not the raw weight names. Only genuinely weak inputs are
+ *  surfaced (nothing pushed in for an input that's already near-perfect), so
+ *  a strong item can return []. */
+export function confidenceReasons(
+  t: ThingForConfidence,
+  source: SourceMeta | undefined,
+  now: Date = new Date(),
+): string[] {
+  const hasDescription = !!(t.blurb && t.blurb.trim());
+  const hasImage = !!(t.photo_url && t.photo_source && t.photo_source !== 'placeholder');
+  const hasAddress = !!(t.address && t.address.trim());
+  const hasDateTime = t.happening_tier === 3 ? true
+    : t.happening_tier === 1 ? !!t.starts_at
+    : !!(t.scheduleConfirmed || t.starts_at);
+
+  const candidates: { score: number; label: string }[] = [];
+
+  const trust = sourceTrustScore(source);
+  if (trust < 0.9) candidates.push({ score: trust, label: source ? 'lower-trust source' : 'source not yet rated' });
+
+  const extraction = extractionMethodScore(source, t.source_count);
+  if (extraction < 0.9) candidates.push({ score: extraction, label: 'AI-extracted, not yet corroborated' });
+
+  if (!hasAddress) candidates.push({ score: 0, label: 'no address' });
+  if (!hasDescription) candidates.push({ score: 0, label: 'no blurb yet' });
+  if (!hasImage) candidates.push({ score: 0, label: 'no photo yet' });
+  if (!hasDateTime) candidates.push({ score: 0, label: t.happening_tier === 1 ? 'no confirmed start time' : 'time not confirmed' });
+
+  const cross = crossSourceAgreementScore(t.source_count);
+  if (cross < 0.9) candidates.push({ score: cross, label: 'single source' });
+
+  const rec = recencyScore(t.last_confirmed, now);
+  if (rec < 0.6) candidates.push({ score: rec, label: 'not reconfirmed recently' });
+
+  const find = findabilityScore(t);
+  if (find < 1.0) candidates.push({ score: find, label: t.nearby_zone ? 'no activity tag' : 'no neighborhood match' });
+
+  return candidates.sort((a, b) => a.score - b.score).slice(0, 3).map((c) => c.label);
+}

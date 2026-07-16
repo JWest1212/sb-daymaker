@@ -30,14 +30,29 @@ describe("sbWhen handles the PST boundary", () => {
   });
 });
 
-describe("prioritize — dated soonest-first, then start-less", () => {
-  it("orders dated rows ascending and pushes start-less to the end", () => {
+describe("prioritize — highest confidence first, then dated soonest-first, then start-less", () => {
+  it("orders dated rows ascending and pushes start-less to the end when no score is present", () => {
     const rows = [
       { id: "late", starts_at: "2026-07-20T00:00:00Z" },
       { id: "place", starts_at: null },
       { id: "soon", starts_at: "2026-07-01T00:00:00Z" },
     ];
     expect(prioritize(rows).map((r) => r.id)).toEqual(["soon", "late", "place"]);
+  });
+  it("puts the highest data_confidence first — fast approvals sit at the top (Doc 24 §4)", () => {
+    const rows = [
+      { id: "weak", starts_at: "2026-07-01T00:00:00Z", data_confidence: 0.4 },
+      { id: "strong", starts_at: "2026-07-20T00:00:00Z", data_confidence: 0.9 },
+      { id: "mid", starts_at: "2026-07-10T00:00:00Z", data_confidence: 0.7 },
+    ];
+    expect(prioritize(rows).map((r) => r.id)).toEqual(["strong", "mid", "weak"]);
+  });
+  it("falls back to date order within the same confidence tier", () => {
+    const rows = [
+      { id: "later", starts_at: "2026-07-20T00:00:00Z", data_confidence: 0.9 },
+      { id: "sooner", starts_at: "2026-07-01T00:00:00Z", data_confidence: 0.9 },
+    ];
+    expect(prioritize(rows).map((r) => r.id)).toEqual(["sooner", "later"]);
   });
 });
 

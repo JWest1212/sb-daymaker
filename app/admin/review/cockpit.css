@@ -132,6 +132,14 @@
 .sbd-cockpit .prov a { color: var(--pacific); text-decoration: none; border-bottom: 1px dotted var(--pacific); }
 .sbd-cockpit .prov a:hover { border-bottom-style: solid; }
 
+/* Data Arch Redesign 24 Phase 4 — data_confidence + "why it's here" (Doc 24 §4) */
+.sbd-cockpit .confrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .72rem; }
+.sbd-cockpit .confbadge { font-family: var(--font-mono); font-weight: 600; padding: 2px 8px; border-radius: var(--radius-pill); }
+.sbd-cockpit .confbadge.high { background: rgba(62,124,90,.15); color: var(--sev-low); }
+.sbd-cockpit .confbadge.mid { background: rgba(199,125,30,.16); color: var(--sev-high); }
+.sbd-cockpit .confbadge.low { background: rgba(178,58,46,.14); color: var(--sev-blocker); }
+.sbd-cockpit .confreasons { color: var(--ink-2); }
+
 .sbd-cockpit .meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .sbd-cockpit .tag { font-size: .72rem; padding: 3px 9px; border-radius: var(--radius-pill); background: var(--plaster-2); color: var(--ink-2); font-weight: 500; text-transform: capitalize; }
 .sbd-cockpit .hood { font-size: .72rem; padding: 3px 9px; border-radius: var(--radius-pill); background: transparent; border: 1px solid var(--line); color: var(--ink-2); font-weight: 500; text-transform: capitalize; }
@@ -198,6 +206,12 @@
 .sbd-cockpit .srcrow.fail .sdot { background: var(--sev-blocker); }
 .sbd-cockpit .srcrow .sname { font-weight: 500; color: var(--ink); }
 .sbd-cockpit .srcrow .scount { margin-left: auto; font-family: var(--font-mono); font-size: .7rem; color: var(--ink-2); }
+
+/* Data Arch Redesign 24 Phase 4 — "Time reclaimed" metrics panel */
+.sbd-cockpit .metrics { padding: 10px 16px; display: flex; flex-direction: column; gap: 8px; }
+.sbd-cockpit .mrow { display: flex; align-items: baseline; gap: 10px; font-size: .82rem; }
+.sbd-cockpit .mrow .mlabel { color: var(--ink-2); }
+.sbd-cockpit .mrow .mvalue { margin-left: auto; font-family: var(--font-mono); font-weight: 600; color: var(--ink); }
 
 /* done state */
 .sbd-cockpit .done { text-align: center; padding: 60px 24px; background: var(--paper); border: 1px dashed var(--line); border-radius: var(--radius-lg); }

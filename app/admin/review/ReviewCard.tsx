@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
-  chipLabel, NEIGHBORHOODS, OCCASION_TAGS,
+  chipLabel, confidenceTier, NEIGHBORHOODS, OCCASION_TAGS,
   type ChipKind, type QueueRow, type ReviewDraft,
 } from "@/lib/review";
 import { ImagePicker } from "./ImagePicker";
@@ -196,6 +196,16 @@ export function ReviewCard({
               {prov.text}
               {prov.href ? <> · <a href={prov.href} target="_blank" rel="noreferrer">view source ↗</a></> : null}
             </span>
+            {item.data_confidence != null ? (
+              <span className="confrow">
+                <span className={`confbadge ${confidenceTier(item.data_confidence)}`}>
+                  {Math.round(item.data_confidence * 100)}% confidence
+                </span>
+                {item.confidence_reasons.length ? (
+                  <span className="confreasons">{item.confidence_reasons.join(" · ")}</span>
+                ) : null}
+              </span>
+            ) : null}
             {editing ? (
               <span className="locknote">🔒 Start time is locked — reject &amp; re-ingest to change it.</span>
             ) : null}

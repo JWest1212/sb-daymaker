@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeDataConfidence, sourceTrustScore, extractionMethodScore, fieldCompletenessScore,
-  crossSourceAgreementScore, recencyScore, findabilityScore, CONFIDENCE_WEIGHTS,
+  crossSourceAgreementScore, recencyScore, findabilityScore, confidenceReasons, CONFIDENCE_WEIGHTS,
   type ThingForConfidence, type SourceMeta,
 } from './confidence';
 
@@ -139,5 +139,35 @@ describe('computeDataConfidence', () => {
     expect(Object.keys(breakdown).sort()).toEqual(
       ['crossSourceAgreement', 'extractionMethod', 'fieldCompleteness', 'findability', 'recency', 'sourceTrust'],
     );
+  });
+});
+
+describe('confidenceReasons', () => {
+  it('returns nothing for a strong, fully-corroborated item — nothing meaningful to explain', () => {
+    expect(confidenceReasons(thing({ source_count: 3 }), trustedSource, NOW)).toEqual([]);
+  });
+  it('names the specific missing fields, not the weight name', () => {
+    const reasons = confidenceReasons(thing({ address: null, photo_source: 'placeholder' }), trustedSource, NOW);
+    expect(reasons).toContain('no address');
+    expect(reasons).toContain('no photo yet');
+  });
+  it('flags a single-source item', () => {
+    expect(confidenceReasons(thing({ source_count: 1 }), trustedSource, NOW)).toContain('single source');
+  });
+  it('flags an unmatched source distinctly from a merely lower-trust one', () => {
+    expect(confidenceReasons(thing({}), undefined, NOW)).toContain('source not yet rated');
+    const lowTrust: SourceMeta = { authority: 0.4, reliability: 0.5, lane: 'structured' };
+    expect(confidenceReasons(thing({}), lowTrust, NOW)).toContain('lower-trust source');
+  });
+  it('caps at 3 reasons, worst first', () => {
+    const reasons = confidenceReasons(
+      thing({
+        address: null, blurb: null, photo_source: 'placeholder', nearby_zone: null,
+        activities: [], last_confirmed: '2025-01-01', starts_at: null,
+      }),
+      undefined,
+      NOW,
+    );
+    expect(reasons.length).toBeLessThanOrEqual(3);
   });
 });
