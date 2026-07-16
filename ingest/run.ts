@@ -34,6 +34,7 @@ import { haversineMeters } from '../lib/geo';
 import { sbDay } from '../lib/explore';
 import { sourceKeyOf } from './dedupe';
 import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
+import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR, type PublishBand } from './publishGate';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -56,6 +57,12 @@ const CONFIDENCE_DRYRUN = process.env.CONFIDENCE_DRYRUN === '1';
 // (the columns now exist). After this, the nightly run keeps it current on
 // its own — see recomputeConfidenceScores() near the digest step below.
 const CONFIDENCE_BACKFILL = process.env.CONFIDENCE_BACKFILL === '1';
+// Data Arch Redesign 24 Phase 2 — SHADOW MODE: label what the gate would do
+// to today's needs_review queue. Read-only; publishes/holds nothing.
+const CONFIDENCE_GATE_SHADOW = process.env.CONFIDENCE_GATE_SHADOW === '1';
+// Data Arch Redesign 24 Phase 3 — run the real gate once, on demand (the
+// nightly run also does this automatically every night; see main()).
+const CONFIDENCE_GATE_APPLY = process.env.CONFIDENCE_GATE_APPLY === '1';
 
 function window() {
   const from = new Date();
@@ -722,6 +729,117 @@ async function backfillConfidenceScores() {
   printConfidenceHistogram(scored, 'confidence-backfill (persisted)');
 }
 
+/** Data Arch Redesign 24 Phase 2 — SHADOW MODE (CONFIDENCE_GATE_SHADOW=1).
+ *  Labels every needs_review thing with the band the gate WOULD assign it
+ *  (auto_publish / review / hold), using the already-persisted
+ *  things.data_confidence (Phase 1). Read-only: no status is ever written
+ *  here. Scoped to needs_review only — published things are already live and
+ *  human-approved; this gate only ever decides the fate of new arrivals, so
+ *  re-labeling already-published rows would be noise, not signal. */
+async function confidenceGateShadowReport() {
+  const sb = getDb();
+  const sourceByKey = await loadSourceMetaByKey(sb);
+
+  const { data: rows, error } = await sb
+    .from('things')
+    .select('id, title, data_confidence, source')
+    .eq('status', 'needs_review');
+  if (error) throw new Error(`confidence-gate-shadow things read: ${error.message}`);
+
+  type Labeled = { id: string; title: string; confidence: number; sourceKey: string; band: PublishBand };
+  const labeled: Labeled[] = (rows ?? []).map((r) => {
+    const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
+    const meta = sourceByKey.get(sourceKey);
+    const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
+    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+    return { id: r.id as string, title: r.title as string, confidence, sourceKey, band };
+  });
+
+  const counts: Record<PublishBand, number> = { auto_publish: 0, review: 0, hold: 0 };
+  for (const l of labeled) counts[l.band]++;
+
+  console.log(`\n[confidence-gate-shadow] ${labeled.length} needs_review thing(s) labeled — nothing published, nothing held\n`);
+  console.log(`  auto_publish (would skip your queue) : ${counts.auto_publish}`);
+  console.log(`  review       (stays in your queue)    : ${counts.review}`);
+  console.log(`  hold         (would not show at all)  : ${counts.hold}`);
+  console.log(`\n  auto-publish requires: confidence >= ${AUTO_PUBLISH_GATE.minConfidence}, source authority >= ${AUTO_PUBLISH_GATE.minSourceAuthority}, structured lane`);
+  console.log(`  hold requires: confidence < ${HOLD_FLOOR}\n`);
+
+  const autoPublishSample = labeled.filter((l) => l.band === 'auto_publish').sort((a, b) => b.confidence - a.confidence);
+  console.log(`[confidence-gate-shadow] auto_publish candidates (${autoPublishSample.length} total) — every one, for you to eyeball:\n`);
+  for (const l of autoPublishSample) {
+    console.log(`  ${l.confidence.toFixed(2)}  "${l.title}"  [source=${l.sourceKey}]`);
+  }
+
+  const holdSample = labeled.filter((l) => l.band === 'hold').slice(0, 10);
+  if (holdSample.length) {
+    console.log(`\n[confidence-gate-shadow] hold sample (first ${holdSample.length} of ${counts.hold}):\n`);
+    for (const l of holdSample) {
+      console.log(`  ${l.confidence.toFixed(2)}  "${l.title}"  [source=${l.sourceKey || '(unmatched)'}]`);
+    }
+  }
+  console.log('');
+}
+
+interface GateApplyResult { published: number; held: number; reviewed: number }
+
+/** Data Arch Redesign 24 Phase 3 — the ONLY place the gate drives a real
+ *  status write. Reads today's needs_review queue, classifies each with the
+ *  same classifyBand() Phase 2 previewed, and:
+ *   - auto_publish -> status='published' (skips the queue for real)
+ *   - hold         -> status='draft' (not shown anywhere, not deleted — a
+ *     later run with a better score, e.g. a second corroborating source or a
+ *     fresher confirmation, can still rescue it; spec 24 §5)
+ *   - review       -> left untouched in needs_review, same as today
+ *  Every automatic transition writes an audit_log row so it's traceable back
+ *  to a rule, not a founder click. The `.eq('status', 'needs_review')` guard
+ *  on each write means this can only ever move a still-pending row — it never
+ *  touches an already-published, already-draft, or archived thing. */
+async function applyPublishGate(sb: SupabaseClient): Promise<GateApplyResult> {
+  const sourceByKey = await loadSourceMetaByKey(sb);
+  const { data: rows, error } = await sb
+    .from('things')
+    .select('id, data_confidence, source')
+    .eq('status', 'needs_review');
+  if (error) throw new Error(`publish-gate read: ${error.message}`);
+
+  const today = new Date().toISOString().slice(0, 10);
+  let published = 0, held = 0, reviewed = 0;
+
+  for (const r of rows ?? []) {
+    const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
+    const meta = sourceByKey.get(sourceKey);
+    const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
+    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+
+    if (band === 'review') { reviewed++; continue; }
+
+    const patch = band === 'auto_publish'
+      ? { status: 'published', last_confirmed: today }
+      : { status: 'draft' };
+    const { error: upErr } = await sb.from('things').update(patch).eq('id', r.id).eq('status', 'needs_review');
+    if (upErr) { console.log(`  [publish-gate] ${band} failed for ${r.id}: ${upErr.message}`); reviewed++; continue; }
+
+    await sb.from('audit_log').insert({
+      entity_type: 'thing', entity_id: r.id,
+      action: band === 'auto_publish' ? 'auto_publish' : 'auto_hold',
+      actor: 'rule',
+      payload: { data_confidence: confidence, source: sourceKey },
+    });
+    if (band === 'auto_publish') published++; else held++;
+  }
+  return { published, held, reviewed };
+}
+
+/** One-off CLI entry point (CONFIDENCE_GATE_APPLY=1): run the real gate once,
+ *  on demand, outside the nightly schedule — same function the nightly run
+ *  calls automatically (see main()). */
+async function runPublishGateOnce() {
+  const sb = getDb();
+  const result = await applyPublishGate(sb);
+  console.log(`\n[publish-gate] published ${result.published} · held ${result.held} · left in review ${result.reviewed}\n`);
+}
+
 /** Mobile/image addendum Part C, one-time / on-demand: re-draft EVERY published
  *  thing's blurb + blurb_long through the retuned voice prompt, so the live catalog
  *  matches the new knowing-local-friend voice (not just new drafts going forward).
@@ -1306,6 +1424,8 @@ async function main() {
   if (VENUE_SEED) return seedVenueRegistry();
   if (CONFIDENCE_DRYRUN) return backfillConfidenceDryRun();
   if (CONFIDENCE_BACKFILL) return backfillConfidenceScores();
+  if (CONFIDENCE_GATE_SHADOW) return confidenceGateShadowReport();
+  if (CONFIDENCE_GATE_APPLY) return runPublishGateOnce();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -1527,6 +1647,18 @@ async function main() {
       console.log(`  confidence           scored ${scoredCount} thing(s)`);
     } catch (err) {
       console.log(`  confidence           skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Data Arch Redesign 24 Phase 3 — the conservative auto-publish gate, real
+    // this time (not shadow). MUST run after the confidence step above so it
+    // reads tonight's fresh scores. Isolated so a gate hiccup can't sink the
+    // run — worst case, things stay in needs_review exactly as before.
+    let gateResult: GateApplyResult = { published: 0, held: 0, reviewed: 0 };
+    try {
+      gateResult = await applyPublishGate(sb);
+      console.log(`  publish-gate         published ${gateResult.published} · held ${gateResult.held} · left in review ${gateResult.reviewed}`);
+    } catch (err) {
+      console.log(`  publish-gate         skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
     await sendDigest(sb, {
