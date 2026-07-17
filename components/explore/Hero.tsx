@@ -65,7 +65,6 @@ export function Hero({
 
         {/* Home Rework spec §10/§13 — locked Voice 1 copy, verbatim. */}
         <div className="sbd-hero__vp">
-          <div className="sbd-hero__vp-eyebrow">A local perspective on what&rsquo;s happening</div>
           <h1 className="sbd-hero__vp-headline">
             Everything worth doing in Santa Barbara, in one place.
           </h1>

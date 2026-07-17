@@ -2749,24 +2749,10 @@
    Phase 6 contrast audit (computed against each variant's 0% stop, text-shadow
    doesn't count toward the WCAG number so this is foreground-vs-background only):
    --paper headline/subline: 7.6:1 (morning/afternoon, the worst case) up to
-   16:1 (night) — clears AA everywhere with room to spare.
-   --gold eyebrow AS-IS only hit 3.7:1 against morning/afternoon's --pacific
-   stop (fails the 4.5:1 normal-text minimum — --text-xs bold doesn't qualify as
-   "large text"). Lightened via color-mix (no new hex) to 4.9:1 there, 6.2–10.3:1
-   on the other three variants. */
+   16:1 (night) — clears AA everywhere with room to spare. */
 .sbd-hero__vp {
   margin-top: var(--space-3);
   max-width: 100%;
-}
-.sbd-hero__vp-eyebrow {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--gold), white 35%);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-  margin-bottom: var(--space-2);
 }
 /* Measured with a real headless-browser render (getClientRects line-counting)
    across 320-428px, not estimated: --text-lg is the largest token that holds
