@@ -41,6 +41,7 @@ export function DiscoveryDoors({ onOpen }: { onOpen: (dimension: Dimension) => v
             aria-label={meta.ariaLabel}
             onClick={() => onOpen(d)}
           >
+            <span className="sbd-door__scrim" aria-hidden="true" />
             <span className="sbd-door__label">{meta.label}</span>
           </button>
         );
