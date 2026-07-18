@@ -38,6 +38,10 @@ export interface Guide {
   now_note_on: string | null;
   /** Raw jsonb from guides.content. Parse with parseGuideContent(). */
   content: unknown;
+  /** Elevation v1 · Gate 2 · G2.1, the semantic URL slug. */
+  slug: string | null;
+  /** Gate 2 · G2.7, drives sitemap lastModified. */
+  updated_at: string | null;
 }
 
 function mapGuide(row: Record<string, unknown>): Guide {
@@ -56,6 +60,8 @@ function mapGuide(row: Record<string, unknown>): Guide {
     now_note: (row.now_note as string) ?? null,
     now_note_on: (row.now_note_on as string) ?? null,
     content: row.content ?? {},
+    slug: (row.slug as string) ?? null,
+    updated_at: (row.updated_at as string) ?? null,
   };
 }
 
@@ -76,24 +82,27 @@ export async function getPublishedGuides(): Promise<Guide[]> {
   if (!sb) return [];
   const { data, error } = await sb
     .from("guides")
-    .select("id, title, kicker, intro, kind, zone, tag, cover_url, stamp_code, refreshed_on, now_note, now_note_on, content")
+    .select("id, title, kicker, intro, kind, zone, tag, cover_url, stamp_code, refreshed_on, now_note, now_note_on, content, slug, updated_at")
     .eq("status", "published")
     .order("kind", { ascending: true });
   if (error || !data) return [];
   return data.map((r) => mapGuide(r as Record<string, unknown>));
 }
 
-export async function getGuide(
-  id: string,
+const GUIDE_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function fetchGuide(
+  column: "id" | "slug",
+  value: string,
 ): Promise<{ guide: Guide; stops: GuideStop[] } | null> {
   const sb = getSupabase();
   if (!sb) return null;
   const { data, error } = await sb
     .from("guides")
     .select(
-      "id, title, kicker, intro, kind, zone, tag, cover_url, stamp_code, refreshed_on, now_note, now_note_on, content, guide_stops ( position, label, note, thing_id, chapter, sub, maps_query )",
+      "id, title, kicker, intro, kind, zone, tag, cover_url, stamp_code, refreshed_on, now_note, now_note_on, content, slug, updated_at, guide_stops ( position, label, note, thing_id, chapter, sub, maps_query )",
     )
-    .eq("id", id)
+    .eq(column, value)
     .maybeSingle();
   if (error || !data) return null;
   const row = data as Record<string, unknown>;
@@ -101,6 +110,20 @@ export async function getGuide(
     .map(mapStop)
     .sort((a, b) => a.position - b.position);
   return { guide: mapGuide(row), stops };
+}
+
+export async function getGuide(
+  id: string,
+): Promise<{ guide: Guide; stops: GuideStop[] } | null> {
+  return fetchGuide("id", id);
+}
+
+/** Gate 2 · G2.2, resolve a /discover/[param] path by SLUG first, UUID fallback. */
+export async function getGuideBySlugOrId(
+  param: string,
+): Promise<{ guide: Guide; stops: GuideStop[] } | null> {
+  if (GUIDE_UUID_RE.test(param)) return fetchGuide("id", param);
+  return fetchGuide("slug", param);
 }
 
 /** Fetch the minimal thing fields needed to derive stop sub-lines and directions

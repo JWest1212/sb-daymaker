@@ -3,7 +3,12 @@ import { getPublishedGuides } from "@/lib/guides";
 import { GuideCard } from "@/components/discover/GuideCard";
 import { EmptyState } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Discover SB · SB Daymaker" };
+export const metadata: Metadata = {
+  title: "Discover SB · Neighborhood & Theme Guides · SB Daymaker",
+  description:
+    "Local guides to Santa Barbara's neighborhoods and themes: the Funk Zone, State Street, and more, with the live happenings scoped to each.",
+  alternates: { canonical: "/discover" },
+};
 export const revalidate = 600; // ISR, refresh published content every 10 min
 
 export default async function DiscoverPage() {

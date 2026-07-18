@@ -248,17 +248,19 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
               <span className="sbd-gd-chband__chev" aria-hidden="true">{isOpen ? "▴" : "▾"}</span>
             </button>
 
-            {isOpen && (
-              <div className="sbd-gd-chinner">
-                {chStops.map((s, i) => (
-                  <StopCard
-                    key={s.position}
-                    stop={s}
-                    isLast={i === chStops.length - 1}
-                  />
-                ))}
-              </div>
-            )}
+            {/* G2.6 (stronger): stop cards are ALWAYS in the DOM (so crawlers +
+                Google's JS renderer see the labels/notes), collapsed with `hidden`
+                when the chapter is closed. Visually identical to the old
+                conditional-mount, just now server-rendered into the initial HTML. */}
+            <div className="sbd-gd-chinner" hidden={!isOpen}>
+              {chStops.map((s, i) => (
+                <StopCard
+                  key={s.position}
+                  stop={s}
+                  isLast={i === chStops.length - 1}
+                />
+              ))}
+            </div>
 
             {/* asides after this chapter */}
             {chAsides.map((text, ai) => (

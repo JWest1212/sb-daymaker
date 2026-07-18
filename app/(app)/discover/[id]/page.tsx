@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  getGuide,
+  getGuideBySlugOrId,
   matchGuideThings,
   parseGuideContent,
   deriveStopSub,
@@ -16,20 +16,41 @@ import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
 import { GuideWalkSection } from "@/components/discover/GuideWalkSection";
 import type { StopDisplay } from "@/components/discover/GuideWalkSection";
+import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
+import { guidePath } from "@/lib/seo/site";
 
 export const revalidate = 600;
 
+function truncate(s: string, n: number): string {
+  const clean = s.trim();
+  return clean.length <= n ? clean : `${clean.slice(0, n - 1).trimEnd()}…`;
+}
+
 // ─── Metadata ────────────────────────────────────────────────────────────────
 
+// Gate 2 · G2.3, per-guide title + real description + slug canonical.
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const result = await getGuide(id);
+  const result = await getGuideBySlugOrId(id);
   if (!result) return { title: "Guide · SB Daymaker" };
-  return { title: `${result.guide.title} · Discover SB · SB Daymaker` };
+  const g = result.guide;
+  const title = `${g.title} · Discover SB · SB Daymaker`;
+  const description = truncate(
+    g.intro ?? g.kicker ?? `A local's guide to ${g.title} in Santa Barbara.`,
+    155,
+  );
+  const canonical = guidePath(g);
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: "article" },
+    twitter: { card: "summary_large_image", title, description },
+  };
 }
 
 // ─── Date helpers (server-side) ───────────────────────────────────────────────
@@ -63,7 +84,7 @@ export default async function GuidePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, things, venuePools] = await Promise.all([getGuide(id), getPublishedThings(), getVenuePhotoPools()]);
+  const [result, things, venuePools] = await Promise.all([getGuideBySlugOrId(id), getPublishedThings(), getVenuePhotoPools()]);
 
   if (!result) {
     return (
@@ -111,10 +132,17 @@ export default async function GuidePage({
   const refreshedLabel = formatRefreshed(guide.refreshed_on);
   const nowDateLabel = formatNowDate(guide.now_note_on);
 
+  // G2.5, Breadcrumb JSON-LD (Home > Discover SB > Guide).
+  const guideJsonLd = guideBreadcrumbJsonLd(guide.title, guidePath(guide));
+
   // ── Plain guide (no content chapters) ─────────────────────────────────
   if (!isRich) {
     return (
       <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
+        />
         <div className="sbd-backrow">
           <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
         </div>
@@ -175,6 +203,15 @@ export default async function GuidePage({
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
+      />
+      {/* G2.6 (stronger): the walk's stop prose is server-rendered into the real
+          DOM by GuideWalkSection (stop cards always present, collapsed with
+          `hidden` until a chapter is tapped), so crawlers and Google's JS renderer
+          both see it. No separate noscript mirror needed. */}
+
       {/* back row */}
       <div className="sbd-backrow">
         <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>

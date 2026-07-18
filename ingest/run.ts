@@ -2237,6 +2237,32 @@ async function main() {
       console.log(`  rescue               skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    // Elevation v1 · Gate 1 · G1.1, recompute quality_tier for every published/
+    // needs_review row from tonight's fresh data. MUST run AFTER the publish-gate
+    // + rescue above so newly-published rows are scored the same night. Idempotent
+    // (writes only where the tier changed); isolated so a hiccup can't sink the run.
+    try {
+      const { recomputeQualityTiers } = await import('./audits/tier_backfill');
+      const tierResult = await recomputeQualityTiers(sb);
+      console.log(
+        `  quality-tier         scored ${tierResult.scored} · full ${tierResult.counts[1]} · ` +
+          `compact ${tierResult.counts[2]} · hidden ${tierResult.counts[3]} · changed ${tierResult.changed}`,
+      );
+    } catch (err) {
+      console.log(`  quality-tier         skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Elevation v1 · Gate 2 · G2.1, ensure every newly-published thing/guide has
+    // a slug + a UUID->slug redirect row (so old links never break). Idempotent;
+    // isolated so a hiccup can't sink the run.
+    try {
+      const { ensureSlugs } = await import('./slugs/backfill');
+      const s = await ensureSlugs(sb);
+      console.log(`  slugs                things +${s.things} · guides +${s.guides} · redirects ${s.redirects}`);
+    } catch (err) {
+      console.log(`  slugs                skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     // Gate 0 G0.1, non-blocking QA-note warning: catch any operator note that
     // leaked into published copy before a human sees it on the site. Never blocks
     // the run.
