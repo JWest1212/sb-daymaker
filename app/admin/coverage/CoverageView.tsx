@@ -99,7 +99,7 @@ export function CoverageView({
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
     }).then((r) => r.json()).catch(() => null);
     setRestockRow(null);
-    if (res?.dispatched) showToast(`Running now: ${label} — fresh candidates land in the queue in ~10–20 min.`);
+    if (res?.dispatched) showToast(`Running now: ${label}, fresh candidates land in the queue in ~10–20 min.`);
     else if (res?.queued && res?.error) showToast(`Run-now dispatch failed (${res.error}). Queued for tonight instead.`);
     else if (res?.ok) showToast(`Queued restock: ${label}`);
     else showToast(res?.error ? `Restock failed: ${res.error}` : "Restock failed");
@@ -173,7 +173,7 @@ export function CoverageView({
               </div>
             )}
             <div className="covlegend">
-              <span className="lg"><span className="sw" style={{ background: "var(--rag-red)" }} />thin — restock</span>
+              <span className="lg"><span className="sw" style={{ background: "var(--rag-red)" }} />thin, restock</span>
               <span className="lg"><span className="sw" style={{ background: "var(--rag-amber)" }} />okay</span>
               <span className="lg"><span className="sw" style={{ background: "var(--rag-green)" }} />stocked</span>
               <span className="legnote">shading is relative within each column</span>
@@ -193,7 +193,7 @@ export function CoverageView({
                   <div className="empty">Loading…</div>
                 ) : cellItems.length === 0 ? (
                   <div className="empty">
-                    Nothing scheduled here in this window — this is exactly what Restock is for.
+                    Nothing scheduled here in this window, this is exactly what Restock is for.
                     Use the ↻ button on the <b>{sel.label}</b> row to queue a targeted fetch for tonight.
                   </div>
                 ) : (
@@ -237,7 +237,7 @@ export function CoverageView({
                   <span className="dt">{s.label}</span>
                   <span className={`dirstat ${HEALTH_BADGE[s.health] ?? "q"}`}>{HEALTH_LABEL[s.health] ?? s.health}</span>
                   <span className="ps">
-                    {s.last_yield ?? "—"} last · baseline {s.expected_yield || "—"}
+                    {s.last_yield ?? "·"} last · baseline {s.expected_yield || "·"}
                     {s.consecutive_empty > 0 ? ` · ${s.consecutive_empty} empty in a row` : ""}
                     {s.last_ok_at ? ` · last ok ${s.last_ok_at.slice(0, 10)}` : " · never run"}
                   </span>
@@ -269,9 +269,9 @@ export function CoverageView({
               <label className={`radio${restockWhen === "now" ? " sel" : ""}`}>
                 <input type="radio" name="rswhen" checked={restockWhen === "now"} onChange={() => setRestockWhen("now")} />
                 <span><span className="rt">Run now</span><br />
-                  <span className="rd">Dispatches the ingest worker on demand (~10–20 min) via a fresh pass across all sources. Real API spend — use it for urgent gaps; the nightly queue is free.</span></span>
+                  <span className="rd">Dispatches the ingest worker on demand (~10–20 min) via a fresh pass across all sources. Real API spend, use it for urgent gaps; the nightly queue is free.</span></span>
               </label>
-              <div className="gatebox">Everything found passes the same gate as the nightly run — deterministic start-time required, dedupe against the DB, category + zone checks — and arrives in your <b>review queue</b>. Nothing goes live without your approval.</div>
+              <div className="gatebox">Everything found passes the same gate as the nightly run, deterministic start-time required, dedupe against the DB, category + zone checks, and arrives in your <b>review queue</b>. Nothing goes live without your approval.</div>
             </div>
             <div className="sfoot">
               <button className="btn btn-edit" onClick={() => setRestockRow(null)}>Cancel</button>

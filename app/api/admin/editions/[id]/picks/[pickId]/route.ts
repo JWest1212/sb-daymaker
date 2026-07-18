@@ -19,7 +19,7 @@ interface PatchBody {
   position?: number;
 }
 
-// PATCH — edit a single pick's overrides and/or its render position. Writes
+// PATCH, edit a single pick's overrides and/or its render position. Writes
 // overrides only (edition-scoped); the canonical `things` row is never
 // touched (spec §4). Any edit here is editorial intent, so is_manual flips true.
 export async function PATCH(
@@ -33,7 +33,7 @@ export async function PATCH(
   const { data: edition, error: edErr } = await sb.from("editions").select("status").eq("id", id).maybeSingle();
   if (edErr || !edition) return NextResponse.json({ error: "edition not found" }, { status: 404 });
   if (!["draft", "approved", "skipped"].includes(edition.status)) {
-    return NextResponse.json({ error: `edition is ${edition.status} — no longer editable` }, { status: 400 });
+    return NextResponse.json({ error: `edition is ${edition.status}, no longer editable` }, { status: 400 });
   }
 
   const body = (await req.json()) as PatchBody;

@@ -12,7 +12,7 @@ import {
 import type { Itinerary } from "@/lib/plan/types";
 
 // One store, two entry points (the Plan "My plans" drawer + Saved › Days). Lives
-// in localStorage exactly like saves — no accounts (CLAUDE.md §2.4). Mirrors the
+// in localStorage exactly like saves, no accounts (CLAUDE.md §2.4). Mirrors the
 // SavesProvider pattern: empty on the server + first client render (no hydration
 // mismatch), then hydrated from storage on mount.
 

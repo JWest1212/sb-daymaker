@@ -1,7 +1,7 @@
 // lib/geo.ts
 //
 // Shared pure geo math. Lives here (not ingest/) so both the ingest worker AND
-// app-side code (lib/venuePool.ts, the cockpit) can import it — ingest/ already
+// app-side code (lib/venuePool.ts, the cockpit) can import it, ingest/ already
 // depends one-way on lib/, never the reverse. Originally defined in
 // ingest/marqueeVenues.ts (Card Imagery Build Spec Phase 1 §4.4); re-exported from
 // there unchanged so existing call sites don't need to change.

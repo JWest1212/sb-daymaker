@@ -24,7 +24,7 @@ export function EmailSignup() {
       else {
         const already = data.status === "already";
         setStatus(already ? "already" : "done");
-        // Event 7: a subscribe succeeded. Status only — never the email.
+        // Event 7: a subscribe succeeded. Status only, never the email.
         trackEvent("subscribe_submit", { status: already ? "already" : "pending" });
       }
     } catch {
@@ -36,13 +36,13 @@ export function EmailSignup() {
     <section className="sbd-signup">
       <h2 className="sbd-signup__title">The weekend, in your inbox</h2>
       <p className="sbd-signup__desc">
-        Two emails a week — what&rsquo;s new and what&rsquo;s coming up. No wall,
+        Two emails a week, what&rsquo;s new and what&rsquo;s coming up. No wall,
         unsubscribe anytime.
       </p>
 
       {status === "done" ? (
         <p className="sbd-signup__ok">
-          ✓ Almost there — check your inbox to confirm.
+          ✓ Almost there, check your inbox to confirm.
         </p>
       ) : status === "already" ? (
         <p className="sbd-signup__ok">✓ You&rsquo;re already subscribed.</p>
@@ -67,7 +67,7 @@ export function EmailSignup() {
         </form>
       )}
       {status === "error" ? (
-        <p className="sbd-signup__err">Something went wrong — please try again.</p>
+        <p className="sbd-signup__err">Something went wrong, please try again.</p>
       ) : null}
     </section>
   );

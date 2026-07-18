@@ -1,5 +1,4 @@
-// Minimal Resend sender (REST, no SDK dependency). Server-side only —
-// RESEND_API_KEY is a secret. Returns false (no throw) when unconfigured.
+// Minimal Resend sender (REST, no SDK dependency). Server-side only, // RESEND_API_KEY is a secret. Returns false (no throw) when unconfigured.
 
 const DEFAULT_FROM = "SB Daymaker <onboarding@resend.dev>";
 
@@ -39,7 +38,7 @@ export interface BatchEmailMessage {
   tags?: { name: string; value: string }[];
 }
 
-/** Up to 100 independent messages per Resend API call (their hard cap) — the
+/** Up to 100 independent messages per Resend API call (their hard cap), the
  *  edition send path (lib/edition/send.ts) chunks larger recipient lists.
  *  Each message is otherwise fully independent (own `to`, same `html`/`text`
  *  body with the per-recipient unsubscribe token already substituted in). */

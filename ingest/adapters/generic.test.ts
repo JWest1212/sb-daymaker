@@ -18,7 +18,7 @@ describe('isExplicitlyFree', () => {
   it('is false when omitted', () => expect(isExplicitlyFree(undefined)).toBe(false));
 });
 
-describe('combineStartISO — never guesses', () => {
+describe('combineStartISO, never guesses', () => {
   it('combines a full date + time into an SB-local instant', () => {
     const iso = combineStartISO('2026-07-24', '19:00');
     expect(iso).toBe('2026-07-24T19:00:00-07:00');
@@ -34,7 +34,7 @@ describe('combineStartISO — never guesses', () => {
   });
 });
 
-describe('toRawCandidate — the trust firewall boundary', () => {
+describe('toRawCandidate, the trust firewall boundary', () => {
   const sourceRow = { key: 'carrwinery.com', url: 'https://carrwinery.com/events/', category_hints: ['food_drink_event'] };
 
   it('marks a fully-dated event ai_extracted with a deterministic start', () => {
@@ -48,7 +48,7 @@ describe('toRawCandidate — the trust firewall boundary', () => {
     expect(c.explicitlyFree).toBe(true);
   });
 
-  it('never invents a start — emits none when the model gave no clock time', () => {
+  it('never invents a start, emits none when the model gave no clock time', () => {
     const e: ExtractedEvent = { title: 'All Day Happy Hour', start_date: '2026-07', confidence: 'low' };
     const c = toRawCandidate(e, sourceRow, sourceRow.url);
     expect(c.startStrategy).toBe('none');
@@ -66,7 +66,7 @@ describe('toRawCandidate — the trust firewall boundary', () => {
     expect(toRawCandidate(e, sourceRow, sourceRow.url).address).toBe('Carr Winery'); // falls back to venue text only
   });
 
-  describe('venue_address — the last-resort fallback', () => {
+  describe('venue_address, the last-resort fallback', () => {
     const rowWithHome = { ...sourceRow, venue_address: '414 N Salsipuedes St, Santa Barbara, CA 93103' };
 
     it('falls back to the source\'s own known address when the page named neither an address nor a venue', () => {
@@ -79,7 +79,7 @@ describe('toRawCandidate — the trust firewall boundary', () => {
       expect(toRawCandidate(e, rowWithHome, rowWithHome.url).address).toBe('123 Elsewhere Ave');
     });
 
-    it('never overrides a stated venue — a different named venue must not silently become this source\'s address', () => {
+    it('never overrides a stated venue, a different named venue must not silently become this source\'s address', () => {
       const e: ExtractedEvent = { title: 'Books & Bubbles', venue: 'Ryon Park', confidence: 'high' };
       expect(toRawCandidate(e, rowWithHome, rowWithHome.url).address).toBe('Ryon Park');
     });
@@ -90,7 +90,7 @@ describe('toRawCandidate — the trust firewall boundary', () => {
     });
   });
 
-  it('never lands a stale date from a cached page — treats a past year as no start at all', () => {
+  it('never lands a stale date from a cached page, treats a past year as no start at all', () => {
     // Live Phase 4 finding: a real page echoed "2024-07-25" while the run happened in July 2026.
     const e: ExtractedEvent = {
       title: 'Livia Zirkel Reception', start_date: '2024-07-25', start_time: '16:00',
@@ -118,7 +118,7 @@ describe('isPastDate', () => {
   });
 });
 
-describe('hashText — change-detection signal', () => {
+describe('hashText, change-detection signal', () => {
   it('is deterministic for identical text', () => {
     expect(hashText('Trivia Night, Wednesdays')).toBe(hashText('Trivia Night, Wednesdays'));
   });
@@ -127,7 +127,7 @@ describe('hashText — change-detection signal', () => {
   });
 });
 
-describe('isSourceDue — source-specific scheduling (spec 25 §3)', () => {
+describe('isSourceDue, source-specific scheduling (spec 25 §3)', () => {
   const now = new Date('2026-07-17T00:00:00Z');
 
   it('nightly sources are always due', () => {
@@ -149,11 +149,11 @@ describe('isSourceDue — source-specific scheduling (spec 25 §3)', () => {
   });
 });
 
-describe('selectSourcesForRun — the per-run page cap', () => {
+describe('selectSourcesForRun, the per-run page cap', () => {
   it('caps the selection and prefers the longest-overdue sources first', () => {
     const sources = [
       { last_ok_at: '2026-07-10T00:00:00Z' },
-      { last_ok_at: null }, // never checked — most overdue
+      { last_ok_at: null }, // never checked, most overdue
       { last_ok_at: '2026-07-15T00:00:00Z' },
     ];
     expect(selectSourcesForRun(sources, 2)).toEqual([

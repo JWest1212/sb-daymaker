@@ -1,11 +1,11 @@
 // components/visuals/SvgDefs.tsx
 //
-// Card Imagery Build Spec Phase 3 §6.2 — the shared filter/symbol defs behind
+// Card Imagery Build Spec Phase 3 §6.2, the shared filter/symbol defs behind
 // every motif, ported verbatim from
 // docs/card-imagery/SBDaymaker_Explore_Feed_Mockup_v1.html (`#grain`, `#vig`,
 // `#tremble`, `#tremble2`, `#peli`), renamed with an `sbd-` prefix so they can't
 // collide with anything else in the app. Mounted EXACTLY ONCE, in the root layout
-// — a feed renders many `ListCard`s, and duplicating `<filter id="sbd-grain">`
+//, a feed renders many `ListCard`s, and duplicating `<filter id="sbd-grain">`
 // once per card would collide on id and (per the SVG spec) make every reference
 // after the first resolve to nothing.
 

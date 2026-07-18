@@ -1,7 +1,7 @@
 // lib/edition/renderData.ts
 //
 // The DB adapter for the renderer (edition_build_spec.md §4, §6.1). Loads an
-// edition + its picks, applies `override_* ?? thing.field` (spec §4 — editing
+// edition + its picks, applies `override_* ?? thing.field` (spec §4, editing
 // a draft never mutates the canonical thing), and hands the pure renderer
 // (render.ts) a fully-resolved RenderableEdition. Shared by the public
 // permalink route and, later, the cockpit draft preview (same renderer,
@@ -59,7 +59,7 @@ const PICK_SELECT = `slot, position, thing_id, override_title, override_blurb, o
     photo_attribution, recurring_schedules ( day_of_week, label, start_time, end_time, frequency ) )`;
 
 /** Noon-UTC anchor for a "YYYY-MM-DD" key (same convention as window.ts /
- *  heroServer.ts) — safely within the same SB calendar day regardless of DST,
+ *  heroServer.ts), safely within the same SB calendar day regardless of DST,
  *  since noon UTC is always early-morning Pacific, same date either way. */
 function dateLabelAnchor(sbDateKey: string): Date {
   const [y, m, d] = sbDateKey.split("-").map(Number);
@@ -79,7 +79,7 @@ function dayLabelFor(t: ThingRow): string | null {
  *  secondaries get, falling back to `blurb` for any older row missing it);
  *  secondary reads `blurb`; anchor reads `reason_to_go` (the Tier-3 "why go"
  *  field); non-event reads `blurb` falling back to `reason_to_go`. Never
- *  things.blurb for anchor — that's the settled map. */
+ *  things.blurb for anchor, that's the settled map. */
 export function blurbSourceFor(slot: EditionSlot, t: ThingRow): string | null {
   if (slot === "hero") return t.blurb_long ?? t.blurb;
   if (slot === "anchor") return t.reason_to_go;
@@ -111,7 +111,7 @@ export interface LoadEditionOptions {
 /** Loads by edition_date. `allowAnyStatus` lets the cockpit preview a
  *  draft/approved edition (auth-gated there); the public permalink route
  *  leaves it false so only `status='sent'` editions resolve (matches the
- *  public_read_editions RLS policy — this is a belt-and-suspenders check
+ *  public_read_editions RLS policy, this is a belt-and-suspenders check
  *  when called with the anon client, and the real gate when called with the
  *  service-role client for the cockpit). */
 export async function loadRenderableEdition(

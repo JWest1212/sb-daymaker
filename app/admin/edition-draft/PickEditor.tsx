@@ -14,7 +14,7 @@ interface Fields {
 }
 
 /** The hero slot's effective blurb is the longer blurb_long (falling back to
- *  the short blurb for an older row missing it) — mirrors renderData.ts's
+ *  the short blurb for an older row missing it), mirrors renderData.ts's
  *  blurbSourceFor exactly, so the editor always shows what will actually
  *  render/send, not a stale/empty field with the title ghosted in behind it. */
 function effectiveBlurb(pick: CockpitPick): string {
@@ -118,7 +118,7 @@ export function PickEditor({
       </label>
       <label className="ed-field">
         <span>Blurb</span>
-        <textarea rows={3} value={fields.blurb} onChange={set("blurb")} placeholder="No blurb yet — write one, or use Claude below" />
+        <textarea rows={3} value={fields.blurb} onChange={set("blurb")} placeholder="No blurb yet, write one, or use Claude below" />
       </label>
       <div className="ed-ai-edit">
         <input

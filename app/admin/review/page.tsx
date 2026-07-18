@@ -3,7 +3,7 @@ import { loadCockpitData } from "@/lib/reviewServer";
 import { ReviewQueue } from "./ReviewQueue";
 
 export const metadata: Metadata = {
-  title: "Review cockpit — SB Daymaker",
+  title: "Review cockpit · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

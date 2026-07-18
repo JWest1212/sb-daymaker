@@ -39,7 +39,7 @@ export function SubmitForm() {
         <div className="sbd-form__done-icon" aria-hidden="true">
           🎉
         </div>
-        <h2 className="sbd-form__done-title">Thanks — got it!</h2>
+        <h2 className="sbd-form__done-title">Thanks, got it!</h2>
         <p>
           We&rsquo;ll take a look. The best submissions get featured in the
           weekend digest.
@@ -125,7 +125,7 @@ export function SubmitForm() {
       </label>
 
       {status === "error" ? (
-        <p className="sbd-field__error">Something went wrong — please try again.</p>
+        <p className="sbd-field__error">Something went wrong, please try again.</p>
       ) : null}
 
       <Button type="submit" variant="cta" block disabled={status === "busy"}>

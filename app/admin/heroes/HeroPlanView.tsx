@@ -94,7 +94,7 @@ export function HeroPlanView({ initial }: { initial: HeroPlan }) {
                   </div>
                   <button className="btn btn-edit btn-sm" disabled={!day.candidates.length} onClick={() => setPicker(day)}
                     title={day.candidates.length ? "Pin a hero" : "No ⭑ candidates occur this day"}>
-                    {day.candidates.length ? "Pin a hero" : "— no candidates —"}
+                    {day.candidates.length ? "Pin a hero" : ", no candidates, "}
                   </button>
                 </>
               )}
@@ -107,7 +107,7 @@ export function HeroPlanView({ initial }: { initial: HeroPlan }) {
         <>
           <div className="scrim show" onClick={() => setPicker(null)} />
           <div className="sheet show" role="dialog" aria-modal="true" aria-labelledby="hpTitle">
-            <h3 id="hpTitle">Pin a hero — {picker.label}<button className="x" aria-label="Close" onClick={() => setPicker(null)}>✕</button></h3>
+            <h3 id="hpTitle">Pin a hero, {picker.label}<button className="x" aria-label="Close" onClick={() => setPicker(null)}>✕</button></h3>
             <div className="sbody">
               {picker.candidates.length === 0 ? (
                 <div className="gatebox">No ⭑ hero-eligible things occur on this day. Flag more things as Hero (in Queue or Catalog), or leave the day on Auto.</div>

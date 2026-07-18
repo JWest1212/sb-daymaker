@@ -1,6 +1,6 @@
 import type { ConfidenceMetrics as Metrics } from "@/lib/reviewServer";
 
-/** Data Arch Redesign 24 Phase 4 — "measure the win" (Doc 24 §4): how much of
+/** Data Arch Redesign 24 Phase 4, "measure the win" (Doc 24 §4): how much of
  *  the founder's review time the auto-publish gate is reclaiming, all-time
  *  since Phase 3 launch, from the audit trail the gate already writes. */
 export function ConfidenceMetrics({ metrics }: { metrics: Metrics }) {
@@ -11,7 +11,7 @@ export function ConfidenceMetrics({ metrics }: { metrics: Metrics }) {
       <h3>Time reclaimed</h3>
       <div className="metrics">
         {noDataYet ? (
-          <div className="mrow"><span className="mlabel">No approvals recorded yet — check back after your queue moves.</span></div>
+          <div className="mrow"><span className="mlabel">No approvals recorded yet, check back after your queue moves.</span></div>
         ) : (
           <>
             <div className="mrow">

@@ -13,7 +13,7 @@ function variant(tod: TimeOfDay, weather: Weather | null): string {
   return isGrayDay(weather) ? "gray" : tod;
 }
 
-/** Home Rework spec §10 — the daily pick card is retired from here (it returns in
+/** Home Rework spec §10, the daily pick card is retired from here (it returns in
  *  Phase 5 as the elevated "Today's pick" atop the feed); this is now a pure
  *  value-prop band over the untouched skyline. No client state left, so this is a
  *  server component again. */
@@ -31,7 +31,7 @@ export function Hero({
   return (
     <section className={`sbd-hero sbd-hero--${v}`}>
       {/* Warm horizon glow behind the skyline so the silhouette reads in every
-          sky — and doubles as the sunset glow at golden hour. Hidden on gray
+          sky, and doubles as the sunset glow at golden hour. Hidden on gray
           days, where the fog band takes over instead. */}
       <div className="sbd-hero__glow" aria-hidden="true" />
       <span className="sbd-hero__sun" aria-hidden="true" />
@@ -40,13 +40,13 @@ export function Hero({
       ) : null}
 
       {/* Marine-layer fog band (gray days only). Rendered BEFORE the skyline so
-          the opaque golden buildings paint on top of it — the fog reads as haze
+          the opaque golden buildings paint on top of it, the fog reads as haze
           in the sky gaps, never a white wash over the city (spec §3.4). */}
       <div className="sbd-hero__fog" aria-hidden="true" />
 
       {/* H2: hand-styled Santa Barbara skyline (Riviera hillside, Mission,
           Courthouse, wharf, Lil' Toot). Golden-hour buildings under a changing
-          sky — scene colors are baked into the asset by design (spec §3.4). The
+          sky, scene colors are baked into the asset by design (spec §3.4). The
           hero's overflow:hidden crops the transparent upper sky at both widths.
           Home Rework spec §1 guardrail: this asset is untouched, byte-for-byte. */}
       <img
@@ -63,7 +63,7 @@ export function Hero({
         </div>
         <ConditionChips weather={weather} />
 
-        {/* Home Rework spec §10/§13 — locked Voice 1 copy, verbatim. */}
+        {/* Home Rework spec §10/§13, locked Voice 1 copy, verbatim. */}
         <div className="sbd-hero__vp">
           <h1 className="sbd-hero__vp-headline">
             Everything worth doing in Santa Barbara, in one place.

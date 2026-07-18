@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     await sb.from("venue_photos").upsert(candidateRows, { onConflict: "venue_id,stable_ref", ignoreDuplicates: true });
   }
 
-  // Approve the best candidate — Wikimedia preferred — unless a pool already exists.
+  // Approve the best candidate, Wikimedia preferred, unless a pool already exists.
   const { data: approvedExisting } = await sb
     .from("venue_photos").select("id").eq("venue_id", venue.id).eq("approved", true).limit(1);
   if (!approvedExisting?.length) {
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
         reason: capHit
           ? "monthly photo budget reached"
           : venue.place_id || (venue.lat != null && venue.lng != null)
-            ? "no candidates found — try again with Google"
+            ? "no candidates found, try again with Google"
             : "venue has no place_id or coordinates (no confident lookup match)",
       });
     }

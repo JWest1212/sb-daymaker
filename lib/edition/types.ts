@@ -3,7 +3,7 @@
 // Shared types for the reader-edition drafter (edition_build_spec.md §2-3).
 // Deliberately relative-import-only (no `@/` alias) so this module loads the
 // same way from Next.js (cockpit, later phases) and from the ingest/ worker
-// (tsx in the GitHub Action) — mirrors lib/heroServer.ts / lib/occurrences.ts.
+// (tsx in the GitHub Action), mirrors lib/heroServer.ts / lib/occurrences.ts.
 // PhotoSource is a plain type-only import (no server-only/env dependency), so
 // it's safe under the same dual-context constraint.
 
@@ -13,7 +13,7 @@ export type EditionType = "weekend" | "week_ahead";
 export type EditionSlot = "hero" | "secondary" | "nonevent" | "anchor";
 
 /** A published `things` row shaped for the drafter. Deliberately excludes
- *  `is_featured` / `sponsor_id` — sponsor-blindness is enforced by never
+ *  `is_featured` / `sponsor_id`, sponsor-blindness is enforced by never
  *  fetching those columns, not just by convention (spec §0.2). */
 export interface DraftThing {
   id: string;
@@ -52,7 +52,7 @@ export interface SlotPick {
 
 export interface SlotSelection {
   picks: DraftThing[]; // in RENDER order (chronological for secondaries; single-item otherwise)
-  rankedBench: DraftThing[]; // in RANK order (cascade order — rank 0 = best), for edition_candidates
+  rankedBench: DraftThing[]; // in RANK order (cascade order, rank 0 = best), for edition_candidates
 }
 
 export interface HeroSelection extends SlotSelection {

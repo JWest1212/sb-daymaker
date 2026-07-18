@@ -8,10 +8,10 @@ export const dynamic = "force-dynamic";
 
 // POST { thing_ids: string[] } -> Images desk "locate" stage: stamp a Google
 // place_id (+ coordinates where missing) onto things that don't have one, via
-// Text Search (free tier 5k/mo — NOT counted against the photo cap). This is
+// Text Search (free tier 5k/mo, NOT counted against the photo cap). This is
 // the root-cause unlock for the free path: coordinates enable Wikimedia
 // geosearch, and place_ids enable exact venue matching + Google photos.
-// STRONG matches only (a real named business — isWeakPlaceMatch guards against
+// STRONG matches only (a real named business, isWeakPlaceMatch guards against
 // bare geocoded addresses); a weak/no hit changes nothing. Existing non-null
 // coordinates are never overwritten (adapter data stays authoritative).
 const MAX_IDS = 25;

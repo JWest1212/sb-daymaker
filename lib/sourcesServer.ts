@@ -1,6 +1,6 @@
 // lib/sourcesServer.ts
 //
-// Data Arch Redesign 23 — server-only DB access for the `sources` table.
+// Data Arch Redesign 23, server-only DB access for the `sources` table.
 // Phase 4 added the read-only health rollup for the Coverage health panel.
 // Phase 5 adds the full management surface: list every field, add a
 // candidate, edit authority/frequency/notes, pause/resume/retire.
@@ -45,10 +45,10 @@ export interface SourceRow {
   notes: string | null;
 }
 
-/** Full list for the Sources management page — every field, every status
+/** Full list for the Sources management page, every field, every status
  *  (unlike the health panel, which only shows active sources' problems).
  *  Sorted so an active source needing attention surfaces first, then healthy
- *  active ones, then paused, then candidates, then retired — alpha within
+ *  active ones, then paused, then candidates, then retired, alpha within
  *  each group. */
 export async function loadSources(): Promise<SourceRow[]> {
   const sb = getAdminSupabase();
@@ -80,11 +80,11 @@ export interface SourceAddInput {
   lane: string;
 }
 
-/** Adds a `sources` row only — it does NOT wire up real fetching by itself.
+/** Adds a `sources` row only, it does NOT wire up real fetching by itself.
  *  Actual ingestion for a brand-new key still needs either a code adapter
  *  (ingest/adapters/registry.ts) or the future generic lane (spec 25) to
  *  read it. Lands as status='candidate' precisely to signal that: "tracked,
- *  not yet crawled" — never silently implied to start pulling events tonight. */
+ *  not yet crawled", never silently implied to start pulling events tonight. */
 export async function addSource(input: SourceAddInput): Promise<MutateResult> {
   const sb = getAdminSupabase();
   if (!sb) return { ok: false, error: "no admin client" };

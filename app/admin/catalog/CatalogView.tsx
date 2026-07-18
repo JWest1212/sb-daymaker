@@ -57,7 +57,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const fetchPage = useCallback(async (p: number) => {
     setLoading(true);
     // LC-3: selection is scoped to what's currently loaded (this page, under the
-    // active filter) — clear it on every navigation so a stale id can't ride
+    // active filter), clear it on every navigation so a stale id can't ride
     // along into a different page/filter and get bulk-acted on unseen.
     setSelected(new Set());
     setBulkSub(null);
@@ -74,8 +74,8 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
       setRows(res.rows); setTotal(res.total); setPage(res.page);
       setFetchError(false);
     } catch {
-      // LC-2: a failed refresh keeps showing the last-known rows — don't wipe
-      // them — but the banner below makes clear they're stale, not empty.
+      // LC-2: a failed refresh keeps showing the last-known rows, don't wipe
+      // them, but the banner below makes clear they're stale, not empty.
       setFetchError(true);
     } finally {
       setLoading(false);
@@ -94,7 +94,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     }).then((res) => res.json()).catch(() => null);
     if (!res?.ok) {
       setHeroOverride((h) => ({ ...h, [r.id]: !next })); // revert
-      showToast("Hero toggle failed — reverted");
+      showToast("Hero toggle failed, reverted");
     } else {
       showToast(next ? `★ Hero-flagged ${r.title}` : "Removed hero flag");
     }
@@ -108,8 +108,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const toggleDraftTag = (tag: string) =>
     setDraft((d) => d ? { ...d, tags: d.tags.includes(tag) ? d.tags.filter((t) => t !== tag) : [...d.tags, tag] } : d);
 
-  // Photo picks apply instantly (their own network call inside CatalogImagePicker) —
-  // this just syncs the already-applied result into the row list + the open sheet,
+  // Photo picks apply instantly (their own network call inside CatalogImagePicker), // this just syncs the already-applied result into the row list + the open sheet,
   // so the thumbnail behind the sheet and the sheet's own "currently live" state
   // both reflect it without a page reload.
   const applyPhoto = useCallback((thingId: string, photo: AppliedPhoto) => {
@@ -122,7 +121,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   }, []);
 
   // 2026-07-10 addendum: a fetch can auto-attach/auto-create a venue for a thing
-  // that didn't have one — sync venue_id so a second fetch in the same sheet
+  // that didn't have one, sync venue_id so a second fetch in the same sheet
   // session reuses it instead of re-running the attach/create logic.
   const applyVenueId = useCallback((thingId: string, venueId: string) => {
     setRows((rs) => rs.map((r) => (r.id === thingId ? { ...r, venue_id: venueId } : r)));
@@ -130,7 +129,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   }, []);
 
   // LC-9: sync a fresh fetch's candidates into row + sheet state so closing and
-  // reopening the edit sheet doesn't discard them — otherwise CatalogImagePicker
+  // reopening the edit sheet doesn't discard them, otherwise CatalogImagePicker
   // remounts from editing.photo_options (only ever-applied picks), losing any
   // fetched-but-not-yet-applied candidates from this session.
   const applyOptions = useCallback((thingId: string, options: PhotoOption[]) => {
@@ -138,7 +137,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     setEditing((e) => (e && e.id === thingId ? { ...e, photo_options: options } : e));
   }, []);
 
-  // Admin edits apply directly to the live row — no review queue.
+  // Admin edits apply directly to the live row, no review queue.
   const submitEdit = useCallback(async () => {
     if (!editing || !draft) return;
     const payload = {
@@ -157,7 +156,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
         neighborhood: draft.neighborhood || null, tags: draft.tags,
       } : r)));
       setEditing(null); setDraft(null);
-      showToast("Saved — live on the site now.");
+      showToast("Saved, live on the site now.");
     } else {
       showToast(res?.error ?? "Edit failed");
     }
@@ -174,7 +173,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     }).catch(() => showToast("Delete failed"));
   }, [showToast]);
 
-  // LC-10 — queues a directive for tonight's worker; fires no Claude call now.
+  // LC-10, queues a directive for tonight's worker; fires no Claude call now.
   // The fresh draft lands as a pending edit in the Queue for a normal approve.
   const doRedraft = useCallback(async (thingId: string) => {
     const res = await fetch("/api/admin/catalog/redraft", {
@@ -184,7 +183,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     if (res?.ok) {
       showToast(
         res.queued
-          ? "Queued for tonight's redraft — no AI call now. It'll land in the Queue for review."
+          ? "Queued for tonight's redraft, no AI call now. It'll land in the Queue for review."
           : "Already queued for tonight's redraft.",
       );
     } else {
@@ -238,7 +237,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
       setRows((rs) => rs.map((r) => (ids.includes(r.id) && !r.tags.includes(bulkTag) ? { ...r, tags: [...r.tags, bulkTag] } : r)));
       showToast(
         res.skipped
-          ? `Added "${bulkTag}" to ${res.applied} thing(s) — skipped ${res.skipped} not allowed for it`
+          ? `Added "${bulkTag}" to ${res.applied} thing(s), skipped ${res.skipped} not allowed for it`
           : `Added "${bulkTag}" to ${res.applied} thing(s)`,
       );
       clearSelection();
@@ -284,14 +283,14 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     }).then((r) => r.json()).catch(() => null);
     setBulkBusy(false);
     if (res?.ok) {
-      showToast(`Queued ${res.queued} for tonight's redraft — no AI call now (${res.already_queued} already queued)`);
+      showToast(`Queued ${res.queued} for tonight's redraft, no AI call now (${res.already_queued} already queued)`);
       clearSelection();
     } else {
       showToast(res?.error ?? "Couldn't queue redrafts");
     }
   }, [selected, clearSelection, showToast]);
 
-  // Bulk archive writes live with no review — count-confirm first, Undo on the toast.
+  // Bulk archive writes live with no review, count-confirm first, Undo on the toast.
   const bulkArchive = useCallback(async () => {
     const ids = [...selected];
     if (!window.confirm(`Archive ${ids.length} thing${ids.length === 1 ? "" : "s"}?\n\nThey'll be unpublished (reversible), not permanently deleted.`)) return;
@@ -433,7 +432,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
               <span className="mono">{r.when}</span>
               {r.nearby_zone ? <><span className="dot">·</span><span>{ZONE_LABEL[r.nearby_zone as keyof typeof ZONE_LABEL] ?? r.nearby_zone}</span></> : null}
               {r.tags.length ? <><span className="dot">·</span><span>{r.tags.map((t) => OCCASION_BY_KEY[t as keyof typeof OCCASION_BY_KEY]?.label ?? t).join(", ")}</span></> : null}
-              <span className="dot">·</span><span className="mono">{r.price_band == null ? "—" : r.price_band}</span>
+              <span className="dot">·</span><span className="mono">{r.price_band == null ? "·" : r.price_band}</span>
             </div>
           </div>
           <div className="lacts">
@@ -441,7 +440,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
             <button className={`herostar${isHero(r) ? " is-on" : ""}`} aria-pressed={isHero(r)} onClick={() => toggleHero(r)} title="Toggle hero eligibility">
               <span className="st">{isHero(r) ? "★" : "☆"}</span> Hero
             </button>
-            <button className="btn btn-edit btn-sm" onClick={() => openEdit(r)} title="Edit — applies to the live site">
+            <button className="btn btn-edit btn-sm" onClick={() => openEdit(r)} title="Edit, applies to the live site">
               Edit
             </button>
             <button className="btn btn-reject btn-sm" onClick={() => del(r)} aria-label={`Delete ${r.title}`} title="Remove from the live site (unpublish)">
@@ -494,7 +493,7 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
               </label>
               <label className="editlabel">Neighborhood
                 <select className="edit-select" value={draft.neighborhood} onChange={(e) => setDraft({ ...draft, neighborhood: e.target.value })}>
-                  <option value="">— none —</option>
+                  <option value="">, none, </option>
                   {NEIGHBORHOODS.map((n) => <option key={n} value={n}>{n.replace(/_/g, " ")}</option>)}
                 </select>
               </label>
@@ -510,14 +509,14 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
                   );
                 })}
               </div>
-              <div className="gatebox">Changes apply to the live site immediately — no review step. (Start time isn&apos;t editable here; to change one, reject &amp; re-ingest in the Queue.)</div>
+              <div className="gatebox">Changes apply to the live site immediately, no review step. (Start time isn&apos;t editable here; to change one, reject &amp; re-ingest in the Queue.)</div>
             </div>
             <div className="sfoot">
               <button
                 className="btn btn-quiet"
                 style={{ marginRight: "auto" }}
                 onClick={() => doRedraft(editing.id)}
-                title="Queues a fresh AI blurb/tags draft for tonight's worker — no AI call now"
+                title="Queues a fresh AI blurb/tags draft for tonight's worker, no AI call now"
               >
                 Redraft blurb + tags tonight
               </button>

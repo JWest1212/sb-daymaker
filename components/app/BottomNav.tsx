@@ -6,7 +6,7 @@ import { useSaves } from "@/components/saves/SavesProvider";
 
 // Custom line icons (S2-B): sun-over-mountain (Explore, ties to the hero/brand),
 // heart (Saved), compass (Discover SB). Stroke = currentColor so each inherits
-// the active/inactive tab color. OS-independent — no emoji.
+// the active/inactive tab color. OS-independent, no emoji.
 const ICONS: Record<string, React.ReactNode> = {
   explore: (
     <svg
@@ -52,7 +52,7 @@ const ICONS: Record<string, React.ReactNode> = {
       <path d="M15 9 L11 11 L9 15 L13 13 Z" />
     </svg>
   ),
-  // Plan (v9.1): an itinerary timeline — a vertical spine with stop-dots and stop
+  // Plan (v9.1): an itinerary timeline, a vertical spine with stop-dots and stop
   // lines, echoing the day-spine the Plan surface builds.
   plan: (
     <svg
@@ -83,7 +83,7 @@ const TABS = [
 ] as const;
 
 /**
- * Bottom navigation — three browse tabs (Explore · Saved · Discover SB) plus the
+ * Bottom navigation, three browse tabs (Explore · Saved · Discover SB) plus the
  * Plan create-action (v9.1), each an icon + label cell.
  */
 export function BottomNav() {

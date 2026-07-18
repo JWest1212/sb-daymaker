@@ -1,6 +1,6 @@
 // lib/doorZones.ts
 //
-// Doc 18 §7.1 — the 8 Place-door zones, a read-time code mapping over the
+// Doc 18 §7.1, the 8 Place-door zones, a read-time code mapping over the
 // existing 11-value `neighborhood` enum. No DDL, no stored column. Distinct
 // from lib/zones.ts's 6-value `nearby_zone` (the Near Me sort's coarse anchors);
 // this is the newer Place-door grouping the Neighborhood Sweep (Doc 19) reports
@@ -51,7 +51,7 @@ export const DOOR_ZONE_BY_KEY: Record<DoorZoneKey, DoorZone> = Object.fromEntrie
   DOOR_ZONES.map((z) => [z.key, z]),
 ) as Record<DoorZoneKey, DoorZone>;
 
-// §4.3 — when triage assigns via a zone chip (not a specific dictionary venue),
+// §4.3, when triage assigns via a zone chip (not a specific dictionary venue),
 // the two collapsed zones write this canonical neighborhood. Finer distinction
 // (riviera vs mission_canyon, carpinteria vs montecito) is preserved for known
 // dictionary venues; only the hand-triaged residue loses granularity.
@@ -66,10 +66,10 @@ export function canonicalNeighborhoodForZone(key: DoorZoneKey): Neighborhood {
   return DOOR_ZONE_CANONICAL_NEIGHBORHOOD[key] ?? DOOR_ZONE_BY_KEY[key].neighborhoods[0];
 }
 
-/** Doc 22 §2.1 — the Place door's own stable sort, bubbling things in the
+/** Doc 22 §2.1, the Place door's own stable sort, bubbling things in the
  *  chosen door zone to the top. Place is a sort, not a filter (a mis-mapped
  *  thing never disappears, just doesn't bubble). Deliberately separate from
- *  nearMeSort() in lib/explore.ts (protected, untouched) — that one drives the
+ *  nearMeSort() in lib/explore.ts (protected, untouched), that one drives the
  *  genuine geolocation Near Me sort on Saved and stays on nearby_zone. */
 export function sortByDoorZone(things: Thing[], zone: DoorZoneKey | null): Thing[] {
   if (!zone) return things;

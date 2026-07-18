@@ -1,15 +1,15 @@
-// Plan surface (v9.1 simplified) — build-it-yourself single-day spine.
+// Plan surface (v9.1 simplified), build-it-yourself single-day spine.
 // No auto-generation, no day-shapes, no slotting engine.
 // Itineraries live in localStorage (no accounts); no AI at tap time.
 
 import type { OccasionKey } from "@/lib/occasions";
 import type { Zone } from "@/lib/zones";
 
-// UI blocks — three time-of-day periods shown to the user.
+// UI blocks, three time-of-day periods shown to the user.
 // DB `tod` enum has 4 values; Night maps to evening + late via BLOCK_TO_TOD.
 export type Block = "morning" | "afternoon" | "night";
 
-// DB tod enum — unchanged. Reach from UI via BLOCK_TO_TOD.
+// DB tod enum, unchanged. Reach from UI via BLOCK_TO_TOD.
 export type Tod = "morning" | "afternoon" | "evening" | "late";
 
 // Period is a type alias for Block (kept for existing imports).
@@ -22,7 +22,7 @@ export const BLOCK_TO_TOD: Record<Block, Tod[]> = {
   night:     ["evening", "late"],
 };
 
-// The vibe subset the setup screen's Fine-tune exposes — 8 of the 10 occasion
+// The vibe subset the setup screen's Fine-tune exposes, 8 of the 10 occasion
 // tags. `solo` and `family_day` are deliberately excluded because
 // the Who selector right above already collects that signal.
 export type VibeKey = Extract<
@@ -71,8 +71,7 @@ export interface PlanAnswers {
 /**
  * shared_states.payload when kind='shared_plan'. A denormalized snapshot
  * so the opener needs no DB join and no local data of their own.
- * Rule 3: startsAt is present only when the source thing.starts_at is set —
- * never a fabricated daypart range.
+ * Rule 3: startsAt is present only when the source thing.starts_at is set, * never a fabricated daypart range.
  */
 export interface SharedPlanPayload {
   title: string;
@@ -80,7 +79,7 @@ export interface SharedPlanPayload {
   stops: Array<{
     block: Block;
     blockLabel: string;        // section label, e.g. "Afternoon"
-    startsAt?: string | null;  // ISO datetime — only if thing.starts_at is set
+    startsAt?: string | null;  // ISO datetime, only if thing.starts_at is set
     title: string;
     area: string;
     blurb: string;

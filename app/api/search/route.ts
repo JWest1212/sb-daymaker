@@ -1,6 +1,6 @@
-// Home Rework spec §9.3 — public, deterministic, no admin gate, no AI. In-memory
+// Home Rework spec §9.3, public, deterministic, no admin gate, no AI. In-memory
 // filter over the already-loaded published set (Phase 0 finding: this page has no
-// ISR to piggyback on anyway — every request already reads fresh from Supabase).
+// ISR to piggyback on anyway, every request already reads fresh from Supabase).
 
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublishedThings } from "@/lib/things";
@@ -10,7 +10,7 @@ import { searchThings } from "@/lib/search";
 export const dynamic = "force-dynamic";
 
 // Minimal in-memory rate limit. This app has no accounts/sessions (CLAUDE.md §2.4),
-// so there's no session key to key off — this is a soft per-IP guard against a
+// so there's no session key to key off, this is a soft per-IP guard against a
 // runaway client polling on every keystroke, not a security boundary. State is
 // per-instance and resets on cold start/restart; that's fine for its purpose.
 const WINDOW_MS = 10_000;

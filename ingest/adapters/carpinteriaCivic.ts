@@ -107,7 +107,7 @@ export const carpinteriaCivic: SourceAdapter = {
   label: 'City of Carpinteria',
   useManagedScrape: false,
   async fetch(w): Promise<RawCandidate[]> {
-    // 1. WP Tribe REST (The Events Calendar — confirmed live at carpinteriaca.gov)
+    // 1. WP Tribe REST (The Events Calendar, confirmed live at carpinteriaca.gov)
     try {
       const cands = await fetchTribeEvents(CITY_BASE, w, {
         sourceKey: SOURCE_KEY,

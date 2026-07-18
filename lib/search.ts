@@ -1,4 +1,4 @@
-// Home Rework spec §9.2 — deterministic header search. Pure matching logic, no AI,
+// Home Rework spec §9.2, deterministic header search. Pure matching logic, no AI,
 // no network: given the already-loaded published `things` and a venue-id→name map,
 // return grouped, capped, ordered hits. Shared by app/api/search/route.ts (server)
 // so the matching rules live in exactly one place.
@@ -13,9 +13,9 @@ export interface SearchHit {
   kind: SearchHitKind;
   id: string;
   label: string;
-  /** Events + venues: navigable. Tags: absent — the caller applies a filter instead. */
+  /** Events + venues: navigable. Tags: absent, the caller applies a filter instead. */
   href?: string;
-  /** Tags only — which dimension + key to set (Home Rework spec §9.2 "Tags" group).
+  /** Tags only, which dimension + key to set (Home Rework spec §9.2 "Tags" group).
    *  Activity is added once Phase 4 gives ExploreClient an `activity` filter to set. */
   filter?: { dimension: "vibe"; key: OccasionKey } | { dimension: "place"; key: DoorZoneKey };
 }
@@ -64,8 +64,7 @@ function searchEvents(things: Thing[], q: string): { hits: SearchHit[]; overflow
   return splitCap(ranked);
 }
 
-/** Venues: distinct venue names among published things (Home Rework spec §18 #1 —
- *  resolved in Phase 2: joins the curated `venues` table via `venue_id`, not the
+/** Venues: distinct venue names among published things (Home Rework spec §18 #1, *  resolved in Phase 2: joins the curated `venues` table via `venue_id`, not the
  *  neighborhood cardPlace() derives). Routes to the venue's own standalone place
  *  card if it has one, else its soonest upcoming dated event. */
 function searchVenues(
@@ -94,7 +93,7 @@ function searchVenues(
   return splitCap(ranked);
 }
 
-/** Tags: the controlled display vocabulary — Vibe (occasion) + Place (zone) labels.
+/** Tags: the controlled display vocabulary, Vibe (occasion) + Place (zone) labels.
  *  Tapping a hit sets that dimension's filter (the caller owns the actual state). */
 function searchTags(q: string): { hits: SearchHit[]; overflow: number } {
   const ranked = [

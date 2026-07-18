@@ -22,7 +22,7 @@ export function EditionImageEditor({
 
   const base = `/api/admin/editions/${editionId}/picks/${pickId}/image`;
   // The drafter guarantees 6 real options for every selected pick before the
-  // cockpit ever opens (draft.ts's ensureImageOptions) — "find more" is now an
+  // cockpit ever opens (draft.ts's ensureImageOptions), "find more" is now an
   // explicit escalation beyond that guaranteed default, up to 10 total.
   const options = photoOptions.filter((o) => o.url).slice(0, MAX_OPTIONS);
 

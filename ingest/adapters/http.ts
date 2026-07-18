@@ -3,8 +3,7 @@
 // Shared HTML fetch for the scrape adapters + the per-source MANAGED-SCRAPE switch
 // (Doc 11 §11 Phase 14, the Option-C reserve). By default a source is fetched with
 // a plain UA'd request. A single blocked source can be routed through a managed
-// scraper (Scrapfly here; Apify is a one-function swap) WITHOUT a code change —
-// just add its key to the MANAGED_SCRAPE env list (or set useManagedScrape on the
+// scraper (Scrapfly here; Apify is a one-function swap) WITHOUT a code change, // just add its key to the MANAGED_SCRAPE env list (or set useManagedScrape on the
 // adapter). OFF by default: no env + no flag => plain fetch, no third-party calls.
 
 const UA = 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)';
@@ -44,7 +43,7 @@ async function managedGet(url: string): Promise<string> {
   return html;
 }
 
-/** Fetch a page's HTML — plain by default, managed when the source is opted in. */
+/** Fetch a page's HTML, plain by default, managed when the source is opted in. */
 export function fetchHtml(url: string, sourceKey: string, flag?: boolean): Promise<string> {
   return isManaged(sourceKey, flag) ? managedGet(url) : plainGet(url);
 }

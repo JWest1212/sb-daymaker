@@ -1,6 +1,6 @@
 // ingest/activityBackfill.ts
 //
-// Doc 21 §4 — the deterministic `happening_category` -> `activities[]` mapping.
+// Doc 21 §4, the deterministic `happening_category` -> `activities[]` mapping.
 // Pure, no AI, no per-request calls. Used by the one-time backfill
 // (scripts/backfill_activities.mts, Doc 21 Phase 2/3) and the nightly land-step
 // self-heal (toThingRow, Doc 21 Phase 4). All 16 HappeningCategory values are
@@ -29,7 +29,7 @@ const CATEGORY_TO_ACTIVITIES: Record<HappeningCategory, ActivityKey[]> = {
   community_gathering: ['community-festivals'],
 };
 
-/** Pure. Unknown/null categories map to no slugs rather than throwing — the
+/** Pure. Unknown/null categories map to no slugs rather than throwing, the
  *  land step and the backfill script both see hand-typed strings from the DB. */
 export function categoryToActivities(category: string | null | undefined): ActivityKey[] {
   if (!category) return [];

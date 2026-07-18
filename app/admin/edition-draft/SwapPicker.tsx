@@ -30,7 +30,7 @@ export function SwapPicker({
 
   // Debounced search-all (spec §5.1's "search-all fallback"). setState calls
   // live inside the timer callback, not the effect body, so this only ever
-  // fires in response to the debounce elapsing — not on every render.
+  // fires in response to the debounce elapsing, not on every render.
   useEffect(() => {
     if (!showSearch) return;
     const t = setTimeout(() => {
@@ -48,7 +48,7 @@ export function SwapPicker({
       <div className="scrim show" onClick={onClose} />
       <div className="sheet show" role="dialog" aria-modal="true" aria-labelledby="swapTitle">
         <h3 id="swapTitle">
-          Swap — {slot}{slot === "secondary" ? ` #${position + 1}` : ""}
+          Swap, {slot}{slot === "secondary" ? ` #${position + 1}` : ""}
           <button className="x" aria-label="Close" onClick={onClose}>✕</button>
         </h3>
         <div className="sbody">
@@ -65,7 +65,7 @@ export function SwapPicker({
                 <div className="pickrow" key={t.id}>
                   <div>
                     <div className="ttl">{t.title}</div>
-                    <div className="pm">T{t.happening_tier} · {t.neighborhood ?? "—"}</div>
+                    <div className="pm">T{t.happening_tier} · {t.neighborhood ?? "·"}</div>
                     {candidateBlurb(slot, t.blurb, t.blurb_long) ? (
                       <div className="ed-swap-blurb">{candidateBlurb(slot, t.blurb, t.blurb_long)}</div>
                     ) : null}
@@ -78,12 +78,12 @@ export function SwapPicker({
             <>
               <p className="ed-swap-heading">Ranked candidates</p>
               {candidates.length === 0 ? (
-                <div className="gatebox">No ranked alternates for this slot — search above for any published thing.</div>
+                <div className="gatebox">No ranked alternates for this slot, search above for any published thing.</div>
               ) : candidates.map((c) => (
                 <div className="pickrow" key={c.thing.id}>
                   <div>
                     <div className="ttl">{c.thing.title}{c.selected ? <span className="chip evergreen"> current</span> : null}</div>
-                    <div className="pm">{c.thing.when} · {c.thing.neighborhood ?? "—"}</div>
+                    <div className="pm">{c.thing.when} · {c.thing.neighborhood ?? "·"}</div>
                     {candidateBlurb(slot, c.thing.blurb, c.thing.blurb_long) ? (
                       <div className="ed-swap-blurb">{candidateBlurb(slot, c.thing.blurb, c.thing.blurb_long)}</div>
                     ) : null}

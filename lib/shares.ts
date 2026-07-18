@@ -4,7 +4,7 @@ import type { SharedPlanPayload } from "./plan/types";
 
 // Isomorphic wrappers around the shared_states RPC API (shared_states_rpc.sql).
 // Reads/writes go through SECURITY DEFINER functions, so the publishable key is
-// all that's needed — the table stays locked.
+// all that's needed, the table stays locked.
 
 export interface SharedStateResult {
   kind: "shared_list" | "save_restore" | "shared_plan";

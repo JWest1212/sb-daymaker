@@ -9,18 +9,18 @@
 //   2. Direct Google (Phase 1)     -> food/drink venues with a place_id, tried
 //      before Wikimedia (still capped, cached, counted)
 //   3. Wikimedia (free, SB-specific) -> geosearch-gated when lat/lng exist, else a
-//      title-search fallback (places only, never events — Phase 1 §4.1/§4.2)
+//      title-search fallback (places only, never events, Phase 1 §4.1/§4.2)
 //   4. Google Place Photo (PAID)   -> only if every free tier genuinely missed, the
 //      card has a place_id, and the persisted monthly counter is under the cap.
 //   5. Motif / big-type (Phase 3)  -> the cap is hit, no image exists anywhere, the
 //      item is a civic meeting (isCivicImage), OR the item is a Tier-1 dated event,
-//      which always defaults to no photo (eventDefaultsToNoPhoto) — a deterministic
+//      which always defaults to no photo (eventDefaultsToNoPhoto), a deterministic
 //      house-drawn motif (or the big-type fallback) from `lib/visualAssignment.ts`,
 //      never Pexels stock, never AI at runtime.
 //   6. branded gradient            -> the code-level final safety net (ListCard's
 //      occasion-gradient fallback), only reached if a `visual` is somehow missing.
 //
-// Pexels retired Phase 3 (§6.2) — the `'pexels'` enum value stays (historical rows
+// Pexels retired Phase 3 (§6.2), the `'pexels'` enum value stays (historical rows
 // re-resolve through this file same as anything else; the value just never gets
 // assigned again). PEXELS_API_KEY is no longer read anywhere in this file.
 //
@@ -38,14 +38,13 @@ import { pickFromPool, type PoolPhoto } from '../lib/venuePool';
 import { assignVisual, type VisualAssignment } from '../lib/visualAssignment';
 import { sbDay } from '../lib/explore';
 
-// Card Imagery Build Spec Phase 0 §3.1.4 (re-verified Phase 1 §4.5, 2026-07-09 —
-// see the Build Deltas ledger): of the two billable calls per Google photo, only the
-// second (Place Photo media) actually costs money — $7.00/1,000 (Enterprise tier,
+// Card Imagery Build Spec Phase 0 §3.1.4 (re-verified Phase 1 §4.5, 2026-07-09, // see the Build Deltas ledger): of the two billable calls per Google photo, only the
+// second (Place Photo media) actually costs money, $7.00/1,000 (Enterprise tier,
 // 1,000 free/mo); the first (Place Details, fieldmask=photos) is Essentials-IDs-Only,
 // $0/unlimited. `onCall()` still counts BOTH toward the shared cap below (a call-
-// count runaway guard, not a dollar meter) — cheaper in practice than the cap number
+// count runaway guard, not a dollar meter), cheaper in practice than the cap number
 // implies. Default cap dropped 1400 -> 500 in Phase 2; raised to 1200 (Jim,
-// 2026-07-11) for the Images-desk backlog clear — Google's photo-media free tier
+// 2026-07-11) for the Images-desk backlog clear, Google's photo-media free tier
 // is 1,000/mo and only ~half the counted calls are billable, so ~1200 still lands
 // ≈$0. If the env var is set anywhere (GitHub repo variable for the nightly), it
 // overrides this default and needs raising separately.
@@ -65,7 +64,7 @@ export interface ResolveStats {
   rejectedQuality: number; rejectedRelevance: number;
 }
 
-/** Addendum Part B — quality bar: a retina-safe HD floor. Free-tier searches
+/** Addendum Part B, quality bar: a retina-safe HD floor. Free-tier searches
  *  occasionally return thumbnail-sized or cropped-down images; this screens those
  *  out before they can become the auto-pick or a cockpit alternate. Options with no
  *  reported size (shouldn't happen for pexels/wikimedia/google after the capture
@@ -86,26 +85,26 @@ export function cacheKey(c: Pick<Candidate, 'place_id' | 'title' | 'neighborhood
   return `${t}|${c.neighborhood ?? ''}`;
 }
 
-/** W2.3 — category-keyed query phrases so a community_gathering doesn't draw the same
+/** W2.3, category-keyed query phrases so a community_gathering doesn't draw the same
  *  generic stock as a live_music. Appended to the title so per-title variety survives
  *  while the imagery gains thematic relevance. This is a BRIDGE: the motif SVG library
  *  (separate design track) will supersede most of these. Civic-meeting items are handled
  *  separately (isCivicImage → straight to placeholder), not here. */
 export const CATEGORY_QUERY: Partial<Record<HappeningCategory, string>> = {
-  // Tier 1 — dated events
+  // Tier 1, dated events
   live_music: 'live band small venue stage',
   festival_fair: 'outdoor street festival crowd',
   arts_theater: 'theater stage performance',
   community_gathering: 'community gathering people outdoors',
   food_drink_event: 'food festival tasting table',
   sports_outdoors_event: 'outdoor sports race coast',
-  // Tier 2 — recurring
+  // Tier 2, recurring
   weekly_special: 'restaurant bar drinks',
   recurring_nightlife: 'nightlife bar lounge evening',
   recurring_market: 'farmers market produce stall california',
   recurring_arts: 'art gallery exhibit',
   recurring_outdoors: 'coastal trail nature walk',
-  // Tier 3 — evergreen places
+  // Tier 3, evergreen places
   outdoor_activity: 'coastal trail outdoors california',
   food_drink_spot: 'restaurant food plating',
   culture_spot: 'museum gallery interior',
@@ -114,13 +113,13 @@ export const CATEGORY_QUERY: Partial<Record<HappeningCategory, string>> = {
 };
 
 /** True when an item is a civic/government meeting (by title, via the W2.1b classifier).
- *  W2.3: for these, a neutral branded placeholder beats a misleading stock photo — we
+ *  W2.3: for these, a neutral branded placeholder beats a misleading stock photo, we
  *  skip the network sources entirely (a fake "council chamber" photo is worse than none). */
 export function isCivicImage(c: Pick<Candidate, 'title'>): boolean {
   return classifyWeight({ title: c.title }) < 0;
 }
 
-/** Free-source search query — concrete and SB-scoped, category-aware (W2.3). */
+/** Free-source search query, concrete and SB-scoped, category-aware (W2.3). */
 export function imageQuery(
   c: Pick<Candidate, 'title' | 'neighborhood'> & { happening_category?: HappeningCategory | string | null },
 ): string {
@@ -132,11 +131,11 @@ export function imageQuery(
 
 /** Rank found options and always append the placeholder as the final alternate
  *  (the resolver below replaces it with a motif/big-type assignment when nothing
- *  real was found — this sentinel is what "nothing found" looks like to the
- *  caller). Card Imagery Build Spec Phase 0 §3.1.1 — relevance-first: an
+ *  real was found, this sentinel is what "nothing found" looks like to the
+ *  caller). Card Imagery Build Spec Phase 0 §3.1.1, relevance-first: an
  *  SB-specific free source (Wikimedia) outranks Google. Phase 3 §6.2 retired
  *  Pexels from fetching; Jim's follow-up call (2026-07-11, Images desk) retired
- *  it from SELECTION too — a historical 'pexels' entry surviving in a thing's
+ *  it from SELECTION too, a historical 'pexels' entry surviving in a thing's
  *  stored `photo_options` (the only way one can still reach this function) is
  *  DROPPED here, not demoted, so every merge-and-persist scrubs old rows and no
  *  picker anywhere is ever offered one. Wikimedia / Google / owned only. */
@@ -147,7 +146,7 @@ export function rankOptions(found: ImageOption[]): ImageOption[] {
   return [...real, { url: '', source: 'placeholder' as const }];
 }
 
-/** Card Imagery Build Spec Phase 0 §3.1.2 — Tier-1 dated events default to no photo:
+/** Card Imagery Build Spec Phase 0 §3.1.2, Tier-1 dated events default to no photo:
  *  a house-drawn motif (Phase 3) beats a generic/mismatched stock photo for the 87%
  *  of the catalog that's happenings, not places. Pure so it's unit-testable
  *  independent of the resolver's DB/network calls. */
@@ -155,7 +154,7 @@ export function eventDefaultsToNoPhoto(c: Pick<Candidate, 'tier'>): boolean {
   return c.tier === 1;
 }
 
-/** Card Imagery Build Spec Phase 1 §4.5 — food/drink venues route to direct Google
+/** Card Imagery Build Spec Phase 1 §4.5, food/drink venues route to direct Google
  *  ahead of Wikimedia. Pure so the resolver's branch and the scoped backfill's row
  *  selection share one definition instead of drifting. */
 export function isDirectGoogleFoodCandidate(c: Pick<Candidate, 'happening_category' | 'type'>): boolean {
@@ -166,12 +165,11 @@ export function isDirectGoogleFoodCandidate(c: Pick<Candidate, 'happening_catego
  *  this run (seeded with the catalog's existing counts), reorder so the LEAST-used real
  *  option leads; source rank breaks ties. Placeholder stays last. Count-based (not a
  *  yes/no set) so that when a cluster of similar events exhausts its shared option pool,
- *  repeats spread evenly across the pool instead of piling back onto the first option —
- *  the threshold-1 run showed ~90 library events collapsing onto one photo without this. */
+ *  repeats spread evenly across the pool instead of piling back onto the first option, *  the threshold-1 run showed ~90 library events collapsing onto one photo without this. */
 export function pickUnused(options: ImageOption[], used: Map<string, number>): ImageOption[] {
   const real = options.filter((o) => o.url);
   const placeholder = options.filter((o) => !o.url);
-  // Stable sort by usage count asc — unused (0) first, then least-used; original
+  // Stable sort by usage count asc, unused (0) first, then least-used; original
   // source ranking (pexels > wikimedia > google) breaks ties.
   const sorted = real
     .map((o, i) => [o, i] as const)
@@ -184,10 +182,9 @@ export function pickUnused(options: ImageOption[], used: Map<string, number>): I
 //
 // Geosearch mode (candidate has lat/lng) replaces the old title-only search as the
 // primary Wikimedia path; title-search remains as a fallback for PLACES only (never
-// events — §4.1's explicit rule: an event with no coords never gets a title-searched,
+// events, §4.1's explicit rule: an event with no coords never gets a title-searched,
 // unverified-location photo). Both modes route their raw candidates through the same
-// gate + scorer below, so this is the single authoritative Wikimedia quality check —
-// the outer resolver no longer re-applies the generic meetsQualityBar() to a
+// gate + scorer below, so this is the single authoritative Wikimedia quality check, // the outer resolver no longer re-applies the generic meetsQualityBar() to a
 // wikimedia() result (its 800px floor + aspect/blocklist/MIME checks are stricter and
 // more source-specific than that generic 960px bar).
 
@@ -206,7 +203,7 @@ const WIKIMEDIA_ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']
  *  geosearch mode (the origin point comes from the caller, not the API result). */
 export interface WikimediaCandidate {
   url: string;
-  title: string; // "File:...jpg" — checked against the blocklist + scored for keyword overlap
+  title: string; // "File:...jpg", checked against the blocklist + scored for keyword overlap
   description: string;
   width: number;
   height: number;
@@ -223,7 +220,7 @@ export function passesWikimediaGate(c: Pick<WikimediaCandidate, 'title' | 'width
   const ratio = c.width / c.height;
   if (ratio < WIKIMEDIA_MIN_ASPECT || ratio > WIKIMEDIA_MAX_ASPECT) return false;
   // Commons filenames use underscores as word separators (e.g. "Santa_Barbara_Map_
-  // 1875.jpg") — normalize to spaces first so \b boundaries actually land between
+  // 1875.jpg"), normalize to spaces first so \b boundaries actually land between
   // words instead of treating "_" as a word character and missing the match.
   if (WIKIMEDIA_BLOCKLIST.test(c.title.replace(/[_-]+/g, ' '))) return false;
   if (!WIKIMEDIA_ALLOWED_MIME.has(c.mime)) return false;
@@ -231,7 +228,7 @@ export function passesWikimediaGate(c: Pick<WikimediaCandidate, 'title' | 'width
 }
 
 /** PD/CC0 +3, CC BY +2, CC BY-SA +1, anything else 0 (and effectively flagged by
- *  scoring low — an unrecognized license still renders via the attribution string). */
+ *  scoring low, an unrecognized license still renders via the attribution string). */
 function licenseScore(license: string): number {
   const s = license.toLowerCase();
   if (/\bcc0\b|public domain|\bpd\b/.test(s)) return 3;
@@ -259,8 +256,8 @@ export function scoreWikimediaCandidate(
 
 /** Gate, score, and rank every survivor above the minimum threshold, best first
  *  (distance breaks equal-score ties ascending, geosearch mode only). Card Imagery
- *  Build Spec Phase 2 §5.3 — the cockpit's "top-5 gated Wikimedia geosearch results"
- *  for a venue reuses this instead of forking a second gate/scorer. Pure — the
+ *  Build Spec Phase 2 §5.3, the cockpit's "top-5 gated Wikimedia geosearch results"
+ *  for a venue reuses this instead of forking a second gate/scorer. Pure, the
  *  network fetchers hand it their parsed candidate list; independently unit-tested. */
 export function rankWikimediaCandidates(
   cands: WikimediaCandidate[],
@@ -293,7 +290,7 @@ function toWikimediaOption(c: WikimediaCandidate): ImageOption {
 
 // ---- network sources (isolated; each returns null on miss/error) -----------
 // Pexels retired here Phase 3 §6.2 (pexelsMany, the rate-limit flag, and the
-// PEXELS_API_KEY read all removed) — Wikimedia/Google/motif cover every case it
+// PEXELS_API_KEY read all removed), Wikimedia/Google/motif cover every case it
 // used to fill.
 
 function parseWikimediaPage(pg: any): Omit<WikimediaCandidate, 'distanceM'> | null {
@@ -309,7 +306,7 @@ function parseWikimediaPage(pg: any): Omit<WikimediaCandidate, 'distanceM'> | nu
     url: u,
     title: pg?.title ?? '',
     description,
-    // Original dimensions (Wikimedia never upscales the thumb beyond them) — the
+    // Original dimensions (Wikimedia never upscales the thumb beyond them), the
     // right quality-bar signal even though we serve the capped 1200px-wide thumb.
     width: info?.width ?? 0,
     height: info?.height ?? 0,
@@ -345,7 +342,7 @@ export async function wikimediaGeosearch(lat: number, lng: number): Promise<Wiki
 }
 
 /** §4.1 title mode: fallback when a candidate has no lat/lng. Restricted to PLACES
- *  by the caller (`wikimedia()` below) — never used for a Tier-1 dated event. */
+ *  by the caller (`wikimedia()` below), never used for a Tier-1 dated event. */
 async function wikimediaTitleSearch(query: string): Promise<WikimediaCandidate[]> {
   try {
     const url = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search`
@@ -362,7 +359,7 @@ async function wikimediaTitleSearch(query: string): Promise<WikimediaCandidate[]
 }
 
 /** Orchestrator: geosearch when the candidate has lat/lng (works at any tier);
- *  title-search fallback only for places (never a Tier-1 event with no coords — §4.1).
+ *  title-search fallback only for places (never a Tier-1 event with no coords, §4.1).
  *  Both modes route through the same gate + scorer (§4.2) before a pick is returned. */
 async function wikimedia(
   c: { title: string; neighborhood?: string; lat?: number; lng?: number; tier?: number },
@@ -418,14 +415,14 @@ async function googlePhoto(placeId: string, onCall: () => void): Promise<ImageOp
   } catch { return null; }
 }
 
-/** 2026-07-10 — distinguishes a CONFIRMED-gone photo from an ambiguous failure, so
+/** 2026-07-10, distinguishes a CONFIRMED-gone photo from an ambiguous failure, so
  *  the refresh step can react to a real death immediately instead of waiting out a
  *  grace period on every failure. 'not_found' = Google's API itself says this exact
- *  photo resource no longer exists (a real HTTP 404 on the media endpoint) — the
+ *  photo resource no longer exists (a real HTTP 404 on the media endpoint), the
  *  business removed the photo, Google's moderation pulled it, or the place itself
  *  is gone. Every other failure (rate limit, 5xx, network error, or an ambiguous
  *  403 that could just as easily mean an API-key/billing problem as a dead photo)
- *  is 'error' — NOT treated as confirmed dead, because reacting to those instantly
+ *  is 'error', NOT treated as confirmed dead, because reacting to those instantly
  *  risks a false-positive mass-reassignment (e.g. a billing hiccup would make many
  *  unrelated photos fail at once; that's a config problem to fix, not hundreds of
  *  venues suddenly needing new photos). */
@@ -434,10 +431,9 @@ export type GoogleRefreshResult =
   | { status: 'not_found' }
   | { status: 'error' };
 
-/** Card Imagery Build Spec Phase 2 §5.5 — the compliant refresh step's own call:
+/** Card Imagery Build Spec Phase 2 §5.5, the compliant refresh step's own call:
  *  re-request a fresh Place Photo media URL for an ALREADY-KNOWN photo resource
- *  name (`venue_photos.stable_ref`). One billable call, no Place Details re-fetch —
- *  the whole point of persisting the stable resource name instead of just the URI. */
+ *  name (`venue_photos.stable_ref`). One billable call, no Place Details re-fetch, *  the whole point of persisting the stable resource name instead of just the URI. */
 export async function refreshGoogleMediaUri(photoResourceName: string): Promise<GoogleRefreshResult> {
   if (!GOOGLE_KEY) return { status: 'error' };
   try {
@@ -460,16 +456,15 @@ export interface PlaceSearchResult {
   formattedAddress: string;
 }
 
-/** Card Imagery Build Spec Phase 2 follow-up, 2026-07-10 — Jim's ask: find a
+/** Card Imagery Build Spec Phase 2 follow-up, 2026-07-10, Jim's ask: find a
  *  venue's Google place_id automatically instead of a manual Place ID Finder
  *  lookup per venue. Text Search (New), field mask limited to
- *  id/location/displayName/formattedAddress — verified pricing: this field
+ *  id/location/displayName/formattedAddress, verified pricing: this field
  *  combination is Text Search PRO ($32/1,000, 5,000 free/month; `id` alone would
- *  be the free Essentials tier, but location + displayName both require Pro —
- *  Google bills the whole request at the highest SKU any requested field
+ *  be the free Essentials tier, but location + displayName both require Pro, *  Google bills the whole request at the highest SKU any requested field
  *  touches). At this feature's actual volume (one-off + occasional new-venue
  *  lookups, nowhere near thousands/month) this is realistically $0 forever.
- *  Returns only the FIRST (best) match — the caller shows it to a human for
+ *  Returns only the FIRST (best) match, the caller shows it to a human for
  *  confirmation before writing anything, so a second-best result is never
  *  silently used. */
 export async function searchPlaceByText(query: string): Promise<PlaceSearchResult | null> {
@@ -498,16 +493,15 @@ export async function searchPlaceByText(query: string): Promise<PlaceSearchResul
   } catch { return null; }
 }
 
-/** Card Imagery Build Spec Phase 2, place_id-lookup follow-up (2026-07-10) —
- *  when `searchPlaceByText` only geocodes a bare address back (no real business
- *  found — see `isWeakPlaceMatch` in lib/venuePool.ts), Nearby Search (New) at a
+/** Card Imagery Build Spec Phase 2, place_id-lookup follow-up (2026-07-10), *  when `searchPlaceByText` only geocodes a bare address back (no real business
+ *  found, see `isWeakPlaceMatch` in lib/venuePool.ts), Nearby Search (New) at a
  *  tight radius around that exact point surfaces the real named POIs actually
  *  sitting there (verified live: a 60m search around a bare "40 E Anapamu St"
  *  geocode correctly surfaces "Santa Barbara Public Library" as its first
  *  result). Same field mask/pricing tier as Text Search Pro. Filters out any
  *  result that's ITSELF just an address echo, so the caller only ever sees
  *  genuinely-named candidates. Returns Google's own relevance ranking as-is
- *  (a human picks the right one, if any, in the review UI — this never
+ *  (a human picks the right one, if any, in the review UI, this never
  *  auto-selects). */
 export async function searchNearbyNamedPlaces(lat: number, lng: number, radiusMeters: number, limit = 5): Promise<PlaceSearchResult[]> {
   if (!GOOGLE_KEY) return [];
@@ -538,16 +532,16 @@ export async function searchNearbyNamedPlaces(lat: number, lng: number, radiusMe
 }
 
 export interface GooglePhotoCandidate {
-  stable_ref: string; // photo resource name — persisted verbatim as venue_photos.stable_ref
+  stable_ref: string; // photo resource name, persisted verbatim as venue_photos.stable_ref
   preview_url: string;
   attribution: string | null;
   width?: number;
   height?: number;
 }
 
-/** Card Imagery Build Spec Phase 2 §5.3 — the cockpit's "Fetch candidates" action:
+/** Card Imagery Build Spec Phase 2 §5.3, the cockpit's "Fetch candidates" action:
  *  up to `max` Google photos for a venue's place_id (1 free-tier Place Details call,
- *  then one billable Place Photo media call PER candidate preview — "batch the
+ *  then one billable Place Photo media call PER candidate preview, "batch the
  *  preview media calls" per the spec means fetch on demand per venue, not eagerly
  *  for every venue, not that a single fetch's own previews are batched down). Stops
  *  early if `hasBudget()` goes false mid-loop so a founder's click can never blow
@@ -560,7 +554,7 @@ export async function fetchGooglePhotoCandidates(
 ): Promise<GooglePhotoCandidate[]> {
   if (!GOOGLE_KEY || !hasBudget()) return [];
   try {
-    onCall(); // Place Details — Essentials IDs Only SKU, $0/unlimited (verified Phase 1)
+    onCall(); // Place Details, Essentials IDs Only SKU, $0/unlimited (verified Phase 1)
     const detRes = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`, {
       headers: { 'X-Goog-Api-Key': GOOGLE_KEY, 'X-Goog-FieldMask': 'photos' },
     });
@@ -571,7 +565,7 @@ export async function fetchGooglePhotoCandidates(
     for (const photo of photos) {
       if (!hasBudget()) break;
       if (!photo?.name) continue;
-      onCall(); // Place Photo media — Enterprise SKU, billable
+      onCall(); // Place Photo media, Enterprise SKU, billable
       const medRes = await fetch(
         `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=1200&skipHttpRedirect=true`,
         { headers: { 'X-Goog-Api-Key': GOOGLE_KEY } },
@@ -591,7 +585,7 @@ export async function fetchGooglePhotoCandidates(
 }
 
 /** On-demand widening for the cockpit's "find more options" action (edition_build_spec
- *  §3.5 — "and lazily for candidates on demand"). Free, no Google — an operator
+ *  §3.5, "and lazily for candidates on demand"). Free, no Google, an operator
  *  clicking repeatedly should never risk the paid cap. Wikimedia only since Phase 3
  *  retired Pexels (§6.2); the cockpit's motif-tier alternates (if any) come from
  *  the registry directly, not this widening action. Merges with the caller's
@@ -601,7 +595,7 @@ export async function findMoreOptions(query: string, existing: ImageOption[]): P
   const existingReal = existing.filter((o) => o.url);
   const seen = new Set(existingReal.map((o) => o.url));
   const fresh: ImageOption[] = [];
-  // No candidate object here (this action is query-string-only, on demand) — always
+  // No candidate object here (this action is query-string-only, on demand), always
   // title-search mode, gated exactly like the main resolver's fallback path.
   const wmBest = pickBestWikimedia(await wikimediaTitleSearch(query), { title: query });
   const wm = wmBest ? toWikimediaOption(wmBest) : null;
@@ -609,9 +603,9 @@ export async function findMoreOptions(query: string, existing: ImageOption[]): P
   return rankOptions([...existingReal, ...fresh]);
 }
 
-/** Images desk (2026-07-11) — the desk's free-candidate search, deliberately
+/** Images desk (2026-07-11), the desk's free-candidate search, deliberately
  *  richer than the single-hit findMoreOptions above: Wikimedia GEOSEARCH when
- *  the thing has coordinates (the resolver's own primary free path — same gate
+ *  the thing has coordinates (the resolver's own primary free path, same gate
  *  + scorer, top 5), merged with the best title-search hit. Free, never Google.
  *  Title-search is allowed here even for dated events because every desk pick
  *  is founder-reviewed before/after it lands (§4.1 forbids title-search only
@@ -648,7 +642,7 @@ export async function findFreeCandidates(
 // ---- spend counter ----------------------------------------------------------
 // Exported (Phase 2 §5.5) so the nightly venue-photo refresh step in ingest/run.ts
 // shares this exact counter instead of a second, divergence-prone bookkeeping path
-// — it's the same shared monthly cap the resolver above enforces.
+//, it's the same shared monthly cap the resolver above enforces.
 
 export function monthKey(): string {
   return new Date().toISOString().slice(0, 7); // YYYY-MM (UTC)
@@ -665,7 +659,7 @@ export async function saveSpend(sb: SupabaseClient, month: string, google_calls:
 }
 export { CAP };
 
-/** W2.3 — cheap image_cache scan: per-url usage counts across the catalog. Seeds the
+/** W2.3, cheap image_cache scan: per-url usage counts across the catalog. Seeds the
  *  per-batch dedupe so fresh resolutions steer away from already-popular photos (and
  *  spread evenly when a shared pool is exhausted). Read-only; cost-free. */
 async function loadUrlCounts(sb: SupabaseClient): Promise<Map<string, number>> {
@@ -678,7 +672,7 @@ async function loadUrlCounts(sb: SupabaseClient): Promise<Map<string, number>> {
   return counts;
 }
 
-// ---- Phase 2 §5 — venue registry + photo pools -----------------------------
+// ---- Phase 2 §5, venue registry + photo pools -----------------------------
 
 export interface LoadedVenue {
   id: string;
@@ -689,8 +683,7 @@ export interface LoadedVenue {
   name_patterns: string[];
 }
 
-/** Batch-load every active venue + its approved photo pool (ordered) once per run —
- *  same shape as the image_cache/url-count batch loads above. Cheap: ~dozens of
+/** Batch-load every active venue + its approved photo pool (ordered) once per run, *  same shape as the image_cache/url-count batch loads above. Cheap: ~dozens of
  *  venues, a few hundred pool rows at most. Exported (2026-07-10 venue-pool-beats-
  *  Tier-1-default fix) so `ingest/run.ts`'s no-network Tier-1 backfill fast path can
  *  check for a pool match the same way the live resolver does, instead of a second,
@@ -737,11 +730,11 @@ export async function loadVenuePools(sb: SupabaseClient): Promise<{
   return { byId, byPlaceId, poolsByVenueId };
 }
 
-/** Card Imagery Build Spec Phase 2 §5.2 — "exact place_id match auto-attaches;
+/** Card Imagery Build Spec Phase 2 §5.2, "exact place_id match auto-attaches;
  *  fuzzy matches queue for review." A candidate that already carries a venue_id
  *  (an already-landed thing whose fuzzy match a founder approved in the cockpit)
  *  keeps it; otherwise an exact place_id hit against the loaded registry attaches
- *  one fresh. No fuzzy/proximity guessing here — that's the cockpit's job.
+ *  one fresh. No fuzzy/proximity guessing here, that's the cockpit's job.
  *  Exported alongside `loadVenuePools` for the same reason. */
 export function matchVenueForCandidate(
   c: Pick<Candidate, 'venue_id' | 'place_id'>,
@@ -783,37 +776,37 @@ export async function resolveImages(
   const used = await loadUrlCounts(sb);
   const bump = (u: string) => used.set(u, (used.get(u) ?? 0) + 1);
 
-  // Phase 2 §5.4 — active venues + their approved photo pools, batch-loaded once.
+  // Phase 2 §5.4, active venues + their approved photo pools, batch-loaded once.
   const { byId: venuesById, byPlaceId: venuesByPlaceId, poolsByVenueId } = await loadVenuePools(sb);
   const today = sbDay(Date.now());
 
   const out: Candidate[] = [];
   // Freshly-resolved rows whose auto-pick still needs the Part B relevance guard
-  // before it can be finalized/persisted — cache hits skip straight to `out` above
+  // before it can be finalized/persisted, cache hits skip straight to `out` above
   // (once vetted, always vetted; re-checking every run would just burn tokens).
   // `skipRelevance` (Phase 1 §4.4 / Phase 2 §5.4): a marquee-venue pin or a venue-pool
-  // pick is a founder-approved choice, not an auto-pick — the vision guard exists to
+  // pick is a founder-approved choice, not an auto-pick, the vision guard exists to
   // catch a WRONG auto-match, so it has nothing to check here.
   const pending: { c: Candidate; key: string; options: ImageOption[]; skipRelevance?: boolean; poolMatched: boolean; marqueeKey: string | null; venue_id?: string }[] = [];
 
   for (const c of cands) {
     const key = cacheKey(c);
     const cached = cache.get(key);
-    // Phase 2 §5.2 — auto-attach on an exact place_id match only; a candidate that
+    // Phase 2 §5.2, auto-attach on an exact place_id match only; a candidate that
     // already carries venue_id (a founder-approved fuzzy match from a prior cockpit
     // review) keeps it. Computed BEFORE the cache-hit branch below: venue_id is a
     // structural thing-attribute, independent of the place-level photo cache.
     const matchedVenue = matchVenueForCandidate(c, venuesById, venuesByPlaceId);
     const matchedPool = matchedVenue ? poolsByVenueId.get(matchedVenue.id) : undefined;
     const hasPoolOverride = !!(matchedPool && matchedPool.length > 0);
-    // Phase 1 §4.4 — landmark match, computed once up front so BOTH the cache-hit
+    // Phase 1 §4.4, landmark match, computed once up front so BOTH the cache-hit
     // fast path below and the fresh-gather path (and Phase 3's motif assignment,
     // either way) share the same result instead of two divergent lookups.
     const marquee = matchMarqueeVenue(c);
 
     if (!opts.force && !hasPoolOverride && cached && cached.photo_source && cached.photo_source !== 'placeholder') {
       // Phase 0 §3.1.2 / Phase 3 §6.2: a cached PLACE-level real photo still isn't
-      // shown on a Tier-1 event — e.g. a second same-venue event landing after the
+      // shown on a Tier-1 event, e.g. a second same-venue event landing after the
       // first already cached a real find; it gets its own motif/big-type instead.
       // The cache itself is untouched (still holds the real place-level resolution
       // for a future non-event candidate).
@@ -831,16 +824,16 @@ export async function resolveImages(
     }
 
     // Gather alternates first (the picker arrows through them). W2.3: civic meetings
-    // skip the network entirely — a neutral placeholder beats a misleading stock
+    // skip the network entirely, a neutral placeholder beats a misleading stock
     // photo (found stays empty → rankOptions yields the placeholder).
     const found: ImageOption[] = [];
     let skipRelevance = false;
     if (!isCivicImage(c)) {
-      // Phase 2 §5.4 — DB venue pool (priority 2, "venue pool"), checked before the
+      // Phase 2 §5.4, DB venue pool (priority 2, "venue pool"), checked before the
       // Phase 1 marquee file-pin: once a venue has real approved photos (curated via
       // the cockpit's Venues tab), this is the live mechanism; the marquee file-pin
       // below is the pre-Phase-2 fallback for a venue that's matched but has no
-      // approved pool yet (in practice a no-op today — every marqueeVenues.ts entry
+      // approved pool yet (in practice a no-op today, every marqueeVenues.ts entry
       // ships with pinnedPhoto empty, per the Phase 1 ledger note).
       if (hasPoolOverride) {
         const idx = pickFromPool(c.id, today, matchedPool!.length);
@@ -848,15 +841,15 @@ export async function resolveImages(
         found.push({ url: picked.url, source: picked.source, attribution: picked.attribution ?? undefined });
         skipRelevance = true;
       } else {
-      // Phase 1 §4.4 — marquee-venue inheritance. A match with no pinnedPhoto yet (the
-      // registry ships empty; Jim pins later) is a no-op — falls through unchanged.
+      // Phase 1 §4.4, marquee-venue inheritance. A match with no pinnedPhoto yet (the
+      // registry ships empty; Jim pins later) is a no-op, falls through unchanged.
       const pin = marquee?.pinnedPhoto;
       if (pin) {
         found.push({ url: pin.url, source: pin.source, attribution: pin.attribution });
         skipRelevance = true;
       } else {
         const q = imageQuery(c);
-        // Phase 1 §4.5 — direct Google for food/drink venues, tried BEFORE Wikimedia
+        // Phase 1 §4.5, direct Google for food/drink venues, tried BEFORE Wikimedia
         // (priority 3, ahead of gated Wikimedia at priority 4). A hit here IS the
         // found real photo: no point also spending free-tier quota confirming it.
         const isFoodVenue = isDirectGoogleFoodCandidate(c) && !!c.place_id;
@@ -869,17 +862,17 @@ export async function resolveImages(
           }
         }
         if (!found.length) {
-          // §4.1/§4.2 — geosearch-gated when the candidate has lat/lng, else a
+          // §4.1/§4.2, geosearch-gated when the candidate has lat/lng, else a
           // title-search fallback for places only; already gated internally, so no
           // meetsQualityBar() re-check here (that's the generic 960px bar; Wikimedia's
           // own 800px + aspect/blocklist/MIME gate is the authoritative one for it).
           const wm = await wikimedia(c, q);
           if (wm) found.push(wm);
-          // Paid fallback — only when every free tier GENUINELY missed.
-          // Phase 0 §3.1.2: never spend a paid call on a Tier-1 event — its auto-pick is
+          // Paid fallback, only when every free tier GENUINELY missed.
+          // Phase 0 §3.1.2: never spend a paid call on a Tier-1 event, its auto-pick is
           // forced to a motif/big-type below regardless, so a Google call here would be
           // spent on a photo nobody ever sees. `!isFoodVenue`: a food venue already
-          // tried this exact place_id above — retrying would just repeat the same
+          // tried this exact place_id above, retrying would just repeat the same
           // (empty) result and burn cap for nothing.
           if (!found.length && c.place_id && GOOGLE_KEY && !eventDefaultsToNoPhoto(c) && !isFoodVenue) {
             if (calls < CAP) {
@@ -899,9 +892,9 @@ export async function resolveImages(
     pending.push({ c, key, options, skipRelevance, poolMatched: hasPoolOverride, marqueeKey: marquee?.key ?? null, ...(matchedVenue ? { venue_id: matchedVenue.id } : {}) });
   }
 
-  // Addendum Part B — one batched vision call over every fresh auto-pick with a real
+  // Addendum Part B, one batched vision call over every fresh auto-pick with a real
   // image (never over the alternates; those are the cockpit's human-reviewed picker).
-  // Phase 0 §3.1.2: Tier-1 events are excluded — their auto-pick is forced to the
+  // Phase 0 §3.1.2: Tier-1 events are excluded, their auto-pick is forced to the
   // placeholder below no matter what the vision check would say, so checking them
   // would just burn tokens on a verdict that's discarded.
   const relevanceCandidates = pending
@@ -912,13 +905,13 @@ export async function resolveImages(
   for (const p of pending) {
     let chosen = p.options[0];
     if (chosen.url && !p.skipRelevance && relevance.get(p.c.id) === false) {
-      // A wrong image is worse than a clean branded gradient — fall back, don't guess
+      // A wrong image is worse than a clean branded gradient, fall back, don't guess
       // at the next-ranked alternate (it wasn't vetted either).
       stats.rejectedRelevance++;
       chosen = { url: '', source: 'placeholder' };
     }
 
-    // Persist the per-PLACE resolution so we never re-fetch/re-pay/re-check — this is
+    // Persist the per-PLACE resolution so we never re-fetch/re-pay/re-check, this is
     // what was actually FOUND for the place, independent of whether today's candidate
     // is allowed to display it. Keeps a later non-event candidate at the same place
     // (place_key) from silently inheriting a Tier-1 event's forced placeholder.
@@ -932,16 +925,16 @@ export async function resolveImages(
     }, { onConflict: 'place_key' });
 
     // Phase 0 §3.1.2: Tier-1 dated events default to no photo on the THING itself,
-    // even when a real photo was found for the place — photo_options still carries
+    // even when a real photo was found for the place, photo_options still carries
     // the real alternates below so the cockpit picker can hand-assign one per event.
     // 2026-07-10 exception (Jim's ask, after the Phase 3 backfill made visible that
     // ~80-100 events at his 18 curated venues were silently never showing the pool
-    // photo he approved): a venue-POOL match (`poolMatched` — the Phase 2 DB
+    // photo he approved): a venue-POOL match (`poolMatched`, the Phase 2 DB
     // registry, not the Phase 1 marquee file-pin) now wins over the Tier-1 default,
     // matching the Build Spec §2 priority table verbatim ("Venue pool... any card
     // (place or dated event)", ranked above "Motif... all remaining dated events").
     // A non-pool Tier-1 pick (generic Wikimedia/Google) still defaults to no photo.
-    // Phase 3 §6.2: every other miss (forced or genuine — including a relevance-
+    // Phase 3 §6.2: every other miss (forced or genuine, including a relevance-
     // rejected pick, whose `chosen` is already the empty placeholder sentinel above)
     // gets a deterministic motif/big-type assignment instead of the bare gradient.
     const noPhoto = !chosen.url || (eventDefaultsToNoPhoto(p.c) && !p.poolMatched);

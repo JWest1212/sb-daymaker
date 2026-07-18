@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { categoryToActivities } from './activityBackfill';
 
-describe('categoryToActivities — Doc 21 §4 mapping', () => {
+describe('categoryToActivities, Doc 21 §4 mapping', () => {
   it('covers all 16 happening_category values', () => {
     expect(categoryToActivities('live_music')).toEqual(['live-music']);
     expect(categoryToActivities('recurring_nightlife')).toEqual(['live-music', 'nightlife']);

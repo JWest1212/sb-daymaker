@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (payload.neighborhood !== undefined) {
     patch.neighborhood = payload.neighborhood && (NEIGHBORHOODS as readonly string[]).includes(payload.neighborhood) ? payload.neighborhood : null;
     changed.neighborhood = patch.neighborhood;
-    // LC-6: a neighborhood edit can move the Near-Me/Coverage zone — recompute
+    // LC-6: a neighborhood edit can move the Near-Me/Coverage zone, recompute
     // with the same rule ingest/land.ts lands new rows with (lib/geo.ts).
     patch.nearby_zone = deriveNearbyZone(patch.neighborhood as string | null, row.lat, row.lng);
     changed.nearby_zone = patch.nearby_zone;

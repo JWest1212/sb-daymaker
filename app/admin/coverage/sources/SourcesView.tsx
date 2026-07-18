@@ -64,7 +64,7 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
     setBusyKey(null);
     if (res?.ok) {
       setSources((rows) => rows.map((row) => (row.key === r.key ? { ...row, status } : row)));
-      showToast(`${r.label} → ${status}. Next nightly run picks this up — no deploy needed.`);
+      showToast(`${r.label} → ${status}. Next nightly run picks this up, no deploy needed.`);
     } else {
       showToast(res?.error ? `Update failed: ${res.error}` : "Update failed.");
     }
@@ -109,9 +109,8 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
         <Link href="/admin/coverage" style={{ fontSize: ".78rem", color: "var(--pacific)" }}>&larr; Coverage</Link>
         <h1 className="qtitle" style={{ marginTop: 6 }}>Sources</h1>
         <p className="sub">
-          Every place events come from — how much each is trusted, how it&apos;s doing against its own
-          normal yield, and whether it&apos;s running. Pause, resume, retire, or add a candidate here —
-          the next nightly run picks up the change, no deploy. Adding a candidate registers it for
+          Every place events come from, how much each is trusted, how it&apos;s doing against its own
+          normal yield, and whether it&apos;s running. Pause, resume, retire, or add a candidate here, the next nightly run picks up the change, no deploy. Adding a candidate registers it for
           tracking; it does not start fetching on its own until a code adapter (or a future generic
           extraction lane) exists for that key.
         </p>
@@ -137,8 +136,8 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
                   </td>
                   <td>{titleCaseLabel(r.lane)}{r.parse_method ? ` · ${r.parse_method}` : ""}</td>
                   <td>{r.authority.toFixed(2)}</td>
-                  <td>{r.last_yield ?? "—"} / {r.expected_yield || "—"}</td>
-                  <td>{r.consecutive_empty > 0 ? r.consecutive_empty : "—"}</td>
+                  <td>{r.last_yield ?? "·"} / {r.expected_yield || "·"}</td>
+                  <td>{r.consecutive_empty > 0 ? r.consecutive_empty : "·"}</td>
                   <td><span className={`dirstat ${statusBadgeClass(r.status)}`}>{r.status}</span></td>
                   <td style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button className="btn btn-edit btn-sm" onClick={() => openEdit(r)}>Edit</button>
@@ -171,7 +170,7 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
             </h3>
             <div className="sbody">
               {sheetTarget === "new" ? (
-                <label className="editlabel">Key (stable machine id — matches a future adapter's key)
+                <label className="editlabel">Key (stable machine id, matches a future adapter's key)
                   <input className="edit-input" type="text" value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="e.g. sbNewVenue" />
                 </label>
               ) : null}
@@ -192,7 +191,7 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
                     </select>
                   </label>
                 ) : (
-                  <label className="editlabel">Crawl frequency (data only for now — per-source scheduling isn&apos;t wired into the pipeline yet)
+                  <label className="editlabel">Crawl frequency (data only for now, per-source scheduling isn&apos;t wired into the pipeline yet)
                     <select className="edit-select" value={form.crawlFrequency} onChange={(e) => setForm({ ...form, crawlFrequency: e.target.value })}>
                       {FREQUENCIES.map((f) => <option key={f} value={f}>{titleCaseLabel(f)}</option>)}
                     </select>

@@ -13,20 +13,18 @@ export interface AppliedPhoto {
 }
 
 /** Live-catalog photo picker (Card Imagery follow-up, not in the Phase 1 spec).
- *  Browsing the thing's pre-fetched photo_options is free — the arrows only move a
+ *  Browsing the thing's pre-fetched photo_options is free, the arrows only move a
  *  local index, no network, same as the Queue's picker. "Use this photo" is the one
  *  deliberate commit action: it posts straight to /api/admin/catalog/photo and
- *  applies to the live row immediately (metadata-immediate like WeightNudge —
- *  optimistic label, no separate "Save changes" step needed).
+ *  applies to the live row immediately (metadata-immediate like WeightNudge, *  optimistic label, no separate "Save changes" step needed).
  *
  *  2026-07-10 addendum (Jim's ask, confirmed design: "venue-backed, invisible to
- *  me" + "auto-create a dedicated venue") — "Fetch candidates" / "Fetch via
+ *  me" + "auto-create a dedicated venue"), "Fetch candidates" / "Fetch via
  *  Google" now go through the SAME venue/pool system the Venues tab uses
  *  (/api/admin/catalog/venue-photos/fetch auto-attaches or auto-creates a venue
  *  behind the scenes), so a Google photo picked here still gets the compliant
  *  7-day refresh + dead-photo fallback + digest notification instead of being a
- *  raw, never-refreshed URL. The venue itself is never shown as a concept here —
- *  only a place_id/coordinates prompt surfaces, and only when the (possibly just
+ *  raw, never-refreshed URL. The venue itself is never shown as a concept here, *  only a place_id/coordinates prompt surfaces, and only when the (possibly just
  *  auto-created) venue actually needs one to fetch anything. */
 export function CatalogImagePicker({
   thingId,
@@ -54,12 +52,11 @@ export function CatalogImagePicker({
   lng: number | null;
   onApplied: (photo: AppliedPhoto) => void;
   /** Fired the first time this thing gets attached to a venue (auto-created or an
-   *  exact place_id match) — lets the parent sync venue_id into its row state so a
+   *  exact place_id match), lets the parent sync venue_id into its row state so a
    *  second fetch reuses the same venue instead of re-triggering creation logic. */
   onVenueAttached?: (venueId: string) => void;
-  /** LC-9 — fired whenever a fetch (venue-backed or "Search wider") widens the
-   *  local option set, so the parent can persist it onto the row/sheet state —
-   *  otherwise closing and reopening the sheet loses every fetched-but-not-yet-
+  /** LC-9, fired whenever a fetch (venue-backed or "Search wider") widens the
+   *  local option set, so the parent can persist it onto the row/sheet state, *  otherwise closing and reopening the sheet loses every fetched-but-not-yet-
    *  applied candidate (editing.photo_options only ever holds applied picks). */
   onOptionsFetched?: (options: PhotoOption[]) => void;
   onToast?: (msg: string, undo?: () => void) => void;
@@ -115,14 +112,14 @@ export function CatalogImagePicker({
           res.googleFetched
             ? `Found ${res.count} photo(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
             : res.capHit
-              ? "Monthly photo budget reached, resets on the 1st — showing Wikimedia results"
+              ? "Monthly photo budget reached, resets on the 1st, showing Wikimedia results"
               : `Found ${res.wikimediaCount} Wikimedia photo(s)`,
         );
       } else {
         onToast?.(
           res.capHit
             ? "Monthly photo budget reached, resets on the 1st"
-            : "No photos found yet" + (!res.venue_has_place_id && !res.venue_has_coords ? " — add a place_id or coordinates below" : ""),
+            : "No photos found yet" + (!res.venue_has_place_id && !res.venue_has_coords ? ", add a place_id or coordinates below" : ""),
         );
       }
     } finally {
@@ -130,7 +127,7 @@ export function CatalogImagePicker({
     }
   };
 
-  // LC-13 — "Search wider (free)": the standalone find-more-images fallback
+  // LC-13, "Search wider (free)": the standalone find-more-images fallback
   // (Wikimedia title-search, no venue/Google involved), merged into the same
   // local option set by URL so it doesn't clobber whatever's already fetched.
   const doSearchWider = async () => {
@@ -178,10 +175,9 @@ export function CatalogImagePicker({
     await doFetch(false);
   };
 
-  // 2026-07-10 addendum (Jim's ask, Part 2: embed the Venues tab's lookup here) —
-  // scoped to just this thing's venue (never the whole registry). Pre-fills the
+  // 2026-07-10 addendum (Jim's ask, Part 2: embed the Venues tab's lookup here), // scoped to just this thing's venue (never the whole registry). Pre-fills the
   // manual inputs above rather than saving directly, so a weak/wrong match never
-  // lands without Jim seeing it first — same review-before-write principle as the
+  // lands without Jim seeing it first, same review-before-write principle as the
   // Venues tab's own bulk lookup.
   const fillCandidate = (c: PlaceCandidate) => {
     setPlaceIdInput(c.place_id);
@@ -203,14 +199,14 @@ export function CatalogImagePicker({
       const weak = res.weakMatches?.[0];
       if (strong) {
         fillCandidate({ place_id: strong.proposed_place_id, lat: strong.proposed_lat, lng: strong.proposed_lng, name: strong.proposed_name, address: strong.proposed_address });
-        setLookupNote(`Matched: ${strong.proposed_name} — ${strong.proposed_address}. Review, then Save & fetch.`);
+        setLookupNote(`Matched: ${strong.proposed_name}, ${strong.proposed_address}. Review, then Save & fetch.`);
       } else if (weak) {
         fillCandidate(weak.addressOnlyMatch);
         setNearbyCandidates(weak.nearbyCandidates);
         setLookupNote(
           weak.nearbyCandidates.length
-            ? "Only found a bare address match — but here are real nearby places, pick one if it's right:"
-            : "Only found a bare address match (no real business found nearby) — review before saving.",
+            ? "Only found a bare address match, but here are real nearby places, pick one if it's right:"
+            : "Only found a bare address match (no real business found nearby), review before saving.",
         );
       } else {
         setLookupNote("No Google match found for this venue's name.");
@@ -220,7 +216,7 @@ export function CatalogImagePicker({
     }
   };
 
-  // LC-9 — shared commit path for "Use this photo" and "Apply best": applies
+  // LC-9, shared commit path for "Use this photo" and "Apply best": applies
   // immediately (no confirm step), so every caller gets an Undo on its toast
   // that re-applies whatever was live a moment ago.
   const applyOption = async (opt: PhotoOption, successMsg: string) => {
@@ -262,14 +258,14 @@ export function CatalogImagePicker({
 
   const useThisPhoto = () => {
     if (!current || isLive) return;
-    applyOption(current, current.source === "placeholder" ? "Photo removed — showing the gradient now" : "Photo updated — live now");
+    applyOption(current, current.source === "placeholder" ? "Photo removed, showing the gradient now" : "Photo updated, live now");
   };
 
   const best = options[0];
   const bestIsLive = !!best && (best.url || "") === (photoUrl ?? "") && best.source === (photoSource ?? "placeholder");
   const applyBest = () => {
     if (!best || bestIsLive) return;
-    applyOption(best, `Applied the top photo (${best.source}) — live now`);
+    applyOption(best, `Applied the top photo (${best.source}), live now`);
   };
 
   return (
@@ -291,10 +287,10 @@ export function CatalogImagePicker({
         <div className="catphoto-location">
           <p className="empty-note">
             {needsCoords && needsPlaceId
-              ? "No place_id or coordinates on file for this yet — add one to fetch real photos."
+              ? "No place_id or coordinates on file for this yet, add one to fetch real photos."
               : needsPlaceId
-                ? "No Google place_id on file yet — add one to also pull Google photos (Wikimedia already works)."
-                : "No coordinates on file yet — add some to also pull Wikimedia photos (Google already works)."}
+                ? "No Google place_id on file yet, add one to also pull Google photos (Wikimedia already works)."
+                : "No coordinates on file yet, add some to also pull Wikimedia photos (Google already works)."}
           </p>
           <div className="veditor-row">
             <label className="veditor-field">
@@ -323,7 +319,7 @@ export function CatalogImagePicker({
             <div className="matchlist" style={{ marginTop: 6 }}>
               {nearbyCandidates.map((c, i) => (
                 <div className="pickrow" key={i} style={{ background: "transparent", border: "none", padding: "4px 0" }}>
-                  <div className="pm"><span className="venuename">{c.name}</span> — {c.address}</div>
+                  <div className="pm"><span className="venuename">{c.name}</span>, {c.address}</div>
                   <div className="btnrow">
                     <button type="button" className="btn btn-approve btn-sm" onClick={() => fillCandidate(c)}>Use this</button>
                   </div>

@@ -1,10 +1,10 @@
 // ingest/adapters/_shared/resolveNeighborhood.ts
 //
-// Doc 19 §4 — the neighborhood resolver, the reusable core of the Neighborhood
+// Doc 19 §4, the neighborhood resolver, the reusable core of the Neighborhood
 // Sweep. Pure and side-effect-free: callers (the sweep and ingest/land.ts) pass
 // in the already-fetched venue dictionary (the `venue_neighborhoods` table, NOT
 // the unrelated image-matching `venues` table in lib/venuePool.ts) rather than
-// this module doing its own DB I/O — same convention as bestVenueMatch there.
+// this module doing its own DB I/O, same convention as bestVenueMatch there.
 // No AI, no per-request calls, no paid geocoding.
 
 import type { Neighborhood } from '../../../packages/shared/types';
@@ -34,7 +34,7 @@ export interface ResolvableThing {
   source_url: string | null;
   lat: number | null;
   lng: number | null;
-  /** The thing's CURRENT neighborhood, if any — only ever surfaced by this
+  /** The thing's CURRENT neighborhood, if any, only ever surfaced by this
    *  resolver via method 'existing' (step 6), and only when nothing stronger
    *  fires. A residue-sweep caller always passes other/null here by construction. */
   neighborhood: Neighborhood | 'other' | null;
@@ -44,11 +44,11 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-// §4.1 step 3 — source-implied venue. Reuses dedupe.ts's sourceKeyOf so the two
+// §4.1 step 3, source-implied venue. Reuses dedupe.ts's sourceKeyOf so the two
 // never drift, then maps to a neighborhood ONLY for sources that imply exactly
 // one venue. Aggregators and multi-location sources (independent, citysb,
 // eventbrite, libraries, farmersMarkets, ticketmaster) are deliberately absent
-// here — Doc 19 §5.2 resolves those per-event via address/coordinates instead.
+// here, Doc 19 §5.2 resolves those per-event via address/coordinates instead.
 const SOURCE_KEY_NEIGHBORHOOD: Partial<Record<string, Neighborhood>> = {
   soho: 'downtown',
   sbbowl: 'riviera',
@@ -59,7 +59,7 @@ const SOURCE_KEY_NEIGHBORHOOD: Partial<Record<string, Neighborhood>> = {
   downtownSB: 'downtown',
 };
 
-// §4.1 step 5 — street/address code table. State St is block-number-sensitive
+// §4.1 step 5, street/address code table. State St is block-number-sensitive
 // (400-1300 -> downtown, below 400 -> funk_zone) so it's handled separately.
 const STREET_NEIGHBORHOOD: Array<[RegExp, Neighborhood]> = [
   [/coast village/i, 'montecito'],
@@ -82,7 +82,7 @@ function streetMatch(address: string): Neighborhood | null {
   return null;
 }
 
-// §4.1 step 4 — point-in-polygon. Rough bounding boxes over SB's 11 neighborhood
+// §4.1 step 4, point-in-polygon. Rough bounding boxes over SB's 11 neighborhood
 // values (free; only uses lat/lng already stored). SB's linear coastal geography
 // makes boxes workable per Doc 19 §8; edges are the acknowledged weak spot,
 // which is why this sits below venue/source matches in trust order.
@@ -106,16 +106,16 @@ function pointInPolygon(lat: number, lng: number): Neighborhood | null {
   return null;
 }
 
-/** The §4.1 waterfall, highest trust first. Pure — no DB, no network. */
+/** The §4.1 waterfall, highest trust first. Pure, no DB, no network. */
 export function resolveNeighborhood(thing: ResolvableThing, dictionary: VenueDictEntry[]): ResolveResult {
-  // 1. place_id match — 0.98
+  // 1. place_id match, 0.98
   if (thing.place_id) {
     const hit = dictionary.find((v) => v.place_id === thing.place_id);
     if (hit) return { neighborhood: hit.neighborhood, method: 'place_id', confidence: 0.98 };
   }
 
   // 2. venue-name match (name_norm or an alias appears in the normalized title
-  //    or address) — 0.9
+  //    or address), 0.9
   const titleNorm = normalize(thing.title);
   const addrNorm = thing.address ? normalize(thing.address) : '';
   for (const v of dictionary) {
@@ -128,26 +128,26 @@ export function resolveNeighborhood(thing: ResolvableThing, dictionary: VenueDic
     }
   }
 
-  // 3. source-implied venue — 0.85
+  // 3. source-implied venue, 0.85
   if (thing.source_url) {
     const n = SOURCE_KEY_NEIGHBORHOOD[sourceKeyOf(thing.source_url)];
     if (n) return { neighborhood: n, method: 'source', confidence: 0.85 };
   }
 
-  // 4. point-in-polygon — 0.75
+  // 4. point-in-polygon, 0.75
   if (thing.lat != null && thing.lng != null) {
     const n = pointInPolygon(thing.lat, thing.lng);
     if (n) return { neighborhood: n, method: 'point_in_polygon', confidence: 0.75 };
   }
 
-  // 5. street/address match — 0.6 (soft suggestion; §4.2 write policy below
+  // 5. street/address match, 0.6 (soft suggestion; §4.2 write policy below
   //    decides this never auto-writes)
   if (thing.address) {
     const n = streetMatch(thing.address);
     if (n) return { neighborhood: n, method: 'street', confidence: 0.6 };
   }
 
-  // 6. existing neighborhood — kept as-is if already real. Applies in the
+  // 6. existing neighborhood, kept as-is if already real. Applies in the
   //    nightly path; a no-op for the residue sweep, whose inputs are always
   //    other/null by construction (Doc 19 §4.1 step 6).
   if (thing.neighborhood && thing.neighborhood !== 'other') {
@@ -158,7 +158,7 @@ export function resolveNeighborhood(thing: ResolvableThing, dictionary: VenueDic
   return { neighborhood: null, method: 'unresolved', confidence: 0 };
 }
 
-/** §4.2 write policy — confidence at or above 0.75 (methods 1-4) writes
+/** §4.2 write policy, confidence at or above 0.75 (methods 1-4) writes
  *  `neighborhood` directly, no review. Everything else (street's 0.6, and
  *  unresolved's 0) is a triage candidate, not an auto-write. */
 export function autoWrites(result: ResolveResult): boolean {

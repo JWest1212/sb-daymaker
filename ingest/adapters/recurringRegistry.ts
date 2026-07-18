@@ -1,14 +1,12 @@
 // ingest/adapters/recurringRegistry.ts
 //
 // The curated Tier-2 recurring-rhythm registry (Doc 10 §8 #7, Doc 11 §11 Phase 14):
-// the steady weekly/biweekly/monthly happenings the scrapers can't reliably produce —
-// farmers' markets, happy hours, trivia, art walks, live-music nights. The founder
+// the steady weekly/biweekly/monthly happenings the scrapers can't reliably produce, // farmers' markets, happy hours, trivia, art walks, live-music nights. The founder
 // maintains these rhythms in the `recurring_rhythms` DB table (edited via the
-// /admin/coverage/recurring-rhythms cockpit — Data Arch Redesign, recurring-registry
+// /admin/coverage/recurring-rhythms cockpit, Data Arch Redesign, recurring-registry
 // spec) instead of hand-editing this file. Every entry lands as needs_review.
 //
-// Honesty rule: when the DAY is known but the TIME isn't, the entry sets start:null —
-// it lands with a BLANK start time + a "(time TBD)" label, never a guessed time.
+// Honesty rule: when the DAY is known but the TIME isn't, the entry sets start:null, // it lands with a BLANK start time + a "(time TBD)" label, never a guessed time.
 // Rhythms are type:'place' (a null-start 'event' would violate events_have_start);
 // tier 2 carries the schedule, not a starts_at.
 

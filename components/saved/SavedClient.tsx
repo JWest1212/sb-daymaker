@@ -87,7 +87,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
     [things, saves, stateFilter, zone],
   );
 
-  // Stable mount-time snapshot — captured once so the past/current split is consistent.
+  // Stable mount-time snapshot, captured once so the past/current split is consistent.
   const [nowMs] = useState(() => Date.now());
 
   const doSplitPast = stateFilter === "want";
@@ -103,7 +103,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
   const weekendCount = useMemo(() => {
     if (stateFilter !== "want") return 0;
     const now = new Date(nowMs);
-    const dow = now.getDay(); // 0=Sun, 6=Sat (local browser time — user is likely in SB/Pacific)
+    const dow = now.getDay(); // 0=Sun, 6=Sat (local browser time, user is likely in SB/Pacific)
     const daysToSat = dow === 6 ? 0 : dow === 0 ? -1 : 6 - dow;
     const sat = new Date(now);
     sat.setDate(sat.getDate() + daysToSat);
@@ -257,7 +257,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
       ) : null}
 
       {selectMode ? (
-        <p className="sbd-saved__hint">Tap to choose what to send — one or many.</p>
+        <p className="sbd-saved__hint">Tap to choose what to send, one or many.</p>
       ) : null}
 
       {/* C2: Proactive "Did you make it?" prompt */}
@@ -416,7 +416,7 @@ export function SavedClient({ things }: { things: Thing[] }) {
       {beenAck !== null ? (
         <div className="sbd-toast sbd-toast--been" role="status" aria-live="polite">
           <span className="sbd-toast__check" aria-hidden="true">✓</span>{" "}
-          Nice — that&apos;s {beenAck} SB {beenAck === 1 ? "spot" : "spots"} you&apos;ve made it to.
+          Nice, that&apos;s {beenAck} SB {beenAck === 1 ? "spot" : "spots"} you&apos;ve made it to.
           <span className="sbd-toast__sub">Quietly building your Santa Barbara.</span>
         </div>
       ) : null}

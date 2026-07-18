@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST { thing_id } -> reverse a dedupe merge (Data Arch Redesign 26 Phase 5).
 // The row was landed at merge time as status='archived' with merged_into set
-// to its survivor (never actually deleted) — un-merge just restores it to
+// to its survivor (never actually deleted), un-merge just restores it to
 // needs_review and clears merged_into, so it reappears in the queue next to
 // the survivor. Always reversible: the row never left the DB.
 export async function POST(req: Request) {

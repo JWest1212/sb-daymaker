@@ -4,7 +4,7 @@ import { isManaged } from './http';
 const orig = process.env.MANAGED_SCRAPE;
 afterEach(() => { process.env.MANAGED_SCRAPE = orig; });
 
-describe('isManaged — the per-source reserve switch (off by default)', () => {
+describe('isManaged, the per-source reserve switch (off by default)', () => {
   it('is OFF when nothing is set', () => {
     delete process.env.MANAGED_SCRAPE;
     expect(isManaged('soho')).toBe(false);

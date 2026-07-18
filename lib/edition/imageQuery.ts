@@ -1,14 +1,14 @@
 // lib/edition/imageQuery.ts
 //
 // Pure query-building for the "find more options" widened search (no
-// server-only import here — kept testable, unlike imageDiscovery.ts which
+// server-only import here, kept testable, unlike imageDiscovery.ts which
 // does the actual network fetch and needs the server-only guard).
 //
 // Two angles, tried in order, not one combined string: a live check against
 // Pexels found that appending "Santa Barbara" to every query anchors the
 // results toward the same generic local stock photos regardless of what else
 // is in the string (e.g. "theater stage performance downtown Santa Barbara"
-// and "downtown Santa Barbara" returned near-identical result sets) — the
+// and "downtown Santa Barbara" returned near-identical result sets), the
 // location term dominates relevance ranking. Dropping it for a topic-only
 // pass returns a genuinely disjoint set (verified: zero id overlap), so the
 // category-only query does the real diversifying; the location query is the

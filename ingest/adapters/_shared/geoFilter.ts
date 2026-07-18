@@ -1,6 +1,6 @@
 // ingest/adapters/_shared/geoFilter.ts
 //
-// Single source of truth for "is this in scope?" — Santa Barbara, Goleta,
+// Single source of truth for "is this in scope?", Santa Barbara, Goleta,
 // Montecito, Carpinteria, Summerland, Isla Vista. Every aggregator/broad source
 // must call isInScope() to drop online, virtual, or out-of-area events. (§2.1)
 
@@ -39,5 +39,5 @@ export function isInScope(c: {
       c.lng >= BBOX.lngMin && c.lng <= BBOX.lngMax
     );
   }
-  return false; // unknown location — caller should log 'geo_unknown'
+  return false; // unknown location, caller should log 'geo_unknown'
 }

@@ -14,7 +14,7 @@ export async function GET() {
 }
 
 // POST -> register a candidate source (§6, "add a candidate"). Lands as
-// status='candidate' — tracked, but does not itself start fetching; that
+// status='candidate', tracked, but does not itself start fetching; that
 // still needs a code adapter or (later) the generic lane to read this key.
 export async function POST(req: Request) {
   const user = await getAdminUser();

@@ -74,7 +74,7 @@ function StopCard({
             )}
           </div>
           <div className="sbd-gd-stopctrls">
-            {/* ✓ Been button — disabled/static in Phase 2 */}
+            {/* ✓ Been button, disabled/static in Phase 2 */}
             <button
               type="button"
               className="sbd-gd-beenbtn"
@@ -83,7 +83,7 @@ function StopCard({
             >
               ✓ Been
             </button>
-            {/* heart save — only for thing-backed stops */}
+            {/* heart save, only for thing-backed stops */}
             {stop.thing_id && (
               <button
                 type="button"

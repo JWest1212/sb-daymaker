@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import type { Thing } from "./things";
 import { filterByState, splitPast, beenList, type SavesMap } from "./savedView";
 
-// Minimal Thing factory — only the fields these selectors read matter.
+// Minimal Thing factory, only the fields these selectors read matter.
 function thing(id: string, over: Partial<Thing> = {}): Thing {
   return {
     id,

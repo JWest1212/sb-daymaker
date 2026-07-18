@@ -58,7 +58,7 @@ function TriageRow({
           <span className="zpill">{DOOR_ZONE_BY_KEY[item.suggestedZone].label}</span>
         </div>
       ) : (
-        <div className="sweep-nosuggest">No signal found — no venue match, no source hint, no coordinates, no street match.</div>
+        <div className="sweep-nosuggest">No signal found, no venue match, no source hint, no coordinates, no street match.</div>
       )}
 
       {assignedTo ? (
@@ -127,7 +127,7 @@ export function NeighborhoodSweepView({
       showToast(`Applied: ${res.updated} thing${res.updated === 1 ? "" : "s"} moved out of other/null. ${res.remaining} still need${res.remaining === 1 ? "s" : ""} triage.`);
       runSweep();
     } else {
-      showToast("Apply failed — check the console.");
+      showToast("Apply failed, check the console.");
     }
   }, [runSweep, showToast]);
 
@@ -235,7 +235,7 @@ export function NeighborhoodSweepView({
             {thinLabels.length > 0 ? (
               <p className="sweep-thinnote">
                 {thinLabels.join(" and ")} {thinLabels.length > 1 ? "are" : "is"} the thinnest zone
-                {thinLabels.length > 1 ? "s" : ""} right now — this feeds the source-targeting work,
+                {thinLabels.length > 1 ? "s" : ""} right now, this feeds the source-targeting work,
                 not the sweep, flagged here so it&apos;s visible from day one.
               </p>
             ) : null}
@@ -259,7 +259,7 @@ export function NeighborhoodSweepView({
           </p>
 
           {summary.triage.length === 0 ? (
-            <p className="sub" style={{ marginBottom: 0 }}>Nothing to triage — every published thing resolved.</p>
+            <p className="sub" style={{ marginBottom: 0 }}>Nothing to triage, every published thing resolved.</p>
           ) : (
             <>
               {streetSuggested.slice(0, 25).map((t) => (

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // POST { ids: string[], photo?, edits?, hero_eligible? }
 // The single write path to status='published'. With `edits` (one card only) it
 // applies the founder's pending changes AND publishes in one press (§A5). Bulk
-// approve passes just { ids }. AI never sets a start time — edits carry no time.
+// approve passes just { ids }. AI never sets a start time, edits carry no time.
 export async function POST(req: Request) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

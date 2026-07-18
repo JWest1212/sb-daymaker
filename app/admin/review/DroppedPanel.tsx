@@ -8,7 +8,7 @@ const REASON_LABEL: Record<string, string> = {
   duplicate: "duplicate",
 };
 
-/** "Dropped tonight" — every held-back candidate with its reason (Doc 11 §9). */
+/** "Dropped tonight", every held-back candidate with its reason (Doc 11 §9). */
 export function DroppedPanel({ drops }: { drops: DropRow[] }) {
   return (
     <div className="panel">

@@ -5,8 +5,8 @@ import type { Thing } from "./things";
  *
  * These exist so the Saved list derivations are testable *and* provably free of
  * the stale-memo class of bug: they take the saves **map** as an explicit
- * argument (never a closure over provider state), so a `want→been` flip — which
- * changes a value, not a key — is always reflected. See lib/savedView.test.ts.
+ * argument (never a closure over provider state), so a `want→been` flip, which
+ * changes a value, not a key, is always reflected. See lib/savedView.test.ts.
  */
 
 export type SavesMap = Record<string, "want" | "been">;
@@ -41,7 +41,7 @@ export function splitPast(items: Thing[], nowMs: number): { current: Thing[]; pa
 }
 
 /**
- * Been-marked things present in the pool, in saves-key (save) order — matching
+ * Been-marked things present in the pool, in saves-key (save) order, matching
  * the "oldest → newest" order MemoryRecap expects.
  */
 export function beenList(things: Thing[], saves: SavesMap): Thing[] {

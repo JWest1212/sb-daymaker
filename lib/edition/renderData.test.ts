@@ -17,7 +17,7 @@ function thing(over: Partial<ThingRow> = {}): ThingRow {
   };
 }
 
-describe("blurbSourceFor — per-slot blurb mapping", () => {
+describe("blurbSourceFor, per-slot blurb mapping", () => {
   it("hero prefers the longer blurb_long over the short blurb", () => {
     const t = thing();
     expect(blurbSourceFor("hero", t)).toBe(t.blurb_long);

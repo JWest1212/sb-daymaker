@@ -10,7 +10,7 @@ type BulkOp = "hero_on" | "hero_off" | "add_tag" | "remove_tag" | "set_weight" |
 // POST { ids: string[], op, tag?, weight? } -> LC-3, the biggest cockpit time win:
 // apply one safe, uniform operation across many published rows at once. Blurb and
 // photo stay per-item by nature (not bulkable). Negative-tag rules (filterTags)
-// are still enforced server-side for add_tag — a row an illegal tag doesn't apply
+// are still enforced server-side for add_tag, a row an illegal tag doesn't apply
 // to is silently skipped and counted, not force-applied or hard-failed. Archive
 // is reversible (status='archived', same as the single-row delete route) so the
 // client can offer an Undo via the 'unarchive' op.

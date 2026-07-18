@@ -1,9 +1,9 @@
 // scripts/reconcile_activity_slugs.mts
 //
-// Doc 22 Option A — the locked Activity vocabulary renames `festivals-community`
+// Doc 22 Option A, the locked Activity vocabulary renames `festivals-community`
 // to `community-festivals` and drops `clubs-groups` entirely. This reconciles
 // existing things.activities[] data to match: renames the first slug in place,
-// removes the second, dedupes defensively. Idempotent — a row with neither slug
+// removes the second, dedupes defensively. Idempotent, a row with neither slug
 // is left untouched; re-running after a successful apply is a no-op.
 //
 //   node --env-file=.env.local --import tsx scripts/reconcile_activity_slugs.mts          # dry run
@@ -45,7 +45,7 @@ console.log(`  ${removed} contain 'clubs-groups' -> will drop that element`);
 console.log(`  ${toUpdate.length} rows total need an update`);
 
 if (!write) {
-  console.log("\nDRY RUN — writes nothing. Pass --write to apply.");
+  console.log("\nDRY RUN, writes nothing. Pass --write to apply.");
   process.exit(0);
 }
 

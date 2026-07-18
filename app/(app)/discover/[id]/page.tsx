@@ -28,8 +28,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const result = await getGuide(id);
-  if (!result) return { title: "Guide — SB Daymaker" };
-  return { title: `${result.guide.title} — Discover SB — SB Daymaker` };
+  if (!result) return { title: "Guide · SB Daymaker" };
+  return { title: `${result.guide.title} · Discover SB · SB Daymaker` };
 }
 
 // ─── Date helpers (server-side) ───────────────────────────────────────────────
@@ -254,7 +254,7 @@ export default async function GuidePage({
         </div>
       )}
 
-      {/* passport slab — zero state (static in Phase 2) */}
+      {/* passport slab, zero state (static in Phase 2) */}
       {guide.stamp_code && (
         <div className="sbd-gd-passport" aria-label={`Your ${shortTitle} passport`}>
           <div className="sbd-gd-passport__left">

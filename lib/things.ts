@@ -3,6 +3,7 @@ import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
 import type { ActivityKey } from "./activities";
 import { getDogFriendlyVenueIds } from "./venues";
+import { cleanText } from "./text/stripEmDash";
 
 export type ThingType = "place" | "event" | "firstlook" | "happyhour";
 
@@ -31,7 +32,7 @@ export interface Thing {
   reason_to_go: string | null;
   happening_tier: number;
   /** Founder curation nudge (−5..+5, default 0). Consumed by cascade()/pickAutoHero.
-   *  This is explicitly-permitted editorial curation — NOT sponsor status. The ranker
+   *  This is explicitly-permitted editorial curation, NOT sponsor status. The ranker
    *  must never read is_featured/sponsor_id (schema §A7). */
   editorial_weight: number;
   happening_category: string | null;
@@ -47,22 +48,22 @@ export interface Thing {
   indoor: boolean;
   photo_url: string | null;
   photo_source: string | null;
-  /** Card Imagery Build Spec Phase 1 §4.3 — non-owned photo credit, rendered on the
+  /** Card Imagery Build Spec Phase 1 §4.3, non-owned photo credit, rendered on the
    *  detail page only (never the card rail). Detail-select-only field, like local_note. */
   photo_attribution: string | null;
-  /** Card Imagery Build Spec Phase 3 §6.1/§6.2 — the motif tier. Set only when
+  /** Card Imagery Build Spec Phase 3 §6.1/§6.2, the motif tier. Set only when
    *  `photo_source === 'motif'`; `visual_key` is null for a `'bigtype'` kind (the
    *  D8 fallback computes its own text from other fields, not a registry lookup). */
   visual_kind: "motif" | "bigtype" | null;
   visual_key: string | null;
   visual_seed: number | null;
-  /** Card Imagery Build Spec Phase 2 §5.1 — the venue this thing is attached to (if
+  /** Card Imagery Build Spec Phase 2 §5.1, the venue this thing is attached to (if
    *  any), the join key for the venue photo pool + per-feed dedupe (lib/venuePool.ts). */
   venue_id: string | null;
   tags: OccasionKey[];
-  /** Home Rework spec §6 — the Activity taxonomy (supabase/migrations/
+  /** Home Rework spec §6, the Activity taxonomy (supabase/migrations/
    *  20260711_activities.sql, additive, not yet applied as of Phase 4). Defaults to
-   *  `[]` — both when a thing genuinely has none, and (via getPublishedThings'
+   *  `[]`, both when a thing genuinely has none, and (via getPublishedThings'
    *  fallback select) when the migration hasn't landed on this DB yet. */
   activities: ActivityKey[];
   happyHours: HappyHourWindow[];
@@ -80,28 +81,30 @@ const RELATIONS = `thing_tags ( tag ),
   recurring_schedules ( category, day_of_week, start_time, end_time, label )`;
 const SELECT = `${BASE_COLS}, ${RELATIONS}`;
 const SELECT_DETAIL = `${BASE_COLS}, local_note, photo_attribution, ${RELATIONS}`;
-// Home Rework spec §6 — same "select the new column, fall back if it 400s"
+// Home Rework spec §6, same "select the new column, fall back if it 400s"
 // pattern getThing() already uses for local_note/photo_attribution below.
 const SELECT_WITH_ACTIVITIES = `${BASE_COLS}, activities, ${RELATIONS}`;
 
 function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string> = new Set()): Thing {
   const indoor = (row.indoor as boolean) ?? false;
-  // Doc 22 §2.2 — Rainy Day is a read-time derivation from `indoor`, not a
+  // Doc 22 §2.2, Rainy Day is a read-time derivation from `indoor`, not a
   // stored tag: no DDL, no batch write, always in sync with `indoor`.
   const tags = ((row.thing_tags as { tag: OccasionKey }[]) ?? []).map((t) => t.tag);
   if (indoor && !tags.includes("rainy_day")) tags.push("rainy_day");
-  // Occasion Tags spec §3 — same read-time-derivation pattern, from the
+  // Occasion Tags spec §3, same read-time-derivation pattern, from the
   // resolved venue's founder-marked flag instead of a thing column.
   const venueId = row.venue_id as string | null;
   if (venueId && dogFriendlyVenueIds.has(venueId) && !tags.includes("dog_friendly")) tags.push("dog_friendly");
   return {
     id: row.id as string,
     type: row.type as ThingType,
-    title: row.title as string,
-    blurb: (row.blurb as string) ?? null,
-    blurb_long: (row.blurb_long as string) ?? null,
-    local_note: (row.local_note as string) ?? null,
-    reason_to_go: (row.reason_to_go as string) ?? null,
+    // G0.9 render guard: the shared normalizer is the last line of defense, so a
+    // user never sees an em dash even if a stray one is in the DB.
+    title: cleanText(row.title as string),
+    blurb: cleanText((row.blurb as string) ?? null),
+    blurb_long: cleanText((row.blurb_long as string) ?? null),
+    local_note: cleanText((row.local_note as string) ?? null),
+    reason_to_go: cleanText((row.reason_to_go as string) ?? null),
     happening_tier: (row.happening_tier as number) ?? 3,
     editorial_weight: (row.editorial_weight as number) ?? 0,
     happening_category: (row.happening_category as string) ?? null,

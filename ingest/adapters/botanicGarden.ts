@@ -1,9 +1,9 @@
 // ingest/adapters/botanicGarden.ts
 //
-// Santa Barbara Botanic Garden — WP Tribe REST → iCal → scrape (§7.2).
+// Santa Barbara Botanic Garden, WP Tribe REST → iCal → scrape (§7.2).
 // Also emits a Tier-3 scenic_chill spot for the garden grounds (evergreen).
 //
-// sbbotanicgarden.org — Robots.txt checked at runtime. useManagedScrape: false.
+// sbbotanicgarden.org, Robots.txt checked at runtime. useManagedScrape: false.
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate, HappeningCategory } from '../../packages/shared/types';
@@ -102,7 +102,7 @@ const GARDEN_SPOT: RawCandidate = {
   explicitlyFree: false,
   sourceUrl: BASE,
   buyUrl: BASE,
-  reasonToGo: '78 acres of California native plant landscapes in Mission Canyon — a living museum with seasonal wildflowers, riparian creekside trails, and sweeping mountain views.',
+  reasonToGo: '78 acres of California native plant landscapes in Mission Canyon, a living museum with seasonal wildflowers, riparian creekside trails, and sweeping mountain views.',
   occasionTags: seedOccasionTags({ category: 'scenic_chill' }),
   raw: {},
 };

@@ -1,12 +1,12 @@
 // ingest/extract.ts
 //
-// Data Arch Redesign 25, Phase 1 — the generic AI extraction lane's core
+// Data Arch Redesign 25, Phase 1, the generic AI extraction lane's core
 // function: reduce a fetched page to clean text, then ask Haiku (batch,
 // forced tool-call, strict schema) what events are literally stated on it.
 //
 // TRUST RULE (Doc 16 §2.3 / spec 25 §4): everything this returns is a
 // CANDIDATE, never a fact. Nothing in this file writes to the database or
-// decides publish status — ingest/publishGate.ts's requireStructuredLane
+// decides publish status, ingest/publishGate.ts's requireStructuredLane
 // already refuses to auto-publish anything from lane='generic', so the
 // firewall is enforced by code that exists independent of this file. This
 // module's only job is: page in, candidate events out.
@@ -35,7 +35,7 @@ export interface ExtractedEvent {
 /**
  * Strip nav/boilerplate tags and collapse whitespace, so the page's visible
  * text goes to the model instead of the raw HTML. Deliberately simple (no
- * main-content heuristics beyond removing structural chrome) — good enough
+ * main-content heuristics beyond removing structural chrome), good enough
  * for a Phase 1 accuracy check; revisit if sample results show it's pulling
  * in menu/footer noise the model can't filter itself.
  */

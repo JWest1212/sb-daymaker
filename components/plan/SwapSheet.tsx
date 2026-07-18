@@ -131,7 +131,7 @@ export function SwapSheet({
       ) : null}
 
       {candidates.length === 0 ? (
-        <p className="sbd-swap-empty">Nothing else fits this slot right now — try a different shape or check back after new spots are added.</p>
+        <p className="sbd-swap-empty">Nothing else fits this slot right now, try a different shape or check back after new spots are added.</p>
       ) : null}
     </BottomSheet>
   );

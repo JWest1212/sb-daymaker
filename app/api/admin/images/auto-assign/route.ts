@@ -9,16 +9,16 @@ import type { PhotoOption } from "@/lib/review";
 export const dynamic = "force-dynamic";
 
 // POST { thing_ids: string[] } -> Images desk bulk "auto-assign best free image".
-// Deterministic and $0 — no AI, no Google. Per thing, in the waterfall's own
+// Deterministic and $0, no AI, no Google. Per thing, in the waterfall's own
 // priority order:
 //   1. Venue pool: an already-attached venue with approved photos, or a NEW
 //      attach when the fuzzy match clears STRONG_MATCH_SCORE (place_id hit or
-//      2+ name-pattern hits — deliberately stricter than the human-review pane)
+//      2+ name-pattern hits, deliberately stricter than the human-review pane)
 //      AND that venue has approved photos. Applies today's rotation pick, same
 //      as /api/admin/venues/match.
-//   2. Top pre-fetched free option (wikimedia/owned) from photo_options — these
+//   2. Top pre-fetched free option (wikimedia/owned) from photo_options, these
 //      already passed the Wikimedia gate + score floor when fetched.
-//   3. Otherwise skipped — left in the queue for the founder.
+//   3. Otherwise skipped, left in the queue for the founder.
 // Everything applied is reported back with its previous photo so the desk's
 // session strip can offer a one-click revert.
 const MAX_IDS = 60;
@@ -87,14 +87,14 @@ export async function POST(req: Request) {
     const id = t.id as string;
     const curSource = (t.photo_source as string) ?? "placeholder";
     const curUrl = (t.photo_url as string) ?? null;
-    // Raced with a manual apply between load and click — leave it alone.
+    // Raced with a manual apply between load and click, leave it alone.
     if (curUrl && curSource !== "placeholder" && curSource !== "motif") {
       results.push({ id, action: "skipped", reason: "already has a photo" });
       continue;
     }
     const prev = { url: curUrl, source: curSource, attribution: (t.photo_attribution as string) ?? null };
 
-    // 1 — venue pool (existing attach, or a new strong-match attach).
+    // 1, venue pool (existing attach, or a new strong-match attach).
     let venueId = (t.venue_id as string) ?? null;
     let attachedNow = false;
     if (!venueId) {
@@ -136,7 +136,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2 — top pre-fetched free option (already gated + score-floored at fetch time).
+    // 2, top pre-fetched free option (already gated + score-floored at fetch time).
     const options = ((t.photo_options as PhotoOption[]) ?? []).filter(
       (o) => o.url && (o.source === "wikimedia" || o.source === "owned"),
     );

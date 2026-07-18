@@ -1,7 +1,7 @@
 import { SegmentedControl } from "@/components/ui";
 import type { Horizon } from "@/lib/explore";
 
-/** Home Rework spec §11.5 — the Today/Week/Month control, rehomed from the
+/** Home Rework spec §11.5, the Today/Week/Month control, rehomed from the
  *  retired ControlRow into DiscoveryControls. Same control, same behavior. */
 export function HorizonSegment({
   horizon,

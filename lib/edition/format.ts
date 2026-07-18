@@ -1,4 +1,4 @@
-// lib/edition/format.ts — small display-formatting helpers shared by the
+// lib/edition/format.ts, small display-formatting helpers shared by the
 // drafter (copy tokens) and the renderer (locator text).
 
 /** "funk_zone" -> "Funk Zone". Snake-case enum value -> display label. */

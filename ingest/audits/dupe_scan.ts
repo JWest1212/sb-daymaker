@@ -1,0 +1,139 @@
+// ingest/audits/dupe_scan.ts  (Gate 0 · G0.4)
+//
+// Surfaces same-entity duplicate pairs among PUBLISHED rows so Jim can merge the
+// loser into the survivor (reusing the existing merged_into / archive mechanism
+// from ingest/dedupe.ts + the cockpit's Merged panel, NOT a new merge path).
+// Canonical target: the two "Santa Barbara Museum of Art" place rows.
+//
+// Why the scoping matters: place_id is shared by every EVENT at a venue (all the
+// Music Academy recitals carry one venue place_id), so a raw place_id collision
+// is a duplicate signal only among type='place' rows. Event dupes need title
+// similarity AND same calendar day (a recurring "Violin Masterclass" series is
+// not a duplicate of itself).
+//
+// Emits a review table; does NOT merge. Jim confirms, then the apply step
+// re-points guide_stops/edition_picks and archives the loser with merged_into.
+//
+// Run: node --env-file=.env.local --import tsx ingest/audits/dupe_scan.ts
+
+import { getDb } from '../db';
+import { titleSimilarity } from '../dedupe';
+import { sbDateKey } from '../tz';
+import { AUDIT_DIR, isMain } from './_util';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Venues: 0.72 keeps true dups (SBMA is 1.00) while dropping common-suffix false
+// positives ("Fox Wine Co." vs "Pali Wine Co.", "Museum of Art" vs "…Natural
+// History", "M Special Brewing" vs "Island Brewing" all land ~0.6–0.69). A
+// same-place_id pair is flagged regardless of title.
+const PLACE_TITLE_SIM = 0.72;
+const EVENT_TITLE_SIM = 0.8; // events: high bar, plus same-day gate below
+const CROSS_TITLE_SIM = 0.5; // event-vs-venue containment (FigMtn): flag for judgment
+
+interface Row {
+  id: string; title: string; type: string;
+  place_id: string | null; starts_at: string | null;
+  blurb: string | null; photo_url: string | null;
+}
+
+export interface DupePair {
+  a: Row; b: Row; similarity: number; reason: string; kind: 'place' | 'event' | 'cross';
+}
+
+/** Richness heuristic: which row to KEEP (more complete copy/photo wins). */
+function richness(r: Row): number {
+  return (r.blurb?.length ?? 0) + (r.photo_url ? 100 : 0) + (r.place_id ? 10 : 0);
+}
+
+export function findDupePairs(rows: Row[]): DupePair[] {
+  const places = rows.filter((r) => r.type === 'place');
+  const events = rows.filter((r) => r.type === 'event');
+  const pairs: DupePair[] = [];
+
+  // place ↔ place: exact place_id collision OR high title similarity.
+  for (let i = 0; i < places.length; i++) {
+    for (let j = i + 1; j < places.length; j++) {
+      const a = places[i], b = places[j];
+      const sim = titleSimilarity(a.title, b.title);
+      const samePid = !!a.place_id && a.place_id === b.place_id;
+      if (samePid || sim >= PLACE_TITLE_SIM) {
+        pairs.push({ a, b, similarity: sim, kind: 'place', reason: samePid ? `same place_id + title ${sim.toFixed(2)}` : `title ${sim.toFixed(2)}` });
+      }
+    }
+  }
+
+  // event ↔ event: high title similarity AND same SB calendar day (double-post),
+  // optionally corroborated by same venue place_id. Different days = legit series.
+  for (let i = 0; i < events.length; i++) {
+    for (let j = i + 1; j < events.length; j++) {
+      const a = events[i], b = events[j];
+      const sim = titleSimilarity(a.title, b.title);
+      if (sim < EVENT_TITLE_SIM) continue;
+      if (!a.starts_at || !b.starts_at || sbDateKey(a.starts_at) !== sbDateKey(b.starts_at)) continue;
+      const samePid = !!a.place_id && a.place_id === b.place_id;
+      pairs.push({ a, b, similarity: sim, kind: 'event', reason: `title ${sim.toFixed(2)} · same day${samePid ? ' · same venue' : ''}` });
+    }
+  }
+
+  // event ↔ place: the FigMtn "event at a venue" vs "the venue" pattern. Flag for
+  // Jim's judgment (defensibly separate if cross-linked in Gate 3).
+  for (const e of events) {
+    for (const p of places) {
+      const sim = titleSimilarity(e.title, p.title);
+      const contained = e.title.toLowerCase().includes(p.title.toLowerCase()) || p.title.toLowerCase().includes(e.title.toLowerCase());
+      if (sim >= CROSS_TITLE_SIM || (contained && p.title.length > 8)) {
+        pairs.push({ a: e, b: p, similarity: sim, kind: 'cross', reason: `event↔venue · title ${sim.toFixed(2)}${contained ? ' · contained' : ''}` });
+      }
+    }
+  }
+
+  return pairs;
+}
+
+function renderReport(pairs: DupePair[]): string {
+  const section = (title: string, kind: DupePair['kind']) => {
+    const rows = pairs.filter((p) => p.kind === kind);
+    if (!rows.length) return `### ${title}\n\n_None._\n\n`;
+    let md = `### ${title} (${rows.length})\n\n| keep (survivor) | archive (loser) | signal |\n|---|---|---|\n`;
+    for (const p of rows) {
+      const [keep, loser] = richness(p.a) >= richness(p.b) ? [p.a, p.b] : [p.b, p.a];
+      md += `| ${keep.title} \`${keep.id}\` | ${loser.title} \`${loser.id}\` | ${p.reason} |\n`;
+    }
+    return md + '\n';
+  };
+  return (
+    `# G0.4, Duplicate same-entity pairs (published)\n\n` +
+    `Generated by \`ingest/audits/dupe_scan.ts\`. ${pairs.length} candidate pair(s). ` +
+    `Confirm, then merge the loser into the survivor via the cockpit Merged panel ` +
+    `(re-points guide_stops/edition_picks/saves, sets merged_into, archives the loser).\n\n` +
+    section('Venue duplicates (place ↔ place), merge', 'place') +
+    section('Event double-posts (event ↔ event, same day), merge', 'event') +
+    section('Event ↔ venue (Jim\'s judgment: merge or cross-link in Gate 3)', 'cross')
+  );
+}
+
+export async function runDupeScan(): Promise<DupePair[]> {
+  const sb = getDb();
+  const { data, error } = await sb
+    .from('things')
+    .select('id, title, type, place_id, starts_at, blurb, photo_url')
+    .eq('status', 'published');
+  if (error) throw new Error(`dupe scan: ${error.message}`);
+  return findDupePairs((data ?? []) as Row[]);
+}
+
+async function main() {
+  console.log('[dupe_scan] scanning published rows for same-entity duplicates…\n');
+  const pairs = await runDupeScan();
+  const byKind = (k: DupePair['kind']) => pairs.filter((p) => p.kind === k).length;
+  console.log(`  place↔place: ${byKind('place')} · event↔event(same day): ${byKind('event')} · event↔venue: ${byKind('cross')}`);
+  const path = join(AUDIT_DIR, 'dupe_scan.out.md');
+  writeFileSync(path, renderReport(pairs), 'utf8');
+  console.log(`\n[dupe_scan] ${pairs.length} candidate pairs. Report: ${path}`);
+  process.exit(0);
+}
+
+if (isMain(import.meta.url)) {
+  main().catch((err) => { console.error(err); process.exit(1); });
+}

@@ -31,7 +31,7 @@ describe('titleSimilarity (Dice over trigrams, ~pg_trgm)', () => {
     expect(titleSimilarity('Molly Miller Trio', 'Andre Nickatina')).toBeLessThan(0.3);
   });
   it('does NOT match a short name against a much longer tour title (known limit)', () => {
-    // Like pg_trgm similarity(), a big length gap dilutes the score — these stay
+    // Like pg_trgm similarity(), a big length gap dilutes the score, these stay
     // distinct rows; the human reviewer merges if needed. Documented, not a bug.
     expect(titleSimilarity('Royel Otis', 'Royel Otis: meet me in the car tour')).toBeLessThan(0.55);
   });
@@ -87,7 +87,7 @@ const SOHO_DICT: VenueDictEntry[] = [
   { name_norm: 'soho restaurant music club', place_id: null, aliases: ['soho'] },
 ];
 
-describe('evaluateMatch (Data Arch Redesign 26 Phase 2 — venue signal)', () => {
+describe('evaluateMatch (Data Arch Redesign 26 Phase 2, venue signal)', () => {
   it('matches (merge) a clear same-day title match with venue unknown on both sides, same as the old matcher', () => {
     const a = { title: 'Molly Miller Trio', starts_at: '2026-07-09T20:00:00-07:00' };
     const b = { title: 'Molly Miller Trio (Live)', starts_at: '2026-07-09T20:00:00-07:00' };
@@ -105,7 +105,7 @@ describe('evaluateMatch (Data Arch Redesign 26 Phase 2 — venue signal)', () =>
     expect(v.venue).toBe('disagree');
   });
 
-  it('is ambiguous (NOT auto-merged) for a mid-band title match even when venue agrees — held for Phase 3, not resolved deterministically', () => {
+  it('is ambiguous (NOT auto-merged) for a mid-band title match even when venue agrees, held for Phase 3, not resolved deterministically', () => {
     // An earlier version of this matcher auto-merged this case; the live
     // shadow report against the real catalog caught it producing false
     // merges (e.g. two distinct same-day Music Academy masterclasses whose
@@ -161,8 +161,8 @@ describe('evaluateMatch (Data Arch Redesign 26 Phase 2 — venue signal)', () =>
   });
 });
 
-describe('dedupeVenueAware (Phase 2 — orchestration parity with dedupe(), venue-aware matching)', () => {
-  it('does NOT merge an ambiguous (mid-band) same-venue title match — both stay (held for Phase 3)', () => {
+describe('dedupeVenueAware (Phase 2, orchestration parity with dedupe(), venue-aware matching)', () => {
+  it('does NOT merge an ambiguous (mid-band) same-venue title match, both stay (held for Phase 3)', () => {
     const authority = new Map([['ticketmaster', 0.90], ['soho', 1.00]]);
     const tm = cand({
       id: 'tm', title: 'An Evening with Molly Miller', source_url: 'https://www.ticketmaster.com/event/123',
@@ -188,7 +188,7 @@ describe('dedupeVenueAware (Phase 2 — orchestration parity with dedupe(), venu
   });
 });
 
-describe('dedupeVenueAware — event_key on drops (Data Arch Redesign 26 Phase 4 — corroboration)', () => {
+describe('dedupeVenueAware, event_key on drops (Data Arch Redesign 26 Phase 4, corroboration)', () => {
   it('carries the SURVIVING candidate\'s event_key on an in-batch near-dupe drop', () => {
     const tm = cand({
       id: 'tm', title: 'Molly Miller Trio', source_url: 'https://www.ticketmaster.com/event/123',
@@ -217,7 +217,7 @@ describe('dedupeVenueAware — event_key on drops (Data Arch Redesign 26 Phase 4
     expect(drops[0].event_key).toBe('deadbeef-existing-key');
   });
 
-  it('carries merged_into (the survivor\'s own id) and evidence on an in-batch near-dupe drop (Phase 5 — reversible merge log)', () => {
+  it('carries merged_into (the survivor\'s own id) and evidence on an in-batch near-dupe drop (Phase 5, reversible merge log)', () => {
     const tm = cand({
       id: 'tm', title: 'Molly Miller Trio', source_url: 'https://www.ticketmaster.com/event/123',
       address: 'SOhO Restaurant & Music Club',

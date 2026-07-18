@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-/** W2.1c — the compact ▲ n ▼ founder-curation gesture, shared by the Queue's
+/** W2.1c, the compact ▲ n ▼ founder-curation gesture, shared by the Queue's
  *  ReviewCard and each Live-catalog row. Posts editorial_weight to /api/admin/weight
- *  (metadata-immediate, like the hero flag — no re-review). Optimistic with
+ *  (metadata-immediate, like the hero flag, no re-review). Optimistic with
  *  revert-on-error via the host's toast. This is founder curation the ranker is
  *  allowed to read; it is NOT sponsor placement. Keep it a two-second gesture. */
 export function WeightNudge({
@@ -37,7 +37,7 @@ export function WeightNudge({
         .catch(() => null);
       if (!res?.ok) {
         setWeight(prev); // revert
-        onToast?.("Weight change failed — reverted");
+        onToast?.("Weight change failed, reverted");
       } else {
         onToast?.(delta > 0 ? `▲ Boosted ${title}` : `▼ Lowered ${title}`);
       }
@@ -55,7 +55,7 @@ export function WeightNudge({
         type="button"
         className="wbtn"
         aria-label={`Boost ${title}`}
-        title="Boost — nudge up the ranking"
+        title="Boost, nudge up the ranking"
         disabled={busy || weight >= 5}
         onClick={(e) => { e.stopPropagation(); nudge(1); }}
       >
@@ -66,7 +66,7 @@ export function WeightNudge({
         type="button"
         className="wbtn"
         aria-label={`Lower ${title}`}
-        title="Lower — sink in the ranking"
+        title="Lower, sink in the ranking"
         disabled={busy || weight <= -5}
         onClick={(e) => { e.stopPropagation(); nudge(-1); }}
       >

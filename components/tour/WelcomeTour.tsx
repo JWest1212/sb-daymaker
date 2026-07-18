@@ -97,7 +97,7 @@ function FeedCardIllustration() {
         strokeLinejoin="round"
       />
 
-      {/* ARROW 2 -> meta (when) — tip lands under TONIGHT */}
+      {/* ARROW 2 -> meta (when), tip lands under TONIGHT */}
       <text x="14" y="162" fontFamily="'JetBrains Mono',monospace" fontSize="10" fontWeight="700" fill="var(--ink)">
         {"when it's happening"}
       </text>

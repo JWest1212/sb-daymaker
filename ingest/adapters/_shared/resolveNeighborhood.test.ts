@@ -20,7 +20,7 @@ function thing(over: Partial<ResolvableThing> = {}): ResolvableThing {
   };
 }
 
-describe('resolveNeighborhood — Doc 19 §4.1 waterfall', () => {
+describe('resolveNeighborhood, Doc 19 §4.1 waterfall', () => {
   it('1. place_id match wins over everything else, confidence 0.98', () => {
     const r = resolveNeighborhood(
       thing({ place_id: 'place-soho', title: 'Karaoke Night', address: '999 Not Real Ave', lat: 34.44, lng: -119.63 }),
@@ -90,7 +90,7 @@ describe('resolveNeighborhood — Doc 19 §4.1 waterfall', () => {
   });
 });
 
-describe('autoWrites — Doc 19 §4.2 write policy', () => {
+describe('autoWrites, Doc 19 §4.2 write policy', () => {
   it('auto-writes at or above 0.75 (methods 1-4)', () => {
     expect(autoWrites({ neighborhood: 'downtown', method: 'place_id', confidence: 0.98 })).toBe(true);
     expect(autoWrites({ neighborhood: 'downtown', method: 'venue_name', confidence: 0.9 })).toBe(true);
@@ -98,7 +98,7 @@ describe('autoWrites — Doc 19 §4.2 write policy', () => {
     expect(autoWrites({ neighborhood: 'downtown', method: 'point_in_polygon', confidence: 0.75 })).toBe(true);
   });
 
-  it('never auto-writes the street tier (0.6) — soft suggestion only', () => {
+  it('never auto-writes the street tier (0.6), soft suggestion only', () => {
     expect(autoWrites({ neighborhood: 'downtown', method: 'street', confidence: 0.6 })).toBe(false);
   });
 

@@ -1,12 +1,12 @@
 import { track } from "@vercel/analytics";
 
 /**
- * The seven — and only seven — Wave-1 custom analytics events.
+ * The seven, and only seven, Wave-1 custom analytics events.
  *
  * Props policy (W1.2 / CLAUDE.md PII boundary): thing ids (uuids), occasion-tag
  * keys, small enums, and counts only. **Never** an email, a share/restore token,
  * a URL, or free-text user input. The overloads below enforce that at compile
- * time — every prop is a `string` id/enum or a `number` count.
+ * time, every prop is a `string` id/enum or a `number` count.
  *
  * `trackEvent` also swallows any error so a missing/blocked analytics script can
  * never throw into app code (the SDK is already safe; this is belt-and-braces).

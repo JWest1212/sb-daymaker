@@ -1,12 +1,11 @@
 // ingest/extractSample.ts
 //
-// Data Arch Redesign 25, Phase 1 — OFFLINE accuracy check only. Fetches a
+// Data Arch Redesign 25, Phase 1, OFFLINE accuracy check only. Fetches a
 // handful of real long-tail pages (a winery, a community hall, ...), runs
 // them through reduceToText + extractEvents, and prints the result so Jim
 // can eyeball accuracy before anything lands in the database.
 //
-// This script is NOT part of the nightly run and NEVER writes to Supabase —
-// no `land.ts`, no `sources`/`things` writes, nothing. It exists purely to
+// This script is NOT part of the nightly run and NEVER writes to Supabase, // no `land.ts`, no `sources`/`things` writes, nothing. It exists purely to
 // let a human judge extraction quality (spec 25 §6 Phase 1).
 //
 // Run:
@@ -26,7 +25,7 @@ const SAMPLE_URLS: string[] = [
 async function main() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY not set — see .env.local');
+    console.error('ANTHROPIC_API_KEY not set, see .env.local');
     process.exit(1);
   }
   const client = new Anthropic({ apiKey, maxRetries: 1, timeout: 90_000 });

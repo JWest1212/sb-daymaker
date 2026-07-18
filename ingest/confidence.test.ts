@@ -37,7 +37,7 @@ describe('sourceTrustScore', () => {
     expect(sourceTrustScore({ authority: 1.0, reliability: 1.0, lane: 'structured' })).toBe(1.0);
     expect(sourceTrustScore({ authority: 0.5, reliability: 0.5, lane: 'structured' })).toBe(0.5);
   });
-  it('never reads sponsor status — the input shape has no such field, so an unmatched source sorts last', () => {
+  it('never reads sponsor status, the input shape has no such field, so an unmatched source sorts last', () => {
     expect(sourceTrustScore(undefined)).toBe(0);
   });
 });
@@ -106,7 +106,7 @@ describe('findabilityScore', () => {
   it('is 1.0 with a resolved zone and an activity tag', () => {
     expect(findabilityScore(thing({}))).toBe(1.0);
   });
-  it('lowers but the caller decides whether it blocks — this is just the number', () => {
+  it('lowers but the caller decides whether it blocks, this is just the number', () => {
     expect(findabilityScore(thing({ nearby_zone: null, activities: [] }))).toBe(0);
     expect(findabilityScore(thing({ nearby_zone: null }))).toBe(0.5);
   });
@@ -132,7 +132,7 @@ describe('computeDataConfidence', () => {
     );
     expect(score).toBeLessThan(0.2);
   });
-  it('never reads sponsor_id or is_featured — the input types carry no such field', () => {
+  it('never reads sponsor_id or is_featured, the input types carry no such field', () => {
     // Type-level guarantee: ThingForConfidence has no sponsor/featured field, so
     // there is no way for this function to read one. This test documents that intent.
     const { breakdown } = computeDataConfidence(thing({}), trustedSource, NOW);
@@ -143,7 +143,7 @@ describe('computeDataConfidence', () => {
 });
 
 describe('confidenceReasons', () => {
-  it('returns nothing for a strong, fully-corroborated item — nothing meaningful to explain', () => {
+  it('returns nothing for a strong, fully-corroborated item, nothing meaningful to explain', () => {
     expect(confidenceReasons(thing({ source_count: 3 }), trustedSource, NOW)).toEqual([]);
   });
   it('names the specific missing fields, not the weight name', () => {

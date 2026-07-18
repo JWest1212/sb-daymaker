@@ -17,8 +17,7 @@ const KIND_LABEL: Record<SearchHit["kind"], string> = {
   tag: "Tag",
 };
 
-/** Header search overlay (Home Rework spec §9). Deterministic string matching only —
- *  no AI. Always mounted (visibility toggled via `.is-open`) so the slide-down
+/** Header search overlay (Home Rework spec §9). Deterministic string matching only, *  no AI. Always mounted (visibility toggled via `.is-open`) so the slide-down
  *  transition can run; useFocusTrap's `active` flag handles enabling/disabling the
  *  trap without needing to unmount. */
 export function SearchPanel({
@@ -47,7 +46,7 @@ export function SearchPanel({
     onClose();
   };
 
-  // Debounced deterministic search — no Claude call, ever (constraint C3).
+  // Debounced deterministic search, no Claude call, ever (constraint C3).
   useEffect(() => {
     if (!open || !query.trim()) {
       setResults(EMPTY);
@@ -67,7 +66,7 @@ export function SearchPanel({
   }, [query, open]);
 
   // Escape closes; scrolling the feed closes (spec §9.1 dismiss list). The scroll
-  // listener arms after a short delay — autofocusing the field can itself trigger a
+  // listener arms after a short delay, autofocusing the field can itself trigger a
   // scroll-into-view on mobile, which would otherwise close the panel the instant
   // it opens (the mockup's own JS has the same beat: focus only after ~260ms).
   useEffect(() => {

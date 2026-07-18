@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST { photo_id } -> Card Imagery Build Spec Phase 2 §5.3: move a candidate into
 // the approved pool (approved=true, sort_order appended to the end). No network
-// call — the row already exists from the fetch step.
+// call, the row already exists from the fetch step.
 export async function POST(req: Request) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

@@ -21,7 +21,7 @@ function bucketAndGroup(tier: number, starts_at: string | null, title: string, t
     if (day > today) return { bucket: 0, sortVal: starts_at, groupKey: day, groupLabel: label };
     return { bucket: 3, sortVal: starts_at, groupKey: `past_${day}`, groupLabel: `${label} · past` };
   }
-  if (tier === 2) return { bucket: 1, sortVal: title.toLowerCase(), groupKey: "recurring", groupLabel: "Recurring — every week" };
+  if (tier === 2) return { bucket: 1, sortVal: title.toLowerCase(), groupKey: "recurring", groupLabel: "Recurring, every week" };
   return { bucket: 2, sortVal: title.toLowerCase(), groupKey: "evergreen", groupLabel: "Anytime in SB" };
 }
 
@@ -54,7 +54,7 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
   if (!sb) return { rows: [], total: 0, page, pageSize: PAGE_SIZE };
   const today = sbDay(Date.now());
 
-  // Vibe filter is a tag join — resolve matching ids first.
+  // Vibe filter is a tag join, resolve matching ids first.
   let vibeIds: string[] | null = null;
   if (f.vibe) {
     const { data } = await sb.from("thing_tags").select("thing_id").eq("tag", f.vibe);

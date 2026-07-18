@@ -1,12 +1,12 @@
 // lib/neighborhoodSweepServer.ts
 //
-// Doc 19 §6 Phase 2 — server-only dry-run sweep. One query over published
+// Doc 19 §6 Phase 2, server-only dry-run sweep. One query over published
 // things, one for the venue_neighborhoods dictionary, resolved in-process via
 // the pure resolveNeighborhood waterfall (ingest/adapters/_shared). No AI, no
 // per-request calls, no paid geocoding. Same convention as lib/coverageServer.ts.
 //
 // `dry` names the eventual apply/dry-run switch (Doc 19 Phase 4 adds the write
-// path); this phase only ever reads and computes — it writes nothing regardless
+// path); this phase only ever reads and computes, it writes nothing regardless
 // of the flag, mirroring the existing DRY_RUN posture (ingest/run.ts).
 
 import "server-only";
@@ -22,7 +22,7 @@ import type { SweepSummary, SweepMethodCount, SweepZoneCount, SweepTriageItem, D
 
 // extractVenueNameFromAddress's "first comma segment that isn't digit-led" rule
 // (built for venue-prefixed addresses like "SOhO, 1221 State St...") false-
-// positives on a bare street address with no venue prefix at all — e.g. "East
+// positives on a bare street address with no venue prefix at all, e.g. "East
 // Beach" (address "E Cabrillo Blvd, Santa Barbara, CA") extracts "E Cabrillo
 // Blvd" as if it were the venue. Filter those out before offering the guess as
 // a dictionary-add candidate: a short, street-suffixed segment is a street, not
@@ -119,7 +119,7 @@ interface VenueDictRow {
   created_by: string;
 }
 
-/** Doc 19 §6 Phase 3 — the dictionary table's data, sorted by zone then name. */
+/** Doc 19 §6 Phase 3, the dictionary table's data, sorted by zone then name. */
 export async function loadVenueDictionary(): Promise<DictionaryEntry[]> {
   const sb = getAdminSupabase();
   if (!sb) return [];
@@ -137,7 +137,7 @@ export async function loadVenueDictionary(): Promise<DictionaryEntry[]> {
       name: r.name,
       neighborhood: r.neighborhood,
       zoneKey,
-      zoneLabel: zoneKey ? DOOR_ZONE_BY_KEY[zoneKey].label : "—",
+      zoneLabel: zoneKey ? DOOR_ZONE_BY_KEY[zoneKey].label : "·",
       aliases: r.aliases ?? [],
       createdBy: r.created_by,
     };
@@ -149,10 +149,10 @@ export interface ApplyResult {
   remaining: number; // still needs triage after this run (unaffected by apply)
 }
 
-/** Doc 19 §6 Phase 4 — writes every autoWrites()-eligible, actually-new match
+/** Doc 19 §6 Phase 4, writes every autoWrites()-eligible, actually-new match
  *  (methods place_id/venue_name/source/point_in_polygon; 'existing' is already
  *  correct and needs no write) to things.neighborhood. Also keeps `nearby_zone`
- *  in sync via deriveNearbyZone — the same LC-6 pattern the catalog edit route
+ *  in sync via deriveNearbyZone, the same LC-6 pattern the catalog edit route
  *  uses (app/api/admin/catalog/edit/route.ts), because the live Place/Near-Me
  *  door reads `nearby_zone`, not `neighborhood` directly. */
 export async function applyResolvedNeighborhoods(): Promise<ApplyResult> {
@@ -172,7 +172,7 @@ export async function applyResolvedNeighborhoods(): Promise<ApplyResult> {
   const dictionary = (dictRows ?? []) as unknown as VenueDictEntry[];
 
   // Group by identical (neighborhood, nearby_zone) write target for chunked
-  // bulk updates — same convention as scripts/backfill_nearby_zone.mts.
+  // bulk updates, same convention as scripts/backfill_nearby_zone.mts.
   const byTarget = new Map<string, string[]>();
   let remaining = 0;
 
@@ -219,7 +219,7 @@ export interface TriageAssignResult {
   error?: string;
 }
 
-/** Doc 19 §6 Phase 4 — one-tap triage assignment. Writes `neighborhood` +
+/** Doc 19 §6 Phase 4, one-tap triage assignment. Writes `neighborhood` +
  *  `nearby_zone` for a single thing (§4.3's canonical neighborhood for the two
  *  collapsed zones; 'other' + no zone for "Regional / Online"), and optionally
  *  upserts a venue into the dictionary. */
@@ -262,7 +262,7 @@ export interface AddVenueResult {
   error?: string;
 }
 
-/** Doc 19 §5.3 — the dictionary's direct "Add a venue" row, independent of
+/** Doc 19 §5.3, the dictionary's direct "Add a venue" row, independent of
  *  triage. Same name_norm-keyed upsert as the seed script (§5.1) and the
  *  triage auto-add, so a manual add and a triage add of the same venue never
  *  duplicate. */
@@ -283,7 +283,7 @@ export async function addDictionaryVenue(name: string, zoneKey: DoorZoneKey): Pr
   return { ok: true };
 }
 
-/** Doc 19 §6 Phase 5 — the Coverage tab's watch count. If this drifts up over
+/** Doc 19 §6 Phase 5, the Coverage tab's watch count. If this drifts up over
  *  time (Phase 5's self-heal wired into ingest/land.ts should keep it near the
  *  residue that only manual triage/other legitimately explains), the sweep
  *  needs another pass. */

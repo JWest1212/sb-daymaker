@@ -2,7 +2,7 @@
 //
 // Server-only data access for the cockpit "Edition Draft" module (spec §5).
 // Mirrors lib/reviewServer.ts's shape (service-role reads, kept separate from
-// client-safe pure code). All writes happen in the API routes, not here — this
+// client-safe pure code). All writes happen in the API routes, not here, this
 // file is read-only.
 
 import "server-only";
@@ -49,7 +49,7 @@ function toCockpitThing(t: ThingJoinRow): CockpitThing {
 
 /** Editions still reachable/editable in the reviewer (the worklist). 'skipped'
  *  (the cockpit's "Hold" status) belongs here, not in the archive: it isn't a
- *  terminal state — it stays fully editable and reversible. Its one real
+ *  terminal state, it stays fully editable and reversible. Its one real
  *  effect is that send.ts will NOT send it (an explicit operator opt-out),
  *  unlike 'draft'/'approved' which both send at the normal time. */
 export async function loadPendingEditions(sb: SupabaseClient): Promise<EditionSummary[]> {

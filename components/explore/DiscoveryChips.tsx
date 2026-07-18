@@ -5,7 +5,7 @@ export interface ActiveChip {
   label: string;
 }
 
-/** Home Rework spec §11.3 — the collapsed active-filter chip bar. One chip per
+/** Home Rework spec §11.3, the collapsed active-filter chip bar. One chip per
  *  active dimension, dimension-tinted, independently removable; a Reset clears
  *  all. Renders nothing when no dimension is active. */
 export function DiscoveryChips({

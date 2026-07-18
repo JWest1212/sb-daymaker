@@ -1,8 +1,8 @@
 // ingest/gate.ts
 //
-// THE STRICT GATE — Doc 11 §4 / Doc 10 §7 as real code.
+// THE STRICT GATE, Doc 11 §4 / Doc 10 §7 as real code.
 // Pure function, no I/O, no AI, so it is unit-testable against the 107 seed
-// fixtures. Claude (enrich.ts) runs AFTER this, never before — so AI never gets
+// fixtures. Claude (enrich.ts) runs AFTER this, never before, so AI never gets
 // the chance to "rescue" a row that failed the start-time test.
 //
 // Two reconciliations vs. the Doc 11 sample, forced by the seed (which Doc 11

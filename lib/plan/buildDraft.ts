@@ -7,7 +7,7 @@ import type { Block, PlanAnswers, Stop, VibeKey } from "./types";
 import type { Thing } from "@/lib/things";
 
 // Soft category boost applied only when the user selected no vibes.
-// These keys are OccasionKeys used only for tag matching — not shown in setup UI.
+// These keys are OccasionKeys used only for tag matching, not shown in setup UI.
 const DEFAULT_PRIOR: Record<Block, string[]> = {
   morning:   ["outdoors_active", "food_drink_spot"],
   afternoon: ["arts_culture", "shopping_browse", "food_drink_spot"],
@@ -44,7 +44,7 @@ export function buildDraft(
 
     const ranked = rankCandidates(block, perBlockAnswers, pool, savedStateFor, placed);
     const pick = ranked[0];
-    if (!pick) continue; // thin inventory — leave block empty, its add-slot shows
+    if (!pick) continue; // thin inventory, leave block empty, its add-slot shows
 
     placed.add(pick.thing.id);
     draft.push({

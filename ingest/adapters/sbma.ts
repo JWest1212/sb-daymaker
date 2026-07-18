@@ -1,9 +1,9 @@
 // ingest/adapters/sbma.ts
 //
-// Santa Barbara Museum of Art — WP Tribe REST → iCal → scrape (§7.2).
+// Santa Barbara Museum of Art, WP Tribe REST → iCal → scrape (§7.2).
 // Also emits a Tier-3 culture_spot for the museum building itself (evergreen).
 //
-// sbma.net — Robots.txt checked at runtime. useManagedScrape: false.
+// sbma.net, Robots.txt checked at runtime. useManagedScrape: false.
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate, HappeningCategory } from '../../packages/shared/types';

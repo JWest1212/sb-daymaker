@@ -45,7 +45,7 @@ describe("normalizeQuery", () => {
   });
 });
 
-describe("searchThings — events", () => {
+describe("searchThings, events", () => {
   it("returns nothing for an empty query", () => {
     const r = searchThings({ query: "  ", things: [thing({ title: "Jazz Night" })], venueNames: {} });
     expect(r.events).toEqual([]);
@@ -79,7 +79,7 @@ describe("searchThings — events", () => {
   });
 });
 
-describe("searchThings — venues", () => {
+describe("searchThings, venues", () => {
   it("matches a venue name unrelated to any thing's title", () => {
     const things = [thing({ id: "e1", title: "Molly Miller Trio", venue_id: "v1" })];
     const r = searchThings({ query: "soho", things, venueNames: { v1: "SOhO Music Club" } });
@@ -107,7 +107,7 @@ describe("searchThings — venues", () => {
   });
 });
 
-describe("searchThings — tags", () => {
+describe("searchThings, tags", () => {
   it("matches an occasion label and returns a vibe filter", () => {
     const r = searchThings({ query: "date night", things: [], venueNames: {} });
     expect(r.tags).toContainEqual({ kind: "tag", id: "date_night", label: "Date Night", filter: { dimension: "vibe", key: "date_night" } });

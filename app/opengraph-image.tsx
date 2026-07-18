@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "SB Daymaker — find what's worth doing in Santa Barbara, daily";
+export const alt = "SB Daymaker, find what's worth doing in Santa Barbara, daily";
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -25,7 +25,7 @@ export default function OpengraphImage() {
           SB Daymaker
         </div>
         <div style={{ fontSize: 40, color: "#4A4038", marginTop: 28, maxWidth: 920, lineHeight: 1.3 }}>
-          Find what&rsquo;s worth doing — find it, save it, share it.
+          Find what&rsquo;s worth doing. Find it, save it, share it.
         </div>
       </div>
     ),

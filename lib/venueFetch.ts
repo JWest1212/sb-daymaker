@@ -1,6 +1,6 @@
 // lib/venueFetch.ts
 //
-// Card Imagery Build Spec Phase 2 §5.3 — the "fetch candidates for a venue" core,
+// Card Imagery Build Spec Phase 2 §5.3, the "fetch candidates for a venue" core,
 // extracted so both the Venues tab's own route and the Live-catalog follow-up
 // (2026-07-10) share ONE implementation instead of drifting. Server-only (service
 // role writes to venue_photos + the shared image_spend cap counter).
@@ -15,7 +15,7 @@ import {
 // Wikimedia is free and its URLs never expire, so it never touches the shared
 // refresh cap; Google costs both a cap slot up front AND an ongoing nightly
 // refresh once approved into a pool. LC-8: Google fires ONLY on an explicit
-// `includeGoogle: true` — the "Fetch free candidates" button never spends a
+// `includeGoogle: true`, the "Fetch free candidates" button never spends a
 // paid call, no matter how thin the Wikimedia results come back.
 
 export interface VenueFetchStats {
@@ -23,7 +23,7 @@ export interface VenueFetchStats {
   wikimediaCount: number;
   googleFetched: boolean;
   googleCount: number;
-  /** LC-8 "capped ≠ empty" — true when Google was requested but the shared
+  /** LC-8 "capped ≠ empty", true when Google was requested but the shared
    *  monthly cap was already hit (or was hit mid-fetch), so the caller can show
    *  a distinct "budget reached" message instead of implying nothing exists. */
   capHit: boolean;
@@ -31,9 +31,9 @@ export interface VenueFetchStats {
 
 /** Top-5 gated Wikimedia geosearch results (if the venue has lat/lng) + up to 10
  *  Google photos (if the venue has a place_id AND either `includeGoogle` is set or
- *  Wikimedia came up thin) — persisted as UNAPPROVED venue_photos rows, deduped on
+ *  Wikimedia came up thin), persisted as UNAPPROVED venue_photos rows, deduped on
  *  (venue_id, stable_ref) so a repeat fetch is safe to call but won't duplicate
- *  rows (Google's own photos[] is a fixed, unpaginated list — nothing new to find
+ *  rows (Google's own photos[] is a fixed, unpaginated list, nothing new to find
  *  on a re-fetch unless Google's own listing changed). */
 export async function fetchCandidatesForVenue(
   sb: SupabaseClient,

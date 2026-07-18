@@ -7,7 +7,7 @@
 //
 // Strict-gate honesty: an event's free-text `when` becomes a start ONLY if the
 // submitter gave a real date + clock time. Vague prose ("Saturday 8-ish") is never
-// guessed into a start — it emits startStrategy:'none' and the gate drops it.
+// guessed into a start, it emits startStrategy:'none' and the gate drops it.
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate } from '../../packages/shared/types';
@@ -18,7 +18,7 @@ const MONTHS: Record<string, number> = {
   jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12,
 };
 
-/** Parse a submitter's `when` into an ISO start — only when it carries an explicit
+/** Parse a submitter's `when` into an ISO start, only when it carries an explicit
  *  month/day/year AND a clock time. Otherwise null (the gate then drops the event). */
 export function parseSubmissionWhen(when: string | undefined): string | null {
   if (!when) return null;
@@ -63,7 +63,7 @@ export const submissions: SourceAdapter = {
         priceLow: null,
         explicitlyFree: free,
         // Synthetic, stable source so the row is keyable + idempotent; not an http
-        // link, so the cockpit shows no "view source" (correct — there's no page).
+        // link, so the cockpit shows no "view source" (correct, there's no page).
         sourceUrl: `submission:${r.id}`,
         reasonToGo: isEvent ? undefined : (p.caption || undefined), // T3 needs a reason
         localNote: p.caption || undefined,

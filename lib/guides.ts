@@ -2,6 +2,7 @@ import { getSupabase } from "./supabase";
 import type { Thing } from "./things";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
+import { cleanText } from "./text/stripEmDash";
 
 export type GuideKind = "neighborhood" | "theme";
 
@@ -42,9 +43,10 @@ export interface Guide {
 function mapGuide(row: Record<string, unknown>): Guide {
   return {
     id: row.id as string,
-    title: row.title as string,
-    kicker: (row.kicker as string) ?? null,
-    intro: (row.intro as string) ?? null,
+    // G0.9 render guard (last line of defense against a stray em dash).
+    title: cleanText(row.title as string),
+    kicker: cleanText((row.kicker as string) ?? null),
+    intro: cleanText((row.intro as string) ?? null),
     kind: row.kind as GuideKind,
     zone: (row.zone as Zone) ?? null,
     tag: (row.tag as OccasionKey) ?? null,
@@ -60,8 +62,8 @@ function mapGuide(row: Record<string, unknown>): Guide {
 function mapStop(row: Record<string, unknown>): GuideStop {
   return {
     position: row.position as number,
-    label: row.label as string,
-    note: (row.note as string) ?? null,
+    label: cleanText(row.label as string),
+    note: cleanText((row.note as string) ?? null),
     thing_id: (row.thing_id as string) ?? null,
     chapter: typeof row.chapter === "number" ? row.chapter : 1,
     sub: (row.sub as string) ?? null,
@@ -147,13 +149,13 @@ export function matchGuideThings(guide: Guide, things: Thing[]): Thing[] {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Living Postcard — content model (Phase 1)
+// Living Postcard, content model (Phase 1)
 //
 // Pure types + helpers only. No query or UI wiring this phase: the selects in
 // getPublishedGuides/getGuide stay byte-identical so the render is provably
 // additive (spec §5), and no page reads these yet (that's Phase 2).
 //
-// The `GuideContent` shape encodes the approved jsonb model verbatim — see
+// The `GuideContent` shape encodes the approved jsonb model verbatim, see
 // docs/discover-sb/Phase1_Content_Model_FunkZone_Paper.md §A3. An empty `{}`
 // parses to all-empty defaults, which render a plain v1 guide (the additivity
 // guarantee). The parser is tolerant: missing keys → defaults, wrong types →
@@ -169,7 +171,7 @@ export interface GuideContentMeta {
 }
 
 /** Time-of-day band for a chapter; drives the deterministic "Now" tag from the
- *  clock. Content vocabulary — note "golden" is content-only, distinct from the
+ *  clock. Content vocabulary, note "golden" is content-only, distinct from the
  *  DB `tod` enum (morning|afternoon|evening|late). */
 export type ChapterTod = "morning" | "afternoon" | "golden" | "evening";
 
@@ -213,7 +215,7 @@ export interface GuideKnowBefore {
 /** Static postcard caption buckets (e.g. `b1_3`, `b4_6`, …). No AI at tap time. */
 export type GuidePostcardCaptions = Record<string, string>;
 
-/** Repo sketch/emblem asset reference — the art itself lives in lib/guide-art.ts. */
+/** Repo sketch/emblem asset reference, the art itself lives in lib/guide-art.ts. */
 export interface GuideSketch {
   kind: "sketch" | "emblem";
   /** Asset id in the lib/guide-art.ts registry (null → renderer falls back). */
@@ -264,7 +266,7 @@ function asTod(v: unknown): ChapterTod | null {
 }
 
 /** Tolerant parser for `guides.content`. Missing keys → empty defaults, unknown
- *  keys ignored, wrong-typed values coerced. Never throws — bad data degrades to
+ *  keys ignored, wrong-typed values coerced. Never throws, bad data degrades to
  *  a plain guide rather than a broken page. */
 export function parseGuideContent(raw: unknown): GuideContent {
   const empty: GuideContent = {
@@ -383,7 +385,7 @@ function priceGlyph(price_band: string | null, free: boolean | null): string | n
 
 /** Derive a stop's sub-line (spec §3.2).
  *  - thing-backed stop → built from thing data (street · category · price);
- *    segments whose source field is null are omitted — never a placeholder.
+ *    segments whose source field is null are omitted, never a placeholder.
  *  - label-only stop (thing_id null) → the stored `sub` verbatim (or null).
  *  Pure. */
 export function deriveStopSub(

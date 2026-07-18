@@ -1,5 +1,5 @@
 // The public "view in browser" permalink (edition_build_spec.md §9). Serves the
-// exact renderer HTML — same function the email uses — for status='sent'
+// exact renderer HTML, same function the email uses, for status='sent'
 // editions only (loadRenderableEdition's default, matching the
 // public_read_editions RLS policy). Uses the public anon client, not the
 // service-role client: no elevated access needed for a public page. ISR at

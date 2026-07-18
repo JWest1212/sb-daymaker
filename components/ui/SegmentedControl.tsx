@@ -10,7 +10,7 @@ interface Option {
 }
 
 /** Segmented switch (e.g. Today · This Week · This Month). Controlled. Tablist with
- *  roving tabindex + arrow-key navigation (Home Rework spec §14 — Horizon segment). */
+ *  roving tabindex + arrow-key navigation (Home Rework spec §14, Horizon segment). */
 export function SegmentedControl({
   options,
   value,

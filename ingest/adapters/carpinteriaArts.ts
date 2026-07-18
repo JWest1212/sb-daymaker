@@ -1,6 +1,6 @@
 // ingest/adapters/carpinteriaArts.ts
 //
-// Carpinteria Arts Center — Google Calendar iCal feed (§8.4).
+// Carpinteria Arts Center, Google Calendar iCal feed (§8.4).
 // carpinteriaartscenter.org uses Givecloud CMS with an embedded Google Calendar
 // (not WordPress/Tribe). iCal export URL extracted from the Google Calendar embed
 // on /calendar. RRULE recurring events (e.g., monthly Art Faire) are handled by
@@ -10,7 +10,7 @@
 // category: arts_theater / recurring_arts.
 // seed: arts_culture, family_day, free_sb.
 //
-// useManagedScrape: false. Public Google Calendar iCal — no auth required.
+// useManagedScrape: false. Public Google Calendar iCal, no auth required.
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate } from '../../packages/shared/types';

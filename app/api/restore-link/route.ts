@@ -5,7 +5,7 @@ import { sendEmail } from "@/lib/email";
 export const dynamic = "force-dynamic";
 
 // Save-restore snapshot + magic-link email. Uses the anon client's SECURITY
-// DEFINER RPC (an end-user action — never the service-role key). Like
+// DEFINER RPC (an end-user action, never the service-role key). Like
 // /api/subscribe, this public route can be made to email an arbitrary address;
 // content is fixed and non-sensitive, so rate limiting is deferred to Wave 4.
 

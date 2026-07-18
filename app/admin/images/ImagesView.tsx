@@ -6,7 +6,7 @@ import { BudgetChip } from "../BudgetChip";
 import type { ImagesDeskData, ImagesDeskRow, ImagesVenueOption } from "@/lib/imagesServer";
 import { dropRetiredPhotoOptions, STRONG_MATCH_SCORE, type PhotoOption } from "@/lib/review";
 
-// Images desk (cockpit Images tab, 2026-07-11) — the backlog worker for
+// Images desk (cockpit Images tab, 2026-07-11), the backlog worker for
 // published things without a real photo. Modeled on the Queue's keyboard-first
 // card flow, composing the machinery that already exists: the shared ImagePicker
 // thumb, /api/admin/catalog/photo (apply), /api/admin/venues/match (attach +
@@ -18,8 +18,7 @@ const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
 type Filter = "all" | "1" | "2" | "3";
 interface Toast { msg: string; undo?: () => void; }
 
-/** A this-session assignment (single apply, venue attach, or bulk auto-assign) —
- *  kept so the strip at the top lets the founder eyeball results and revert. */
+/** A this-session assignment (single apply, venue attach, or bulk auto-assign), *  kept so the strip at the top lets the founder eyeball results and revert. */
 interface Assigned {
   row: ImagesDeskRow;
   url: string | null;
@@ -51,7 +50,7 @@ const post = (url: string, body: unknown) =>
     body: JSON.stringify(body),
   }).then((r) => r.json()).catch(() => null);
 
-// Wikimedia / Google / owned only (Jim, 2026-07-11) — historical pexels entries
+// Wikimedia / Google / owned only (Jim, 2026-07-11), historical pexels entries
 // in stored photo_options are never offered, even on rows loaded before the
 // server-side scrub existed.
 const realOptions = (r: ImagesDeskRow): PhotoOption[] => dropRetiredPhotoOptions(r.photo_options.filter((o) => o.url));
@@ -105,14 +104,13 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     [visible, pageClamped],
   );
 
-  // Clamp at render time (a removal can shrink the page under the cursor) —
-  // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
+  // Clamp at render time (a removal can shrink the page under the cursor), // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
   const activeIdx = Math.min(active, Math.max(0, pageItems.length - 1));
 
   const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
 
   // The pool-build worklist: venues (attached or strongly suggested) that a
-  // cluster of queue items shares but that have NO approved photos yet — one
+  // cluster of queue items shares but that have NO approved photos yet, one
   // approved photo there covers the whole cluster, free, forever.
   const poolTargets = useMemo(() => {
     const counts = new Map<string, number>();
@@ -171,10 +169,10 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     if (res?.rows) {
       setRows(res.rows); setVenues(res.venues ?? []); setScanCapped(!!res.scanCapped);
       setPublishedTotal(res.publishedTotal ?? 0); setNoImageTotal(res.noImageTotal ?? 0);
-    } else showToast("Refresh failed — showing the last loaded list");
+    } else showToast("Refresh failed, showing the last loaded list");
   }, [showToast]);
 
-  /** Revert a session assignment: re-apply the previous photo (normalized — a
+  /** Revert a session assignment: re-apply the previous photo (normalized, a
    *  url-less motif/placeholder prev must go back as "placeholder", the photo
    *  route's explicit clear), detach if this session attached the venue, and
    *  put the row back at the top of the queue. */
@@ -196,7 +194,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
       },
       ...rs.filter((r) => r.id !== entry.row.id),
     ]);
-    showToast("Reverted — back in the queue");
+    showToast("Reverted, back in the queue");
   }, [showToast]);
 
   const applyOption = useCallback(async (row: ImagesDeskRow, opt: PhotoOption) => {
@@ -212,7 +210,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     const entry: Assigned = { row, url: opt.url, source: opt.source, how: "manual", attached_now: false, prev };
     removeRow(row.id);
     setAssigned((a) => [entry, ...a]);
-    showToast(`Applied (${opt.source}) — live now`, () => revertAssign(entry));
+    showToast(`Applied (${opt.source}), live now`, () => revertAssign(entry));
   }, [busyId, removeRow, revertAssign, showToast]);
 
   const applySelected = useCallback((row: ImagesDeskRow) => {
@@ -239,10 +237,10 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
       const entry: Assigned = { row, url: null, source: "venue", how: "venue", venueName, attached_now: true, prev };
       removeRow(row.id);
       setAssigned((a) => [entry, ...a]);
-      showToast(`Attached to ${venueName} — pool photo applied`, () => revertAssign(entry));
+      showToast(`Attached to ${venueName}, pool photo applied`, () => revertAssign(entry));
     } else {
       patchRow(row.id, { venue_id: venueId, venue_name: venueName, venue_approved_count: 0, suggestion: null });
-      showToast(`Attached to ${venueName} — no approved photos yet, fetch some below`);
+      showToast(`Attached to ${venueName}, no approved photos yet, fetch some below`);
     }
   }, [busyId, patchRow, removeRow, revertAssign, showToast]);
 
@@ -251,7 +249,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     setBusyId(row.id);
     const res = await post("/api/admin/images/ack", { thing_id: row.id });
     setBusyId(null);
-    if (res?.ok) { removeRow(row.id); showToast("Left as-is — it won't reappear here"); }
+    if (res?.ok) { removeRow(row.id); showToast("Left as-is, it won't reappear here"); }
     else showToast(res?.error ?? "Couldn't dismiss");
   }, [busyId, removeRow, showToast]);
 
@@ -272,11 +270,11 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     if (fetchingId) return;
     setFetchingId(row.id);
     let res = await post("/api/admin/catalog/venue-photos/fetch", { thing_id: row.id, include_google: true });
-    // Most ingested things have no place_id — instead of dead-ending, run the
+    // Most ingested things have no place_id, instead of dead-ending, run the
     // same automatic place lookup the catalog picker exposes as a button, save
     // a STRONG match (never a bare-address geocode), and re-fetch.
     if (res?.ok && !(res.options?.length) && res.venue_id && !res.venue_has_place_id) {
-      showToast("No place_id on file — looking it up automatically…");
+      showToast("No place_id on file, looking it up automatically…");
       const lu = await post("/api/admin/venues/lookup-place-ids", { venue_id: res.venue_id });
       const strong = lu?.ok ? lu.strongMatches?.[0] : null;
       if (strong) {
@@ -287,8 +285,8 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
       } else {
         setFetchingId(null);
         showToast(lu?.weakMatches?.length
-          ? "Google only found a bare address here, not a business — pick the right place from the Venues tab"
-          : "No Google place match found — add a place_id from the Venues tab");
+          ? "Google only found a bare address here, not a business, pick the right place from the Venues tab"
+          : "No Google place match found, add a place_id from the Venues tab");
         return;
       }
     }
@@ -304,7 +302,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     }
     if (Array.isArray(res.options) && res.options.length) {
       patch.photo_options = res.options;
-      // You just paid for Google — pre-select the first Google result so A
+      // You just paid for Google, pre-select the first Google result so A
       // applies what the press fetched (pool ordering can put Wikimedia first).
       const real = (res.options as PhotoOption[]).filter((o) => o.url);
       const gIdx = real.findIndex((o) => o.source === "google");
@@ -316,14 +314,14 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
         res.googleFetched
           ? `Found ${res.count} photo(s) (${res.wikimediaCount} Wikimedia + ${res.googleCount} Google)`
           : res.capHit
-            ? "Monthly photo budget reached, resets on the 1st — showing Wikimedia results"
+            ? "Monthly photo budget reached, resets on the 1st, showing Wikimedia results"
             : `Found ${res.wikimediaCount} Wikimedia photo(s)`,
       );
     } else {
       showToast(
         res.capHit
           ? "Monthly photo budget reached, resets on the 1st"
-          : "No photos found" + (!res.venue_has_place_id && !res.venue_has_coords ? " — this venue needs a place_id or coordinates (Venues tab)" : ""),
+          : "No photos found" + (!res.venue_has_place_id && !res.venue_has_coords ? ", this venue needs a place_id or coordinates (Venues tab)" : ""),
       );
     }
   }, [fetchingId, venues, patchRow, showToast]);
@@ -386,7 +384,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
   }, [pageItems, autoRunning, processAutoResults, showToast]);
 
   // The whole-backlog variant: per chunk it (1) LOCATES items with no place_id
-  // via the free-tier Text Search — the root-cause unlock for geosearch + venue
+  // via the free-tier Text Search, the root-cause unlock for geosearch + venue
   // matching, (2) runs the free Wikimedia search for anything with no candidates
   // yet, then (3) auto-assigns. Across EVERY filtered row, not just the page.
   const autoAssignAll = useCallback(async () => {
@@ -398,7 +396,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
         "First locates items missing a place_id (free-tier lookup, strong matches only), then runs the free Wikimedia " +
         "search, then assigns: strong venue matches use their approved pool, otherwise the top Wikimedia result. " +
         "No paid photo calls. Every assignment lands in the reviewed strip with one-click revert. " +
-        "A large backlog can take several minutes — keep the tab open.",
+        "A large backlog can take several minutes, keep the tab open.",
     );
     if (!okGo) return;
     setAutoRunning(true);
@@ -423,7 +421,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
               return l?.located ? { ...r, place_id: l.place_id ?? r.place_id, lat: l.lat ?? r.lat, lng: l.lng ?? r.lng } : r;
             }));
             // A fresh place_id/coords means the earlier "no candidates" search
-            // is stale — let the prefetch stage re-run for these.
+            // is stale, let the prefetch stage re-run for these.
             for (const x of loc.results as { id: string; located: boolean }[]) if (x.located) needSearch.add(x.id);
           }
         }
@@ -447,7 +445,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     showToast(
       `${assignedCount} assigned across ${targets.length} item(s)` +
         (locatedCount ? ` (${locatedCount} newly located)` : "") +
-        " — review the strip, then Auto-Google the rest",
+        ", review the strip, then Auto-Google the rest",
     );
   }, [visible, autoRunning, processAutoResults, showToast]);
 
@@ -462,7 +460,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
       `Auto-Google ALL ${targets.length} item(s) in this view?\n\n` +
         "Fetches only the TOP Google photo per item (~1 billable call each), auto-approves it into the venue pool " +
         "(compliant nightly refresh), and applies it. Items with no confident place match are skipped, never guessed. " +
-        "Stops hard at the monthly cap — watch the budget chip.",
+        "Stops hard at the monthly cap, watch the budget chip.",
     );
     if (!okGo) return;
     setAutoRunning(true);
@@ -485,7 +483,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     }
     showToast(
       `${assignedCount} assigned via Google/pool across ${processed} item(s)` +
-        (capHit ? " — stopped at the monthly budget cap" : ""),
+        (capHit ? ", stopped at the monthly budget cap" : ""),
     );
   }, [visible, autoRunning, processAutoResults, showToast]);
 
@@ -500,7 +498,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     setPoolBusyId(null);
     if (!res?.ok) { showToast(res?.error ?? "Pool build failed"); return; }
     if (!res.approved) {
-      showToast(`${target.venue.display_name}: ${res.reason ?? "no pool photo found"}${includeGoogle ? "" : " — try “with Google”"}`);
+      showToast(`${target.venue.display_name}: ${res.reason ?? "no pool photo found"}${includeGoogle ? "" : ", try “with Google”"}`);
       return;
     }
     setVenues((vs) => vs.map((v) => (v.id === target.venue.id ? { ...v, approved_count: Math.max(1, v.approved_count) } : v)));
@@ -531,7 +529,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
   }, [poolBusyId, autoRunning, rows, processAutoResults, showToast]);
 
   // The honest tail: coordless/venueless items that per canon SHOULD stay on the
-  // motif. Acts on the CURRENT FILTERED VIEW — filter first (e.g. Events + "No
+  // motif. Acts on the CURRENT FILTERED VIEW, filter first (e.g. Events + "No
   // address only"), then dismiss the lot. Permanent, like the per-card M.
   const ackAllView = useCallback(async () => {
     const targets = visible.map((r) => r.id);
@@ -550,7 +548,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
     if (!res?.ok) { showToast(res?.error ?? "Dismiss failed"); return; }
     const done = new Set<string>((res.acked as string[]) ?? targets);
     setRows((rs) => rs.filter((r) => !done.has(r.id)));
-    showToast(`${done.size} left on motif — they won't reappear here`);
+    showToast(`${done.size} left on motif, they won't reappear here`);
   }, [visible, autoRunning, showToast]);
 
   // One-press per-card variant (⇧G): top-1 paid fetch + apply, with Undo.
@@ -566,11 +564,11 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
         const known = venues.find((v) => v.id === r.venue_id);
         patchRow(row.id, { venue_id: r.venue_id, venue_name: known?.display_name ?? row.title, suggestion: null });
       }
-      showToast(r?.reason ? `Skipped — ${r.reason}` : "Skipped");
+      showToast(r?.reason ? `Skipped, ${r.reason}` : "Skipped");
       return;
     }
     const entry = processAutoResults([r], [row])[0];
-    if (entry) showToast(`Applied (${entry.source}) — live now`, () => revertAssign(entry));
+    if (entry) showToast(`Applied (${entry.source}), live now`, () => revertAssign(entry));
   }, [busyId, autoRunning, venues, patchRow, processAutoResults, revertAssign, showToast]);
 
   // ---- keyboard map (mirrors the Queue's; guarded against field focus) -------
@@ -642,14 +640,14 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
         </div>
 
         {scanCapped ? (
-          <p className="empty-note">Showing the first 1000 imageless items — work through these and Refresh for more.</p>
+          <p className="empty-note">Showing the first 1000 imageless items, work through these and Refresh for more.</p>
         ) : null}
 
         {poolTargets.length > 0 ? (
           <div className="panel idk-strip">
             <h3>Venue pools to build <span className="n">{poolTargets.length}</span></h3>
             <p className="empty-note" style={{ padding: "6px 16px" }}>
-              One approved photo at a shared venue covers every queue item there — free, and it keeps auto-refreshing.
+              One approved photo at a shared venue covers every queue item there, free, and it keeps auto-refreshing.
             </p>
             <div className="idk-striplist">
               {poolTargets.map((pt) => (
@@ -682,7 +680,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
                   {a.url ? <img className="lthumb" src={a.url} alt="" /> : <span className="lthumb idk-thumb-venue" aria-hidden>🏛</span>}
                   <div className="lmain">
                     <div className="lt"><span className="ttl">{a.row.title}</span></div>
-                    <div className="lmeta"><span className="mono">{HOW_LABEL[a.how]}{a.venueName ? ` — ${a.venueName}` : ""}</span></div>
+                    <div className="lmeta"><span className="mono">{HOW_LABEL[a.how]}{a.venueName ? `, ${a.venueName}` : ""}</span></div>
                   </div>
                   <button className="btn btn-quiet btn-sm" onClick={() => revertAssign(a)}>Revert</button>
                 </div>
@@ -720,7 +718,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <h2 className="title">{row.title}</h2>
                         <div className="cat">
-                          {row.neighborhood ? row.neighborhood.replace(/_/g, " ") : "—"} · {row.address ?? "no address on file"}
+                          {row.neighborhood ? row.neighborhood.replace(/_/g, " ") : "·"} · {row.address ?? "no address on file"}
                         </div>
                       </div>
                       <span className="idk-now">now: {row.photo_source ?? "no image"}</span>
@@ -730,7 +728,7 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
                       <div className="idk-venue is-attached">
                         <span aria-hidden>🏛</span> Attached: <b>{row.venue_name ?? "venue"}</b>
                         {row.venue_approved_count === 0
-                          ? <span className="idk-warn"> — no approved pool photos yet; fetch below</span>
+                          ? <span className="idk-warn">, no approved pool photos yet; fetch below</span>
                           : <span className="pm"> · {row.venue_approved_count} approved photo(s)</span>}
                       </div>
                     ) : s ? (
@@ -855,13 +853,13 @@ export function ImagesView({ initial }: { initial: ImagesDeskData }) {
         <div className="panel">
           <h3>How this desk works</h3>
           <div className="keys">
-            <div className="kr">Free Wikimedia candidates pre-load in the background as you page — browsing costs nothing.</div>
+            <div className="kr">Free Wikimedia candidates pre-load in the background as you page, browsing costs nothing.</div>
             <div className="kr">Attaching a venue with approved photos assigns one instantly ($0) and keeps it auto-refreshed.</div>
             <div className="kr">Google is the only paid step and always an explicit press, counted on the budget chip.</div>
-            <div className="kr">Auto-assign only acts on exact/strong venue matches and gate-passing Wikimedia picks — everything it does lands in the strip with one-click revert.</div>
+            <div className="kr">Auto-assign only acts on exact/strong venue matches and gate-passing Wikimedia picks, everything it does lands in the strip with one-click revert.</div>
             <div className="kr">Auto-Google is the paid second pass: only the top photo per item (~1 billable call), auto-approved into the venue pool; items with no confident place match are skipped, never guessed.</div>
-            <div className="kr">&ldquo;Venue pools to build&rdquo; is the multiplier — one approved photo covers every queue item at that venue. Work it top-down before spending on Google.</div>
-            <div className="kr">&ldquo;Keep motif (view)&rdquo; is the honest tail: dated events with no address are MEANT to sit on the motif — filter to them and dismiss the lot.</div>
+            <div className="kr">&ldquo;Venue pools to build&rdquo; is the multiplier, one approved photo covers every queue item at that venue. Work it top-down before spending on Google.</div>
+            <div className="kr">&ldquo;Keep motif (view)&rdquo; is the honest tail: dated events with no address are MEANT to sit on the motif, filter to them and dismiss the lot.</div>
           </div>
         </div>
         <div className="panel">

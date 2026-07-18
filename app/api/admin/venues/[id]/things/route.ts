@@ -15,8 +15,7 @@ export interface AttachedThing {
 
 // GET -> Phase 7 (V-7): the venue detail sheet's attached-events list, fetched
 // lazily when the sheet opens (not baked into the main loader's payload, which
-// already carries every venue up front). Includes archived-status things too —
-// their venue attachment is still real even if they're not published right now.
+// already carries every venue up front). Includes archived-status things too, // their venue attachment is still real even if they're not published right now.
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

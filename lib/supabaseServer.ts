@@ -22,7 +22,7 @@ export async function getServerSupabase() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Called from a Server Component — cookie writes are handled by
+            // Called from a Server Component, cookie writes are handled by
             // middleware on the response. Safe to ignore here.
           }
         },

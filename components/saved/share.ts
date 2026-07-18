@@ -7,7 +7,7 @@ export async function shareUrl(url: string, title: string): Promise<ShareResult>
       await navigator.share({ title, url });
       return "shared";
     } catch (e) {
-      // User cancelled the share sheet — don't fall through to a copy.
+      // User cancelled the share sheet, don't fall through to a copy.
       if ((e as Error).name === "AbortError") return "failed";
     }
   }

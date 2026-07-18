@@ -14,14 +14,14 @@ const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
 });
 
 /** The SB (America/Los_Angeles) calendar day for an instant, as "YYYY-MM-DD".
- *  The single source of truth for day-keying — reused by the coverage math so
+ *  The single source of truth for day-keying, reused by the coverage math so
  *  cockpit occurrence counts and the public feed can never disagree. */
 export function sbDay(ms: number): string {
   return SB_DATE_FMT.format(ms);
 }
 
 /** Today's SB-local weekday as 0=Sun … 6=Sat (schema convention). Derived from
- *  the SB calendar date — NOT the browser's local `getDay()` — so a late-night
+ *  the SB calendar date, NOT the browser's local `getDay()`, so a late-night
  *  user in another timezone still sees SB's day. Reuses `sbDay` (single source
  *  of truth) and reads the weekday off a UTC-anchored date to dodge DST drift,
  *  mirroring lib/occurrences.ts. */
@@ -31,11 +31,11 @@ export function sbDayOfWeek(now: number = Date.now()): number {
 }
 
 /** Does a Tier-2 (recurring / happy-hour) thing land on today's SB weekday?
- *  A thing with NO schedule rows passes (we can't prove it's off-day — don't
+ *  A thing with NO schedule rows passes (we can't prove it's off-day, don't
  *  invent one). biweekly/monthly frequency is a deliberate approximation: a
  *  "1st Thursday" item shows on every Thursday. We do NOT expand occurrences
  *  here (that math is approximate too, and the feed must stay cheap +
- *  deterministic) — same feed-vs-coverage divergence lib/occurrences.ts notes. */
+ *  deterministic), same feed-vs-coverage divergence lib/occurrences.ts notes. */
 function tier2OccursToday(thing: Thing, now: number): boolean {
   const dow = sbDayOfWeek(now);
   const scheduleDows = [
@@ -49,16 +49,15 @@ function tier2OccursToday(thing: Thing, now: number): boolean {
 
 /** Happenings-first order: Tier 1 (dated) → 2 (recurring/HH) → 3 (evergreen).
  *
- *  W2.1a — the ranker now consumes `editorial_weight` (founder curation), the FIRST
+ *  W2.1a, the ranker now consumes `editorial_weight` (founder curation), the FIRST
  *  time cascade() reads a curation field. TRUST RULE (schema §A7, wave §0.3): this is
  *  explicitly-permitted founder curation. The sort key must NEVER read `is_featured`
- *  or `sponsor_id` — paid placement can never buy rank here. (A regression test in
+ *  or `sponsor_id`, paid placement can never buy rank here. (A regression test in
  *  explore.test.ts sorts a fixture with those fields set adversarially and asserts the
  *  order is unchanged; keep it green.)
  *
  *  Per-tier deterministic key (no AI, no randomness):
- *   • All tiers: `editorial_weight < 0` sinks to the BOTTOM of its tier section —
- *     downweighted, never hidden (still visible + findable).
+ *   • All tiers: `editorial_weight < 0` sinks to the BOTTOM of its tier section, *     downweighted, never hidden (still visible + findable).
  *   • Tier-1, non-negative: starts_at asc (soonest-first legibility) → editorial_weight
  *     desc (same-start ties break toward founder-boosted) → stable input order.
  *   • Tier-2/3, non-negative: editorial_weight desc → stable input order (DB/alpha). */
@@ -88,7 +87,7 @@ export function cascade(things: Thing[]): Thing[] {
     .map(([t]) => t);
 }
 
-/** W2.1a — the auto-hero pick, shared verbatim by BOTH the public ExploreClient hero
+/** W2.1a, the auto-hero pick, shared verbatim by BOTH the public ExploreClient hero
  *  memo and heroServer.ts's projected "Auto" rail so the two can never diverge. Pure,
  *  deterministic, sponsor-blind (reads only tier / starts_at / editorial_weight).
  *
@@ -145,11 +144,11 @@ function dayOfYear(sbDateKey: string): number {
   return Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 1)) / 86_400_000);
 }
 
-/** W1.3b Layer-1 — the hero's evergreen parachute (constraint C5). When the
+/** W1.3b Layer-1, the hero's evergreen parachute (constraint C5). When the
  *  filtered view is empty, deterministically pick a Tier-3 thing from the full
  *  published pool, rotated by the SB calendar date: same day → same pick,
  *  tomorrow → the next one. No AI, no randomness. Returns null when the pool has
- *  no Tier-3 things — the caller then renders the hardcoded Layer-2 card. */
+ *  no Tier-3 things, the caller then renders the hardcoded Layer-2 card. */
 export function pickEvergreenFallback(things: Thing[], sbDateKey: string): Thing | null {
   const candidates = things
     .filter((t) => t.happening_tier === 3)
@@ -163,9 +162,9 @@ export function filterByLens(things: Thing[], tag: OccasionKey | null): Thing[] 
   return things.filter((t) => t.tags.includes(tag));
 }
 
-/** Home Rework spec §11.4 — the Activity door's filter, stacked with filterByLens.
+/** Home Rework spec §11.4, the Activity door's filter, stacked with filterByLens.
  *  A thing with no activities (not yet enriched, or genuinely none) simply never
- *  matches a specific activity — same "no tag = no match" behavior as filterByLens. */
+ *  matches a specific activity, same "no tag = no match" behavior as filterByLens. */
 export function filterByActivity(things: Thing[], activity: ActivityKey | null): Thing[] {
   if (!activity) return things;
   return things.filter((t) => t.activities.includes(activity));
@@ -191,7 +190,7 @@ export const TIER_META: Record<number, { key: string; title: string }> = {
 };
 
 // ---------------------------------------------------------------------------
-// Lead-breakout helpers (Phase 16 — Explore horizon lead breakout)
+// Lead-breakout helpers (Phase 16, Explore horizon lead breakout)
 // These do NOT modify cascade / withinHorizon / filterByLens.
 // ---------------------------------------------------------------------------
 
@@ -264,7 +263,7 @@ const UTC_LONG_MONTH = new Intl.DateTimeFormat("en-US", {
   month: "long",
 });
 
-/** "5th" / "11th" / "22nd" — the standard English ordinal exceptions are the
+/** "5th" / "11th" / "22nd", the standard English ordinal exceptions are the
  *  11th–13th (never "1st"/"2nd"/"3rd"). */
 export function ordinal(day: number): string {
   if (day % 10 === 1 && day % 100 !== 11) return `${day}st`;
@@ -274,7 +273,7 @@ export function ordinal(day: number): string {
 }
 
 /** "July 5th through 11th" / "June 28th through July 4th" from UTC-anchored
- *  week bounds (see groupByWeek — these are synthetic calendar-math
+ *  week bounds (see groupByWeek, these are synthetic calendar-math
  *  timestamps, not real instants, so they're formatted in UTC rather than
  *  SB_TZ). The month name repeats only when the week crosses a month. */
 function formatWeekLabel(startMs: number, endMs: number): string {
@@ -291,7 +290,7 @@ function formatWeekLabel(startMs: number, endMs: number): string {
 /** Group items by SB-local calendar week (Sun–Sat), weeks ascending. Week bounds
  *  are computed via UTC-anchored date math off the SB day key (same DST-safe
  *  technique as dayOfYear above) so a late-night browser timezone can't shift
- *  the boundary. Items without starts_at can't be dated to a week — they're
+ *  the boundary. Items without starts_at can't be dated to a week, they're
  *  collected into a trailing, header-less group instead of being dropped. */
 export function groupByWeek(
   items: Thing[]

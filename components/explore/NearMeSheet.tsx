@@ -52,7 +52,7 @@ export function NearMeSheet({
 
       {status === "denied" ? (
         <p className="sbd-near-note">
-          No location — no problem. Pick a neighborhood instead.
+          No location, no problem. Pick a neighborhood instead.
         </p>
       ) : (
         <p className="sbd-near-note">Or choose a neighborhood:</p>

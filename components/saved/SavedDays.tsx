@@ -34,7 +34,7 @@ export function SavedDays() {
       <EmptyState
         icon="🗓"
         title="No saved days yet"
-        message="Build a day on the Plan tab and tap Save plan — it'll live here."
+        message="Build a day on the Plan tab and tap Save plan, it'll live here."
       />
     );
   }

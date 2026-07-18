@@ -1,6 +1,6 @@
 // ingest/adapters/sbbowl.ts
 //
-// Santa Barbara Bowl — server-detail scrape (§6.1). Collects concert URLs from
+// Santa Barbara Bowl, server-detail scrape (§6.1). Collects concert URLs from
 // /concerts/, then fetches each detail page. Detail pages render date in
 // .single-concerts__date--formatted ("Thursday, July 9, 2026") and start time
 // in .single-concerts__time--formatted ("7:00 pm") → startStrategy:'server_detail'.

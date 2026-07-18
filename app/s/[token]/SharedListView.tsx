@@ -24,7 +24,7 @@ export function SharedListView({ items }: { items: Thing[] }) {
         <p className="sbd-public__eyebrow">Shared with you</p>
         <h1 className="sbd-public__title">A few Santa Barbara picks</h1>
         <p className="sbd-public__desc">
-          Someone shared these with you. Save your own copy — no account needed.
+          Someone shared these with you. Save your own copy, no account needed.
         </p>
 
         {items.length === 0 ? (

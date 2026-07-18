@@ -31,14 +31,14 @@ export type OccasionTag =
   | 'date_night' | 'family_day' | 'nightlife' | 'catch_a_show' | 'arts_culture'
   | 'outdoors_active' | 'wine_food' | 'free_sb' | 'hosting_visitors' | 'solo';
 
-// Home Rework spec §6.1 — the Activity door's controlled vocabulary. Single
+// Home Rework spec §6.1, the Activity door's controlled vocabulary. Single
 // source of truth is lib/activities.ts's ActivityKey; aliased here under the
 // historical name so existing Candidate/enrich call sites don't change.
 export type ActivityTag = ActivityKey;
 
 export type PhotoSource = 'pexels' | 'wikimedia' | 'google' | 'owned' | 'placeholder' | 'motif';
 
-/** Card Imagery Build Spec Phase 3 §6.1 — the motif tier. `visual_key` is only set
+/** Card Imagery Build Spec Phase 3 §6.1, the motif tier. `visual_key` is only set
  *  for kind `'motif'`; a `'bigtype'` card computes its own text at render time from
  *  other structured fields, so it has no registry key. */
 export type VisualKind = 'motif' | 'bigtype';
@@ -48,10 +48,10 @@ export type VisualKind = 'motif' | 'bigtype';
  * start is "deterministic". 'structured' = a machine field (e.g. Ticketmaster
  * dateTime). 'server_detail' = an explicit clock time on a server-rendered detail
  * page (the SOhO pattern). 'none' = no start exists (evergreen Tier-3 / recurring
- * Tier-2 only). Prose-derived guesses are NEVER a valid strategy — there is no
+ * Tier-2 only). Prose-derived guesses are NEVER a valid strategy, there is no
  * enum value for them.
  */
-// 'ai_extracted' (spec 25) — a start read by the generic AI extraction lane
+// 'ai_extracted' (spec 25), a start read by the generic AI extraction lane
 // from page prose rather than a structured field or an explicit server-
 // rendered clock time. It still passes the gate's deterministic-start check
 // (a real date+time was found, never guessed), but is never treated as
@@ -64,7 +64,7 @@ export type StartStrategy = 'structured' | 'server_detail' | 'none' | 'ai_extrac
 export type RecurFrequency = 'weekly' | 'biweekly' | 'monthly';
 
 /** A Tier-2 recurring rhythm occurrence. start_time is null when the day is known
- *  but the time isn't — we never guess a time (it lands blank + flagged). */
+ *  but the time isn't, we never guess a time (it lands blank + flagged). */
 export interface RecurringSpec {
   day_of_week: number;          // 0 = Sunday
   start_time: string | null;    // 'HH:MM' or null (time unknown)
@@ -96,7 +96,7 @@ export interface RawCandidate {
   reasonToGo?: string;            // required for Tier-3 at gate time
   localNote?: string;
   is21Plus?: boolean;             // feeds the family_day negative rule (unset unless a source knows)
-  recurring?: RecurringSpec[];    // Tier-2 rhythms — written to recurring_schedules at land time
+  recurring?: RecurringSpec[];    // Tier-2 rhythms, written to recurring_schedules at land time
   /** When true: a rhythm proposal bound for recurringRegistry.ts (§3). The gate
    *  enforces recurring[0].start_time presence; dedupe checks against the live file;
    *  the cockpit emits a paste-ready snippet on approval (never auto-publishes). */
@@ -115,7 +115,7 @@ export interface Candidate {
   tier: Tier;
   happening_category: HappeningCategory;
   neighborhood?: Neighborhood;
-  address: string;                // navigable (or resolved-from-venue) — required
+  address: string;                // navigable (or resolved-from-venue), required
   lat?: number; lng?: number;
   price_band: PriceBand | null;
   time_of_day_fit: Tod[];
@@ -124,9 +124,9 @@ export interface Candidate {
   buy_url?: string;
   source_url: string;             // required
   place_id?: string;
-  /** Card Imagery Build Spec Phase 2 §5.2 — set ONLY on an exact place_id match
+  /** Card Imagery Build Spec Phase 2 §5.2, set ONLY on an exact place_id match
    *  against an active `venues` row (the "auto-attaches" case). A fuzzy/proximity
-   *  match is never written here directly — it queues for founder review in the
+   *  match is never written here directly, it queues for founder review in the
    *  cockpit's Venues tab instead, which writes things.venue_id on approval. */
   venue_id?: string;
   reason_to_go?: string;          // required for T3
@@ -135,23 +135,22 @@ export interface Candidate {
   recurring?: RecurringSpec[];    // Tier-2 schedule rows to write at land time
   last_confirmed: string;         // run date
   start_strategy: StartStrategy;  // carried through for the cockpit trust chip
-  /** Data Arch Redesign 26 Phase 4 — canonical event identity, computed post-dedupe
+  /** Data Arch Redesign 26 Phase 4, canonical event identity, computed post-dedupe
    *  (venue+title+date/cadence hash; see ingest/eventKey.ts). Undefined only for
    *  Tier-3 evergreen places, which have no event identity to key on. */
   event_key?: string;
   /** W2.1b founder-curation nudge (−5..+5). Set by classifyWeight() at gate time
    *  (−3 for civic filler, else 0); a founder ▲/▼ overrides it later. Never a
-   *  sponsor/placement field — the ranker stays sponsor-blind. */
+   *  sponsor/placement field, the ranker stays sponsor-blind. */
   editorial_weight?: number;
-  // image fields (set by resolveImages, pre-landing — see Doc 11 §7b):
+  // image fields (set by resolveImages, pre-landing, see Doc 11 §7b):
   photo_url?: string;             // current pick = photo_options[0] at land time
   photo_source?: PhotoSource;     // provenance shown as the card's source-pill
   photo_options?: { url: string; source: PhotoSource; width?: number; height?: number; attribution?: string }[];
-  /** Credit line for the current pick (Card Imagery Build Spec Phase 1 §4.3) —
-   *  the chosen photo_options[] entry's own `attribution`, carried up so land.ts/the
+  /** Credit line for the current pick (Card Imagery Build Spec Phase 1 §4.3), *  the chosen photo_options[] entry's own `attribution`, carried up so land.ts/the
    *  backfills can persist it to things.photo_attribution. Never set for 'owned'. */
   photo_attribution?: string;
-  /** Card Imagery Build Spec Phase 3 §6.2 — set alongside `photo_source: 'motif'`
+  /** Card Imagery Build Spec Phase 3 §6.2, set alongside `photo_source: 'motif'`
    *  by `resolveImages()`/the backfills' Tier-1 fast path, never elsewhere. */
   visual_kind?: VisualKind;
   visual_key?: string;
@@ -160,7 +159,7 @@ export interface Candidate {
   blurb?: string;
   blurb_long?: string;
   proposed_tags?: { tag: OccasionTag; confidence: number }[];
-  /** Home Rework spec §6.2 — zero or more Activity keys, AI-proposed alongside
+  /** Home Rework spec §6.2, zero or more Activity keys, AI-proposed alongside
    *  proposed_tags. Written verbatim to things.activities (a plain array column,
    *  unlike proposed_tags which lands in the thing_tags join table). */
   proposed_activities?: ActivityTag[];

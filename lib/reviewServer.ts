@@ -40,7 +40,7 @@ export interface CockpitData {
   merges: MergedRow[];
 }
 
-// The shared `things` column list — reused by the needs_review queue AND the
+// The shared `things` column list, reused by the needs_review queue AND the
 // thing_edits overlay embed so both build identical QueueRows.
 export const THINGS_SELECT =
   `id, type, title, blurb, blurb_long, happening_category, happening_tier, neighborhood,
@@ -63,7 +63,7 @@ function mapThingRow(t: ThingRaw, sourceByKey: Map<string, SourceMeta> = new Map
   const source = (t.source as string) ?? null;
   const tags = ((t.thing_tags as { tag: string }[]) ?? []).map((x) => x.tag);
 
-  // Data Arch Redesign 24 Phase 4 — the same confidence facts the nightly
+  // Data Arch Redesign 24 Phase 4, the same confidence facts the nightly
   // pipeline scores with, recomputed here for the "why it's here" reasons
   // (only the aggregate data_confidence is persisted, not the breakdown).
   const dataConfidence = t.data_confidence == null ? null : Number(t.data_confidence);
@@ -127,13 +127,13 @@ function mapThingRow(t: ThingRaw, sourceByKey: Map<string, SourceMeta> = new Map
   } satisfies QueueRow;
 }
 
-/** Data Arch Redesign 24 Phase 4 — sources.authority/reliability/lane keyed by
+/** Data Arch Redesign 24 Phase 4, sources.authority/reliability/lane keyed by
  *  sources.key, for the Queue's confidence reasons. Same shape as ingest/run.ts's
  *  loadSourceMetaByKey(), duplicated (not imported) to keep this file's only
  *  ingest/ dependency the pure confidence.ts module. */
 async function loadSourceMetaByKey(sb: NonNullable<ReturnType<typeof getAdminSupabase>>): Promise<Map<string, SourceMeta>> {
   const { data, error } = await sb.from("sources").select("key, authority, reliability, lane");
-  if (error) return new Map(); // resilient — reasons just come back generic, not a 500
+  if (error) return new Map(); // resilient, reasons just come back generic, not a 500
   const byKey = new Map<string, SourceMeta>();
   for (const r of data ?? []) {
     byKey.set(r.key as string, {
@@ -153,7 +153,7 @@ async function loadPendingOverlays(
     .select(`id, thing_id, payload, created_at, things ( ${THINGS_SELECT} )`)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
-  if (error) return []; // table missing / read failure — no overlays rather than 500
+  if (error) return []; // table missing / read failure, no overlays rather than 500
 
   return (data ?? []).flatMap((e) => {
     // A FK embed returns the single related row; some type paths widen it to an array.
@@ -177,7 +177,7 @@ async function loadPendingOverlays(
   });
 }
 
-// Data Arch Redesign 24 Phase 3 shipped 2026-07-16 — audit_log's 'approve'
+// Data Arch Redesign 24 Phase 3 shipped 2026-07-16, audit_log's 'approve'
 // action goes back to the cockpit's very first day (627+ rows and counting),
 // so an all-time count would permanently swamp autoPublishRatePct toward 0%
 // and never reflect what the gate is actually doing. Scope every metric here
@@ -189,12 +189,12 @@ export interface ConfidenceMetrics {
   autoHeld: number;           // audit_log action='auto_hold', since Phase 3 launch
   manuallyApproved: number;   // audit_log action='approve', since Phase 3 launch (not all-time)
   autoPublishRatePct: number | null; // autoPublished / (autoPublished + manuallyApproved) * 100; null with no data yet
-  queueDepth: number;         // current needs_review count — "time being reclaimed" (Doc 24 §4)
+  queueDepth: number;         // current needs_review count, "time being reclaimed" (Doc 24 §4)
 }
 
-/** Data Arch Redesign 24 Phase 4 — "measure the win": how much of your review
+/** Data Arch Redesign 24 Phase 4, "measure the win": how much of your review
  *  time the gate is actually reclaiming, from the audit trail Phase 3 already
- *  writes. No new table — audit_log is the ledger. */
+ *  writes. No new table, audit_log is the ledger. */
 async function loadConfidenceMetrics(sb: NonNullable<ReturnType<typeof getAdminSupabase>>): Promise<ConfidenceMetrics> {
   const since = (q: ReturnType<typeof sb.from>) => q.select("id", { count: "exact", head: true }).gte("created_at", PHASE3_LAUNCH_DATE);
   const [autoPubRes, autoHoldRes, approvedRes, queueRes] = await Promise.all([
@@ -215,7 +215,7 @@ async function loadConfidenceMetrics(sb: NonNullable<ReturnType<typeof getAdminS
   };
 }
 
-/** Data Arch Redesign 26 Phase 5 — merged/archived rows the founder can
+/** Data Arch Redesign 26 Phase 5, merged/archived rows the founder can
  *  reverse. Two queries (not an embedded resource) so this doesn't depend on
  *  guessing the merged_into foreign-key constraint name: fetch the archived
  *  merged rows, then batch-fetch their survivors' titles by id. */

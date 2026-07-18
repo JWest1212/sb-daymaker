@@ -1,17 +1,17 @@
 // ingest/adapters/newVic.ts
 //
-// Ensemble Theatre Company at The New Vic (etcsb.org) — §9.4.
+// Ensemble Theatre Company at The New Vic (etcsb.org), §9.4.
 // Server-rendered WordPress + MEC plugin (currently empty).
 //
 // Confirmed structure (2026-07-01):
 //   Season listing: /whats-on/season-2026-2027/
 //   Production detail: /production/{slug}/
-//   Each detail page carries multiple JSON-LD Event blocks — one per performance
+//   Each detail page carries multiple JSON-LD Event blocks, one per performance
 //   with a full ISO startDate (e.g. "2026-07-31T13:00:00-07:00") and an
 //   offers.url pointing to store.ensembletheatre.com (AXS-powered venue store).
 //
 // Resolution order:
-//   1. MEC REST (kept in case it becomes populated — currently returns [])
+//   1. MEC REST (kept in case it becomes populated, currently returns [])
 //   2. Season listing → /production/{slug}/ detail pages → JSON-LD per performance
 //
 // Tier 1 · arts_theater · seed catch_a_show, arts_culture, date_night.
@@ -32,7 +32,7 @@ const NEIGHBORHOOD = 'downtown' as const;
 
 const UA = 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)';
 
-/** Try MEC REST — returns [] if empty or absent (currently always []). */
+/** Try MEC REST, returns [] if empty or absent (currently always []). */
 async function tryMecApi(w: DateWindow): Promise<RawCandidate[]> {
   const from = w.fromISO.slice(0, 10);
   const to = w.toISO.slice(0, 10);

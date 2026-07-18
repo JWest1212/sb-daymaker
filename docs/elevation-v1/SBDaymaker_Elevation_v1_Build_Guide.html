@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Elevation v1 Build Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink-2:#4A3F35;
+    --pacific:#16586A; --pacific-dark:#0E3C49; --terracotta:#C0532E; --gold:#E0A82E;
+    --gold-text:#7A5E13; --sage:#7E8B6B; --sage-text:#566049;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--font-body);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px 120px}
+  header.masthead{border-bottom:2px solid var(--ink);margin-bottom:8px;padding:44px 0 20px}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--pacific);margin:0 0 14px}
+  h1{font-family:var(--font-display);font-weight:900;font-size:clamp(34px,6vw,52px);line-height:1.04;margin:0 0 14px;letter-spacing:-.01em}
+  .dek{font-family:var(--font-display);font-weight:400;font-size:20px;color:var(--ink-2);margin:0;max-width:60ch}
+  .meta{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);margin-top:18px;letter-spacing:.03em}
+  h2{font-family:var(--font-display);font-weight:600;font-size:30px;margin:56px 0 6px;letter-spacing:-.01em}
+  h2 .num{font-family:var(--font-mono);font-size:15px;font-weight:400;color:var(--terracotta);display:block;letter-spacing:.1em;margin-bottom:6px}
+  h3{font-family:var(--font-display);font-weight:600;font-size:21px;margin:34px 0 8px}
+  h4{font-family:var(--font-body);font-weight:600;font-size:16px;margin:22px 0 6px;letter-spacing:.01em}
+  p{margin:0 0 16px}
+  a{color:var(--pacific);text-decoration-thickness:1px;text-underline-offset:2px}
+  .lede{font-size:19px;color:var(--ink-2)}
+  hr{border:none;border-top:1px solid var(--plaster-2);margin:40px 0}
+  .rule-thick{border-top:2px solid var(--ink);margin:8px 0 0}
+  strong{font-weight:600}
+  ul,ol{margin:0 0 16px;padding-left:22px}
+  li{margin:0 0 8px}
+  code{font-family:var(--font-mono);font-size:.86em;background:var(--plaster-2);padding:1px 6px;border-radius:4px}
+  .card{background:var(--paper);border:1px solid var(--plaster-2);border-radius:14px;padding:22px 24px;margin:20px 0;box-shadow:0 1px 0 rgba(36,28,22,.03)}
+  .callout{border-left:4px solid var(--terracotta);background:var(--paper);border-radius:0 10px 10px 0;padding:16px 20px;margin:22px 0}
+  .callout.pacific{border-left-color:var(--pacific)}
+  .callout.gold{border-left-color:var(--gold)}
+  .callout .lbl{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--terracotta);margin:0 0 6px}
+  .callout.pacific .lbl{color:var(--pacific)} .callout.gold .lbl{color:var(--gold-text)}
+  table{width:100%;border-collapse:collapse;margin:18px 0;font-size:15px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--plaster-2);vertical-align:top}
+  th{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pacific);border-bottom:2px solid var(--ink)}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;padding:3px 9px;border-radius:100px;text-transform:uppercase}
+  .pill.crit{background:#F6DDD3;color:#8A2D0E}
+  .pill.major{background:#FBEBCF;color:var(--gold-text)}
+  .pill.minor{background:#E4EAE0;color:var(--sage-text)}
+  .gate-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-top:2px solid var(--ink);padding-top:14px;margin-top:52px}
+  .gate-head .g{font-family:var(--font-mono);font-size:13px;color:var(--terracotta);letter-spacing:.1em}
+  .gate-head h2{margin:0;border:none;padding:0}
+  .effort{font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+  .flow{font-family:var(--font-mono);font-size:13px;line-height:2;background:var(--pacific-dark);color:var(--plaster);padding:20px 22px;border-radius:12px;overflow-x:auto;white-space:pre;margin:20px 0}
+  .checklist{list-style:none;padding:0;margin:14px 0}
+  .checklist li{padding-left:28px;position:relative;margin-bottom:9px}
+  .checklist li:before{content:"";position:absolute;left:0;top:4px;width:15px;height:15px;border:1.5px solid var(--pacific);border-radius:3px}
+  .toc{columns:2;column-gap:36px;font-size:15px}
+  .toc a{display:block;padding:3px 0;text-decoration:none;color:var(--ink)}
+  .toc a:hover{color:var(--pacific)}
+  .kicker-num{font-family:var(--font-mono);color:var(--terracotta);font-size:13px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:620px){.two,.toc{grid-template-columns:1fr;columns:1}}
+  .foot{margin-top:60px;padding-top:24px;border-top:2px solid var(--ink);font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+  .quote{font-family:var(--font-display);font-size:22px;line-height:1.4;color:var(--ink);border-left:3px solid var(--gold);padding-left:20px;margin:26px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">SB Daymaker · Build Runbook</p>
+  <h1>Elevation v1</h1>
+  <p class="dek">Turning "curated" from a claim into a system — then opening the growth channel and shipping the planner that no competitor or AI can copy.</p>
+  <p class="meta">Six gates · 48 audited findings · additive DDL only · founder decisions locked · Jul 2026</p>
+</header>
+
+<p class="lede">This is the human-facing companion to the six markdown gate specs you'll hand to Claude Code one at a time. It holds the <em>why</em>: the strategy, the decision log, the architecture, the sequencing logic, effort estimates, and the acceptance bar for each gate. The markdown files hold the <em>how</em> — file-level tasks, DDL, and per-task tests. Read this once end to end; then work the gates in order, handing over one <code>.md</code> at a time.</p>
+
+<div class="callout pacific">
+  <p class="lbl">The one idea to hold onto</p>
+  <p style="margin:0"><strong>Trust before growth before differentiation.</strong> A visitor must never catch the site contradicting itself. Gate&nbsp;0 removes today's contradictions; Gate&nbsp;1 makes new ones structurally impossible; only then do Gates&nbsp;2–5 add reach and features. A brilliant planner built on untrustworthy data is worse than no planner — so the exciting gates come last on purpose.</p>
+</div>
+
+<div class="callout" style="border-left-color:var(--gold)">
+  <p class="lbl" style="color:var(--gold-text)">The golden rule (existential)</p>
+  <p style="margin:0"><strong>Zero em dashes, anywhere on the site, ever.</strong> Not in a blurb, title, secret, guide, button, meta tag, email, alt text, slug, code comment, or database row. This is a hard, permanent site rule that ranks with the load-bearing constraints, and it is enforced in the codebase at three layers (Gate&nbsp;0, task G0.9): a build-time CI gate that fails on any em dash, a write-time sanitizer in the ingest pipeline, and a render-time guard as the last line of defense. Replacements: recast the sentence, or use a comma, period, colon, parentheses, or "to" for ranges. When in doubt, there is no em dash.</p>
+</div>
+
+<h2><span class="num">CONTENTS</span>What's in here</h2>
+<nav class="toc">
+  <a href="#strategy">The strategic frame</a>
+  <a href="#decisions">Your locked decisions</a>
+  <a href="#map">The gate map &amp; sequencing</a>
+  <a href="#g0">Gate 0 · Stop the Bleeding</a>
+  <a href="#g1">Gate 1 · Trust Infrastructure</a>
+  <a href="#g2">Gate 2 · Findability</a>
+  <a href="#g3">Gate 3 · Navigation &amp; IA</a>
+  <a href="#g4">Gate 4 · The Concierge Day</a>
+  <a href="#g5">Gate 5 · Loops &amp; Polish</a>
+  <a href="#ddl">All the schema changes</a>
+  <a href="#handoff">How to run this with Claude Code</a>
+</nav>
+
+<!-- STRATEGY -->
+<h2 id="strategy"><span class="num">FRAME</span>Where the site is, and where this takes it</h2>
+<p>The audit found a product with an unusually strong spine and a content layer that undercuts it. The two Discover guides are the best neighborhood-guide format in this market — accountable, dated, opinionated, gamified. The problem is that the <em>listing</em> layer beneath them reads like a pipeline showing through the curation veneer: leaked operator notes, descriptions that contradict their own timestamps, duplicate entries, broken images, filler copy, and detail pages that can't even tell you a street address. The homepage promises "everything worth doing, curated by someone who knows the town." A sharp visitor falsifies that promise in under two minutes.</p>
+<p>So the whole build compresses to one sentence: <strong>the listing layer must rise to the guides' standard or shrink out of the way, and the guides' DNA — verification stamps, real local truth, a shareable artifact — must propagate down into every thing and forward into the planner.</strong> Do that, and the site stops being redundant with Google and starts being the one place that hands a visitor a Santa Barbara day they can actually execute.</p>
+
+<div class="quote">"The guides are the real product. Everything else needs to either meet their standard or get out of their way."</div>
+
+<h3>What makes this defensible</h3>
+<p>Three things no AI assistant and no aggregator can replicate, all of which this build invests in: <strong>locally-verified operational truth</strong> (real hours, parking reality, crowd timing — data that exists nowhere to be trained on), <strong>a dated first-party verification trail</strong> (the "Verified · Jul 2026" stamp), and <strong>a constraint-solved day</strong> (a plan that's not just plausible but validated against those truths). Google has the hours but not the judgment; the Independent has neither; a generic model can draft a plausible day but not a correct one.</p>
+
+<!-- DECISIONS -->
+<h2 id="decisions"><span class="num">DECISIONS</span>What you locked in the session</h2>
+<p>These are settled. The specs are built around them. If Claude Code hits a genuine conflict with a load-bearing constraint, it's instructed to stop and flag rather than quietly work around your call.</p>
+
+<table>
+  <tr><th>Area</th><th>Your decision</th><th>Why it matters</th></tr>
+  <tr><td>Scope</td><td>Everything incl. growth loops</td><td>The full arc, minus live weather and the "Right Now" module (both deferred).</td></tr>
+  <tr><td>Inventory</td><td>Expand with quality tiers — demote, never cull</td><td>Keeps breadth (your "+264 more") while stopping filler from posing as curation.</td></tr>
+  <tr><td>Tier surfacing</td><td>Tier 2 = compact card; Tier 3 hidden</td><td>Weak entries stay discoverable but visibly lighter; broken ones quarantine, not delete.</td></tr>
+  <tr><td>Audience</td><td>Visitors and locals equally</td><td>Every feature serves both the 48-hour visitor and the "what's on tonight" local.</td></tr>
+  <tr><td>Recurring events</td><td>Own section, computed next-dates</td><td>Kills the "every week" bug that told people to show up on the wrong Friday.</td></tr>
+  <tr><td>Local's Secret</td><td>Hide when there's no real secret</td><td>The feature only works if every secret is genuinely insider. No filler.</td></tr>
+  <tr><td>Location</td><td>Address + Directions deep link</td><td>Gets visitors to the door with zero map-API cost.</td></tr>
+  <tr><td>Corrections</td><td>One-tap flag → review queue</td><td>Crowdsources your QA for free; closes the loop in the cockpit.</td></tr>
+  <tr><td>URLs</td><td>Full slugs + 301 redirects</td><td>Shareable, rankable, human-readable — without breaking existing links.</td></tr>
+  <tr><td>Structured data</td><td>Event + Business + Breadcrumb</td><td>The ticket into Google's event carousel — your highest-ROI growth artifact.</td></tr>
+  <tr><td>Planner</td><td>Full engine: party / anchor / meals / transport / budget</td><td>The moat. Turns a filter form into a validated concierge day.</td></tr>
+  <tr><td>Plan sharing</td><td>Server permalink, no account</td><td>A couple or family can pass the day around with one link.</td></tr>
+  <tr><td>Weather</td><td>Deferred this build</td><td>Keeps Gate 4 focused; weather-aware swaps come later.</td></tr>
+  <tr><td>Right Now</td><td>Skipped this build</td><td>You chose to validate the core first; the live module waits.</td></tr>
+  <tr><td>Explore</td><td>Search + Weekend filter</td><td>Surfaces the depth already in the DB; answers the #1 query intent.</td></tr>
+  <tr><td>Sharing</td><td>Share buttons + per-thing OG cards</td><td>Makes "find it, save it, share it" literally true.</td></tr>
+  <tr><td>Bottom nav</td><td>Keep 3 tabs; "Build your day" banner untouched this build</td><td>Nav stays canon; the CTA banner is explicitly out of scope here.</td></tr>
+  <tr><td>About page</td><td>Out of scope this build</td><td>No <code>/about</code>; may return later. "How it works" link left as-is.</td></tr>
+  <tr><td>Revenue</td><td>On hold — clean seams only</td><td>Nothing monetized; seams left so it switches on later without touching the ranker.</td></tr>
+  <tr><td>Guides</td><td>Untouched (your separate project)</td><td>Gate work only wires links and SSR; it never restructures guide content.</td></tr>
+</table>
+
+<!-- MAP -->
+<h2 id="map"><span class="num">SEQUENCE</span>The gate map</h2>
+<p>Six gates. Mostly sequential, because each builds on the last's data model. Gates 2 and 3 can run in parallel once Gate 1 is closed.</p>
+<div class="flow">Gate 0  Stop the Bleeding ........ trust-critical data fixes      [ship first, alone]
+Gate 1  Trust Infrastructure ..... tiers · quality gate · detail  [everything inherits this]
+Gate 2  Findability (SEO) ........ slugs · schema · OG · metadata ┐  parallel
+Gate 3  Navigation &amp; IA ......... search · weekend · x-links     ┘
+Gate 4  The Concierge Day ....... the planner engine (the moat)  [needs Gate 1 data]
+Gate 5  Loops &amp; Polish ......... sharing · saved · a11y · seams  [needs Gate 2 OG]</div>
+<p><strong>Discipline that makes this work:</strong> one gate at a time. Claude Code finishes a gate, verifies it on the dev server, tells you what changed and what to spot-check, and waits for your go-ahead. Do not let it run three gates without a check-in — that's how regressions hide.</p>
+
+<!-- GATE 0 -->
+<div class="gate-head" id="g0"><span class="g">GATE 0</span><h2 style="border:none;padding:0;margin:0">Stop the Bleeding</h2></div>
+<p class="effort">Effort: low · 1–2 sessions · ships alone before anything else · <span class="pill crit">mostly Critical</span></p>
+<p>Eight fixes, every one discoverable by a casual visitor in under two minutes, every one directly falsifying the headline claim. This is data and render work — no schema changes.</p>
+<div class="card">
+  <p><strong>What gets fixed:</strong> the leaked editorial QA note published as a "Local's secret" · the daypart hallucinations (10&nbsp;AM "evening" talks) and the generator guard that stops them recurring · card-vs-detail time mismatches · the duplicate Museum of Art entries · broken images (a Federal Register scan as Shoreline Park) nulled to clean motifs · the Art Walk pulled from "every week" · placeholder values (<code>Where: Other</code>, bare <code>—</code> prices) · the stray "Cancel" leaking into every page's SSR.</p>
+  <p style="margin:0"><strong>The bar:</strong> a skeptical first-timer browses the homepage and five detail pages without hitting a single self-contradiction, broken image, operator note, or placeholder.</p>
+</div>
+
+<!-- GATE 1 -->
+<div class="gate-head" id="g1"><span class="g">GATE 1</span><h2 style="border:none;padding:0;margin:0">Trust Infrastructure</h2></div>
+<p class="effort">Effort: medium · 2–3 sessions · everything downstream reads these fields · <span class="pill crit">Critical</span> <span class="pill major">Major</span></p>
+<p>The load-bearing gate. It installs the <strong>Entry Quality Gate</strong> — a rule that an entry can't reach Tier&nbsp;1 without a what-it-is sentence, an address, a real insider fact, a correct daypart, a real image, and a resolved price. Tier&nbsp;2 renders compact; Tier&nbsp;3 quarantines out of the public feed. Nothing is deleted; weak entries are demoted until fixed.</p>
+<div class="two">
+  <div class="card"><h4 style="margin-top:0">Detail pages become destinations</h4><p style="margin:0">Real address, a Directions deep link (no map cost), open-now from stored hours, adaptive outbound labels (LOTG stops saying "Get tickets"), a "Verified · Jul 2026" stamp, and "Before you go" safety notes on outdoor spots.</p></div>
+  <div class="card"><h4 style="margin-top:0">The filters start meaning something</h4><p style="margin:0">Tag entropy fixed: the schema's own negative rules enforced (no "Family Day" on 21+ events), max three tags, one chip per card, and the card chip always matches the detail's top chip.</p></div>
+</div>
+<div class="callout"><p class="lbl">The pleasant surprise in your schema</p><p style="margin:0">Your database already has <code>address</code>, <code>lat</code>, <code>lng</code>, <code>last_confirmed</code>, <code>happening_tier</code>, and <code>reason_to_go</code>. A lot of this gate is <em>populating and surfacing fields you already designed</em> — not inventing new ones. The new columns are just <code>quality_tier</code>, <code>verified_at</code>, recurrence cadence, a settings enum, and the <code>content_flags</code> table.</p></div>
+
+<!-- GATE 2 -->
+<div class="gate-head" id="g2"><span class="g">GATE 2</span><h2 style="border:none;padding:0;margin:0">Findability</h2></div>
+<p class="effort">Effort: low–medium · 1–2 sessions · parallelizable with Gate 3 · <span class="pill crit">Critical</span> (growth)</p>
+<p>The entire organic-growth channel, currently at zero, for about a week of plumbing. Every <code>/thing</code> page shares the title "Detail — SB Daymaker" today; every page gets a unique title, a real description, and a per-thing OG card so shared links preview as designed artifacts. Full slugs replace UUID URLs with 301s so nothing breaks. Event + LocalBusiness + Breadcrumb JSON-LD gets you into Google's event carousel. And your best prose — the guide walks — finally renders server-side so crawlers can see it.</p>
+<div class="card"><p style="margin:0"><strong>Why it sits here and not first:</strong> ranking pages before Gate&nbsp;1 fixes them just drives traffic to disappointment. Trust first, then turn on the funnel.</p></div>
+
+<!-- GATE 3 -->
+<div class="gate-head" id="g3"><span class="g">GATE 3</span><h2 style="border:none;padding:0;margin:0">Navigation &amp; Information Architecture</h2></div>
+<p class="effort">Effort: medium · 2 sessions · parallel with Gate 2 · <span class="pill major">Major</span></p>
+<p>Makes the depth you already have findable and connected. Search (fuzzy, using your existing trigram index). A first-class "This weekend" horizon at <code>/weekend</code> — the single highest-intent local query, and the web twin of your newsletter. Recurring events with real computed next-dates instead of "every week." The cross-linking flywheel: things link to the guides they star in, guide stops link back to things, and every detail page shows nearby things to pair with. And the one-tap correction flag wired to a cockpit review queue.</p>
+<p style="font-size:15px;color:var(--ink-2)"><em>Out of scope this build (per your notes):</em> the "Build your day" CTA banner stays exactly where it is, and there's no <code>/about</code> page.</p>
+
+<!-- GATE 4 -->
+<div class="gate-head" id="g4"><span class="g">GATE 4</span><h2 style="border:none;padding:0;margin:0">The Concierge Day</h2></div>
+<p class="effort">Effort: high · 3–4 sessions · the differentiator · needs Gate 1 data</p>
+<p>This is the moat. It upgrades your existing <code>buildDraft</code> from a picker into a constraint solver — still pure, still deterministic, still no AI at tap time — following your canonical Plan spec, not replacing it. The pipeline:</p>
+<div class="flow">inputs → candidate pool → hard-constraint filter → geo-cluster → slot assignment
+       → transition + parking annotation → meal insertion → validation pass → editable draft</div>
+<p>Inputs expand to party composition (with kid age bands), a start anchor, transport mode, budget band, and which meals to include. The hard filter is what makes it "concierge" rather than "filter": it drops any candidate that <em>can't be true</em> — closed at that hour, 21+ on a family day, out of budget, unreachable on foot. It clusters stops so you're not driving in circles, annotates each transition with the parking truth your guides already know ("park once on Anacapa; the Funk Zone lots are a trap"), guarantees a meal at mealtimes, and validates the finished day so a broken plan never ships. Then it hands back an <em>editable</em> draft — Share&nbsp;+&nbsp;Clear, ephemeral, every stop swappable — and a <code>/p/[token]</code> permalink a partner opens with no login.</p>
+<div class="callout pacific"><p class="lbl">What no AI can hand a visitor</p><p style="margin:0">A generic assistant can draft a plausible Santa Barbara day. It cannot draft a <em>validated</em> one — open when it says, clustered, parked where a local parks, fed on time, in budget — because the constraint data that makes validation possible is your proprietary, locally-verified truth.</p></div>
+
+<!-- GATE 5 -->
+<div class="gate-head" id="g5"><span class="g">GATE 5</span><h2 style="border:none;padding:0;margin:0">Loops &amp; Polish</h2></div>
+<p class="effort">Effort: medium · 2–3 sessions · <span class="pill major">Major</span> <span class="pill minor">Minor</span></p>
+<p>Turns one-way consumption into loops. Share buttons on things and guides (native share sheet + OG card). Saved lists that can be shared view-only, turned into a plan, and moved across devices via the magic link — all with zero accounts and no recipient PII, keeping your device-local privacy stance intact (defend it loudly; it's a real differentiator). A newsletter box with proof (a sample issue) so the list grows before you monetize it. A submit page that finally takes corrections, business claims, and local tips for existing entries — your best future secrets are in your users' heads. An accessibility sweep to hold the WCAG floor. And clean, inert <strong>revenue seams</strong> — an affiliate-ready outbound module, a labeled "Featured" component wired to nothing, a business-claim intake — so monetization later is a switch, not a refactor, and never touches the ranker.</p>
+
+<!-- DDL -->
+<h2 id="ddl"><span class="num">SCHEMA</span>Everything you'll paste into Supabase</h2>
+<p>All schema changes are additive and idempotent. You apply them by hand in the Supabase SQL editor, in gate order — Claude Code never runs them. The consolidated block lives in <code>00_START_HERE_build_index.md</code>; here's the shape so you know what's coming.</p>
+<table>
+  <tr><th>Gate</th><th>What's added</th><th>Nature</th></tr>
+  <tr><td>1</td><td><code>things.quality_tier</code>, <code>verified_at</code>, <code>verified_by</code>, <code>setting</code>, optional <code>hours</code> + <code>practical_note</code>; <code>recurrence_cadence</code> enum + 3 columns on <code>recurring_schedules</code>; <code>content_flags</code> table + <code>flag_status</code> enum</td><td>Columns, 2 enums, 1 table</td></tr>
+  <tr><td>2</td><td><code>things.slug</code>, <code>guides.slug</code> (+ unique indexes); <code>url_redirects</code> table</td><td>Columns, 1 table</td></tr>
+  <tr><td>4</td><td><code>shared_state_kind</code> gains <code>'shared_plan'</code> (run this statement alone)</td><td>1 enum value</td></tr>
+</table>
+<div class="callout"><p class="lbl">The reassuring part</p><p style="margin:0">That's the whole schema footprint for a six-gate build: a handful of columns, three small enums, and two tables. Almost everything else reads fields your v10 schema already defined. This build is far more about <em>populating and surfacing</em> than restructuring.</p></div>
+
+<!-- HANDOFF -->
+<h2 id="handoff"><span class="num">HANDOFF</span>How to run this with Claude Code</h2>
+<ol>
+  <li><strong>Apply Gate&nbsp;1 DDL first</strong> in Supabase (from the index file), since Gate&nbsp;1 code paths depend on the columns. Apply Gate&nbsp;2 and Gate&nbsp;4 DDL when you reach those gates.</li>
+  <li><strong>Hand over one gate file at a time</strong>, starting with <code>00_START_HERE_build_index.md</code> so Claude Code has the locked decisions and cross-gate invariants, then <code>GATE_0…md</code>.</li>
+  <li><strong>Let it finish a gate, then stop.</strong> It will report what changed and what to spot-check. Test it on your phone (the audit was mobile-first; so is the product). Flag bugs fast.</li>
+  <li><strong>Check each gate against its acceptance summary</strong> — every gate file ends with a checklist of pass/fail tests. Don't move on until they're green.</li>
+  <li><strong>Coordinate the guide-touching tasks</strong> (Gate&nbsp;2 SSR, Gate&nbsp;3/5 linking) with your separate guides project so you don't collide. Those tasks are wiring only — they never restyle a guide.</li>
+</ol>
+
+<div class="card">
+  <h4 style="margin-top:0">The order of files in your specs folder</h4>
+  <ul style="margin:0">
+    <li><code>00_START_HERE_build_index.md</code> — decisions, sequencing, all DDL, invariants</li>
+    <li><code>GATE_0_stop_the_bleeding.md</code></li>
+    <li><code>GATE_1_trust_infrastructure.md</code></li>
+    <li><code>GATE_2_findability_seo.md</code></li>
+    <li><code>GATE_3_navigation_and_ia.md</code></li>
+    <li><code>GATE_4_planner_engine.md</code></li>
+    <li><code>GATE_5_loops_and_polish.md</code></li>
+  </ul>
+</div>
+
+<div class="callout pacific">
+  <p class="lbl">What "done" feels like</p>
+  <p style="margin:0">A skeptical first-time visitor and a jaded local both experience a site where nothing contradicts itself, every entry could get you to the door, every page is findable and shareable as a designed artifact, the planner hands you a day you can actually execute, and the revenue seams are clean enough to switch on later without ever touching the ranker. That's the elevation.</p>
+</div>
+
+<p class="foot">SB Daymaker · Elevation v1 Build Guide · derived from the live-site audit (48 findings) and the founder decision session · six gate specs accompany this document · additive DDL only · Jul 2026</p>
+
+</div>
+</body>
+</html>

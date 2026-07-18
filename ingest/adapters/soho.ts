@@ -4,8 +4,7 @@
 // every show server-side with title + an explicit clock time + a /e/<slug> detail
 // link, so we parse the LISTING page directly (one request) rather than crawling
 // every detail page. The explicit, server-rendered time -> startStrategy:'server_detail'.
-// If a card has no parseable clock time, we emit 'none' and let the gate drop it —
-// we NEVER guess a time from prose.
+// If a card has no parseable clock time, we emit 'none' and let the gate drop it, // we NEVER guess a time from prose.
 
 import * as cheerio from 'cheerio';
 import type { SourceAdapter } from './types';

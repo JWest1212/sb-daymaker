@@ -16,7 +16,7 @@ export interface SourceAdapter {
   /**
    * Pull raw payloads and emit RawCandidates. MUST set startStrategy honestly:
    * 'structured' (machine field), 'server_detail' (explicit page time), or 'none'.
-   * MUST NOT guess a time from prose — emit startStrategy:'none' and let the gate
+   * MUST NOT guess a time from prose, emit startStrategy:'none' and let the gate
    * drop it.
    */
   fetch(window: DateWindow): Promise<RawCandidate[]>;

@@ -1,25 +1,24 @@
 // ingest/adapters/generic.ts
 //
-// Data Arch Redesign 25 — the generic AI extraction lane's SourceAdapter.
+// Data Arch Redesign 25, the generic AI extraction lane's SourceAdapter.
 // ONE code path serves every `sources` row with lane='generic': fetch its
 // page, reduce to clean text, hand it to Haiku (ingest/extract.ts), and emit
 // RawCandidates the same shape any hand-coded adapter emits. From here on,
-// onboarding a new long-tail source is a `sources` row only (spec 25 §5) —
-// this file does not change per source.
+// onboarding a new long-tail source is a `sources` row only (spec 25 §5), // this file does not change per source.
 //
 // TRUST FIREWALL (Doc 16 §2.3 / spec 25 §4): an event only gets a deterministic
 // start (startStrategy 'ai_extracted') when Haiku returned BOTH a real date and
-// a clock time — same "never guess" rule every adapter follows (adapters/types.ts).
+// a clock time, same "never guess" rule every adapter follows (adapters/types.ts).
 // Anything else emits startStrategy:'none' and the shared gate (ingest/gate.ts)
 // drops it, logged like any other adapter's drop. The actual auto-publish block
-// is NOT this label — it's ingest/publishGate.ts's requireStructuredLane, which
+// is NOT this label, it's ingest/publishGate.ts's requireStructuredLane, which
 // reads the resolved source's `lane` (set on its `sources` row, not on the
 // candidate), so a generic-lane event can never skip review regardless of how
 // confident the extraction looked.
 //
-// Phase 3 — cost/runtime discipline (spec 25 §3):
+// Phase 3, cost/runtime discipline (spec 25 §3):
 //   • Change-detection: a page's reduced text is hashed; an unchanged hash
-//     skips the Haiku call entirely (the AI call is the metered cost — the
+//     skips the Haiku call entirely (the AI call is the metered cost, the
 //     self-hosted fetch itself is free, so there's no reason to skip that).
 //   • Source-specific scheduling: 'nightly' sources run every night, 'weekly'
 //     sources run once every 7 days (tracked via sources.last_ok_at), and
@@ -28,7 +27,7 @@
 //     are onboarded (Phase 4).
 //   • AI spend (from real token usage) + runtime are logged per run via
 //     getLastGenericRunStats(), which ingest/run.ts folds into this run's
-//     source_runs row (ai_cost_usd) — runtime is already free from that row's
+//     source_runs row (ai_cost_usd), runtime is already free from that row's
 //     existing started_at/finished_at.
 
 import { createHash } from 'crypto';
@@ -44,8 +43,7 @@ export interface GenericSourceRow {
   key: string;
   url: string | null;
   category_hints: string[] | null;
-  /** Founder-confirmed street address for this source's OWN fixed venue —
-   *  set only when the source has one physical home (a winery, a hall). Never
+  /** Founder-confirmed street address for this source's OWN fixed venue, *  set only when the source has one physical home (a winery, a hall). Never
    *  set for a multi-location or touring source (e.g. a comedy club whose
    *  shows rotate rooms, a nonprofit with two campuses), because defaulting
    *  to one address would then be actively wrong on some nights, which is
@@ -55,7 +53,7 @@ export interface GenericSourceRow {
   venue_address?: string | null;
 }
 
-/** The full sources-row shape fetch() reads — extends GenericSourceRow (the
+/** The full sources-row shape fetch() reads, extends GenericSourceRow (the
  *  candidate-mapping shape toRawCandidate needs) with the scheduling/change-
  *  detection fields, kept separate so mapping tests don't need to fill them in. */
 interface SourceScheduleRow extends GenericSourceRow {
@@ -64,7 +62,7 @@ interface SourceScheduleRow extends GenericSourceRow {
   content_hash: string | null;
 }
 
-/** Founder-curation fallback when a source's category_hints is empty — matches
+/** Founder-curation fallback when a source's category_hints is empty, matches
  *  submissions.ts's use of the same catch-all for non-specific items. */
 const DEFAULT_CATEGORY: HappeningCategory = 'community_gathering';
 
@@ -82,7 +80,7 @@ export function isExplicitlyFree(price: string | undefined): boolean {
 }
 
 /** Combine extracted "YYYY-MM-DD" + "HH:MM" into an SB-local ISO instant.
- *  Returns undefined — never guesses — if either piece is missing or malformed,
+ *  Returns undefined, never guesses, if either piece is missing or malformed,
  *  which is exactly what makes the gate drop the candidate as startStrategy:'none'. */
 export function combineStartISO(startDate: string | undefined, startTime: string | undefined): string | undefined {
   const dm = startDate?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -94,12 +92,11 @@ export function combineStartISO(startDate: string | undefined, startTime: string
 }
 
 /** Live testing (Phase 4) surfaced a real failure mode: a stale cached page
- *  can echo a date years in the past (seen live — a 2024 date on a 2026 page,
+ *  can echo a date years in the past (seen live, a 2024 date on a 2026 page,
  *  a 2021 date on another) and the model reports it "high" confidence because
  *  the text itself IS unambiguous, it's just old. A wrong-year date is exactly
  *  the silent error the trust firewall exists to catch, so a start whose SB
- *  calendar day is before today is treated the same as no start at all —
- *  never landed, never guessed forward to "fix" it. */
+ *  calendar day is before today is treated the same as no start at all, *  never landed, never guessed forward to "fix" it. */
 export function isPastDate(startISO: string, now: Date): boolean {
   return sbDateKey(startISO) < sbDateKey(now.toISOString());
 }
@@ -116,8 +113,7 @@ export function toRawCandidate(
     source: sourceRow.key,
     title: e.title,
     // Preference order: the page's own stated address, then its stated venue
-    // name (existing behavior), then — only when the page named NEITHER —
-    // this source's own known home address. That last fallback never fires
+    // name (existing behavior), then, only when the page named NEITHER, // this source's own known home address. That last fallback never fires
     // when a (possibly different) venue was named, so it can't paper over an
     // event that's actually happening somewhere else.
     address: e.address || e.venue || sourceRow.venue_address || undefined,
@@ -135,7 +131,7 @@ export function toRawCandidate(
   };
 }
 
-/** sha256 of the page's reduced text — cheap, deterministic change signal.
+/** sha256 of the page's reduced text, cheap, deterministic change signal.
  *  A boilerplate-only change (nav/footer) never reaches here since reduceToText
  *  already strips that chrome before this is computed. */
 export function hashText(text: string): string {
@@ -144,10 +140,10 @@ export function hashText(text: string): string {
 
 const WEEKLY_INTERVAL_MS = 7 * 24 * 60 * 60 * 1_000;
 
-/** Spec 25 §3 — source-specific scheduling from sources.crawl_frequency.
+/** Spec 25 §3, source-specific scheduling from sources.crawl_frequency.
  *  'nightly' is always due. 'weekly' is due when never checked or ≥7 days
  *  since its last successful check (sources.last_ok_at). 'reserve' is never
- *  auto-scheduled — mirrors Lane C's "reserve" naming (held back by default;
+ *  auto-scheduled, mirrors Lane C's "reserve" naming (held back by default;
  *  a future manual/on-demand trigger is the only way it runs). */
 export function isSourceDue(row: Pick<SourceScheduleRow, 'crawl_frequency' | 'last_ok_at'>, now: Date): boolean {
   if (row.crawl_frequency === 'reserve') return false;
@@ -156,7 +152,7 @@ export function isSourceDue(row: Pick<SourceScheduleRow, 'crawl_frequency' | 'la
   return now.getTime() - new Date(row.last_ok_at).getTime() >= WEEKLY_INTERVAL_MS;
 }
 
-/** Spec 25 §3 — per-run page cap, protecting the 20-minute nightly wall as
+/** Spec 25 §3, per-run page cap, protecting the 20-minute nightly wall as
  *  more generic-lane sources are onboarded (Phase 4 targets 10-20). Sources
  *  due longest ago (or never checked) go first, so nothing due starves behind
  *  sources that merely sort earlier. */
@@ -171,7 +167,7 @@ export function selectSourcesForRun<T extends Pick<SourceScheduleRow, 'last_ok_a
     .slice(0, cap);
 }
 
-// Haiku 4.5 published rate (spec 25 §3 — "log AI spend ... per run").
+// Haiku 4.5 published rate (spec 25 §3, "log AI spend ... per run").
 const HAIKU_INPUT_PER_M_USD = 1.0;
 const HAIKU_OUTPUT_PER_M_USD = 5.0;
 
@@ -195,7 +191,7 @@ function emptyStats(): GenericLaneRunStats {
 let lastRunStats: GenericLaneRunStats = emptyStats();
 
 /** ingest/run.ts reads this right after adapter.fetch() to fold ai_cost_usd
- *  into this run's source_runs row — the SourceAdapter interface returns only
+ *  into this run's source_runs row, the SourceAdapter interface returns only
  *  RawCandidate[], so spend/skip bookkeeping rides this side-channel instead
  *  of widening that shared interface for one adapter. */
 export function getLastGenericRunStats(): GenericLaneRunStats {
@@ -222,7 +218,7 @@ export const generic: SourceAdapter = {
     const selected = selectSourcesForRun(due);
     stats.sourcesDeferred = due.length - selected.length;
     if (stats.sourcesDeferred > 0) {
-      console.log(`[generic] page cap (${GENERIC_LANE_PAGE_CAP}) reached — ${stats.sourcesDeferred} due source(s) deferred to a later run`);
+      console.log(`[generic] page cap (${GENERIC_LANE_PAGE_CAP}) reached, ${stats.sourcesDeferred} due source(s) deferred to a later run`);
     }
     if (!selected.length) {
       lastRunStats = stats;
@@ -231,7 +227,7 @@ export const generic: SourceAdapter = {
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
-      console.log('[generic] ANTHROPIC_API_KEY not set — skipping generic-lane extraction this run');
+      console.log('[generic] ANTHROPIC_API_KEY not set, skipping generic-lane extraction this run');
       lastRunStats = stats;
       return [];
     }
@@ -248,7 +244,7 @@ export const generic: SourceAdapter = {
 
         if (row.content_hash && row.content_hash === hash) {
           stats.sourcesSkippedUnchanged++;
-          console.log(`[generic] ${row.key}: unchanged since last check — skipping extraction`);
+          console.log(`[generic] ${row.key}: unchanged since last check, skipping extraction`);
           await sb.from('sources').update({ last_ok_at: nowIso }).eq('key', row.key);
           continue;
         }
@@ -275,7 +271,7 @@ export const generic: SourceAdapter = {
     lastRunStats = stats;
     console.log(
       `[generic] run summary: ${stats.sourcesExtracted} extracted, ${stats.sourcesSkippedUnchanged} unchanged-skipped, `
-      + `${stats.sourcesDeferred} deferred (cap) — $${stats.aiCostUsd.toFixed(4)} AI spend, `
+      + `${stats.sourcesDeferred} deferred (cap), $${stats.aiCostUsd.toFixed(4)} AI spend, `
       + `${stats.inputTokens}+${stats.outputTokens} tokens`,
     );
     return out;

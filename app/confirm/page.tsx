@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 
 export const metadata: Metadata = {
-  title: "Confirm subscription — SB Daymaker",
+  title: "Confirm subscription · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

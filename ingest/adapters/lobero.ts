@@ -1,8 +1,8 @@
 // ingest/adapters/lobero.ts
 //
-// Lobero Theatre — server-detail scrape (§6.1). Collects event URLs from the
+// Lobero Theatre, server-detail scrape (§6.1). Collects event URLs from the
 // monthly calendar listing, then fetches each detail page. The og:description
-// meta tag carries "Weekday, Month D, YYYY at H:MM AM/PM" — a deterministic,
+// meta tag carries "Weekday, Month D, YYYY at H:MM AM/PM", a deterministic,
 // year-bearing start → startStrategy:'server_detail'. No JSON-LD Event type on
 // detail pages (confirmed 2026-06-30). buyUrl → AXS (venue-direct scrape rule).
 //

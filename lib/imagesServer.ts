@@ -1,6 +1,6 @@
 // lib/imagesServer.ts
 //
-// Images desk (cockpit Images tab, 2026-07-11) — server-only data access for the
+// Images desk (cockpit Images tab, 2026-07-11), server-only data access for the
 // backlog of published things with no real photo (photo_url null, or sitting on
 // the placeholder gradient / a motif). Mirrors lib/venuesServer.ts's pattern:
 // service-role reads, no auth check here (the route/page caller gates via
@@ -39,7 +39,7 @@ export interface ImagesDeskRow {
   lng: number | null;
   venue_id: string | null;
   /** Display name + approved-pool size of the already-attached venue (null/0 when
-   *  unattached) — an attached-but-empty-pool row stays in this queue, and the UI
+   *  unattached), an attached-but-empty-pool row stays in this queue, and the UI
    *  should say so instead of re-suggesting a venue it already has. */
   venue_name: string | null;
   venue_approved_count: number;
@@ -48,25 +48,25 @@ export interface ImagesDeskRow {
   photo_attribution: string | null;
   photo_options: PhotoOption[];
   /** Best fuzzy venue match for an UNattached row (score > 0), or null. Computed
-   *  live like the Venues tab's proposals — never persisted. */
+   *  live like the Venues tab's proposals, never persisted. */
   suggestion: VenueSuggestion | null;
 }
 
 export interface ImagesDeskData {
   rows: ImagesDeskRow[];
   venues: ImagesVenueOption[];
-  /** True when the scan hit MAX_SCAN — there are more imageless rows than one
+  /** True when the scan hit MAX_SCAN, there are more imageless rows than one
    *  load returns; the UI should say "showing the first N" instead of implying
    *  the whole backlog is on screen. */
   scanCapped: boolean;
   /** Coverage stat: how many things are published at all, and how many of those
-   *  lack a real photo (INCLUDING photo_ack-dismissed ones — the stat reports
+   *  lack a real photo (INCLUDING photo_ack-dismissed ones, the stat reports
    *  honest image coverage, the queue reports remaining work). */
   publishedTotal: number;
   noImageTotal: number;
 }
 
-// Same generous, documented bound as the venues scan — the UI pages through
+// Same generous, documented bound as the venues scan, the UI pages through
 // everything this returns rather than hard-slicing and hiding the rest.
 const MAX_SCAN = 1000;
 
@@ -108,8 +108,7 @@ export async function loadImagesDesk(): Promise<ImagesDeskData> {
       .or("photo_url.is.null,photo_source.in.(placeholder,motif)"),
   ]);
 
-  // A missing photo_ack column (migration not applied yet) fails the scan —
-  // surface it instead of rendering a convincingly empty queue.
+  // A missing photo_ack column (migration not applied yet) fails the scan, // surface it instead of rendering a convincingly empty queue.
   if (thingsRes.error) console.error("[images] scan failed:", thingsRes.error.message);
 
   const approvedCounts = new Map<string, number>();
@@ -171,7 +170,7 @@ export async function loadImagesDesk(): Promise<ImagesDeskData> {
     };
   });
 
-  // Soonest-first, T1 on top — same order as the venues no-match catcher, so the
+  // Soonest-first, T1 on top, same order as the venues no-match catcher, so the
   // items whose cards the public sees next get imagery first.
   const sortKey = (r: ImagesDeskRow): [number, string] => {
     if (r.happening_tier === 1 && r.starts_at) return [0, r.starts_at];

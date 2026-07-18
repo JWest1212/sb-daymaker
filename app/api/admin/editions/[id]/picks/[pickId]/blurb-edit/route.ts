@@ -11,7 +11,7 @@ const MODEL = "claude-haiku-4-5";
 // Mirrors ingest/enrich.ts's SYSTEM voice guidance verbatim (knowing local friend,
 // no em dashes, sentence case, concrete over listy) so an ad-hoc cockpit edit never
 // drifts from the batch-drafted voice. This is an operator-triggered single call,
-// not send-time synthesis — same category as the existing "find more images" and
+// not send-time synthesis, same category as the existing "find more images" and
 // image-relevance-guard calls already in this cockpit.
 const SYSTEM = `You revise a single blurb for an SB Daymaker Santa Barbara listing, in
 the house voice: a knowing local friend, telling you where they'd go. Warm, dry,
@@ -62,7 +62,7 @@ export async function POST(
   const { data: edition, error: edErr } = await sb.from("editions").select("status").eq("id", editionId).maybeSingle();
   if (edErr || !edition) return NextResponse.json({ error: "edition not found" }, { status: 404 });
   if (!["draft", "approved", "skipped"].includes(edition.status)) {
-    return NextResponse.json({ error: `edition is ${edition.status} — no longer editable` }, { status: 400 });
+    return NextResponse.json({ error: `edition is ${edition.status}, no longer editable` }, { status: 400 });
   }
 
   const { data: pick, error: pickErr } = await sb
@@ -87,7 +87,7 @@ export async function POST(
       messages: [{
         role: "user",
         content: `Listing: "${thing.title}" (${thing.happening_category})\n` +
-          `Slot: ${pick.slot} — target length: ${targetLengthFor(pick.slot as EditionSlot)}\n` +
+          `Slot: ${pick.slot}, target length: ${targetLengthFor(pick.slot as EditionSlot)}\n` +
           `Current blurb: ${currentBlurb?.trim() || "(empty)"}\n` +
           `Operator instruction: ${instruction.trim()}`,
       }],

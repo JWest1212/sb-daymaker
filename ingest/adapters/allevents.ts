@@ -1,6 +1,6 @@
 // ingest/adapters/allevents.ts
 //
-// AllEvents.in (Santa Barbara / Goleta / Carpinteria) — §9.3 planned scrape.
+// AllEvents.in (Santa Barbara / Goleta / Carpinteria), §9.3 planned scrape.
 //
 // DOC MISMATCH (§9.3): Doc expected server-rendered HTML with structured event data.
 // Reality: allevents.in is a client-rendered React SPA. The server delivers an empty
@@ -20,7 +20,7 @@ export const allevents: SourceAdapter = {
   label: 'AllEvents (SB)',
   useManagedScrape: false,
   async fetch(): Promise<RawCandidate[]> {
-    // Client-rendered — plain fetch yields empty shell. Returns [] until a
+    // Client-rendered, plain fetch yields empty shell. Returns [] until a
     // headless-browser path is available or a public API is discovered.
     return [];
   },

@@ -7,7 +7,7 @@ export interface SavedItinerary {
   id: string;
   title: string;
   answers: PlanAnswers;
-  stops: Stop[];    // snapshot at save time — restored on reopen; insertion order preserved
+  stops: Stop[];    // snapshot at save time, restored on reopen; insertion order preserved
   savedAt: string;  // ISO timestamp
 }
 

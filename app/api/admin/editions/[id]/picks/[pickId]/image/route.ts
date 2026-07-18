@@ -29,7 +29,7 @@ async function setOverride(
   return error;
 }
 
-// POST — sets a pick's override_image_url one of two ways (spec §5.1):
+// POST, sets a pick's override_image_url one of two ways (spec §5.1):
 //   - JSON { url }              paste any URL, or pick one of the thing's photo_options
 //   - multipart/form-data file  upload a new image, hosted in the edition-media bucket
 export async function POST(
@@ -43,7 +43,7 @@ export async function POST(
   const { data: edition, error: edErr } = await sb.from("editions").select("status").eq("id", editionId).maybeSingle();
   if (edErr || !edition) return NextResponse.json({ error: "edition not found" }, { status: 404 });
   if (!["draft", "approved", "skipped"].includes(edition.status)) {
-    return NextResponse.json({ error: `edition is ${edition.status} — no longer editable` }, { status: 400 });
+    return NextResponse.json({ error: `edition is ${edition.status}, no longer editable` }, { status: 400 });
   }
 
   const contentType = req.headers.get("content-type") ?? "";

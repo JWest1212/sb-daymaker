@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
-  title: "Cockpit — sign in",
+  title: "Cockpit, sign in",
   robots: { index: false, follow: false },
 };
 

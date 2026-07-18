@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker · Concierge Day · Interactive Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink-2:#4A3F35; --ink-3:#8A7F6A;
+    --pacific:#16586A; --pacific-dark:#0E3C49; --terracotta:#C0532E; --gold:#E0A82E;
+    --gold-text:#7A5E13; --sage:#7E8B6B; --sage-text:#566049;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#E7DECB;color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;padding:30px 16px 80px}
+  .page{max-width:900px;margin:0 auto}
+  .intro{text-align:center;margin-bottom:26px}
+  .intro .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--pacific);margin:0 0 10px}
+  .intro h1{font-family:var(--font-display);font-weight:900;font-size:clamp(26px,5vw,38px);margin:0 0 8px;letter-spacing:-.01em}
+  .intro p{font-size:15px;color:var(--ink-2);margin:0 auto;max-width:52ch}
+
+  /* Phone */
+  .stage{display:flex;justify-content:center}
+  .phone{width:340px;background:#1c1712;border-radius:42px;padding:11px;box-shadow:0 18px 50px rgba(36,28,22,.34)}
+  .screen{position:relative;width:100%;height:710px;background:var(--plaster);border-radius:32px;overflow:hidden;display:flex;flex-direction:column}
+  .statusbar{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;flex-shrink:0}
+  .statusbar .t{font-family:var(--font-mono);font-size:12px;font-weight:500;color:var(--ink)}
+  .statusbar .r{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--ink-2)}
+  .viewport{flex:1;overflow-y:auto;position:relative}
+  .viewport::-webkit-scrollbar{width:0}
+
+  /* App header */
+  .apphead{padding:6px 18px 10px;display:flex;align-items:center;justify-content:space-between}
+  .apphead .brand{font-family:var(--font-display);font-size:16px;font-weight:600}
+  .apphead .brand b{color:var(--terracotta)}
+  .apphead .close{font-size:20px;color:var(--ink-3);cursor:pointer;line-height:1;background:none;border:none}
+
+  /* Screens */
+  .view{display:none;padding:0 18px 24px;animation:fade .28s ease}
+  .view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* Intro screen */
+  .hero{background:linear-gradient(135deg,#F3D9A0,#E9B86E 70%,#E0A24E);border-radius:18px;padding:20px 18px 22px;margin-bottom:16px;position:relative;overflow:hidden}
+  .hero .sun{position:absolute;right:-14px;top:-14px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#FFF4D6,#F7C96B);opacity:.85}
+  .hero .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:#7A5E13;position:relative}
+  .hero h2{font-family:var(--font-display);font-weight:600;font-size:22px;color:#3A2E12;margin:6px 0 0;line-height:1.15;position:relative;max-width:15ch}
+  .lead{font-size:15px;color:var(--ink-2);margin:0 0 18px;line-height:1.55}
+  .primary{display:block;width:100%;text-align:center;background:var(--terracotta);color:var(--paper);border:none;border-radius:100px;padding:15px 0;font-size:16px;font-weight:600;font-family:var(--font-body);cursor:pointer;box-shadow:0 3px 0 #9e3f1f}
+  .primary:active{transform:translateY(1px);box-shadow:0 2px 0 #9e3f1f}
+  .ghostlink{display:block;text-align:center;margin-top:14px;font-size:14px;color:var(--pacific);text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+  .miniex{background:var(--paper);border:1px solid var(--plaster-2);border-radius:14px;padding:14px;margin-top:18px}
+  .miniex .h{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px}
+  .miniex .row{display:flex;gap:8px;font-size:12px;color:var(--ink-2);margin-bottom:5px;align-items:center}
+  .miniex .row .d{width:5px;height:5px;border-radius:50%;background:var(--gold);flex-shrink:0}
+
+  /* Questionnaire */
+  .qtop{display:flex;align-items:center;gap:10px;padding:4px 0 14px}
+  .qtop .back{font-size:20px;color:var(--ink-3);cursor:pointer;background:none;border:none;line-height:1}
+  .dots{display:flex;gap:5px}
+  .dots i{width:7px;height:7px;border-radius:50%;background:var(--plaster-2);display:block}
+  .dots i.on{background:var(--terracotta);width:18px;border-radius:100px}
+  .qnum{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-left:auto}
+  .qh{font-family:var(--font-display);font-weight:600;font-size:24px;line-height:1.2;margin:8px 0 4px}
+  .qsub{font-size:14px;color:var(--ink-2);margin:0 0 20px}
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .opt{display:flex;align-items:center;gap:13px;background:var(--paper);border:1.5px solid var(--plaster-2);border-radius:14px;padding:15px 16px;cursor:pointer;transition:.14s;text-align:left;width:100%;font-family:var(--font-body)}
+  .opt:hover{border-color:var(--pacific)}
+  .opt:active{transform:scale(.99)}
+  .opt.sel{border-color:var(--pacific);background:#EBF2F3}
+  .opt .ic{font-size:22px;width:26px;text-align:center;flex-shrink:0}
+  .opt .txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .opt .lab{display:block;font-size:15px;font-weight:500;color:var(--ink);line-height:1.25}
+  .opt .desc{display:block;font-size:12px;color:var(--ink-3);line-height:1.3}
+  .opt .chev{margin-left:auto;color:var(--ink-3);font-size:18px;flex-shrink:0}
+  .contbar{margin-top:20px}
+  .cont{display:block;width:100%;text-align:center;background:var(--pacific);color:var(--paper);border:none;border-radius:100px;padding:14px 0;font-size:15px;font-weight:600;font-family:var(--font-body);cursor:pointer}
+  .cont:disabled{background:#C7C0B2;cursor:default}
+
+  /* Building */
+  .building{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:0 30px;text-align:center}
+  .building.on{display:flex}
+  .spinner{width:54px;height:54px;border-radius:50%;border:3px solid var(--plaster-2);border-top-color:var(--terracotta);animation:spin 0.8s linear infinite;margin-bottom:22px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .building h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 6px}
+  .building .step{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);min-height:16px}
+
+  /* Results */
+  .rhead{padding:2px 0 12px}
+  .rhead .k{font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--pacific);text-transform:uppercase}
+  .rhead h2{font-family:var(--font-display);font-weight:600;font-size:23px;margin:4px 0 6px;line-height:1.15}
+  .rhead .params{display:flex;gap:6px;flex-wrap:wrap}
+  .ptag{font-family:var(--font-mono);font-size:10px;background:var(--plaster-2);color:var(--sage-text);border-radius:100px;padding:3px 9px}
+
+  .spine{position:relative;margin-top:6px}
+  .stop{position:relative;background:var(--paper);border:1px solid var(--plaster-2);border-radius:14px;padding:13px 14px;margin-bottom:2px}
+  .stop .tm{font-family:var(--font-mono);font-size:12px;color:var(--terracotta);margin-bottom:4px;display:flex;align-items:center;gap:7px}
+  .stop .sg{font-family:var(--font-mono);font-size:9px;background:#F4E3D9;color:var(--terracotta);border-radius:100px;padding:1px 7px}
+  .stop h4{font-family:var(--font-display);font-weight:600;font-size:17px;margin:0 0 3px;display:flex;align-items:center;gap:7px}
+  .stop .meal{font-family:var(--font-mono);font-size:9px;background:#E4EAE0;color:var(--sage-text);border-radius:100px;padding:2px 7px;font-weight:400}
+  .stop .sd{font-size:13px;color:var(--ink-2);margin:0}
+  .stop .acts{display:flex;gap:8px;margin-top:10px}
+  .stop .act{font-size:12px;color:var(--pacific);background:none;border:1px solid #C4D3D6;border-radius:100px;padding:5px 12px;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px}
+  .stop .act:active{background:#EBF2F3}
+  .transit{display:flex;align-items:center;gap:8px;padding:7px 16px;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.01em}
+  .transit .ln{flex:1;border-top:1px dashed #CDBFA4}
+
+  /* swap panel (inline) */
+  .swap{background:#EBF2F3;border:1px solid #B9CFD4;border-radius:12px;padding:12px;margin:2px 0 8px;display:none;animation:fade .2s}
+  .swap.on{display:block}
+  .swap .h{font-family:var(--font-mono);font-size:10px;color:var(--pacific);letter-spacing:.06em;margin-bottom:8px}
+  .swap .alt{display:flex;align-items:center;gap:10px;background:var(--paper);border-radius:10px;padding:9px 11px;cursor:pointer;margin-bottom:6px}
+  .swap .alt:active{background:#f3ede0}
+  .swap .alt h5{font-family:var(--font-display);font-size:14px;font-weight:600;margin:0}
+  .swap .alt p{font-size:11px;color:var(--ink-3);margin:1px 0 0}
+  .swap .alt .pick{margin-left:auto;font-size:11px;color:var(--pacific);font-weight:600}
+  .swap .cancel{width:100%;text-align:center;font-size:12px;color:var(--ink-3);background:none;border:none;padding:4px;cursor:pointer;margin-top:2px}
+
+  /* go bar. matches the detail-card action row: equal Pacific pills, primary solid */
+  .gobar{position:sticky;bottom:0;background:linear-gradient(to top,var(--plaster) 68%,rgba(246,241,231,0));padding:16px 0 10px;display:flex;gap:9px;margin-top:8px}
+  .gobar .gb{flex:1;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:100px;font-size:14px;font-weight:500;font-family:var(--font-body);cursor:pointer;border:1.5px solid var(--pacific);background:transparent;color:var(--pacific);transition:.14s}
+  .gobar .gb:active{transform:scale(.98)}
+  .gobar .gb.share{background:var(--pacific);color:var(--paper);border-color:var(--pacific)}
+  .regennote{text-align:center;font-family:var(--font-mono);font-size:10px;color:var(--ink-3);margin:2px 0 0}
+
+  /* overlays inside phone */
+  .sheet-scrim{position:absolute;inset:0;background:rgba(36,28,22,.4);display:none;align-items:flex-end;z-index:20}
+  .sheet-scrim.on{display:flex;animation:fade .2s}
+  .sheet{width:100%;background:var(--plaster);border-radius:22px 22px 0 0;padding:20px 20px 26px;animation:up .28s ease}
+  @keyframes up{from{transform:translateY(100%)}to{transform:none}}
+  .sheet .grab{width:38px;height:4px;border-radius:100px;background:#cfc6b3;margin:0 auto 16px}
+  .sheet h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 4px}
+  .sheet p{font-size:13px;color:var(--ink-2);margin:0 0 16px}
+  .daycard{background:linear-gradient(135deg,#2c4a52,#16586A);border-radius:14px;padding:16px;color:var(--plaster);margin-bottom:14px}
+  .daycard .dk{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;opacity:.8}
+  .daycard h4{font-family:var(--font-display);font-weight:600;font-size:18px;margin:4px 0 8px}
+  .daycard .mini{font-size:11px;opacity:.9;line-height:1.6}
+  .linkrow{display:flex;align-items:center;gap:8px;background:var(--paper);border:1px solid var(--plaster-2);border-radius:100px;padding:9px 14px;margin-bottom:14px}
+  .linkrow .u{flex:1;font-family:var(--font-mono);font-size:12px;color:var(--ink-2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .linkrow .cp{font-size:12px;color:var(--pacific);font-weight:600;cursor:pointer;flex-shrink:0}
+  .sharebtns{display:flex;gap:9px}
+  .sharebtns .sb{flex:1;text-align:center;background:var(--paper);border:1px solid var(--plaster-2);border-radius:12px;padding:12px 0;font-size:12px;color:var(--ink);cursor:pointer}
+  .sharebtns .sb .i{font-size:19px;display:block;margin-bottom:3px}
+  .sheet .done{display:block;width:100%;text-align:center;background:var(--pacific);color:var(--paper);border:none;border-radius:100px;padding:13px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:16px;font-family:var(--font-body)}
+  .noteflag{text-align:center;font-size:11px;color:var(--sage-text);margin-top:12px}
+
+  /* nav */
+  .navbar{display:flex;border-top:1px solid var(--plaster-2);background:var(--paper);flex-shrink:0}
+  .navbar div{flex:1;text-align:center;padding:9px 0 11px;font-family:var(--font-mono);font-size:9px;color:var(--ink-3)}
+  .navbar div.on{color:var(--terracotta)}
+  .navbar .ic{font-size:17px;display:block;margin-bottom:2px}
+
+  /* caption under phone */
+  .cap{max-width:520px;margin:24px auto 0;text-align:center;font-size:13px;color:var(--ink-2);line-height:1.6}
+  .cap b{color:var(--ink)}
+  .legend{max-width:520px;margin:16px auto 0;background:rgba(252,250,245,.6);border:1px solid var(--plaster-2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--ink-2)}
+  .legend .h{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--pacific);text-transform:uppercase;margin-bottom:6px}
+  .legend ul{margin:0;padding-left:18px} .legend li{margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="intro">
+    <p class="eyebrow">SB Daymaker · Gate 4 · Interactive prototype</p>
+    <h1>The Concierge Day</h1>
+    <p>Tap through the real flow. Answer the setup, watch it solve, then edit, swap, regenerate, and share the day. This is a clickable mockup for your feedback, not final pixels.</p>
+  </div>
+
+  <div class="stage">
+    <div class="phone"><div class="screen">
+      <div class="statusbar"><span class="t">9:41</span><span class="r">☀ 71°&nbsp;&nbsp;●●●&nbsp;&nbsp;⌁</span></div>
+
+      <div class="apphead">
+        <span class="brand">Day<b>maker</b></span>
+        <button class="close" onclick="reset()" title="Close" aria-label="Close">✕</button>
+      </div>
+
+      <div class="viewport" id="vp">
+
+        <!-- INTRO -->
+        <div class="view on" id="v-intro">
+          <div class="hero"><div class="sun"></div>
+            <div class="k">FRI JUL 17 · GOLDEN HOUR</div>
+            <h2>Let's build your Santa Barbara day</h2>
+          </div>
+          <p class="lead">Answer a few quick questions and we'll draft a Santa Barbara day that actually works. Then you tweak it.</p>
+          <button class="primary" onclick="go('q0')">Build my day →</button>
+          <button class="ghostlink" onclick="startBlank()">Or start from a blank day</button>
+          <div class="miniex">
+            <div class="h">WHAT MAKES IT DIFFERENT</div>
+            <div class="row"><span class="d"></span> Every stop is open when we schedule it</div>
+            <div class="row"><span class="d"></span> Clustered so you're not driving in circles</div>
+            <div class="row"><span class="d"></span> Parking + lunch built in, shareable in one link</div>
+          </div>
+        </div>
+
+        <!-- Q0 WHEN -->
+        <div class="view" id="v-q0">
+          <div class="qtop"><button class="back" onclick="go('intro')">‹</button><div class="dots"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div><span class="qnum">1 / 6</span></div>
+          <h3 class="qh">When's the day?</h3>
+          <p class="qsub">We'll pull what's actually open and on.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'when','Today')"><span class="ic">☀️</span><span class="txt"><span class="lab">Today</span><span class="desc">Friday, Jul 17</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'when','Tomorrow')"><span class="ic">🌅</span><span class="txt"><span class="lab">Tomorrow</span><span class="desc">Saturday, Jul 18</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'when','This weekend')"><span class="ic">📅</span><span class="txt"><span class="lab">This weekend</span><span class="desc">Fri–Sun</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'when','Pick a date')"><span class="ic">🗓️</span><span class="txt"><span class="lab">Pick a date…</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q1 WHO -->
+        <div class="view" id="v-q1">
+          <div class="qtop"><button class="back" onclick="go('q0')">‹</button><div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="qnum">2 / 6</span></div>
+          <h3 class="qh">Who's coming?</h3>
+          <p class="qsub">This shapes the pace and rules out the wrong stops.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'who','Couple')"><span class="ic">💑</span><span class="txt"><span class="lab">Couple</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pickFamily(this)"><span class="ic">👨‍👩‍👧</span><span class="txt"><span class="lab">Family with kids</span><span class="desc">We'll ask their ages</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'who','Solo')"><span class="ic">🚶</span><span class="txt"><span class="lab">Solo</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'who','Group')"><span class="ic">👥</span><span class="txt"><span class="lab">Group of friends</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q1b KID AGE (conditional) -->
+        <div class="view" id="v-q1b">
+          <div class="qtop"><button class="back" onclick="go('q1')">‹</button><div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="qnum">2 / 6</span></div>
+          <h3 class="qh">How old are the kids?</h3>
+          <p class="qsub">Toddlers get nap-window pacing and no late nights.</p>
+          <div class="opts">
+            <button class="opt" onclick="pickAge(this,'Toddler')"><span class="ic">🧸</span><span class="txt"><span class="lab">Toddler (0–3)</span><span class="desc">Short loops, stroller-friendly, shade</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pickAge(this,'Young kids')"><span class="ic">🎈</span><span class="txt"><span class="lab">Young kids (4–9)</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pickAge(this,'Tweens+')"><span class="ic">🛹</span><span class="txt"><span class="lab">Tweens &amp; up (10+)</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q2 ANCHOR -->
+        <div class="view" id="v-q2">
+          <div class="qtop"><button class="back" onclick="backFromAnchor()">‹</button><div class="dots"><i></i><i></i><i class="on"></i><i></i><i></i><i></i></div><span class="qnum">3 / 6</span></div>
+          <h3 class="qh">Where are you starting?</h3>
+          <p class="qsub">We cluster the day around this and route from it.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'anchor','Hotel Californian')"><span class="ic">🏨</span><span class="txt"><span class="lab">Hotel Californian</span><span class="desc">Funk Zone · 36 State St</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'anchor','The Riviera')"><span class="ic">📍</span><span class="txt"><span class="lab">My place on the Riviera</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'anchor','Downtown')"><span class="ic">🏛️</span><span class="txt"><span class="lab">Downtown / State St</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'anchor','Enter address')"><span class="ic">✏️</span><span class="txt"><span class="lab">Enter an address…</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q3 TRANSPORT -->
+        <div class="view" id="v-q3">
+          <div class="qtop"><button class="back" onclick="go('q2')">‹</button><div class="dots"><i></i><i></i><i></i><i class="on"></i><i></i><i></i></div><span class="qnum">4 / 6</span></div>
+          <h3 class="qh">Getting around?</h3>
+          <p class="qsub">Walking keeps it to one neighborhood; a car unlocks the coast.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'transport','On foot')"><span class="ic">🚶</span><span class="txt"><span class="lab">On foot</span><span class="desc">Park once, walk the rest</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'transport','Car')"><span class="ic">🚗</span><span class="txt"><span class="lab">Car</span><span class="desc">Opens Goleta, Carpinteria, backcountry</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'transport','Bike')"><span class="ic">🚲</span><span class="txt"><span class="lab">Bike</span><span class="desc">Waterfront path friendly</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q4 BUDGET -->
+        <div class="view" id="v-q4">
+          <div class="qtop"><button class="back" onclick="go('q3')">‹</button><div class="dots"><i></i><i></i><i></i><i></i><i class="on"></i><i></i></div><span class="qnum">5 / 6</span></div>
+          <h3 class="qh">Budget for the day?</h3>
+          <p class="qsub">We won't seat you at three splurges by accident.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'budget','$ Easy')"><span class="ic">🪙</span><span class="txt"><span class="lab">Keep it cheap</span><span class="desc">Free + $ mostly</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'budget','$$ Mid · one splurge')"><span class="ic">💳</span><span class="txt"><span class="lab">Middle, one splurge</span><span class="desc">$$ with a treat</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'budget','$$$ No limit')"><span class="ic">✨</span><span class="txt"><span class="lab">Treat ourselves</span><span class="desc">$$$ welcome</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- Q5 MEALS -->
+        <div class="view" id="v-q5">
+          <div class="qtop"><button class="back" onclick="go('q4')">‹</button><div class="dots"><i></i><i></i><i></i><i></i><i></i><i class="on"></i></div><span class="qnum">6 / 6</span></div>
+          <h3 class="qh">Which meals should we plan?</h3>
+          <p class="qsub">A plan without a meal at mealtime isn't a plan.</p>
+          <div class="opts">
+            <button class="opt" onclick="pick(this,'meals','Lunch')"><span class="ic">🥗</span><span class="txt"><span class="lab">Just lunch</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'meals','Lunch + dinner')"><span class="ic">🍽️</span><span class="txt"><span class="lab">Lunch and dinner</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'meals','All of them')"><span class="ic">☕</span><span class="txt"><span class="lab">Breakfast through dinner</span></span><span class="chev">›</span></button>
+            <button class="opt" onclick="pick(this,'meals','None')"><span class="ic">🚫</span><span class="txt"><span class="lab">No meals, we'll figure food out</span></span><span class="chev">›</span></button>
+          </div>
+        </div>
+
+        <!-- BUILDING -->
+        <div class="building" id="v-build">
+          <div class="spinner"></div>
+          <h3>Solving your day…</h3>
+          <div class="step" id="buildstep">Checking what's open</div>
+        </div>
+
+        <!-- RESULTS -->
+        <div class="view" id="v-results">
+          <div class="rhead">
+            <div class="k">Your draft · editable</div>
+            <h2 id="planTitle">Your Funk Zone day</h2>
+            <div class="params" id="planParams"></div>
+          </div>
+          <div class="spine" id="spine"></div>
+          <p class="regennote" id="regennote"></p>
+          <div class="gobar">
+            <button class="gb clear" onclick="reset()">Clear</button>
+            <button class="gb regen" onclick="regenerate()">↻ Redo</button>
+            <button class="gb share" onclick="openShare()">Share day</button>
+          </div>
+        </div>
+
+      </div><!-- /viewport -->
+
+      <!-- SHARE SHEET -->
+      <div class="sheet-scrim" id="shareScrim">
+        <div class="sheet">
+          <div class="grab"></div>
+          <h3>Share this day</h3>
+          <p>A view-only link. Whoever opens it sees the whole plan, no app and no login, and can save the stops to their own phone.</p>
+          <div class="daycard">
+            <div class="dk">SB DAYMAKER · A DAY IN SANTA BARBARA</div>
+            <h4 id="shareTitle">Your Funk Zone day</h4>
+            <div class="mini" id="shareMini"></div>
+          </div>
+          <div class="linkrow"><span class="u">sbdaymaker.com/p/f3k9-funk-day</span><span class="cp" onclick="this.textContent='Copied ✓'">Copy</span></div>
+          <div class="sharebtns">
+            <div class="sb"><span class="i">💬</span>Messages</div>
+            <div class="sb"><span class="i">✉️</span>Email</div>
+            <div class="sb"><span class="i">🔗</span>More</div>
+          </div>
+          <p class="noteflag">No account. No contact info stored. The plan is ephemeral, so this link is the only copy.</p>
+          <button class="done" onclick="closeShare()">Done</button>
+        </div>
+      </div>
+
+      <div class="navbar">
+        <div class="on"><span class="ic">◎</span>Explore</div>
+        <div><span class="ic">♡</span>Saved</div>
+        <div><span class="ic">▤</span>Discover</div>
+      </div>
+
+    </div></div><!-- /phone -->
+  </div>
+
+  <p class="cap"><b>How to drive it:</b> start with "Build my day," tap an answer to each question, watch it solve, then on the itinerary try <b>Swap</b> on any stop, <b>Redo</b> to re-solve, and <b>Share day</b> to see the permalink. "Clear" or the ✕ starts over.</p>
+
+  <div class="legend">
+    <div class="h">What the prototype is demonstrating</div>
+    <ul>
+      <li><b>Expanded inputs.</b> Who, start point, transport, budget, and meals reshape the result (family plus toddler adds nap pacing; walking keeps it in one zone).</li>
+      <li><b>A solved spine.</b> Timed stops with transitions that name the parking reality, and a lunch stop inserted at mealtime, in-cluster and in-budget.</li>
+      <li><b>Editable, not locked.</b> Every stop swaps to the next-best open option, Redo re-solves, and the go-bar is Share plus Clear (the plan is ephemeral, no Save).</li>
+      <li><b>Shareable.</b> A no-login <code>/p/…</code> permalink with a day-card preview. No account, no stored contact info.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  const state = {when:'',who:'',age:'',anchor:'',transport:'',budget:'',meals:'',variant:0};
+
+  const views = ['intro','q0','q1','q1b','q2','q3','q4','q5','results'];
+  function showView(id){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    document.getElementById('v-build').classList.remove('on');
+    const el = document.getElementById('v-'+id);
+    if(el) el.classList.add('on');
+    document.getElementById('vp').scrollTop = 0;
+  }
+  function go(id){ showView(id); }
+
+  function pick(btn, key, val){
+    state[key] = val;
+    btn.classList.add('sel');
+    const next = {when:'q1', who:'q2', anchor:'q3', transport:'q4', budget:'q5', meals:'BUILD'};
+    setTimeout(()=>{
+      if(key==='meals'){ build(); }
+      else { go(next[key]); }
+    }, 180);
+  }
+  function pickFamily(btn){
+    state.who = 'Family';
+    btn.classList.add('sel');
+    setTimeout(()=>go('q1b'), 180);
+  }
+  function pickAge(btn, age){
+    state.age = age; state.who = 'Family · '+age;
+    btn.classList.add('sel');
+    setTimeout(()=>go('q2'), 180);
+  }
+  function backFromAnchor(){ go(state.who.startsWith('Family') ? 'q1b' : 'q1'); }
+
+  function startBlank(){
+    state.when='Today'; state.who='Solo'; state.anchor='Downtown'; state.transport='On foot'; state.budget='$$ Mid'; state.meals='Lunch'; state.variant=2;
+    renderResults(); go('results');
+  }
+
+  const steps = ['Checking what\'s open','Clustering by neighborhood','Placing your stops','Adding parking + a lunch stop','Validating the day'];
+  function build(){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    const b = document.getElementById('v-build'); b.classList.add('on');
+    const stepEl = document.getElementById('buildstep');
+    let i=0; stepEl.textContent = steps[0];
+    const iv = setInterval(()=>{ i++; if(i<steps.length){ stepEl.textContent = steps[i]; } }, 460);
+    setTimeout(()=>{ clearInterval(iv); b.classList.remove('on'); renderResults(); go('results'); }, 2500);
+  }
+
+  // Two plan variants + per-stop alternates
+  const plans = [
+    {
+      title:'Your Funk Zone day',
+      stops:[
+        {t:'10:30', s:true, name:'MOXI', meal:'', d:'Hands-on science museum. The rooftop deck and toddler area are the hits. Open til 5.',
+         alts:[{n:'Santa Barbara Maritime Museum',p:'Harbor · quieter · open til 5'},{n:'Sea Center on Stearns Wharf',p:'Touch tanks · tiny but a toddler win'}]},
+        {tr:'4 min walk · park once in the Californian garage, forget the car'},
+        {t:'12:30', s:true, name:'Lucky Penny', meal:'lunch', d:'Wood-fired pizza next to The Lark. The clam pie, order it before you think about it. $$, in-cluster.',
+         alts:[{n:'The Nook',p:'Sandwiches · faster · $ · kid-easy'},{n:'Helena Ave Bakery',p:'Pastries + counter lunch · $$'}]},
+        {tr:'2 min walk'},
+        {t:'2:00', s:true, name:'Funk Zone murals + galleries', meal:'', d:'Self-guided loop through the murals and tasting-room courtyards. Free, shaded, stroller-friendly.',
+         alts:[{n:'Santa Barbara Waterfront',p:'Beach + Stearns Wharf · 8 min walk'},{n:'Municipal Winemakers',p:'Patio · 21+ friendly, not for toddlers'}]}
+      ],
+      mini:'10:30 MOXI · 12:30 Lucky Penny (lunch) · 2:00 Funk Zone murals'
+    },
+    {
+      title:'Your Funk Zone day (take 2)',
+      stops:[
+        {t:'10:00', s:true, name:'Santa Barbara Waterfront + Stearns Wharf', meal:'', d:'Start on the sand while it\'s cool, walk the wharf. Free. Marine layer usually burns off by now.',
+         alts:[{n:'MOXI',p:'Indoor backup if it\'s socked in'},{n:'Chase Palm Park',p:'Big lawn + playground for littles'}]},
+        {tr:'6 min walk · leave the car in the Californian garage all day'},
+        {t:'12:15', s:true, name:'The Nook', meal:'lunch', d:'Quick, great sandwiches, easy with a stroller and a short attention span. $, in-cluster.',
+         alts:[{n:'Lucky Penny',p:'The clam pie · $$ · a step up'},{n:'Lilly\'s Tacos',p:'Legendary adobada · $ · counter'}]},
+        {tr:'3 min walk'},
+        {t:'1:45', s:true, name:'Funk Zone murals loop', meal:'', d:'Shaded, flat, free. Duck into the courtyards between the tasting rooms. Nap-window friendly.',
+         alts:[{n:'MOXI',p:'If the afternoon needs A/C'},{n:'Santa Barbara Museum of Art',p:'Downtown · 10 min · free-ish'}]}
+      ],
+      mini:'10:00 Waterfront · 12:15 The Nook (lunch) · 1:45 Funk Zone murals'
+    }
+  ];
+
+  function paramTags(){
+    const p = document.getElementById('planParams');
+    const tags = [state.when, state.who, state.transport, state.budget, state.meals].filter(Boolean);
+    p.innerHTML = tags.map(t=>`<span class="ptag">${t}</span>`).join('');
+  }
+
+  function renderResults(){
+    const plan = plans[state.variant % 2];
+    document.getElementById('planTitle').textContent = plan.title;
+    document.getElementById('shareTitle').textContent = plan.title;
+    document.getElementById('shareMini').textContent = plan.mini;
+    paramTags();
+    const spine = document.getElementById('spine');
+    spine.innerHTML = '';
+    plan.stops.forEach((st, idx)=>{
+      if(st.tr){
+        spine.insertAdjacentHTML('beforeend',
+          `<div class="transit"><span class="ln"></span>🚶 ${st.tr}<span class="ln"></span></div>`);
+        return;
+      }
+      const sgg = st.s ? '<span class="sg">Suggested</span>' : '';
+      const meal = st.meal ? `<span class="meal">${st.meal}</span>` : '';
+      spine.insertAdjacentHTML('beforeend', `
+        <div class="stop" id="stop-${idx}">
+          <div class="tm">${st.t} ${sgg}</div>
+          <h4>${st.name} ${meal}</h4>
+          <p class="sd">${st.d}</p>
+          <div class="acts">
+            <button class="act" onclick="toggleSwap(${idx})">↻ Swap</button>
+            <button class="act">🗺 Directions</button>
+            <button class="act">♡ Save</button>
+          </div>
+          <div class="swap" id="swap-${idx}">
+            <div class="h">SWAP FOR THE NEXT-BEST OPEN OPTION</div>
+            ${st.alts.map((a,ai)=>`<div class="alt" onclick="doSwap(${idx},${ai})"><div><h5>${a.n}</h5><p>${a.p}</p></div><span class="pick">Use →</span></div>`).join('')}
+            <button class="cancel" onclick="toggleSwap(${idx})">Keep ${st.name.split(' ')[0]}</button>
+          </div>
+        </div>`);
+    });
+    document.getElementById('regennote').textContent = '';
+  }
+
+  function toggleSwap(idx){
+    const el = document.getElementById('swap-'+idx);
+    document.querySelectorAll('.swap').forEach(s=>{ if(s!==el) s.classList.remove('on'); });
+    el.classList.toggle('on');
+    if(el.classList.contains('on')) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function doSwap(idx, ai){
+    const plan = plans[state.variant % 2];
+    const st = plan.stops[idx];
+    const alt = st.alts[ai];
+    // move current name into alts, promote alt to the stop
+    const oldName = st.name, oldD = st.d;
+    st.alts[ai] = {n:oldName, p:'Back to the original pick'};
+    st.name = alt.n; st.d = alt.p + '. Re-checked: open now, in your cluster and budget.';
+    renderResults();
+    const stopEl = document.getElementById('stop-'+idx);
+    if(stopEl){ stopEl.style.outline='2px solid var(--pacific)'; setTimeout(()=>stopEl.style.outline='none',900); stopEl.scrollIntoView({behavior:'smooth',block:'center'}); }
+  }
+
+  function regenerate(){
+    state.variant++;
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+    const b = document.getElementById('v-build'); b.classList.add('on');
+    document.getElementById('buildstep').textContent = 'Re-solving with fresh picks';
+    setTimeout(()=>{ b.classList.remove('on'); renderResults();
+      document.getElementById('regennote').textContent = 'Fresh draft, same rules, different picks';
+      go('results'); }, 1200);
+  }
+
+  function openShare(){ document.getElementById('shareScrim').classList.add('on'); }
+  function closeShare(){ document.getElementById('shareScrim').classList.remove('on'); }
+
+  function reset(){
+    Object.assign(state,{when:'',who:'',age:'',anchor:'',transport:'',budget:'',meals:'',variant:0});
+    document.querySelectorAll('.opt.sel').forEach(o=>o.classList.remove('sel'));
+    closeShare();
+    go('intro');
+  }
+</script>
+</body>
+</html>

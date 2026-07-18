@@ -24,7 +24,7 @@ export function LensSheet({
         className={`sbd-lens-any${current === null ? " is-active" : ""}`}
         onClick={() => onSelect(null)}
       >
-        ✦ Any vibe — show everything
+        ✦ Any vibe, show everything
       </button>
 
       <div className="sbd-lens-grid">

@@ -5,7 +5,7 @@ import { getPublishedThings, type Thing } from "@/lib/things";
 import { SharedListView } from "./SharedListView";
 
 export const metadata: Metadata = {
-  title: "Shared picks — SB Daymaker",
+  title: "Shared picks · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

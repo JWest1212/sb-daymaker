@@ -46,7 +46,7 @@ function toRawCandidate(r: SeedRow): RawCandidate {
 
 describe('seed fixture sanity', () => {
   // NB: the seed's header comment says "54 events + 53 places", but the actual
-  // rows are 57 events + 50 places — three recurring market/art-walk rows are
+  // rows are 57 events + 50 places, three recurring market/art-walk rows are
   // typed `event` (the comment predates that). 107 total is the load-bearing count.
   it('loaded the 107-row oracle (57 events + 50 places)', () => {
     expect(rows.length).toBe(107);
@@ -57,7 +57,7 @@ describe('seed fixture sanity', () => {
 
 // ---- Legacy-ID rows: stored IDs minted from an EARLIER title (pre-rename) -----
 // Five seed rows carry a stable uuid5 that was generated with the documented
-// formula, but from a title that was later edited — so the gate (running the
+// formula, but from a title that was later edited, so the gate (running the
 // formula on the CURRENT title) can't reproduce them. These are benign seed-
 // compilation artifacts, NOT random/broken IDs. For four we recovered the exact
 // original key (proven below); the fifth (SBMA) is the same mechanism, key not
@@ -92,7 +92,7 @@ describe('gate() reproduces the exact stored uuid5 for the 102 conforming rows',
   }
 });
 
-describe('exactly five rows are legacy-ID (pre-rename) exceptions — no silent drift', () => {
+describe('exactly five rows are legacy-ID (pre-rename) exceptions, no silent drift', () => {
   it('the set of non-reproducing rows is precisely the documented five', () => {
     const drifted = rows
       .filter((r) => gate(toRawCandidate(r)).candidate!.id !== r.id)
@@ -106,7 +106,7 @@ describe('exactly five rows are legacy-ID (pre-rename) exceptions — no silent 
       const row = rows.find((r) => r.title === title)!;
       expect(row.id).toBe(stored); // the seed still carries the pinned legacy id
       if (originalKey) {
-        // Prove the legacy id IS formula-derived — just from the earlier title.
+        // Prove the legacy id IS formula-derived, just from the earlier title.
         expect(uuidv5(originalKey, NS)).toBe(stored);
       }
     });
@@ -144,37 +144,37 @@ const base: RawCandidate = {
 };
 
 describe('gate() drops bad candidates with the right reason', () => {
-  it("no_start — open mic at '8-ish' (prose only)", () => {
+  it("no_start, open mic at '8-ish' (prose only)", () => {
     const res = gate({ ...base, title: 'Open Mic Night', startISO: undefined, startStrategy: 'none' });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_start');
   });
 
-  it("no_start — yoga 'at dusk' (prose only)", () => {
+  it("no_start, yoga 'at dusk' (prose only)", () => {
     const res = gate({ ...base, title: 'Sunset Yoga', startISO: undefined, startStrategy: 'none' });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_start');
   });
 
-  it('no_start — trivia with a date but no clock time', () => {
+  it('no_start, trivia with a date but no clock time', () => {
     const res = gate({ ...base, title: 'Trivia Night', startISO: '2026-07-04', startStrategy: 'structured' });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_start');
   });
 
-  it('no_title — blank title', () => {
+  it('no_title, blank title', () => {
     const res = gate({ ...base, title: '   ' });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_title');
   });
 
-  it('no_address — no address and no resolvable venue', () => {
+  it('no_address, no address and no resolvable venue', () => {
     const res = gate({ ...base, address: undefined, venueName: undefined });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_address');
   });
 
-  it('no_source — missing source url', () => {
+  it('no_source, missing source url', () => {
     const res = gate({ ...base, sourceUrl: undefined });
     expect(res.ok).toBe(false);
     expect(res.reason).toBe('no_source');

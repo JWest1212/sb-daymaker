@@ -1,7 +1,7 @@
 // ingest/adapters/seatgeek.ts
 //
-// SeatGeek Platform API — Wave 4 backstop (§9.1). Geo-scoped to 15 mi around SB;
-// structured UTC datetimes, no scraping. Lowest-priority aggregator — venue-direct
+// SeatGeek Platform API, Wave 4 backstop (§9.1). Geo-scoped to 15 mi around SB;
+// structured UTC datetimes, no scraping. Lowest-priority aggregator, venue-direct
 // and Ticketmaster records win in dedupe; SeatGeek fills net-new sports + music gaps.
 //
 // Requires env var SEATGEEK_CLIENT_ID (free: seatgeek.com/developer).
@@ -41,11 +41,11 @@ export const seatgeek: SourceAdapter = {
   async fetch({ fromISO, toISO }: DateWindow): Promise<RawCandidate[]> {
     const clientId = process.env.SEATGEEK_CLIENT_ID;
     if (!clientId) {
-      console.log('[seatgeek] SEATGEEK_CLIENT_ID not set — skipping');
+      console.log('[seatgeek] SEATGEEK_CLIENT_ID not set, skipping');
       return [];
     }
 
-    // SeatGeek uses datetime_utc (ISO 8601, no TZ suffix) — convert to date-only for the param
+    // SeatGeek uses datetime_utc (ISO 8601, no TZ suffix), convert to date-only for the param
     const fromDate = fromISO.slice(0, 10);
     const toDate = toISO.slice(0, 10);
 

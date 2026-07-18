@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // POST { thing_id, weight } -> immediate editorial_weight nudge + audit (W2.1c).
 // The ▲/▼ cockpit gesture. Metadata-immediate like hero-eligible: no re-review,
 // touches no status. `editorial_weight` is founder curation the ranker is allowed
-// to read — NOT sponsor status (the ranker never reads is_featured/sponsor_id).
+// to read, NOT sponsor status (the ranker never reads is_featured/sponsor_id).
 // revalidatePublic() because a weight change can move the live hero/order.
 export async function POST(req: Request) {
   const user = await getAdminUser();

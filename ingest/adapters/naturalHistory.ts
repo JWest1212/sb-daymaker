@@ -1,14 +1,13 @@
 // ingest/adapters/naturalHistory.ts
 //
-// Santa Barbara Museum of Natural History — WP Tribe REST → iCal → scrape (§7.2).
+// Santa Barbara Museum of Natural History, WP Tribe REST → iCal → scrape (§7.2).
 // Also emits a single Tier-3 culture_spot entry for the museum building itself
 // (evergreen; idempotent via upsert on id conflict, per land.ts).
 //
-// The reasonToGo for the Tier-3 spot is a factual description of the institution —
-// NOT copied from the website (facts-only rule). Enrich never writes reasonToGo for
+// The reasonToGo for the Tier-3 spot is a factual description of the institution, // NOT copied from the website (facts-only rule). Enrich never writes reasonToGo for
 // Tier-3 spots that already carry one.
 //
-// sbnature.org — Robots.txt checked at runtime. useManagedScrape: false.
+// sbnature.org, Robots.txt checked at runtime. useManagedScrape: false.
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate, HappeningCategory } from '../../packages/shared/types';

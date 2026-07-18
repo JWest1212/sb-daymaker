@@ -26,7 +26,7 @@ export const DOOR_META: Record<
 
 const DIMENSIONS: Dimension[] = ["place", "vibe", "activity"];
 
-/** Home Rework spec §11.1 — the three photographic discovery doors. */
+/** Home Rework spec §11.1, the three photographic discovery doors. */
 export function DiscoveryDoors({ onOpen }: { onOpen: (dimension: Dimension) => void }) {
   return (
     <div className="sbd-doors">

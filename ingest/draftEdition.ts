@@ -3,7 +3,7 @@
 // On-demand / scheduled entrypoint for the reader-edition drafter (spec §3, §3.1,
 // amended). Mirrors ingest/run.ts's conventions (getDb(), console summary,
 // non-zero exit on fatal error). Wired into the nightly GitHub Action on a
-// Wed/Sat 06:00 PT schedule (.github/workflows/ingest.yml) — morning-of-the-
+// Wed/Sat 06:00 PT schedule (.github/workflows/ingest.yml), morning-of-the-
 // day-before, not the original spec's night-before, so the operator gets a
 // full day to review before the following morning's send.
 //
@@ -11,7 +11,7 @@
 //   npx tsx ingest/draftEdition.ts                 auto: drafts the next Thu/Sun
 //                                                   edition IF today (SB time)
 //                                                   is Wed or Sat; else no-ops.
-//                                                   (Day-of-week only — safe to
+//                                                   (Day-of-week only, safe to
 //                                                   run at any hour of that day.)
 //   EDITION_DATE=2026-07-09 EDITION_TYPE=weekend \
 //     npx tsx ingest/draftEdition.ts               explicit override (testing/backfill).
@@ -44,7 +44,7 @@ async function main() {
   }
 
   if (!target) {
-    console.log('[edition] not a drafting night (SB time) — no-op');
+    console.log('[edition] not a drafting night (SB time), no-op');
     return;
   }
 
@@ -58,7 +58,7 @@ async function main() {
     return;
   }
   console.log(
-    `[edition] drafted ${result.editionId} — hero via ${result.heroSource}, ` +
+    `[edition] drafted ${result.editionId}, hero via ${result.heroSource}, ` +
       `${result.counts?.secondaries} secondaries, ${result.counts?.nonevent ? 'non-event picked' : 'no non-event pick'}, ` +
       `anchor ${result.counts?.anchor ? 'fired' : 'not fired'}`,
   );

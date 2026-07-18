@@ -39,23 +39,23 @@ function edition(over: Partial<RenderableEdition> = {}): RenderableEdition {
   };
 }
 
-describe("renderEditionEmailHtml — em-dash normalization", () => {
+describe("renderEditionEmailHtml, em-dash normalization", () => {
   it("strips an em dash from a reused title/blurb even though the drafter never wrote it", () => {
     const html = renderEditionEmailHtml(
-      edition({ hero: pick({ title: "Karaoke Night — Dargan's", blurb: "Sing along — no cover." }) }),
+      edition({ hero: pick({ title: "Karaoke Night, Dargan's", blurb: "Sing along, no cover." }) }),
     );
-    expect(html).not.toContain("—");
+    expect(html).not.toContain(String.fromCharCode(0x2014));
   });
 
   it("subject/preheader/greeting are also normalized defensively", () => {
     const html = renderEditionEmailHtml(
-      edition({ subject: "A — B", preheader: "C — D", greeting: "E — F" }),
+      edition({ subject: "A, B", preheader: "C, D", greeting: "E, F" }),
     );
-    expect(html).not.toContain("—");
+    expect(html).not.toContain(String.fromCharCode(0x2014));
   });
 });
 
-describe("renderEditionEmailHtml — HTML escaping", () => {
+describe("renderEditionEmailHtml, HTML escaping", () => {
   it("escapes & and other HTML metacharacters in reused content", () => {
     const html = renderEditionEmailHtml(edition({ hero: pick({ title: "Baby & Me <fun>" }) }));
     expect(html).toContain("Baby &amp; Me &lt;fun&gt;");
@@ -63,7 +63,7 @@ describe("renderEditionEmailHtml — HTML escaping", () => {
   });
 });
 
-describe("renderEditionEmailHtml — Local's Secret quality guard", () => {
+describe("renderEditionEmailHtml, Local's Secret quality guard", () => {
   it("omits the callout when local_note is short/absent", () => {
     const html = renderEditionEmailHtml(edition({ hero: pick({ localNote: "Nice spot." }) }));
     expect(html).not.toContain("Local&#39;s secret");
@@ -79,7 +79,7 @@ describe("renderEditionEmailHtml — Local's Secret quality guard", () => {
   });
 });
 
-describe("renderEditionEmailHtml — missing image state matrix", () => {
+describe("renderEditionEmailHtml, missing image state matrix", () => {
   it("falls back to a brand color band instead of an <img> when imageUrl is null", () => {
     const html = renderEditionEmailHtml(edition({ hero: pick({ imageUrl: null }) }));
     expect(html).not.toMatch(/<img[^>]*Sunset jazz/);
@@ -102,7 +102,7 @@ describe("renderEditionEmailHtml — missing image state matrix", () => {
   });
 });
 
-describe("renderEditionEmailHtml — secondaries + non-event + anchor bands", () => {
+describe("renderEditionEmailHtml, secondaries + non-event + anchor bands", () => {
   it("renders all populated slots and omits absent ones", () => {
     const html = renderEditionEmailHtml(
       edition({
@@ -119,7 +119,7 @@ describe("renderEditionEmailHtml — secondaries + non-event + anchor bands", ()
   });
 });
 
-describe("renderEditionEmailHtml — long titles/blurbs wrap, never truncate (state matrix §10)", () => {
+describe("renderEditionEmailHtml, long titles/blurbs wrap, never truncate (state matrix §10)", () => {
   it("passes a long hero title and blurb through in full, with no ellipsis/clipping styles applied to the text", () => {
     const longTitle = "The Santa Barbara International Orchid Show and Farmers Market Block Party Weekend";
     const longBlurb =
@@ -132,7 +132,7 @@ describe("renderEditionEmailHtml — long titles/blurbs wrap, never truncate (st
   });
 });
 
-describe("renderEditionEmailHtml — dark mode + structure", () => {
+describe("renderEditionEmailHtml, dark mode + structure", () => {
   it("includes a prefers-color-scheme: dark block and preheader hidden text", () => {
     const html = renderEditionEmailHtml(edition());
     expect(html).toContain("prefers-color-scheme: dark");
@@ -149,12 +149,12 @@ describe("renderEditionPlainText", () => {
   it("is em-dash-free and includes every populated section", () => {
     const text = renderEditionPlainText(
       edition({
-        secondaries: [pick({ thingId: "s1", title: "Market day — mornings only" })],
+        secondaries: [pick({ thingId: "s1", title: "Market day, mornings only" })],
         nonEvent: pick({ thingId: "n1", title: "New taqueria" }),
         anchor: pick({ thingId: "a1", title: "The Courthouse tower" }),
       }),
     );
-    expect(text).not.toContain("—");
+    expect(text).not.toContain(String.fromCharCode(0x2014));
     expect(text).toContain("Market day, mornings only");
     expect(text).toContain("New taqueria");
     expect(text).toContain("The Courthouse tower");

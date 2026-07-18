@@ -1,6 +1,6 @@
-// Deterministic sunset time for a fixed lat/lng — pure math, no network, no AI.
+// Deterministic sunset time for a fixed lat/lng, pure math, no network, no AI.
 // Implements the standard "Sunrise/Sunset Algorithm" (Almanac for Computers,
-// 1990), accurate to ~1 minute — ample for the hero's golden-hour countdown
+// 1990), accurate to ~1 minute, ample for the hero's golden-hour countdown
 // chip. Trig is done in degrees to match the source formulae.
 
 const RAD = Math.PI / 180;

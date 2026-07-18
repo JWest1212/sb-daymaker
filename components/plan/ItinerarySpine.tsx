@@ -63,7 +63,7 @@ export function ItinerarySpine({
                 );
               })}
 
-              {/* Trailing empty slot — always present */}
+              {/* Trailing empty slot, always present */}
               <button
                 type="button"
                 className="sbd-addslot"

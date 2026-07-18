@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // Live-catalog follow-up (Jim's ask, 2026-07-10, per his own confirmed design:
 // "venue-backed, invisible to me" + "auto-create a dedicated venue"). Makes the
 // Catalog tab's photo fetch a thin, thing-centric front end onto the SAME
-// compliant venue/pool system the Venues tab uses — so a Google photo picked here
+// compliant venue/pool system the Venues tab uses, so a Google photo picked here
 // still gets the 7-day refresh + dead-photo fallback + digest notification, rather
 // than being stored as a raw, never-refreshed URL directly on the thing (the exact
 // gap Phase 2 itself was built to close).
@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 //   1. Thing already has venue_id -> use that venue (its existing pool, if any).
 //   2. Thing has no venue_id but has a place_id that EXACTLY matches an existing
 //      active venue's place_id -> attach to that venue (a deterministic dedup
-//      check, not fuzzy matching — Jim explicitly declined guessing).
+//      check, not fuzzy matching, Jim explicitly declined guessing).
 //   3. Otherwise -> auto-create a new venue seeded from the thing's own title/
 //      place_id/lat/lng (whatever it has; a venue with neither still gets
 //      created, it just can't fetch anything until one is added via the
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
   const stats = await fetchCandidatesForVenue(sb, venue, !!include_google);
 
   // Return the venue's FULL current option set (approved pool first, then fresh
-  // unapproved candidates) as PhotoOption[] — the catalog picker just merges this
+  // unapproved candidates) as PhotoOption[], the catalog picker just merges this
   // into its existing single-photo cycle UI, same as "Try fetching a photo"
   // already does for free sources (no new grid UI needed).
   const { data: photoRows } = await sb

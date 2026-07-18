@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-// LC-7: shared sheet focus trap — on open, focus the first field and trap Tab
+// LC-7: shared sheet focus trap, on open, focus the first field and trap Tab
 // within the container; on close, restore focus to the element that triggered
 // the sheet (e.g. the row's Edit button). Reused by the Venues sheet (V-14).
 

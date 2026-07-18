@@ -11,7 +11,7 @@ const ALL_CATEGORIES: HappeningCategory[] = [
 ];
 
 describe('assignVisual', () => {
-  it('is deterministic — same thing id always gets the same assignment', () => {
+  it('is deterministic, same thing id always gets the same assignment', () => {
     const a = assignVisual({ id: 'thing-1', happening_category: 'live_music' });
     const b = assignVisual({ id: 'thing-1', happening_category: 'live_music' });
     expect(a).toEqual(b);

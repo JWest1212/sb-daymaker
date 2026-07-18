@@ -9,7 +9,7 @@ const FREQUENCY_SET = new Set<string>(SOURCE_FREQUENCIES);
 
 // PATCH -> edit any subset of fields, or just flip `status` (pause/resume/retire).
 // Partial body: only the keys present are written. The next nightly run reads
-// the new `status`/`authority` immediately — no deploy needed (Phase 2 already
+// the new `status`/`authority` immediately, no deploy needed (Phase 2 already
 // wires the orchestrator + dedupe to read this table live).
 export async function PATCH(req: Request, { params }: { params: Promise<{ key: string }> }) {
   const user = await getAdminUser();

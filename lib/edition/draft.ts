@@ -6,8 +6,7 @@
 // the ingest/ GitHub Action (getDb(), SUPABASE_SERVICE_ROLE) and, later, a
 // cockpit "regenerate draft" action (getAdminSupabase(), SUPABASE_SECRET_KEY).
 //
-// Each selected pick's photo_url is re-hosted into edition-media (spec §3.5) —
-// see lib/edition/imageHost.ts. Re-hosting is best-effort: on any failure it
+// Each selected pick's photo_url is re-hosted into edition-media (spec §3.5), // see lib/edition/imageHost.ts. Re-hosting is best-effort: on any failure it
 // falls back to the original photo_url rather than blocking the draft.
 
 import { randomUUID } from "node:crypto";
@@ -27,7 +26,7 @@ const THING_SELECT = `id, type, title, blurb, blurb_long, local_note, reason_to_
   happening_tier, happening_category, editorial_weight, neighborhood, starts_at, ends_at,
   hero_eligible, photo_url, photo_source, photo_attribution, photo_options, created_at, last_confirmed,
   recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
-// Deliberately NOT selected: is_featured, sponsor_id (spec §0.2 — sponsor-blindness
+// Deliberately NOT selected: is_featured, sponsor_id (spec §0.2, sponsor-blindness
 // enforced by never reading these columns, not just by convention).
 
 const COOLDOWN_EDITIONS = 12;
@@ -77,7 +76,7 @@ type BlurbSource = Pick<DraftThing, "id" | "type" | "title" | "blurb" | "happeni
 
 /** Every selected pick gets a real blurb, not a blank line or (per the cockpit's
  *  own bug this fixes) a title standing in for one. A published thing can reach
- *  the drafter blurb-less if the nightly enrich() call missed it — this is a
+ *  the drafter blurb-less if the nightly enrich() call missed it, this is a
  *  batch, draft-time (not send-time) Claude Haiku call, same tiering/cost
  *  category as the nightly enrich pass, just scoped to this issue's picks.
  *  Fills genuinely MISSING blurbs only (never overwrites one that already
@@ -114,13 +113,12 @@ type ImageSource = Pick<DraftThing, "id" | "photo_options" | "neighborhood" | "h
  *  the same widen-and-persist logic as the cockpit's own "find more options"
  *  button (imageDiscovery.ts), just run proactively at draft time instead of
  *  waiting for an operator to click. Sequential, not parallel, to stay gentle on
- *  Pexels's rate limit — this runs twice a week for ~5 picks, not on a hot path.
+ *  Pexels's rate limit, this runs twice a week for ~5 picks, not on a hot path.
  *  Exported for the same reason as ensureBlurbs above: reused by the swap route
  *  for a single newly-swapped-in thing. */
 export async function ensureImageOptions(sb: SupabaseClient, things: ImageSource[]): Promise<void> {
   for (const t of things) {
-    // Retired pexels entries don't count toward the minimum (Jim, 2026-07-11) —
-    // a row padded with them still gets widened, and the persist scrubs them.
+    // Retired pexels entries don't count toward the minimum (Jim, 2026-07-11), // a row padded with them still gets widened, and the persist scrubs them.
     const current = (t.photo_options ?? []).filter((o) => o.url && o.source !== "pexels");
     if (current.length >= MIN_IMAGE_OPTIONS) continue;
     const options = await discoverMoreImages({
@@ -180,7 +178,7 @@ export async function draftEdition(
       editionDate,
       editionType,
       status: existing.status as DraftResult["status"],
-      skipReason: `edition already ${existing.status} — idempotent no-op`,
+      skipReason: `edition already ${existing.status}, idempotent no-op`,
     };
   }
   const editionId = existing?.id ?? randomUUID();
@@ -209,7 +207,7 @@ export async function draftEdition(
   if (!heroPick || realPickCount === 0) {
     const skipReason = !heroPick
       ? "no hero candidate (ranked pool and evergreen fallback both empty)"
-      : "no real picks beyond hero — cannot assemble a minimum viable issue";
+      : "no real picks beyond hero, cannot assemble a minimum viable issue";
     await sb.from("editions").upsert(
       { id: editionId, edition_date: editionDate, edition_type: editionType, status: "failed", skip_reason: skipReason },
       { onConflict: "id" },

@@ -3,7 +3,7 @@
 // "Today / Tomorrow / this Saturday / next Friday" → absolute ISO in SB time.
 // Used by list pages (Eventbrite, Downtown SB) that print relative instead of
 // absolute dates. Always resolves against the ingest runDate in America/Los_Angeles.
-// Returns null on any ambiguity — the gate will drop it. (§2.4)
+// Returns null on any ambiguity, the gate will drop it. (§2.4)
 
 import { sbISO } from '../../tz';
 
@@ -34,7 +34,7 @@ function addDays(utcBase: number, n: number): Date {
  *
  * Examples of text: "Today", "Tomorrow", "This Saturday", "Next Friday",
  *   "Saturday", "Fri"
- * timeHHmm: "20:00" — required for the gate to pass.
+ * timeHHmm: "20:00", required for the gate to pass.
  */
 export function parseRelativeDate(text: string, timeHHmm: string, runDateISO: string): string | null {
   if (!timeHHmm) return null;

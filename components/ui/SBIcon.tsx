@@ -1,4 +1,4 @@
-// Inline-SVG icon set. All icons are aria-hidden="true" — the label on the
+// Inline-SVG icon set. All icons are aria-hidden="true", the label on the
 // wrapping interactive element carries the accessible name.
 
 export type IconName =

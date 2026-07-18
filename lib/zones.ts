@@ -1,4 +1,4 @@
-// The Near Me anchors — the six coarse `nearby_zone` values the UI exposes.
+// The Near Me anchors, the six coarse `nearby_zone` values the UI exposes.
 // Centroids are approximate Santa Barbara coordinates, used only to pick the
 // nearest zone from a device location. No map (v9): Near Me is a sort.
 

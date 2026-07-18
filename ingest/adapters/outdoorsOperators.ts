@@ -1,15 +1,15 @@
 // ingest/adapters/outdoorsOperators.ts
 //
-// SB outdoor operator standing schedules — registry candidates (§8.3).
+// SB outdoor operator standing schedules, registry candidates (§8.3).
 // Tier 2 · recurring_outdoors · seed outdoors_active, family_day, date_night, solo.
 //
 // Confirmed fixed public schedules (verified 2026-06-30):
 //   Condor Express: 4.5-hr Whale Watch departs daily 10:00am from Sea Landing.
-//     (condorexpress.com — structured booking calendar confirms daily 10am slot)
+//     (condorexpress.com, structured booking calendar confirms daily 10am slot)
 //   Ice in Paradise: multiple public-skate and specialty sessions
-//     (iceinparadise.org/public-session — structured schedule page)
+//     (iceinparadise.org/public-session, structured schedule page)
 //
-// SB Adventure Co: "book a time" on demand — no fixed weekly schedule published.
+// SB Adventure Co: "book a time" on demand, no fixed weekly schedule published.
 // Excluded per §1: no deterministic recurring time to emit.
 //
 // Condor Express is emitted as 7 weekly candidates (Mon–Sun) because it departs
@@ -90,9 +90,9 @@ export const outdoorsOperators: SourceAdapter = {
     const iceVenue = 'Ice in Paradise (Las Positas Sports Complex)';
 
     return [
-      // Condor Express — daily 10am whale watch (7 × weekly = daily coverage)
+      // Condor Express, daily 10am whale watch (7 × weekly = daily coverage)
       ...dailyTrip(
-        'Whale Watch — Condor Express',
+        'Whale Watch, Condor Express',
         'Condor Express',
         condorAddress,
         'waterfront',
@@ -104,30 +104,30 @@ export const outdoorsOperators: SourceAdapter = {
         null,  // price varies by season; enrich can fill
       ),
 
-      // Ice in Paradise — public skate sessions
+      // Ice in Paradise, public skate sessions
       trip(
-        'Public Skate — Ice in Paradise (Saturday PM)',
+        'Public Skate, Ice in Paradise (Saturday PM)',
         iceVenue, iceAddress, 'upper_state', iceUrl, iceUrl,
         6,       // Saturday
         '13:30', '16:30',
         'recurring_outdoors', false, null,
       ),
       trip(
-        'Public Skate — Ice in Paradise (Sunday PM)',
+        'Public Skate, Ice in Paradise (Sunday PM)',
         iceVenue, iceAddress, 'upper_state', iceUrl, iceUrl,
         0,       // Sunday
         '13:30', '15:30',
         'recurring_outdoors', false, null,
       ),
       trip(
-        'Friday Night Ice Jam — Ice in Paradise',
+        'Friday Night Ice Jam, Ice in Paradise',
         iceVenue, iceAddress, 'upper_state', iceUrl, iceUrl,
         5,       // Friday
         '18:00', '20:00',
         'recurring_outdoors', false, null,
       ),
       trip(
-        'College Night — Ice in Paradise',
+        'College Night, Ice in Paradise',
         iceVenue, iceAddress, 'upper_state', iceUrl, iceUrl,
         2,       // Tuesday
         '20:00', '22:15',

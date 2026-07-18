@@ -6,9 +6,9 @@ import { cardBlurb, cardPlace } from "./derive";
 import type { Thing } from "@/lib/things";
 
 // ---------------------------------------------------------------------------
-// RockTile — full-bleed image tile for the Month lead section.
+// RockTile, full-bleed image tile for the Month lead section.
 // DateEyebrow replaces the gold date pill; CardActions replaces bespoke acts.
-// Neighborhood line removed — folded into the eyebrow when available.
+// Neighborhood line removed, folded into the eyebrow when available.
 // ---------------------------------------------------------------------------
 function RockTile({ t }: { t: Thing }) {
   const blurb = cardBlurb(t);
@@ -47,10 +47,9 @@ function RockTile({ t }: { t: Thing }) {
 }
 
 // ---------------------------------------------------------------------------
-// RockGrid — sorts month items soonest-first, grouped by SB-local calendar
+// RockGrid, sorts month items soonest-first, grouped by SB-local calendar
 // week. Each week's header is sticky (same top/z-index as SectionHeader's
-// lead mode) so it hands off to the next week's header as the user scrolls —
-// a native-CSS "always know which week you're viewing" cue.
+// lead mode) so it hands off to the next week's header as the user scrolls, // a native-CSS "always know which week you're viewing" cue.
 // Infinite scroll: an off-screen sentinel past the last loaded tile requests
 // the next batch of 8 as it nears the viewport, so the feed keeps loading
 // itself rather than waiting on a "See more" click.

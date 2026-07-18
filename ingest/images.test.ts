@@ -22,7 +22,7 @@ describe('imageQuery', () => {
       .toBe('Stearns Wharf waterfront Santa Barbara');
   });
 
-  // W2.3 — category-aware templates so distinct categories don't draw the same stock.
+  // W2.3, category-aware templates so distinct categories don't draw the same stock.
   it('appends the category template when the happening_category has one', () => {
     expect(imageQuery({ title: 'Jason Libs Band', neighborhood: undefined, happening_category: 'live_music' }))
       .toBe(`Jason Libs Band ${CATEGORY_QUERY.live_music} Santa Barbara`);
@@ -40,7 +40,7 @@ describe('imageQuery', () => {
   });
 });
 
-describe('isCivicImage — W2.3 civic items skip stock, go to placeholder', () => {
+describe('isCivicImage, W2.3 civic items skip stock, go to placeholder', () => {
   it('flags civic-meeting titles (reuses the W2.1b classifier)', () => {
     expect(isCivicImage({ title: 'Street Tree Advisory Committee' })).toBe(true);
     expect(isCivicImage({ title: 'City Council' })).toBe(true);
@@ -50,7 +50,7 @@ describe('isCivicImage — W2.3 civic items skip stock, go to placeholder', () =
   });
 });
 
-describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
+describe('pickUnused, W2.3 per-batch dedupe (least-used-first)', () => {
   const ranked: ImageOption[] = [
     { url: 'a', source: 'wikimedia' },
     { url: 'b', source: 'google' },
@@ -93,7 +93,7 @@ describe('pickUnused — W2.3 per-batch dedupe (least-used-first)', () => {
   });
 });
 
-describe('meetsQualityBar — addendum Part B retina-safe HD floor', () => {
+describe('meetsQualityBar, addendum Part B retina-safe HD floor', () => {
   it('passes an option at or above the floor', () => {
     expect(meetsQualityBar({ width: MIN_IMAGE_WIDTH, height: MIN_IMAGE_HEIGHT })).toBe(true);
     expect(meetsQualityBar({ width: 1920, height: 1080 })).toBe(true);
@@ -110,7 +110,7 @@ describe('meetsQualityBar — addendum Part B retina-safe HD floor', () => {
   });
 });
 
-describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.2', () => {
+describe('rankOptions, Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.2', () => {
   it('orders real sources (owned > wikimedia > google) and appends placeholder last', () => {
     const found: ImageOption[] = [
       { url: 'g', source: 'google' },
@@ -119,7 +119,7 @@ describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.
     ];
     expect(rankOptions(found).map((o) => o.source)).toEqual(['owned', 'wikimedia', 'google', 'placeholder']);
   });
-  it('2026-07-11: a historical pexels entry (still possible in a stored photo_options list) is DROPPED entirely — Wikimedia/Google/owned only in selections', () => {
+  it('2026-07-11: a historical pexels entry (still possible in a stored photo_options list) is DROPPED entirely, Wikimedia/Google/owned only in selections', () => {
     const found: ImageOption[] = [
       { url: 'p', source: 'pexels' },
       { url: 'g', source: 'google' },
@@ -136,7 +136,7 @@ describe('rankOptions — Card Imagery Build Spec Phase 0 §3.1.1 / Phase 3 §6.
   });
 });
 
-describe('eventDefaultsToNoPhoto — Card Imagery Build Spec Phase 0 §3.1.2', () => {
+describe('eventDefaultsToNoPhoto, Card Imagery Build Spec Phase 0 §3.1.2', () => {
   it('is true for Tier-1 dated events', () => {
     expect(eventDefaultsToNoPhoto({ tier: 1 })).toBe(true);
   });
@@ -146,7 +146,7 @@ describe('eventDefaultsToNoPhoto — Card Imagery Build Spec Phase 0 §3.1.2', (
   });
 });
 
-describe('isDirectGoogleFoodCandidate — Card Imagery Build Spec Phase 1 §4.5', () => {
+describe('isDirectGoogleFoodCandidate, Card Imagery Build Spec Phase 1 §4.5', () => {
   it('is true for food_drink_spot', () => {
     expect(isDirectGoogleFoodCandidate({ happening_category: 'food_drink_spot', type: 'place' })).toBe(true);
   });
@@ -162,7 +162,7 @@ describe('isDirectGoogleFoodCandidate — Card Imagery Build Spec Phase 1 §4.5'
   });
 });
 
-describe('passesWikimediaGate — Card Imagery Build Spec Phase 1 §4.2', () => {
+describe('passesWikimediaGate, Card Imagery Build Spec Phase 1 §4.2', () => {
   const base: WikimediaCandidate = {
     url: 'https://example.org/x.jpg', title: 'File:Stearns Wharf sunset.jpg', description: 'Stearns Wharf at sunset',
     width: 1600, height: 1000, mime: 'image/jpeg', artist: 'Jane Doe', license: 'CC BY-SA 4.0',
@@ -190,7 +190,7 @@ describe('passesWikimediaGate — Card Imagery Build Spec Phase 1 §4.2', () => 
   });
 });
 
-describe('scoreWikimediaCandidate / pickBestWikimedia — Card Imagery Build Spec Phase 1 §4.2', () => {
+describe('scoreWikimediaCandidate / pickBestWikimedia, Card Imagery Build Spec Phase 1 §4.2', () => {
   const photo = (over: Partial<WikimediaCandidate>): WikimediaCandidate => ({
     url: 'https://example.org/a.jpg', title: 'File:Photo.jpg', description: '',
     width: 1600, height: 1000, mime: 'image/jpeg', artist: 'Jane Doe', license: 'CC BY-SA 4.0',

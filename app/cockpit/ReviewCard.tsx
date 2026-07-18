@@ -33,7 +33,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         <h3 className="sbd-review__title">{item.title}</h3>
       </div>
 
-      {/* Facts (founder-sourced — the AI never wrote these) */}
+      {/* Facts (founder-sourced, the AI never wrote these) */}
       <dl className="sbd-review__facts">
         {item.address ? (
           <div>
@@ -55,7 +55,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         ) : null}
         <div>
           <dt>Price</dt>
-          <dd>{item.free ? "Free" : (item.price_band ?? "—")}</dd>
+          <dd>{item.free ? "Free" : (item.price_band ?? "·")}</dd>
         </div>
       </dl>
 

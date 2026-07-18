@@ -14,14 +14,15 @@ import type { DropRecord } from './dedupe';
 import { deriveNearbyZone } from '../lib/geo';
 import { categoryToActivities } from './activityBackfill';
 import { resolveNeighborhood, autoWrites, type VenueDictEntry, type ResolvableThing } from './adapters/_shared/resolveNeighborhood';
+import { cleanText } from '../lib/text/stripEmDash';
 
-/** Map a gated Candidate to a `things` row. `source` stores the URL — the seed
+/** Map a gated Candidate to a `things` row. `source` stores the URL, the seed
  *  convention, and the same string the uuid5 id is keyed on. `dictionary`
  *  defaults to empty for callers that don't need neighborhood accuracy (the
- *  DRY_RUN title/date preview in run.ts) — landCandidates always passes the
+ *  DRY_RUN title/date preview in run.ts), landCandidates always passes the
  *  real venue_neighborhoods dictionary. */
 function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<string, unknown> {
-  // Doc 19 §6 Phase 5 — self-heal. Runs the same waterfall the sweep and apply
+  // Doc 19 §6 Phase 5, self-heal. Runs the same waterfall the sweep and apply
   // use; a confident match (>=0.75) overrides whatever the gate/adapter already
   // set (a stronger signal is allowed to correct a weaker one, same as Apply),
   // otherwise falls back to the candidate's own neighborhood unchanged.
@@ -39,13 +40,16 @@ function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<str
     id: c.id,
     type: c.type,
     status: 'needs_review',
-    title: c.title,
-    blurb: c.blurb ?? null,
-    blurb_long: c.blurb_long ?? null,
+    // G0.9 write-time sanitizer: strip any em dash from scraped/AI copy before it
+    // is written (the Golden Rule's belt; the render guard in mapThing is the
+    // suspenders).
+    title: cleanText(c.title),
+    blurb: cleanText(c.blurb ?? null),
+    blurb_long: cleanText(c.blurb_long ?? null),
     happening_tier: c.tier,
     editorial_weight: c.editorial_weight ?? 0, // W2.1b civic-filler nudge (0 unless matched)
     happening_category: c.happening_category,
-    reason_to_go: c.reason_to_go ?? null,
+    reason_to_go: cleanText(c.reason_to_go ?? null),
     neighborhood,
     nearby_zone,
     address: c.address,
@@ -61,26 +65,26 @@ function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<str
     photo_source: c.photo_source ?? 'placeholder',
     photo_options: c.photo_options ?? [],
     photo_attribution: c.photo_attribution ?? null,
-    // Card Imagery Build Spec Phase 3 §6.2 — set by resolveImages() alongside
+    // Card Imagery Build Spec Phase 3 §6.2, set by resolveImages() alongside
     // photo_source: 'motif'; null for anything else (a real photo, or a row that
     // predates Phase 3 and hasn't been re-resolved yet).
     visual_kind: c.visual_kind ?? null,
     visual_key: c.visual_key ?? null,
     visual_seed: c.visual_seed ?? null,
-    // Card Imagery Build Spec Phase 2 §5.2 — only ever set here on an exact
+    // Card Imagery Build Spec Phase 2 §5.2, only ever set here on an exact
     // place_id match against the venue registry (resolveImages()'s
     // matchVenueForCandidate); a fuzzy match is never auto-written, even at land
-    // time — it queues for founder review in the cockpit's Venues tab instead.
+    // time, it queues for founder review in the cockpit's Venues tab instead.
     venue_id: c.venue_id ?? null,
-    // Home Rework spec §6.2 — Activity taxonomy. AI-proposed tags (proposed_activities)
+    // Home Rework spec §6.2, Activity taxonomy. AI-proposed tags (proposed_activities)
     // union with the deterministic happening_category map (Doc 21 §4/§6 Phase 4
     // self-heal), so every new thing carries activities[] even before/without the
     // AI pass. Requires supabase/migrations/20260711_activities.sql applied first.
     activities: [...new Set([...(c.proposed_activities ?? []), ...categoryToActivities(c.happening_category)])],
-    local_note: c.local_note ?? null,
+    local_note: cleanText(c.local_note ?? null),
     last_confirmed: c.last_confirmed,
     source: c.source_url,
-    // Data Arch Redesign 26 Phase 4 — canonical event identity, computed
+    // Data Arch Redesign 26 Phase 4, canonical event identity, computed
     // post-dedupe in run.ts's main() (undefined for Tier-3 evergreen places).
     event_key: c.event_key ?? null,
   };
@@ -93,7 +97,7 @@ export interface RunRow {
   qualified: number;
   dropped: number;
   landed: number;
-  /** Data Arch Redesign 25 Phase 3 — AI spend this run (USD). Only the
+  /** Data Arch Redesign 25 Phase 3, AI spend this run (USD). Only the
    *  generic-lane adapter sets this; every other adapter leaves it at 0. */
   ai_cost_usd?: number;
 }

@@ -1,7 +1,7 @@
 // ingest/adapters/registry.ts
 //
 // Ordered list of active adapters. Order matters for dedupe's canonical-source
-// preference (venue-owned ticketing wins over aggregators) — see dedupe.ts.
+// preference (venue-owned ticketing wins over aggregators), see dedupe.ts.
 // Phase 10 ships the two reference adapters; Phases 13–14 append the rest.
 
 import type { SourceAdapter } from './types';
@@ -42,7 +42,7 @@ import { seatgeek } from './seatgeek';
 import { sbcountyArts } from './sbcountyArts';
 import { allevents } from './allevents';
 import { newVic } from './newVic';
-// Data Arch Redesign 25 — the generic AI extraction lane (one adapter, N `sources` rows)
+// Data Arch Redesign 25, the generic AI extraction lane (one adapter, N `sources` rows)
 import { generic } from './generic';
 
 // Order mirrors SOURCE_PRIORITY in dedupe.ts:
@@ -67,7 +67,7 @@ export const registry: SourceAdapter[] = [
   farmersMarkets,
   nightlifeRhythms, outdoorsOperators, natureProgramsFree,
   recurringRegistry, submissions,
-  // generic AI extraction lane — runs last; each candidate's own resolved
+  // generic AI extraction lane, runs last; each candidate's own resolved
   // source (by URL) carries its own authority/lane, so ordering here doesn't
   // affect dedupe preference (dedupe.ts sorts by sources.authority, not
   // registry position).

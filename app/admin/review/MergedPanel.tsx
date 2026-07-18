@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { MergedRow } from "@/lib/review";
 
-/** Data Arch Redesign 26 Phase 5 — the founder's "un-merge" surface. Each row
+/** Data Arch Redesign 26 Phase 5, the founder's "un-merge" surface. Each row
  *  is a dedupe merge dedupeVenueAware() made: the dropped candidate was
  *  archived and pointed at its survivor instead of discarded, so a wrong call
  *  is reversible. Posts to /api/admin/dedupe/unmerge; on success the row is
@@ -34,7 +34,7 @@ export function MergedPanel({
         return;
       }
       setRows((prev) => prev.filter((r) => r.id !== row.id));
-      onToast?.(`Un-merged "${row.title}" — back in the review queue`);
+      onToast?.(`Un-merged "${row.title}", back in the review queue`);
     } finally {
       setBusyId(null);
     }

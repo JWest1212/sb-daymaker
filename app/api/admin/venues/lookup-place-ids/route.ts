@@ -7,7 +7,7 @@ import { isWeakPlaceMatch } from "@/lib/venuePool";
 export const dynamic = "force-dynamic";
 
 // A Nearby Search this tight only makes sense once we already have a precise
-// geocoded point (from the address-only Text Search result itself) — wide enough
+// geocoded point (from the address-only Text Search result itself), wide enough
 // to catch a POI sitting at the same street address, narrow enough not to pull in
 // unrelated neighbors.
 const NEARBY_RADIUS_M = 75;
@@ -36,7 +36,7 @@ export interface WeakMatch {
   venue_id: string;
   venue_key: string;
   venue_display_name: string;
-  /** The bare-geocode result itself — still offered as a last-resort pick (it IS
+  /** The bare-geocode result itself, still offered as a last-resort pick (it IS
    *  a real place_id, just not obviously a photographed business). */
   addressOnlyMatch: PlaceCandidate;
   /** Real named POIs found within NEARBY_RADIUS_M of that geocoded point, if any
@@ -61,14 +61,14 @@ function toCandidate(r: { placeId: string; lat: number; lng: number; name: strin
 // own text" retry on a weak match), operating on exactly that venue regardless
 // of its current place_id state. `query` (only meaningful with `venue_id`) lets
 // the caller override the auto-built "{display_name}, Santa Barbara, CA" search
-// text — the editable-retry box for weak matches, so Jim can type the real name
+// text, the editable-retry box for weak matches, so Jim can type the real name
 // he already knows (e.g. "Santa Barbara Public Library") instead of the venue's
 // own bare-address display_name.
 //
 // A "weak" match (searchPlaceByText geocoded a bare address back rather than
-// finding a real business — see isWeakPlaceMatch) triggers a follow-up Nearby
+// finding a real business, see isWeakPlaceMatch) triggers a follow-up Nearby
 // Search around that exact point, surfacing any real named POI actually sitting
-// there. WRITES NOTHING in either case — every result (strong, weak, or a nearby
+// there. WRITES NOTHING in either case, every result (strong, weak, or a nearby
 // candidate) is a proposal for the cockpit to show a human before anything is
 // applied via the existing /api/admin/venues/edit route.
 export async function POST(req: Request) {

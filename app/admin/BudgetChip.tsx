@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 interface Budget { used: number; cap: number; month: string; }
 
-/** LC-8 / V-10 — shared cost-visibility chip: "used / cap this month", turns
+/** LC-8 / V-10, shared cost-visibility chip: "used / cap this month", turns
  *  amber near the cap. Fetches its own state (no prop threading) so it drops
  *  into the catalog picker and the venues fetch panel independently. */
 export function BudgetChip() {
@@ -24,7 +24,7 @@ export function BudgetChip() {
   return (
     <span
       className={`budget-chip${near ? " is-near" : ""}`}
-      title="Google Places photo calls this month — resets on the 1st"
+      title="Google Places photo calls this month, resets on the 1st"
     >
       {budget.used}/{budget.cap} Google calls
     </span>

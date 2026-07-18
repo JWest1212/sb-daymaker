@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Guide } from "@/lib/guides";
 
-/** A guide entry on the Discover SB list — links to the guide page. */
+/** A guide entry on the Discover SB list, links to the guide page. */
 export function GuideCard({ guide }: { guide: Guide }) {
   const isTheme = guide.kind === "theme";
   return (

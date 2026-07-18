@@ -1,0 +1,21 @@
+name: golden-rule
+
+# THE GOLDEN RULE (Elevation v1, Gate 0 / G0.9): zero em dashes (U+2014) in any
+# site source, ever. This job fails the build on any occurrence. No em dash, no
+# green build. See scripts/check-emdash.mjs.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  no-em-dash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check for em dashes (U+2014)
+        run: node scripts/check-emdash.mjs

@@ -1,8 +1,8 @@
-// Funk Zone sketch map — base SVG without marker circles.
+// Funk Zone sketch map, base SVG without marker circles.
 // Markers are rendered as an overlay layer in GuideWalkSection so Phase 3
 // can recolor them per-stop without touching this asset.
 // Lifted from SBDaymaker_DiscoverSB_Mockup_v5.html Frame 01 as drawn.
-// All colors use v9 CSS token variables — zero hardcoded hex.
+// All colors use v9 CSS token variables, zero hardcoded hex.
 
 export function FunkZoneSketch({ className }: { className?: string }) {
   return (

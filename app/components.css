@@ -1365,9 +1365,9 @@
   background: var(--bg);
 }
 .sbd-shell__main {
-  /* clear the fixed 54px nav + a comfortable gap + safe area (S3) */
+  /* clear the fixed 50px nav + a comfortable gap + safe area (S3) */
   padding: 0 var(--space-5)
-    calc(54px + var(--space-8) + env(safe-area-inset-bottom));
+    calc(50px + var(--space-8) + env(safe-area-inset-bottom));
 }
 
 /* Header */
@@ -1415,7 +1415,10 @@
 }
 
 /* Bottom navigation (S1-B / S2-B / S3) — Pacific teal bar, custom line icons,
-   gold active tab with a top pip. The teal is the divider (no top border). */
+   gold active tab with a top pip. The teal is the divider (no top border).
+   Height/placement calibrated to match the standard iOS/Yelp-style tab bar
+   (~49-50px content height, icon+label block vertically centered rather than
+   pinned to the top — was previously a taller, top-hugged 56px bar). */
 .sbd-nav {
   position: fixed;
   bottom: 0;
@@ -1426,8 +1429,8 @@
   display: flex;
   border-top: none;
   background: var(--pacific);
-  padding-top: 8px;
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  padding-top: 3px;
+  padding-bottom: max(3px, env(safe-area-inset-bottom));
   z-index: 60;
 }
 .sbd-nav__btn {
@@ -1436,8 +1439,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* icons hug the top of the bar (S3) */
-  gap: 3px;
+  justify-content: center; /* icon+label centered in the bar, Yelp-style */
+  gap: 2px;
   text-decoration: none;
   /* inactive: dimmed white on teal (≥4.5:1 for the label) */
   color: rgba(255, 255, 255, 0.78);
@@ -1454,7 +1457,7 @@
 .sbd-nav__btn[aria-current="page"]::before {
   content: "";
   position: absolute;
-  top: -8px;
+  top: -3px;
   left: 50%;
   transform: translateX(-50%);
   width: 22px;
@@ -1632,7 +1635,7 @@
 /* ---- PLAN setup screen (mockup State 1) -------------------------------- */
 /* Extra bottom room so the last group / saved hook clears the fixed go-bar. */
 .sbd-plan-setup {
-  padding-bottom: calc(54px + 86px + env(safe-area-inset-bottom));
+  padding-bottom: calc(50px + 86px + env(safe-area-inset-bottom));
 }
 
 /* Make My Day — flagship express card. The copy sits over a left dark scrim so
@@ -1993,12 +1996,12 @@
   font-weight: var(--weight-bold);
 }
 
-/* Sticky go-bar — fixed just above the 54px bottom nav, centered to the shell. */
+/* Sticky go-bar — fixed just above the 50px bottom nav, centered to the shell. */
 .sbd-plan-gobar {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 54px;
+  bottom: 50px;
   width: 100%;
   max-width: 480px;
   padding: var(--space-3) var(--space-5)
@@ -4140,7 +4143,7 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(54px + env(safe-area-inset-bottom));
+  bottom: calc(50px + env(safe-area-inset-bottom));
   width: 100%;
   max-width: 480px;
   display: flex;
@@ -4246,7 +4249,7 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(72px + env(safe-area-inset-bottom));
+  bottom: calc(68px + env(safe-area-inset-bottom));
   z-index: 80;
   background: var(--ink);
   color: var(--paper);

@@ -49,7 +49,7 @@ export const ticketmaster: SourceAdapter = {
     const key = process.env.TICKETMASTER_API_KEY;
     if (!key) throw new Error('TICKETMASTER_API_KEY not set');
 
-    // TM Discovery requires exactly YYYY-MM-DDTHH:mm:ssZ — no milliseconds.
+    // TM Discovery requires exactly YYYY-MM-DDTHH:mm:ssZ, no milliseconds.
     const tmDate = (iso: string) => iso.replace(/\.\d{3}Z$/, 'Z');
     const start = tmDate(fromISO);
     const end = tmDate(toISO);
