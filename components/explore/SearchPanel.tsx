@@ -158,6 +158,8 @@ export function SearchPanel({
                     >
                       <SearchRowTag kind={r.hit.kind} />
                       <span className="sbd-search-row__name">{r.hit.label}</span>
+                      {/* G3.2 #4, door origin so overlapping tags (Nightlife) are distinguishable. */}
+                      {r.hit.door ? <span className="sbd-search-row__door">{r.hit.door}</span> : null}
                     </button>
                   )}
                 </li>

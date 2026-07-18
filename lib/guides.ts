@@ -137,7 +137,7 @@ export async function getStopThingMap(
   if (!sb) return new Map();
   const { data, error } = await sb
     .from("things")
-    .select("id, category, address, lat, lng, price_band, free")
+    .select("id, category, address, lat, lng, price_band, free, slug")
     .in("id", ids);
   if (error || !data) return new Map();
   const map = new Map<string, StopThingFields & { id: string }>();
@@ -150,9 +150,33 @@ export async function getStopThingMap(
       lng: (row.lng as number) ?? null,
       price_band: (row.price_band as string) ?? null,
       free: (row.free as boolean) ?? null,
+      slug: (row.slug as string) ?? null,
     });
   }
   return map;
+}
+
+/** Elevation v1 · Gate 3 · G3.5, the published guides whose guide_stops include
+ *  this thing, for a detail page's "Featured in: <Guide>" cross-link. Two cheap
+ *  queries (stop ids, then the guides) to avoid embed ambiguity. */
+export async function getGuidesFeaturingThing(
+  thingId: string,
+): Promise<{ id: string; title: string; slug: string | null }[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data: stops } = await sb.from("guide_stops").select("guide_id").eq("thing_id", thingId);
+  const guideIds = [...new Set(((stops ?? []) as { guide_id: string | null }[]).map((s) => s.guide_id).filter(Boolean))];
+  if (guideIds.length === 0) return [];
+  const { data: guides } = await sb
+    .from("guides")
+    .select("id, title, slug")
+    .eq("status", "published")
+    .in("id", guideIds as string[]);
+  return ((guides ?? []) as { id: string; title: string; slug: string | null }[]).map((g) => ({
+    id: g.id,
+    title: cleanText(g.title),
+    slug: g.slug,
+  }));
 }
 
 /** Strip a trailing parenthetical qualifier from a guide title for the
@@ -387,6 +411,8 @@ export interface StopThingFields {
   free: boolean | null;
   lat: number | null;
   lng: number | null;
+  /** Gate 3 · G3.5, the thing's slug so a guide stop can deep-link to it. */
+  slug: string | null;
 }
 
 /** First comma-segment of an address with a leading house number stripped:

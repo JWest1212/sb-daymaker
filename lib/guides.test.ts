@@ -118,6 +118,7 @@ const fullThing: StopThingFields = {
   free: false,
   lat: 34.42,
   lng: -119.7,
+  slug: null,
 };
 
 describe("deriveStopSub", () => {

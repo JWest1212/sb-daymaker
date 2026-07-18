@@ -14,6 +14,7 @@ export function DiscoveryControls({
   onResetChips,
   horizon,
   onHorizonChange,
+  resultCount,
 }: {
   onOpenSheet: (dimension: Dimension) => void;
   chips: ActiveChip[];
@@ -21,12 +22,26 @@ export function DiscoveryControls({
   onResetChips: () => void;
   horizon: Horizon;
   onHorizonChange: (h: Horizon) => void;
+  /** Elevation v1 · Gate 3 · G3.8, live count of things matching the current
+   *  door + horizon selection. Updates on every filter change. */
+  resultCount?: number;
 }) {
   return (
     <div className="sbd-disco">
+      {/* G3.8, the two axes are visually separated + labelled: the "doors" (Place /
+          Occasion / Activity) are the category axis, the segmented control below is
+          the time axis. */}
       <DiscoveryDoors onOpen={onOpenSheet} />
       <DiscoveryChips chips={chips} onRemove={onRemoveChip} onReset={onResetChips} />
-      <HorizonSegment horizon={horizon} onChange={onHorizonChange} />
+      <div className="sbd-disco__axis">
+        <span className="sbd-disco__axis-label" aria-hidden="true">When</span>
+        <HorizonSegment horizon={horizon} onChange={onHorizonChange} />
+      </div>
+      {typeof resultCount === "number" ? (
+        <div className="sbd-disco__count" aria-live="polite">
+          {resultCount} {resultCount === 1 ? "thing" : "things"}
+        </div>
+      ) : null}
     </div>
   );
 }

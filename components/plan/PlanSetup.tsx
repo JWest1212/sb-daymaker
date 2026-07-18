@@ -34,15 +34,19 @@ const WHO: { value: Who; glyph: string; label: string }[] = [
   { value: "friends", glyph: "🥂", label: "Friends" },
 ];
 
-const VIBES: { value: VibeKey; glyph: string; label: string }[] = [
-  { value: "outdoors_active", glyph: "⛰️", label: "Outdoors" },
-  { value: "wine_food", glyph: "🍇", label: "Wine & Food" },
-  { value: "arts_culture", glyph: "🎨", label: "Arts & Culture" },
-  { value: "date_night", glyph: "🍷", label: "Date Night" },
-  { value: "catch_a_show", glyph: "🎭", label: "Catch a Show" },
-  { value: "nightlife", glyph: "🍸", label: "Nightlife" },
-  { value: "hosting_visitors", glyph: "🎟️", label: "Showing Visitors" },
-  { value: "free_sb", glyph: "💸", label: "Free SB" },
+// Elevation v1 · Gate 3 · G3.8, grouped by kind so mood / audience / budget
+// aren't presented as one flat set (a legibility pass; the taxonomy is unchanged).
+type VibeGroup = "Mood" | "Who it's for" | "Budget";
+const VIBE_GROUPS: VibeGroup[] = ["Mood", "Who it's for", "Budget"];
+const VIBES: { value: VibeKey; glyph: string; label: string; group: VibeGroup }[] = [
+  { value: "outdoors_active", glyph: "⛰️", label: "Outdoors", group: "Mood" },
+  { value: "wine_food", glyph: "🍇", label: "Wine & Food", group: "Mood" },
+  { value: "arts_culture", glyph: "🎨", label: "Arts & Culture", group: "Mood" },
+  { value: "date_night", glyph: "🍷", label: "Date Night", group: "Mood" },
+  { value: "catch_a_show", glyph: "🎭", label: "Catch a Show", group: "Mood" },
+  { value: "nightlife", glyph: "🍸", label: "Nightlife", group: "Mood" },
+  { value: "hosting_visitors", glyph: "🎟️", label: "Showing Visitors", group: "Who it's for" },
+  { value: "free_sb", glyph: "💸", label: "Free SB", group: "Budget" },
 ];
 
 const ZONE_OPTS: { value: Zone | null; label: string }[] = [
@@ -219,26 +223,28 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             </div>
 
             <p className="sbd-miniq">Vibe</p>
-            <div
-              className="sbd-q__row"
-              role="group"
-              aria-label="What's the vibe?"
-            >
-              {VIBES.map((v) => (
-                <button
-                  key={v.value}
-                  type="button"
-                  className="sbd-qbtn"
-                  aria-pressed={vibes.includes(v.value)}
-                  onClick={() => toggleVibe(v.value)}
-                >
-                  <span className="sbd-qbtn__g" aria-hidden="true">
-                    {v.glyph}
-                  </span>
-                  {v.label}
-                </button>
-              ))}
-            </div>
+            {/* G3.8, chips grouped by kind (Mood / Who it's for / Budget). */}
+            {VIBE_GROUPS.map((g) => (
+              <div key={g} className="sbd-q__vgroup">
+                <p className="sbd-q__vgroup-label">{g}</p>
+                <div className="sbd-q__row" role="group" aria-label={g}>
+                  {VIBES.filter((v) => v.group === g).map((v) => (
+                    <button
+                      key={v.value}
+                      type="button"
+                      className="sbd-qbtn"
+                      aria-pressed={vibes.includes(v.value)}
+                      onClick={() => toggleVibe(v.value)}
+                    >
+                      <span className="sbd-qbtn__g" aria-hidden="true">
+                        {v.glyph}
+                      </span>
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </main>

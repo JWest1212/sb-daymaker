@@ -16,6 +16,7 @@ import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
 import { GuideWalkSection } from "@/components/discover/GuideWalkSection";
 import type { StopDisplay } from "@/components/discover/GuideWalkSection";
+import { FlagButton } from "@/components/detail/FlagButton";
 import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
 import { guidePath } from "@/lib/seo/site";
 
@@ -126,6 +127,8 @@ export default async function GuidePage({
       thing_id: s.thing_id,
       sub: deriveStopSub(s, thing),
       directionsUrl: directionsUrl(s, thing),
+      // G3.5, deep link to the stop's thing (slug preferred, id fallback).
+      href: s.thing_id ? `/thing/${thing?.slug ?? s.thing_id}` : null,
     };
   });
 
@@ -192,6 +195,10 @@ export default async function GuidePage({
               />
             )}
           </section>
+          {/* G3.6, one-tap correction flag for the guide (no PII). */}
+          <div className="sbd-detail__flag">
+            <FlagButton guideId={guide.id} />
+          </div>
         </div>
       </>
     );
@@ -359,6 +366,11 @@ export default async function GuidePage({
           WRITTEN BY A LOCAL
           {refreshedLabel ? ` · REFRESHED ${refreshedLabel}` : ""}
         </span>
+      </div>
+
+      {/* G3.6, one-tap correction flag for the guide (no PII). */}
+      <div className="sbd-detail__flag">
+        <FlagButton guideId={guide.id} />
       </div>
     </>
   );

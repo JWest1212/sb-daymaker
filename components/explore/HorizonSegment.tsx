@@ -19,6 +19,8 @@ export function HorizonSegment({
         options={[
           { label: "Today", value: "today" },
           { label: "Week", value: "week", ariaLabel: "This Week" },
+          // Gate 3 · G3.3, "This weekend" as a first-class horizon.
+          { label: "Weekend", value: "weekend", ariaLabel: "This Weekend" },
           { label: "Month", value: "month", ariaLabel: "This Month" },
         ]}
       />

@@ -7,6 +7,7 @@ import { DOOR_META } from "./DiscoveryDoors";
 const HORIZON_NOUN: Record<Horizon, string> = {
   today: "today",
   week: "this week",
+  weekend: "this weekend",
   month: "this month",
 };
 

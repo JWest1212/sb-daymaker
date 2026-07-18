@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getThingBySlugOrId, type Thing } from "@/lib/things";
+import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
+import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { ZONE_LABEL } from "@/lib/zones";
 import { Tag, EmptyState } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
+import { FlagButton } from "@/components/detail/FlagButton";
 import { OpenNow } from "@/components/detail/OpenNow";
 import { BackButton } from "@/components/detail/BackButton";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
@@ -13,7 +15,7 @@ import { eventDetailWhen } from "@/lib/format/eventTime";
 import { outboundLink } from "@/lib/format/outboundLink";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
-import { absoluteUrl, thingPath } from "@/lib/seo/site";
+import { absoluteUrl, thingPath, guidePath } from "@/lib/seo/site";
 
 export const revalidate = 600; // ISR: refresh published content every 10 min
 
@@ -91,6 +93,14 @@ export default async function ThingPage({
 }) {
   const { id } = await params;
   const t = await getThingBySlugOrId(id);
+
+  // G3.5, cross-link data: guides this thing stars in, and nearby same-zone things.
+  const [guidesFeaturing, nearby] = t
+    ? await Promise.all([
+        getGuidesFeaturingThing(t.id),
+        t.nearby_zone ? getNearbyThings(t.nearby_zone, t.id, 3) : Promise.resolve([]),
+      ])
+    : [[], []];
 
   if (!t) {
     return (
@@ -238,6 +248,19 @@ export default async function ThingPage({
         </aside>
       ) : null}
 
+      {/* G3.5, Thing -> Guide: this thing stars in a published guide. */}
+      {guidesFeaturing.length > 0 ? (
+        <p className="sbd-detail__featured">
+          Featured in{" "}
+          {guidesFeaturing.map((g, i) => (
+            <span key={g.id}>
+              {i > 0 ? ", " : ""}
+              <Link href={guidePath(g)}>{g.title}</Link>
+            </span>
+          ))}
+        </p>
+      ) : null}
+
       <div className="sbd-detail__actions">
         {outbound ? (
           <a
@@ -251,6 +274,30 @@ export default async function ThingPage({
         ) : null}
         {/* G1.3, the Save / Share / Directions action row. */}
         <DetailActions id={t.id} title={t.title} directionsHref={directionsHref} />
+      </div>
+
+      {/* G3.5, Nearby / pairs-with: 2-3 same-zone things, Tier-1 first. */}
+      {nearby.length > 0 && t.nearby_zone ? (
+        <section className="sbd-detail__nearby">
+          <h2 className="sbd-detail__nearby-h">Nearby in {ZONE_LABEL[t.nearby_zone]}</h2>
+          <ul className="sbd-detail__nearby-list">
+            {nearby.map((n) => (
+              <li key={n.id}>
+                <Link href={thingPath(n)} className="sbd-detail__nearby-link">
+                  <span className="sbd-detail__nearby-name">{n.title}</span>
+                  <span className="sbd-detail__nearby-meta">
+                    {n.free ? "Free" : (n.price_band ?? "")}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* G3.6, one-tap correction flag (no PII). */}
+      <div className="sbd-detail__flag">
+        <FlagButton thingId={t.id} />
       </div>
     </div>
   );

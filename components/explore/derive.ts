@@ -4,6 +4,7 @@ import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
 import { eventCardWhen } from "@/lib/format/eventTime";
+import { nextOccurrenceForThing, formatNextDate } from "@/lib/recurring/nextOccurrence";
 
 /** Shared by Hero (sky variant) and the R1 "Today's pick" card's contextual
  *  eyebrow (heroEyebrow below), moved here so both can import one definition. */
@@ -62,6 +63,27 @@ export function cardFacts(t: Thing): string[] {
 
 export function cardBlurb(t: Thing): string {
   return t.blurb ?? t.reason_to_go ?? "";
+}
+
+/** Elevation v1 · Gate 3 · G3.4, the "when" for a recurring (Tier-2) card: a real
+ *  next date ("Next: Fri Jul 24, 5pm"), or an honest "Check schedule" for an
+ *  irregular cadence, never a false "every week". Null for non-recurring things
+ *  (callers fall back to cardFacts). Computed read-time so it's never stale. */
+export function recurringWhen(t: Thing): string | null {
+  if (t.happening_tier !== 2 || t.recurring.length === 0) return null;
+  const next = nextOccurrenceForThing(
+    t.recurring.map((r) => ({
+      day_of_week: r.day_of_week,
+      cadence: r.cadence,
+      frequency: r.frequency,
+      nth_dow: r.nth_dow,
+      start_time: r.start_time,
+      last_confirmed: r.last_confirmed,
+    })),
+  );
+  if (next === null) return null;
+  if (next === "irregular") return "Check schedule";
+  return `Next: ${formatNextDate(next)}`;
 }
 
 /** Card Imagery Build Spec Phase 3 §6.2, `ListCard`'s motif/bigtype render input,

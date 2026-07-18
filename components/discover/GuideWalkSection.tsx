@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Link from "next/link";
 import { useSaves } from "@/components/saves/SavesProvider";
 import type { GuideContent, GuideChapter } from "@/lib/guides";
 import { getGuideArt } from "@/lib/guide-art";
@@ -15,6 +16,8 @@ export interface StopDisplay {
   thing_id: string | null;
   sub: string | null;         // derived by server (deriveStopSub)
   directionsUrl: string | null; // derived by server (directionsUrl)
+  /** G3.5, deep link to the stop's /thing page (slug) when it's thing-backed. */
+  href?: string | null;
 }
 
 interface Props {
@@ -55,7 +58,10 @@ function StopCard({
       <div className="sbd-gd-stopbody">
         <div className="sbd-gd-stoptoprow">
           <div className="sbd-gd-stoplabelwrap">
-            <h4 className="sbd-gd-stoplabel">{stop.label}</h4>
+            <h4 className="sbd-gd-stoplabel">
+              {/* G3.5, guide stop -> thing deep link (saveable detail page). */}
+              {stop.href ? <Link href={stop.href}>{stop.label}</Link> : stop.label}
+            </h4>
             {(stop.sub || stop.directionsUrl) && (
               <div className="sbd-gd-stopsub">
                 {stop.sub}

@@ -2,8 +2,12 @@ import type { Thing } from "./things";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
 import type { ActivityKey } from "./activities";
+import { sbHour } from "./format/daypart";
 
-export type Horizon = "today" | "week" | "month";
+// Elevation v1 · Gate 3 · G3.3, "This weekend" is a first-class horizon alongside
+// Today / Week / Month. Fri 5pm to Sun 11:59pm SB (or from now, if it's already
+// the weekend).
+export type Horizon = "today" | "week" | "weekend" | "month";
 
 // SB is always America/Los_Angeles; en-CA gives YYYY-MM-DD without extra config.
 const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
@@ -114,6 +118,30 @@ export function pickAutoHero(ordered: Thing[], sbTodayKey: string): Thing | null
   return ordered[0] ?? null;
 }
 
+/** The Fri/Sat/Sun SB date keys of the current (or upcoming) weekend. If today is
+ *  already Sat/Sun, the window still ends this Sunday; UTC-anchored math dodges DST. */
+export function weekendKeys(now: number): { fri: string; sat: string; sun: string } {
+  const dow = sbDayOfWeek(now); // 0 = Sun … 6 = Sat
+  const [y, m, d] = sbDay(now).split("-").map(Number);
+  const todayUTC = Date.UTC(y, m - 1, d);
+  const sunUTC = todayUTC + ((7 - dow) % 7) * 86_400_000;
+  const friUTC = sunUTC - 2 * 86_400_000;
+  const key = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+  return { fri: key(friUTC), sat: key(friUTC + 86_400_000), sun: key(sunUTC) };
+}
+
+/** Does a recurring/happy-hour Tier-2 thing fire on a weekend day (Fri/Sat/Sun)?
+ *  Mirrors tier2OccursToday but against the weekend day-set. Schedule-less passes
+ *  (we can't prove it's off this weekend). */
+function tier2OccursThisWeekend(thing: Thing): boolean {
+  const dows = [
+    ...(thing.type === "happyhour" ? thing.happyHours.map((w) => w.day_of_week) : []),
+    ...thing.recurring.map((s) => s.day_of_week),
+  ];
+  if (dows.length === 0) return true;
+  return dows.some((d) => d === 5 || d === 6 || d === 0); // Fri, Sat, Sun
+}
+
 /** Dated (Tier-1) events are bound by the horizon; ongoing items always pass.
  *  Date comparison uses the SB (Pacific) calendar day so yesterday's events
  *  don't bleed into today just because < 24 h has elapsed. */
@@ -127,12 +155,22 @@ export function withinHorizon(
   if (horizon === "today" && thing.happening_tier === 2) {
     return tier2OccursToday(thing, now);
   }
+  // G3.3: on Weekend, a recurring Tier-2 must fire on a weekend day.
+  if (horizon === "weekend" && thing.happening_tier === 2) {
+    return tier2OccursThisWeekend(thing);
+  }
   if (thing.happening_tier !== 1 || !thing.starts_at) return true;
   const start = new Date(thing.starts_at).getTime();
   const todayKey = sbDay(now);
   const startKey = sbDay(start);
   if (startKey < todayKey) return false; // already passed in SB time
   if (horizon === "today") return startKey === todayKey;
+  // G3.3: Fri 5pm to Sun 11:59pm. Friday counts only from 5pm; Sat/Sun any time.
+  if (horizon === "weekend") {
+    const { fri, sat, sun } = weekendKeys(now);
+    if (startKey === fri) return sbHour(thing.starts_at) >= 17;
+    return startKey === sat || startKey === sun;
+  }
   const days = (start - now) / 86_400_000;
   if (horizon === "week") return days < 7;
   return days < 31;

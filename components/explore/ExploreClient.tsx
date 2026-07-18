@@ -38,6 +38,7 @@ export function ExploreClient({
   nowMs,
   pinnedHeroId = null,
   venuePools = {},
+  initialHorizon = "today",
 }: {
   things: Thing[];
   tod: TimeOfDay;
@@ -50,12 +51,16 @@ export function ExploreClient({
   /** Card Imagery Build Spec Phase 2 §5.4, approved venue photo pools, keyed by
    *  venue_id; threaded to CascadeFeed for the per-feed dedupe pass. */
   venuePools?: Record<string, PoolPhoto[]>;
+  /** Gate 3 · G3.3, the horizon the view lands on. The /weekend route passes
+   *  "weekend" so it's the crawlable web twin of the newsletter; Explore defaults
+   *  to "today". */
+  initialHorizon?: Horizon;
 }) {
   const { openTour } = useTour();
   const [vibe, setVibe] = useState<OccasionKey | null>(null);
   const [place, setPlace] = useState<DoorZoneKey | null>(null);
   const [activity, setActivity] = useState<ActivityKey | null>(null);
-  const [horizon, setHorizon] = useState<Horizon>("today");
+  const [horizon, setHorizon] = useState<Horizon>(initialHorizon);
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
   // Home Rework spec §11.4, the order dimensions were (most recently) set, so
   // "Show the closest matches" knows which filter to drop first.
@@ -83,9 +88,14 @@ export function ExploreClient({
   useEffect(() => {
     const vibeParam = searchParams.get("vibe");
     const placeParam = searchParams.get("place");
-    if (!vibeParam && !placeParam) return;
+    // G3.2 #3, the Activity door was already wired in the UI (setActivity via
+    // applyFilter); this adds the header-search bridge so an Activity tag hit
+    // lands on a working Activity-filtered Explore, mirroring vibe/place.
+    const activityParam = searchParams.get("activity");
+    if (!vibeParam && !placeParam && !activityParam) return;
     if (vibeParam && vibeParam in OCCASION_BY_KEY) applyFilter("vibe", vibeParam);
     if (placeParam && placeParam in DOOR_ZONE_BY_KEY) applyFilter("place", placeParam);
+    if (activityParam && activityParam in ACTIVITY_BY_KEY) applyFilter("activity", activityParam);
     router.replace("/", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -198,6 +208,7 @@ export function ExploreClient({
           onResetChips={clearAllFilters}
           horizon={horizon}
           onHorizonChange={setHorizon}
+          resultCount={ordered.length}
         />
         <CascadeFeed
           items={feed}

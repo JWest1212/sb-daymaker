@@ -57,7 +57,7 @@ function thing(over: Partial<Thing> = {}): Thing {
 }
 
 function sched(day_of_week: number): RecurringSchedule {
-  return { category: "market", day_of_week, start_time: null, end_time: null, label: null };
+  return { category: "market", day_of_week, start_time: null, end_time: null, label: null, frequency: "weekly", cadence: "weekly", nth_dow: null, last_confirmed: null };
 }
 function window(day_of_week: number): HappyHourWindow {
   return { day_of_week, starts_local: "16:00", ends_local: "18:00", deal_text: null };
@@ -111,6 +111,29 @@ describe("withinHorizon, W1.3a day-aware Tier-2 on Today", () => {
     const pastEvent = thing({ id: "e0", type: "event", happening_tier: 1, starts_at: "2026-07-01T22:00:00Z" });
     expect(withinHorizon(todayEvent, "today", FRI)).toBe(true);
     expect(withinHorizon(pastEvent, "today", FRI)).toBe(false);
+  });
+});
+
+describe("withinHorizon, G3.3 weekend", () => {
+  const MON = new Date("2026-07-20T19:00:00Z").getTime(); // Mon noon SB; weekend = Fri 24..Sun 26
+  it("includes a Saturday dated event, excludes a Tuesday one", () => {
+    const sat = thing({ id: "sat", type: "event", happening_tier: 1, starts_at: "2026-07-25T20:00:00Z" });
+    const tue = thing({ id: "tue", type: "event", happening_tier: 1, starts_at: "2026-07-21T20:00:00Z" });
+    expect(withinHorizon(sat, "weekend", MON)).toBe(true);
+    expect(withinHorizon(tue, "weekend", MON)).toBe(false);
+  });
+  it("includes a Friday 6pm event but not a Friday 10am one (Fri 5pm cutoff)", () => {
+    const friEve = thing({ id: "fe", type: "event", happening_tier: 1, starts_at: "2026-07-25T01:00:00Z" }); // Fri 6pm SB
+    const friMorn = thing({ id: "fm", type: "event", happening_tier: 1, starts_at: "2026-07-24T17:00:00Z" }); // Fri 10am SB
+    expect(withinHorizon(friEve, "weekend", MON)).toBe(true);
+    expect(withinHorizon(friMorn, "weekend", MON)).toBe(false);
+  });
+  it("recurring Tier-2 firing Saturday passes; Tuesday-only fails", () => {
+    expect(withinHorizon(thing({ id: "sm", happening_tier: 2, recurring: [sched(6)] }), "weekend", MON)).toBe(true);
+    expect(withinHorizon(thing({ id: "tm", happening_tier: 2, recurring: [sched(2)] }), "weekend", MON)).toBe(false);
+  });
+  it("Tier-3 evergreen always passes weekend", () => {
+    expect(withinHorizon(thing({ id: "ev", happening_tier: 3 }), "weekend", MON)).toBe(true);
   });
 });
 

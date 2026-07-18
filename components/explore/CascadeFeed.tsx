@@ -8,13 +8,14 @@ import type { Thing } from "@/lib/things";
 import type { Weather } from "@/lib/weather";
 import type { Horizon } from "@/lib/explore";
 import { dedupeFeedVenuePhotos, type PoolPhoto } from "@/lib/venuePool";
-import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay } from "./derive";
+import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay, recurringWhen } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
 const HORIZON_LABEL: Record<Horizon, string> = {
   today: "Happening Today",
   week: "Happening This Week",
+  weekend: "Happening This Weekend",
   month: "Happening This Month",
 };
 
@@ -22,6 +23,7 @@ const HORIZON_LABEL: Record<Horizon, string> = {
 const PICK_RIBBON_LABEL: Record<Horizon, string> = {
   today: "Today's pick",
   week: "This week's pick",
+  weekend: "This weekend's pick",
   month: "This month's pick",
 };
 
@@ -103,6 +105,7 @@ function deriveLeadDek(horizon: Horizon, count: number): string | null {
     if (count === 0) return null;
     return count <= 4 ? "A quieter day, worth a look." : "Plenty on today.";
   }
+  if (horizon === "weekend") return "The weekend in Santa Barbara.";
   if (horizon === "week") return "The week ahead in Santa Barbara.";
   return "The month worth building a day around.";
 }
@@ -171,7 +174,8 @@ function LeadSection({
         />
       ) : null}
       {horizon === "today" && <TodayLead tier1={tier1} />}
-      {horizon === "week" && <LeadDayRail items={tier1} />}
+      {/* G3.3, Weekend uses the same day-grouped rail as Week (multi-day dated). */}
+      {(horizon === "week" || horizon === "weekend") && <LeadDayRail items={tier1} />}
       {horizon === "month" && (
         <div className="sbd-feed-section__list">
           <RockGrid
@@ -364,9 +368,11 @@ export function CascadeFeed({
       {/* Every week, Tier 2, collapsed by default */}
       {tier2.length > 0 && (
         <section className="sbd-feed-section">
+          {/* G3.4, recurring rhythms get their own section with a real computed
+              next-date on each card ("Next: Fri Jul 24, 5pm"), never "every week". */}
           <SectionHeader
             mode="collapsible"
-            label="Every week"
+            label="Recurring in SB"
             count={tier2.length}
             expanded={tier2Open}
             onToggle={() => setTier2Open((o) => !o)}
@@ -386,7 +392,7 @@ export function CascadeFeed({
                     occasionKey={t.tags[0]}
                     title={t.title}
                     blurb={cardBlurb(t)}
-                    when={cardFacts(t).join(" · ")}
+                    when={recurringWhen(t) ?? cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
                     visual={cardVisual(t)}
                   />

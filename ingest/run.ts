@@ -2263,6 +2263,16 @@ async function main() {
       console.log(`  slugs                skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    // Elevation v1 · Gate 3 · G3.4, keep recurring_schedules.next_occurrence
+    // current so recurring cards show a real next date, never "every week".
+    try {
+      const { recomputeNextOccurrences } = await import('./audits/recurring_next');
+      const n = await recomputeNextOccurrences(sb);
+      console.log(`  recurring-next       computed ${n.computed}/${n.scanned} · changed ${n.changed}`);
+    } catch (err) {
+      console.log(`  recurring-next       skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     // Gate 0 G0.1, non-blocking QA-note warning: catch any operator note that
     // leaked into published copy before a human sees it on the site. Never blocks
     // the run.

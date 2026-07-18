@@ -21,6 +21,11 @@ export interface RecurringSchedule {
   start_time: string | null;
   end_time: string | null;
   label: string | null;
+  /** Elevation v1 · Gate 3 · G3.4, cadence fields for computing the next date. */
+  frequency: string | null;
+  cadence: string | null;
+  nth_dow: number | null;
+  last_confirmed: string | null;
 }
 
 export interface Thing {
@@ -109,7 +114,7 @@ const G1_COLS = `quality_tier, hours, verified_at, verified_by, last_confirmed, 
 // card/detail chips by it (the card shows the single highest-confidence tag).
 const RELATIONS = `thing_tags ( tag, confidence ),
   happy_hour_windows ( day_of_week, starts_local, ends_local, deal_text ),
-  recurring_schedules ( category, day_of_week, start_time, end_time, label )`;
+  recurring_schedules ( category, day_of_week, start_time, end_time, label, frequency, cadence, nth_dow, last_confirmed )`;
 const SELECT = `${BASE_COLS}, ${RELATIONS}`;
 const SELECT_DETAIL = `${BASE_COLS}, ${G1_COLS}, local_note, photo_attribution, ${RELATIONS}`;
 // Home Rework spec §6, same "select the new column, fall back if it 400s"
@@ -240,4 +245,33 @@ export async function getThing(id: string): Promise<Thing | null> {
 export async function getThingBySlugOrId(param: string): Promise<Thing | null> {
   if (UUID_RE.test(param)) return fetchThing("id", param);
   return fetchThing("slug", param);
+}
+
+/** Elevation v1 · Gate 3 · G3.5, up to `limit` published things in the same
+ *  nearby_zone (excluding the thing itself), Tier-1 (dated) first, for the detail
+ *  page's "Nearby" pairing. Deterministic (no AI). Excludes quality_tier=3. */
+export async function getNearbyThings(
+  zone: Zone,
+  excludeId: string,
+  limit = 3,
+): Promise<Thing[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const [primary, dogFriendlyVenueIds] = await Promise.all([
+    sb
+      .from("things")
+      .select(SELECT_WITH_ACTIVITIES)
+      .eq("nearby_zone", zone)
+      .neq("id", excludeId)
+      .order("happening_tier", { ascending: true }),
+    getDogFriendlyVenueIds(),
+  ]);
+  const result = primary.error
+    ? await sb.from("things").select(SELECT).eq("nearby_zone", zone).neq("id", excludeId).order("happening_tier", { ascending: true })
+    : primary;
+  if (result.error || !result.data) return [];
+  return result.data
+    .map((r) => mapThing(r as Record<string, unknown>, dogFriendlyVenueIds))
+    .filter((t) => t.quality_tier !== 3)
+    .slice(0, limit);
 }
