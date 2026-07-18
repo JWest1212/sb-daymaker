@@ -1,6 +1,6 @@
 // scripts/seed_venue_neighborhoods.mts
 //
-// Doc 19 §5.1 — one-time (repeatable) auto-seed of the `venue_neighborhoods`
+// Doc 19 §5.1, one-time (repeatable) auto-seed of the `venue_neighborhoods`
 // dictionary from the ~21 venue-direct adapter sources already known to the
 // pipeline. Idempotent: upserts on name_norm, so re-running just refreshes
 // aliases/neighborhood rather than duplicating rows.

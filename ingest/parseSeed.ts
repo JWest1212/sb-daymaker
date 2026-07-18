@@ -2,7 +2,7 @@
 //
 // A small, string-aware parser for the seed SQL's `insert into things (...)`
 // blocks. The seed uses THREE different column layouts and value rows contain
-// commas, escaped apostrophes (''), ::type casts, and {array} literals — so a
+// commas, escaped apostrophes (''), ::type casts, and {array} literals, so a
 // naive split() won't do. We tokenize respecting single-quoted strings and
 // parenthesis depth, and map each value to its column NAME (never by position).
 //
@@ -93,7 +93,7 @@ function readGroups(sql: string, start: number): string[] {
     if (capturing) { cur += ch; continue; }
     // Between value groups at depth 0, only whitespace and commas are legal.
     // Anything else (`;`, or the `on conflict (id) do nothing` tail) ends the
-    // value list — stop before its literal `(id)` is misread as a row.
+    // value list, stop before its literal `(id)` is misread as a row.
     if (depth === 0 && ch !== ',' && !/\s/.test(ch)) break;
   }
   return groups;
@@ -136,5 +136,5 @@ function parseValue(tokenIn: string): SeedValue {
     return token.slice(1, -1).replace(/''/g, "'");
   }
   if (/^-?\d+(\.\d+)?$/.test(token)) return Number(token);
-  return token; // bare token (e.g. an unquoted {array}) — kept verbatim
+  return token; // bare token (e.g. an unquoted {array}), kept verbatim
 }

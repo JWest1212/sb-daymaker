@@ -1,9 +1,9 @@
 // ingest/adapters/citySites.ts
 //
-// City of Santa Barbara civic calendar (calendar.santabarbaraca.gov) — a
+// City of Santa Barbara civic calendar (calendar.santabarbaraca.gov), a
 // Localist-style listing. Each event's "View Details" link carries a fully
 // structured aria-label:  View Details - "<title>" on <Weekday>, <Month> <D>, <Y> @ <h:mm><am/pm>
-// — so we parse title + an exact, year-bearing start time straight from it
+//, so we parse title + an exact, year-bearing start time straight from it
 // (startStrategy:'server_detail').
 
 import * as cheerio from 'cheerio';

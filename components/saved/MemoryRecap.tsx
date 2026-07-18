@@ -35,7 +35,7 @@ export function MemoryRecap({
         <h2 className="sbd-recap__title">Your map starts here.</h2>
         <p className="sbd-recap__lead">
           Mark a place you&rsquo;ve been and we&rsquo;ll quietly start remembering
-          the SB you&rsquo;re building — privately, on this device.
+          the SB you&rsquo;re building, privately, on this device.
         </p>
       </section>
     );
@@ -60,8 +60,7 @@ export function MemoryRecap({
         </span>
       </div>
 
-      {/* Only show the neighborhood progress when we actually have area data —
-          otherwise a stray "0 of 6" reads as a bug next to a non-zero count
+      {/* Only show the neighborhood progress when we actually have area data, otherwise a stray "0 of 6" reads as a bug next to a non-zero count
           (e.g. been items that have rolled out of the live feed). */}
       {hoods.length > 0 ? (
         <>

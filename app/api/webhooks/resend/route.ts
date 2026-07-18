@@ -1,6 +1,6 @@
 // Resend webhook receiver (spec §7.5). Handles bounces/complaints (suppress
 // the address) and open/click tracking (bump the edition's counters for the
-// cockpit archive). Signature-verified via svix — Resend signs webhooks the
+// cockpit archive). Signature-verified via svix, Resend signs webhooks the
 // same way (see https://resend.com/docs/dashboard/webhooks/verify-webhooks-requests);
 // the raw request body must be used as-is, never re-parsed and re-stringified,
 // or the signature check fails.
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       if (editionId) await sb.rpc("increment_edition_click", { p_edition_id: editionId });
       break;
     default:
-      break; // delivered/sent/scheduled/etc. — nothing to record for V1
+      break; // delivered/sent/scheduled/etc., nothing to record for V1
   }
 
   return NextResponse.json({ ok: true });

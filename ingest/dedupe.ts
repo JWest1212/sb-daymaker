@@ -18,28 +18,34 @@ export interface DropRecord {
   detail?: string;
   source_url?: string;
   raw?: unknown;
-  /** Data Arch Redesign 26 Phase 4 — set only for a venue-aware near-dupe drop
+  /** Data Arch Redesign 26 Phase 4, set only for a venue-aware near-dupe drop
    *  (never for an exact-id repeat): the canonical event_key of the row this
    *  one was merged into, so the caller can record the dropped source's
    *  corroboration in event_sources even though its own row never lands. */
   event_key?: string | null;
-  /** Data Arch Redesign 26 Phase 5 — the dropped candidate's own uuid5 id
+  /** Data Arch Redesign 26 Phase 5, the dropped candidate's own uuid5 id
    *  (set only for a venue-aware near-dupe drop), so the caller can look up
-   *  its full Candidate and persist it as a reversible merge — see
+   *  its full Candidate and persist it as a reversible merge, see
    *  `merged_into` and `evidence` below. */
   id?: string;
   /** The surviving row's id (the kept candidate's id for an in-batch merge,
-   *  or the existing DB row's id for a vs-existing merge) — same value that
+   *  or the existing DB row's id for a vs-existing merge), same value that
    *  lands as `things.id` for the survivor, so it's directly usable as the
    *  dropped row's `merged_into` foreign key. */
   merged_into?: string | null;
-  /** The matcher's own verdict for this merge — the "which signals fired"
-   *  evidence spec 26 §4 asks every merge to log. */
-  evidence?: { titleSim: number; venue: VenueVerdict; signal: MatchVerdict['signal'] };
+  /** The matcher's own verdict for this merge, the "which signals fired"
+   *  evidence spec 26 §4 asks every merge to log. `signal: 'ai_adjudicated'`
+   *  marks a Phase 3 merge (evaluateMatch alone never produces that value,
+   *  a Sonnet verdict decided it, not the deterministic matcher). */
+  evidence?: { titleSim: number; venue: VenueVerdict; signal: MatchVerdict['signal'] | 'ai_adjudicated' };
+  /** Data Arch Redesign 26 Phase 3, set only on an AI-adjudicated merge: the
+   *  model's own confidence + reasoning, logged alongside `evidence` above so
+   *  the audit trail shows the AI verdict spec 26 §4 asks for. */
+  aiVerdict?: { confidence: number; reasoning: string };
 }
 
 /** Minimal shape of a DB row we dedupe against. `address`/`place_id`/`recurring`
- *  are optional (Data Arch Redesign 26 Phase 2) — `dedupe()`'s own tests and
+ *  are optional (Data Arch Redesign 26 Phase 2), `dedupe()`'s own tests and
  *  call sites that don't care about the venue signal can omit them, and the
  *  venue-aware matcher correctly treats that as "unknown venue". `event_key`
  *  (Phase 4) is the row's own already-persisted canonical identity, read
@@ -60,12 +66,12 @@ export const NEAR_THRESHOLD = 0.55;
 
 /** Short source key for the drop log, derived from the candidate's URL. Exported
  *  for reuse by ingest/adapters/_shared/resolveNeighborhood.ts (Doc 19 §4.1 step 3
- *  — source-implied venue), so the two never drift apart.
+ *, source-implied venue), so the two never drift apart.
  *  Data Arch Redesign 23 Phase 2: this MAP used to cover only 13 of the 33
  *  sources (canonical-source preference fell back to a raw hostname string for
  *  the rest, which could never match a `sources.key`). Extended here to cover
  *  every adapter so authorityOf() below resolves correctly for all of them.
- *  The first 13 entries are UNCHANGED from before this migration — resolveNeighborhood.ts's
+ *  The first 13 entries are UNCHANGED from before this migration, resolveNeighborhood.ts's
  *  SOURCE_KEY_NEIGHBORHOOD dict depends on their exact output strings. */
 export function sourceKeyOf(url: string | undefined): string {
   if (!url) return 'unknown';
@@ -83,7 +89,7 @@ export function sourceKeyOf(url: string | undefined): string {
     [/downtownsb\.org/i, 'downtownSB'],
     [/eventbrite\.com/i, 'eventbrite'],
     [/sbfarmersmarket\.org/i, 'farmersMarkets'],
-    // added Phase 2 — previously unmapped, fell back to a raw hostname string
+    // added Phase 2, previously unmapped, fell back to a raw hostname string
     [/musicacademy\.org/i, 'musicacademy'],
     [/alcazartheater\.com|thealcazar\.org/i, 'alcazar'],
     [/centerstagetheater\.org/i, 'centerstage'],
@@ -113,7 +119,7 @@ export function sourceKeyOf(url: string | undefined): string {
  *  `sources.authority` (higher wins) instead of the retired hardcoded
  *  SOURCE_RANK regex table (lower-wins rank numbers). `byKey` is loaded once
  *  per run from the `sources` table by the caller (ingest/run.ts) and passed
- *  in — dedupe.ts stays DB-free. A source missing from `byKey` (shouldn't
+ *  in, dedupe.ts stays DB-free. A source missing from `byKey` (shouldn't
  *  happen once `sources` is fully seeded) sorts last, same as the old
  *  table's rank-99 fallback for an unrecognized URL. */
 export function sourceAuthority(url: string | undefined, byKey: Map<string, number>): number {
@@ -169,7 +175,7 @@ export function dedupe(
       });
     };
 
-    // 1) exact id — already in DB, or a re-emit within this batch
+    // 1) exact id, already in DB, or a re-emit within this batch
     if (existingIds.has(c.id)) { drop('exact id already in DB'); continue; }
     if (keptIds.has(c.id)) { drop('exact id repeated in batch'); continue; }
 
@@ -193,10 +199,10 @@ export function dedupe(
 }
 
 // ============================================================================
-// Data Arch Redesign 26 Phase 2 — venue-aware matching (LIVE as of Phase 2's
+// Data Arch Redesign 26 Phase 2, venue-aware matching (LIVE as of Phase 2's
 // go-live; ingest/run.ts's main() calls dedupeVenueAware(), not dedupe()).
 // `dedupe()` above is kept byte-for-byte unchanged as the plain deterministic
-// core — still exported and unit-tested on its own, and reused as the "OLD"
+// core, still exported and unit-tested on its own, and reused as the "OLD"
 // baseline by the DEDUPE_VENUE_SHADOW audit report in run.ts. `evaluateMatch()`
 // and `dedupeVenueAware()` below are the improved matcher from Doc 16 §3.6:
 // the venue signal, the recurring/time-TBD path, and the ambiguous band that
@@ -205,7 +211,7 @@ export function dedupe(
 // going live.
 // ============================================================================
 
-/** Below this, a pair is never even ambiguous — matches spec 26 §3.3's
+/** Below this, a pair is never even ambiguous, matches spec 26 §3.3's
  *  ambiguous-band floor (~0.35-0.55). */
 const AMBIGUOUS_FLOOR = 0.35;
 
@@ -219,16 +225,16 @@ export interface VenueAwareItem {
 
 export type VenueVerdict = 'agree' | 'disagree' | 'unknown';
 
-/** 'merge': deterministic, clear — Phase 2 acts on this directly.
+/** 'merge': deterministic, clear, Phase 2 acts on this directly.
  *  'split': deterministic, clearly distinct (or vetoed by disagreeing venues).
  *  'ambiguous': spec 3.3's band (~0.35-0.55 title sim, same day/cadence,
- *  same-or-unknown venue) — Phase 2 has no AI yet, so this is held apart
+ *  same-or-unknown venue), Phase 2 has no AI yet, so this is held apart
  *  (same visible effect as 'split' today) but reported separately as a
  *  preview of Phase 3's adjudication volume. NEVER auto-merged: an earlier
  *  version of this matcher let venue agreement auto-merge this band, and the
  *  live shadow report caught it producing real false merges (e.g. two
  *  different Music Academy masterclasses on the same day, two different
- *  civic meetings sharing a generic placeholder address) — a title match
+ *  civic meetings sharing a generic placeholder address), a title match
  *  this weak needs a real adjudicator, not a lowered threshold. */
 export type MatchOutcome = 'merge' | 'split' | 'ambiguous';
 
@@ -251,14 +257,13 @@ function venueVerdict(a: VenueAwareItem, b: VenueAwareItem, dictionary: VenueDic
 
 /** The Phase 2 matcher: same deterministic core as `dedupe()` for the clear
  *  cases (never touches AI) plus the venue signal from spec 26 §3.2/§3.3:
- *   - Different KNOWN venues never match, regardless of title similarity —
- *     bias toward split (a false-split just looks like a duplicate; a
+ *   - Different KNOWN venues never match, regardless of title similarity, *     bias toward split (a false-split just looks like a duplicate; a
  *     false-merge hides a real event).
  *   - A clear title match (>0.55) still merges deterministically, same as
  *     today, on same day (or, new: same recurring cadence when neither side
- *     has a start time — closing the gap where time-TBD/recurring rows never
+ *     has a start time, closing the gap where time-TBD/recurring rows never
  *     got compared at all).
- *   - A mid-band title match (~0.35-0.55) is 'ambiguous', not merged — that's
+ *   - A mid-band title match (~0.35-0.55) is 'ambiguous', not merged, that's
  *     spec 3.3's band for Phase 3's AI adjudication, whether the venue agrees
  *     or is simply unknown (only a KNOWN, DISAGREEING venue forces 'split'). */
 export function evaluateMatch(a: VenueAwareItem, b: VenueAwareItem, dictionary: VenueDictEntry[]): MatchVerdict {
@@ -275,7 +280,7 @@ export function evaluateMatch(a: VenueAwareItem, b: VenueAwareItem, dictionary: 
     return result('split');
   }
 
-  // Recurring / time-TBD path — no start time on at least one side.
+  // Recurring / time-TBD path, no start time on at least one side.
   const cadenceA = cadenceKey(a.recurring ?? []);
   const cadenceB = cadenceKey(b.recurring ?? []);
   if (cadenceA && cadenceA === cadenceB) {
@@ -347,7 +352,7 @@ export function dedupeVenueAware(
 
     const cItem = asItem(c);
 
-    // Data Arch Redesign 26 Phase 4/5 — a near-dupe drop carries the
+    // Data Arch Redesign 26 Phase 4/5, a near-dupe drop carries the
     // SURVIVOR's event_key (not a fresh computation from the dropped row's
     // own title) plus the match evidence, so the caller can (a) record the
     // dropped source's corroboration even though its row never lands, and

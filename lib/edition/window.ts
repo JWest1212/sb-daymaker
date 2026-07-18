@@ -1,8 +1,8 @@
 // lib/edition/window.ts
 //
 // Window + per-type chrome constants (edition_build_spec.md §3.2, anatomy v3 §1).
-// Reuses sbDay (lib/explore.ts) — the single source of truth for SB-local day
-// keying — so the drafter's window never disagrees with the public feed.
+// Reuses sbDay (lib/explore.ts), the single source of truth for SB-local day
+// keying, so the drafter's window never disagrees with the public feed.
 
 import { sbDay } from "../explore";
 import type { EditionType } from "./types";
@@ -39,7 +39,7 @@ export const EDITION_CONFIG: Record<EditionType, EditionConfig> = {
  *  immediately AFTER edition_date (Thu edition -> Fri..Sun; Sun edition -> Mon..Thu). */
 export function windowDaysFor(editionType: EditionType, editionDateKey: string): string[] {
   const [y, m, d] = editionDateKey.split("-").map(Number);
-  const base = Date.UTC(y, m - 1, d, 12); // noon anchor — matches sbWindowDays/sbDatesFrom convention
+  const base = Date.UTC(y, m - 1, d, 12); // noon anchor, matches sbWindowDays/sbDatesFrom convention
   const { spanDays } = EDITION_CONFIG[editionType];
   const days: string[] = [];
   for (let i = 1; i <= spanDays; i++) days.push(sbDay(base + i * 86_400_000));
@@ -53,7 +53,7 @@ export function weekdayOf(sbDateKey: string): number {
 }
 
 // The send cron fires at 14:00 UTC on an edition's own date (vercel.json:
-// "0 14 * * 0,4" — same fixed-UTC, DST-drift-accepted convention as every
+// "0 14 * * 0,4", same fixed-UTC, DST-drift-accepted convention as every
 // other cron in this project; see app/api/cron/send-edition/route.ts).
 export const SEND_HOUR_UTC = 14;
 

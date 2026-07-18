@@ -5,7 +5,7 @@ import { getAdminSupabase } from "@/lib/supabaseAdmin";
 export const dynamic = "force-dynamic";
 
 // POST { thing_id } -> Phase 7 (V-8): clears things.venue_id. Deliberately
-// leaves the thing's current photo fields untouched (Jim's default call) — it
+// leaves the thing's current photo fields untouched (Jim's default call), it
 // re-resolves on the next nightly pass / backfill rather than being cleared to
 // a gradient immediately, which would visibly regress the card before anything
 // better has had a chance to land.

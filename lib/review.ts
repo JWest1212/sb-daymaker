@@ -1,7 +1,7 @@
 // lib/review.ts
 //
 // Shared data shapes + PURE helpers for the review cockpit (/admin/review).
-// No server-only imports here — client components import these formatters, so
+// No server-only imports here, client components import these formatters, so
 // keep next/headers + service-role code in lib/reviewServer.ts.
 
 export type ChipKind = "green" | "amber" | "evergreen";
@@ -32,7 +32,7 @@ export interface PhotoOption {
   url: string;
   source: string; // pexels | wikimedia | google | owned | placeholder
   attribution?: string;
-  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10) — set
+  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10), set
    *  ONLY for an option sourced from a venue's photo pool (google/wikimedia fetched
    *  via the venue system). Lets the apply route also approve the underlying
    *  venue_photos row (compliant refresh/fallback) instead of just writing a raw
@@ -41,8 +41,7 @@ export interface PhotoOption {
   venuePhotoId?: string;
 }
 
-/** Jim (2026-07-11): retired sources must never appear as pickable candidates —
- *  Wikimedia / Google / owned only. Historical 'pexels' entries still survive in
+/** Jim (2026-07-11): retired sources must never appear as pickable candidates, *  Wikimedia / Google / owned only. Historical 'pexels' entries still survive in
  *  older rows' stored photo_options; strip them wherever options are served to a
  *  picker (ingest's rankOptions also scrubs them on every merge-and-persist, so
  *  touched rows clean themselves over time). */
@@ -50,7 +49,7 @@ export function dropRetiredPhotoOptions<T extends { source: string }>(options: T
   return options.filter((o) => o.source !== "pexels");
 }
 
-/** Images desk — the auto-attach confidence floor, deliberately stricter than
+/** Images desk, the auto-attach confidence floor, deliberately stricter than
  *  the Venues tab's "surface anything above zero for human review": an exact
  *  place_id hit (+100), or two name-pattern hits (+20), or one name hit plus a
  *  strong proximity bonus. A bare single name-substring hit (10) stays a
@@ -82,7 +81,7 @@ export interface QueueRow {
   tags: string[];
   when: string; // pre-formatted mono string
   chip: ChipKind;
-  /** Data Arch Redesign 24 Phase 4 — the trust score (0-1, null if not yet
+  /** Data Arch Redesign 24 Phase 4, the trust score (0-1, null if not yet
    *  scored) and the 1-3 weakest, plain-language reasons behind it (Doc 24
    *  §4's "why it's here"), e.g. "no photo yet", "single source". */
   data_confidence: number | null;
@@ -113,9 +112,9 @@ export interface CatalogRow {
   editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   photo_url: string | null;
   photo_source: string | null;
-  /** Card Imagery — non-owned photo credit (Build Spec Phase 1 §4.3). */
+  /** Card Imagery, non-owned photo credit (Build Spec Phase 1 §4.3). */
   photo_attribution: string | null;
-  /** Card Imagery — the resolver's ranked alternates, so the Live-catalog edit sheet
+  /** Card Imagery, the resolver's ranked alternates, so the Live-catalog edit sheet
    *  can offer a photo picker without a second fetch. */
   photo_options: PhotoOption[];
   tags: string[];
@@ -123,8 +122,7 @@ export interface CatalogRow {
   pending_edit: boolean; // an edit is awaiting review in the queue
   groupKey: string;      // day/bucket this row belongs to (for the divider grouping)
   groupLabel: string;    // header shown when the group changes ("Today · Thu, Jul 3", "Recurring…")
-  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10) —
-   *  carried so the edit sheet's photo section knows whether this thing already
+  /** Card Imagery Build Spec Phase 2 §5, Live-catalog follow-up (2026-07-10), *  carried so the edit sheet's photo section knows whether this thing already
    *  has a venue (fetch reuses it) or would need one auto-created on first fetch,
    *  and whether there's a place_id/lat/lng to seed that venue with. */
   place_id: string | null;
@@ -134,7 +132,7 @@ export interface CatalogRow {
 }
 
 /** The editable draft held while a card is in Edit mode. Title is editable in v2
- *  (start time is not — reject & re-ingest to change a time). */
+ *  (start time is not, reject & re-ingest to change a time). */
 export interface ReviewDraft {
   title: string;
   blurb: string;
@@ -162,7 +160,7 @@ export interface DropRow {
   source_url: string | null;
 }
 
-/** Data Arch Redesign 26 Phase 5 — a dedupe merge the founder can reverse.
+/** Data Arch Redesign 26 Phase 5, a dedupe merge the founder can reverse.
  *  `id` is the dropped/archived thing's own row (status='archived',
  *  merged_into=survivorId); `survivorTitle` is looked up for display so the
  *  panel can show "X was merged into Y" without a second client-side fetch. */
@@ -226,7 +224,7 @@ export function chipLabel(chip: ChipKind): string {
   return chip === "green" ? "Deterministic start" : chip === "amber" ? "Confirm cadence" : "Evergreen";
 }
 
-/** Data Arch Redesign 24 Phase 4 — confidence display tier for the Queue badge.
+/** Data Arch Redesign 24 Phase 4, confidence display tier for the Queue badge.
  *  Thresholds are display-only (not the publish gate itself, which lives in
  *  ingest/publishGate.ts) but chosen to roughly track it, so "high" reads as
  *  "about what auto-publishes" and "low" reads as "about what gets held." */
@@ -252,7 +250,7 @@ export function whenString(tier: number, starts_at: string | null, scheds: Sched
 }
 
 /** Data Arch Redesign 24 §4 order: highest data_confidence first ("the most-
- *  likely-good sit at top — fast approvals first"), then Doc 11 §9's original
+ *  likely-good sit at top, fast approvals first"), then Doc 11 §9's original
  *  order (dated rows by soonest start, then start-less by newest) as the
  *  tiebreak within a confidence tier. Rows with no score yet (undefined, not
  *  a real 0) sort by date alone, same as before this field existed. */
@@ -264,7 +262,7 @@ export function prioritize<T extends { starts_at: string | null; data_confidence
     if (a.starts_at && b.starts_at) return a.starts_at.localeCompare(b.starts_at);
     if (a.starts_at) return -1;
     if (b.starts_at) return 1;
-    return 0; // both start-less — keep DB order (fetched newest-first)
+    return 0; // both start-less, keep DB order (fetched newest-first)
   });
 }
 
@@ -292,10 +290,10 @@ interface RegistrySchedRow {
 const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /**
- * Build a copy-paste reference summary for a registry-candidate item — the
+ * Build a copy-paste reference summary for a registry-candidate item, the
  * founder pastes these values into the "Add a rhythm" form at
  * /admin/coverage/recurring-rhythms, then rejects this card. (§3.5)
- * Plain "Field: value" lines, not code — the destination is a web form, not
+ * Plain "Field: value" lines, not code, the destination is a web form, not
  * a source file, since the Data Arch Redesign recurring-registry migration.
  */
 export function buildRegistrySnippet(
@@ -327,7 +325,7 @@ export function buildRegistrySnippet(
     `Category: ${item.happening_category ?? 'recurring_market'}`,
     `Frequency: ${s.frequency ?? 'weekly'}`,
     `Day(s) of week: ${daysOfWeek.join(', ')}`,
-    `Start time: ${s.start_time ?? '(unknown — leave blank, check "time TBD")'}`,
+    `Start time: ${s.start_time ?? '(unknown, leave blank, check "time TBD")'}`,
     s.end_time ? `End time: ${s.end_time}` : '',
     item.tags.length ? `Tags: ${item.tags.join(', ')}` : '',
     item.source ? `Source URL: ${item.source}` : '',
@@ -336,7 +334,7 @@ export function buildRegistrySnippet(
   return lines.join('\n');
 }
 
-/** Data Arch Redesign 23 Phase 4 — a source's health judged against ITS OWN
+/** Data Arch Redesign 23 Phase 4, a source's health judged against ITS OWN
  *  baseline (`sources.expected_yield`), never a global threshold. This is the
  *  fix for the exact gap `rollupSources()` above has: a source whose normal
  *  yield is 0 never false-alarms (no baseline yet = nothing to compare
@@ -354,10 +352,10 @@ export interface SourceHealthRow {
 
 export type SourceHealth = "ok" | "below_baseline" | "paused";
 
-/** "Materially below" baseline, per Doc 16 §3.9/§3.10 — a fraction, not a hard
+/** "Materially below" baseline, per Doc 16 §3.9/§3.10, a fraction, not a hard
  *  zero, so a source that normally lands 20 and drops to 2 still trips this
  *  even though 2 isn't literally zero. Sources with no established baseline
- *  yet (`expected_yield` 0) can never trip it — nothing to compare against. */
+ *  yet (`expected_yield` 0) can never trip it, nothing to compare against. */
 const BELOW_BASELINE_FRACTION = 0.34;
 
 export function sourceHealth(s: Pick<SourceHealthRow, "status" | "expected_yield" | "last_yield">): SourceHealth {

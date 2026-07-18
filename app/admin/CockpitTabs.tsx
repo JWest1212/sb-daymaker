@@ -17,7 +17,7 @@ const TABS = [
 
 /** Cockpit v2 shell chrome: pacific-dark topbar + the four-tab strip.
  *  Tabs are real routes (deep-linkable, back-button works). Counts are the
- *  latest-run snapshot from the server layout — they refresh on navigation. */
+ *  latest-run snapshot from the server layout, they refresh on navigation. */
 export function CockpitTabs({ counts }: { counts: Counts }) {
   const pathname = usePathname();
   return (

@@ -7,7 +7,7 @@ import { sbDay } from "@/lib/explore";
 export const dynamic = "force-dynamic";
 
 // POST { thing_id, venue_id } -> approve a fuzzy match (Card Imagery Build Spec
-// Phase 2 §5.3 "Matches to review" pane). Writes things.venue_id — the ONLY way a
+// Phase 2 §5.3 "Matches to review" pane). Writes things.venue_id, the ONLY way a
 // fuzzy match is ever persisted (the resolver only auto-attaches on an EXACT
 // place_id hit; this route is the founder-reviewed path for everything else).
 // If the venue already has an approved photo pool, also apply today's rotation

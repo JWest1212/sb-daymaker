@@ -1,6 +1,6 @@
 // ingest/adapters/nightlifeRhythms.ts
 //
-// SB nightlife recurring rhythms — registry candidates (§8.2).
+// SB nightlife recurring rhythms, registry candidates (§8.2).
 // Tier 2 · recurring_nightlife · seed nightlife, date_night, solo, free_sb.
 //
 // Only schedules published directly on each venue's own website are included.
@@ -8,12 +8,12 @@
 //
 // Confirmed published schedules (verified 2026-06-30):
 //   Figueroa Mountain Brewing (Funk Zone, 137 Anacapa St):
-//     Tuesdays 7pm — Head Games Trivia (published at figmtnbrew.com/santabarbara)
-//     Fridays 7–10pm — Live music
-//     Saturdays 7–10pm — Live music
+//     Tuesdays 7pm, Head Games Trivia (published at figmtnbrew.com/santabarbara)
+//     Fridays 7–10pm, Live music
+//     Saturdays 7–10pm, Live music
 //   Dargan's Irish Pub (18 E Ortega St):
-//     Tuesdays 9pm–1am — Karaoke (darganssb.com/karaoke)
-//     Thursdays 9pm–1am — Karaoke
+//     Tuesdays 9pm–1am, Karaoke (darganssb.com/karaoke)
+//     Thursdays 9pm–1am, Karaoke
 //
 // Out of scope (Instagram-only or schedule not on venue website):
 //   Brass Bear Brewing, Wine Therapy SB, Hotel Californian, Validation Ale
@@ -68,9 +68,9 @@ export const nightlifeRhythms: SourceAdapter = {
   useManagedScrape: false,
   async fetch(): Promise<RawCandidate[]> {
     return [
-      // Figueroa Mountain Brewing — Funk Zone, SB
+      // Figueroa Mountain Brewing, Funk Zone, SB
       rhythm(
-        'Head Games Trivia Night — Figueroa Mountain Brewing',
+        'Head Games Trivia Night, Figueroa Mountain Brewing',
         'Figueroa Mountain Brewing Co. (Funk Zone)',
         '137 Anacapa St, Santa Barbara, CA 93101',
         'waterfront',
@@ -81,7 +81,7 @@ export const nightlifeRhythms: SourceAdapter = {
         true,     // free per venue listing
       ),
       rhythm(
-        'Live Music — Figueroa Mountain Brewing',
+        'Live Music, Figueroa Mountain Brewing',
         'Figueroa Mountain Brewing Co. (Funk Zone)',
         '137 Anacapa St, Santa Barbara, CA 93101',
         'waterfront',
@@ -92,7 +92,7 @@ export const nightlifeRhythms: SourceAdapter = {
         true,
       ),
       rhythm(
-        'Live Music — Figueroa Mountain Brewing',
+        'Live Music, Figueroa Mountain Brewing',
         'Figueroa Mountain Brewing Co. (Funk Zone)',
         '137 Anacapa St, Santa Barbara, CA 93101',
         'waterfront',
@@ -104,7 +104,7 @@ export const nightlifeRhythms: SourceAdapter = {
       ),
       // Dargan's Irish Pub
       rhythm(
-        "Karaoke Night — Dargan's Irish Pub",
+        "Karaoke Night, Dargan's Irish Pub",
         "Dargan's Irish Pub",
         '18 E Ortega St, Santa Barbara, CA 93101',
         'downtown',
@@ -115,7 +115,7 @@ export const nightlifeRhythms: SourceAdapter = {
         false,
       ),
       rhythm(
-        "Karaoke Night — Dargan's Irish Pub",
+        "Karaoke Night, Dargan's Irish Pub",
         "Dargan's Irish Pub",
         '18 E Ortega St, Santa Barbara, CA 93101',
         'downtown',

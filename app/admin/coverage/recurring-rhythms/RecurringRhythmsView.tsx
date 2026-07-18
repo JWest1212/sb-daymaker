@@ -69,7 +69,7 @@ export function RecurringRhythmsView({ initialRhythms }: { initialRhythms: Recur
     setTogglingId(null);
     if (res?.ok) {
       setRhythms((rows) => rows.map((row) => (row.id === r.id ? { ...row, active: !r.active } : row)));
-      showToast(!r.active ? `${r.title} is active — next nightly run includes it.` : `${r.title} turned off — next nightly run skips it.`);
+      showToast(!r.active ? `${r.title} is active, next nightly run includes it.` : `${r.title} turned off, next nightly run skips it.`);
     } else {
       showToast(res?.error ? `Toggle failed: ${res.error}` : "Toggle failed.");
     }
@@ -120,8 +120,7 @@ export function RecurringRhythmsView({ initialRhythms }: { initialRhythms: Recur
         <Link href="/admin/coverage" style={{ fontSize: ".78rem", color: "var(--pacific)" }}>&larr; Coverage</Link>
         <h1 className="qtitle" style={{ marginTop: 6 }}>Recurring Rhythms</h1>
         <p className="sub">
-          The standing weekly / biweekly / monthly happenings the scrapers can&apos;t reliably find —
-          farmers&apos; markets, live-music nights, art walks. Add or edit here; the next nightly run
+          The standing weekly / biweekly / monthly happenings the scrapers can&apos;t reliably find, farmers&apos; markets, live-music nights, art walks. Add or edit here; the next nightly run
           picks it up, no code change.
         </p>
       </div>
@@ -159,7 +158,7 @@ export function RecurringRhythmsView({ initialRhythms }: { initialRhythms: Recur
                 </tr>
               ))}
               {sorted.length === 0 ? (
-                <tr><td colSpan={5}>No rhythms yet — add the first one above.</td></tr>
+                <tr><td colSpan={5}>No rhythms yet, add the first one above.</td></tr>
               ) : null}
             </tbody>
           </table>
@@ -225,7 +224,7 @@ export function RecurringRhythmsView({ initialRhythms }: { initialRhythms: Recur
               </div>
               <label className="chk">
                 <input type="checkbox" checked={form.timeUnknown} onChange={(e) => setForm({ ...form, timeUnknown: e.target.checked, start: "", end: "" })} />
-                Time not published — show &quot;(time TBD)&quot; instead of guessing
+                Time not published, show &quot;(time TBD)&quot; instead of guessing
               </label>
               <label className="editlabel">Source URL
                 <input className="edit-input" type="url" value={form.sourceUrl} onChange={(e) => setForm({ ...form, sourceUrl: e.target.value })} />

@@ -3,9 +3,10 @@ import type { Weather } from "@/lib/weather";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
+import { eventCardWhen } from "@/lib/format/eventTime";
 
 /** Shared by Hero (sky variant) and the R1 "Today's pick" card's contextual
- *  eyebrow (heroEyebrow below) — moved here so both can import one definition. */
+ *  eyebrow (heroEyebrow below), moved here so both can import one definition. */
 export function isGrayDay(weather: Weather | null): boolean {
   if (!weather || weather.isClear) return false;
   const c = weather.condition.toLowerCase();
@@ -47,28 +48,14 @@ export function cardPlace(t: Thing): string | undefined {
   return t.neighborhood ? prettify(t.neighborhood) : undefined;
 }
 
-function eventTime(iso: string): string {
-  // Assemble from parts rather than letting Intl auto-join: Node's ICU and the
-  // browser's disagree on the weekday/time separator ("Fri 12 PM" vs "Fri, 12
-  // PM"), which causes a React hydration mismatch. Joining the meaningful parts
-  // ourselves yields the same string on server and client.
-  const parts = new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    hour: "numeric",
-    timeZone: "America/Los_Angeles",
-  }).formatToParts(new Date(iso));
-  const value = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((p) => p.type === type)?.value ?? "";
-  return [value("weekday"), value("hour"), value("dayPeriod")]
-    .filter(Boolean)
-    .join(" ");
-}
-
 export function cardFacts(t: Thing): string[] {
   const facts: string[] = [];
   if (t.free) facts.push("Free");
   else if (t.price_band) facts.push(t.price_band);
-  if (t.type === "event" && t.starts_at) facts.push(eventTime(t.starts_at));
+  // G0.3, the exact time, via the one shared formatter the detail page also uses.
+  // Previously this dropped minutes ("Fri 8 PM"), disagreeing with the detail's
+  // "8:30 PM". Now both build the clock token from eventClock().
+  if (t.type === "event" && t.starts_at) facts.push(eventCardWhen(t.starts_at));
   if (t.is_21_plus) facts.push("21+");
   return facts;
 }
@@ -77,10 +64,10 @@ export function cardBlurb(t: Thing): string {
   return t.blurb ?? t.reason_to_go ?? "";
 }
 
-/** Card Imagery Build Spec Phase 3 §6.2 — `ListCard`'s motif/bigtype render input,
+/** Card Imagery Build Spec Phase 3 §6.2, `ListCard`'s motif/bigtype render input,
  *  assembled from the fields `resolveImages()` already wrote. `undefined` when the
  *  thing has no visual assigned (a real photo, or a row that predates Phase 3's
- *  backfill) — `ListCard` falls through to the pre-existing gradient in that case. */
+ *  backfill), `ListCard` falls through to the pre-existing gradient in that case. */
 export function cardVisual(t: Thing): CardVisual | undefined {
   if (t.visual_kind !== "motif" && t.visual_kind !== "bigtype") return undefined;
   return {
@@ -98,7 +85,7 @@ export function cardVisual(t: Thing): CardVisual | undefined {
 // --------------------------------------------------------------------------
 
 // Live `happening_category` enum values (lib/enrich.ts) that back each eyebrow
-// bucket — the spec's wireframe shorthand (music/arts/happyhour) mapped onto the
+// bucket, the spec's wireframe shorthand (music/arts/happyhour) mapped onto the
 // real categories the pipeline actually writes.
 const MUSIC_CATS = new Set(["live_music"]);
 const ARTS_CATS = new Set(["arts_theater", "recurring_arts"]);
@@ -146,12 +133,12 @@ const SB_YMD = new Intl.DateTimeFormat("en-CA", {
 });
 
 /** Hero meta time, e.g. `4–6 PM`. Empty when the pick has no start time
- *  (evergreen places, recurring items — venue then stands alone). */
+ *  (evergreen places, recurring items, venue then stands alone). */
 export function heroTime(t: Thing): string {
   if (!t.starts_at) return "";
   const s = clockParts(t.starts_at);
   if (!t.ends_at) return `${s.time} ${s.period}`;
-  // Multi-day span: a clock range would be nonsense — show the start only.
+  // Multi-day span: a clock range would be nonsense, show the start only.
   if (SB_YMD.format(new Date(t.starts_at)) !== SB_YMD.format(new Date(t.ends_at)))
     return `${s.time} ${s.period}`;
   const e = clockParts(t.ends_at);
@@ -161,7 +148,7 @@ export function heroTime(t: Thing): string {
 }
 
 /** Card CTA affordance: ticketing handoffs get "Get tickets", else "See details".
- *  Rendered as text inside the card's single tap target — never a nested link. */
+ *  Rendered as text inside the card's single tap target, never a nested link. */
 export function heroCta(t: Thing): string {
   const url = (t.buy_url ?? "").toLowerCase();
   const ticketing = url.includes("axs") || url.includes("ticketmaster");

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { reduceToText, buildExtractUserMessage, extractTool } from './extract';
 
-describe('reduceToText — strips chrome, keeps content', () => {
+describe('reduceToText, strips chrome, keeps content', () => {
   it('removes nav/header/footer/script/style before extracting text', () => {
     const html = `<html><body>
       <header>Site Header Nav</header>

@@ -3,15 +3,15 @@
 // Re-hosts a chosen image into the edition-media bucket (spec §3.5: "Email and
 // permalink reference the hosted URL, absolute, non-expiring; never a Places
 // URL that can expire"). Keyed by a hash of the source URL, so the same photo
-// is never fetched/uploaded twice across picks or editions — the on-disk
+// is never fetched/uploaded twice across picks or editions, the on-disk
 // analog of ingest/images.ts's image_cache table.
 //
 // Graceful degradation: any failure (network, unsupported type, oversized)
 // returns the original source URL unchanged rather than throwing. A working
-// hotlinked image beats a broken pick — this mirrors the rest of the image
+// hotlinked image beats a broken pick, this mirrors the rest of the image
 // pipeline's "never block on image trouble" posture (state matrix §10).
 //
-// Deliberately NOT `import "server-only"` — draft.ts (which calls this) must
+// Deliberately NOT `import "server-only"`, draft.ts (which calls this) must
 // stay importable from the ingest/ worker via plain Node/tsx, not just
 // Next.js's bundler, and "server-only" only resolves inside the latter.
 

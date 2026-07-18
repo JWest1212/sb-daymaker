@@ -12,7 +12,7 @@ export default async function ExplorePage() {
     getPublishedThings(),
     getWeather(),
     getLiveHeroPinId(), // today's founder hero pin, if any (overrides the ranker)
-    getVenuePhotoPools(), // Card Imagery Phase 2 §5.4 — feeds CascadeFeed's per-feed dedupe
+    getVenuePhotoPools(), // Card Imagery Phase 2 §5.4, feeds CascadeFeed's per-feed dedupe
   ]);
 
   return (

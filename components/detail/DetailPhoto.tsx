@@ -2,7 +2,7 @@
 
 import { usePhotoFallback } from "@/components/ui/Card";
 
-/** Card Imagery Build Spec Phase 2 §5.5 "fallback resilience" — the thing detail
+/** Card Imagery Build Spec Phase 2 §5.5 "fallback resilience", the thing detail
  *  page renders its own photo block (not ListCard/PickCard), so it needs the same
  *  broken-image → gradient fallback as the card rail and hero. Small client island
  *  (matches BackButton/DetailSaveButton's pattern) inside the otherwise

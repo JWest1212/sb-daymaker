@@ -1,14 +1,14 @@
 // lib/edition/render.ts
 //
 // The renderer (edition_build_spec.md §6, amended by
-// edition_build_spec_ADDENDUM_mobile.md Part A — mobile-first base sizing).
+// edition_build_spec_ADDENDUM_mobile.md Part A, mobile-first base sizing).
 // Pure functions: given a fully resolved edition (overrides already applied
-// by the caller — renderData.ts — so this file knows nothing about the DB),
+// by the caller, renderData.ts, so this file knows nothing about the DB),
 // produce the email HTML, its plain-text alternative, and preview markup for
 // the permalink page (which reuses this same HTML, so the mobile sizing
-// applies there too — see app/edition/[date]/route.ts).
+// applies there too, see app/edition/[date]/route.ts).
 //
-// Table-based layout + inline styles (email clients strip <style> — the mockup's
+// Table-based layout + inline styles (email clients strip <style>, the mockup's
 // CSS custom properties become literal hex values here, sourced from
 // sbdaymaker_tokens.css, never re-invented). The zoned-band effect survives as
 // table-cell background colors. A small <style> block layers in dark-mode
@@ -16,27 +16,25 @@
 // also carry class names) and web-font declarations with system-font fallbacks.
 //
 // Sizing note (addendum Part A, then a second pass after real-device
-// testing): these are BASE sizes, not gated behind a min-width media query —
-// Gmail and others strip media queries, and the mobile-tuned sizes read fine
+// testing): these are BASE sizes, not gated behind a min-width media query, // Gmail and others strip media queries, and the mobile-tuned sizes read fine
 // on desktop too. The first live test send (2026-07-09) rendered correctly
 // but too small on iPhone (13px body text, 78px thumbnails, sub-44px tap
 // targets). Part A's addendum sizes were a real improvement but still read
-// small on a second real-device test — body copy topped out at 15-17px,
+// small on a second real-device test, body copy topped out at 15-17px,
 // under iOS's own 17pt native body-text baseline (Apple HIG), so a reader's
 // eye is calibrated larger than what shipped. This second pass pushes body
 // copy to 16-19px and titles/headlines further up accordingly, matching how
 // premium mobile-read newsletters (Morning Brew, Stratechery, etc.) size
-// their type — comfortably past the native baseline, not just at it.
+// their type, comfortably past the native baseline, not just at it.
 //
-// Em-dash normalization (§6.6) runs here, last, over every assembled string —
-// belt-and-suspenders even though the drafter's own authored strings
+// Em-dash normalization (§6.6) runs here, last, over every assembled string, // belt-and-suspenders even though the drafter's own authored strings
 // (subject/preheader/greeting) are already clean and reused thing fields
 // shouldn't be rewritten upstream of this pass.
 
 import { stripEmDashes } from "./emdash";
 import type { EditionType } from "./types";
 
-// ---- tokens (sbdaymaker_tokens.css — literal hex, never re-derived) --------
+// ---- tokens (sbdaymaker_tokens.css, literal hex, never re-derived) --------
 const C = {
   plaster: "#F6F1E7",
   plaster2: "#EFE7D8",
@@ -51,7 +49,7 @@ const C = {
   line: "#D8CDB8",
 } as const;
 
-// Hand-built dark mapping (the app itself has no dark theme to reuse — see
+// Hand-built dark mapping (the app itself has no dark theme to reuse, see
 // file header). Ink becomes the dark ground; Plaster becomes the dark text.
 const DARK = {
   bg: "#241C16",
@@ -112,7 +110,7 @@ function esc(input: string | null | undefined): string {
 
 /** Every assembled string goes through this before it's placed in markup:
  *  escape first (so a stray & in a title doesn't break the table), THEN strip
- *  em dashes (order matters not at all here since — isn't an HTML metachar,
+ *  em dashes (order matters not at all here since, isn't an HTML metachar,
  *  but keeping escape-then-normalize consistent avoids double-processing). */
 function clean(input: string | null | undefined): string {
   return esc(stripEmDashes(input ?? ""));
@@ -122,7 +120,7 @@ function altText(title: string, attribution: string | null): string {
   return attribution ? `${title} (photo: ${attribution})` : title;
 }
 
-/** A flat, on-brand color band — the email-safe equivalent of the mockup's
+/** A flat, on-brand color band, the email-safe equivalent of the mockup's
  *  golden-hour gradient hero. True CSS gradients + text-over-image aren't
  *  reliable across email clients, so "never blank" here means a solid brand
  *  color band, not a pixel-identical gradient. Height matches the real hero

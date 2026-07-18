@@ -1,13 +1,13 @@
 // ingest/adapters/centerstage.ts
 //
-// Center Stage Theater (Paseo Nuevo, SB) — server-detail scrape (§8.5).
+// Center Stage Theater (Paseo Nuevo, SB), server-detail scrape (§8.5).
 // ARTdynamix CMS by Dream Warrior Group. Not WordPress/Squarespace/Wix.
 //
 // Approach: GET /shows, parse hidden <input id="allShows"> JSON array.
 // Fields per show: id, long_title, event_date, event_start_time, url.
 // startStrategy: 'server_detail' (structured datetime from JSON baked into HTML).
 //
-// Ticketing: OvationTix (ci.ovationtix.com) — NOT AXS or Ticketmaster.
+// Ticketing: OvationTix (ci.ovationtix.com), NOT AXS or Ticketmaster.
 // The show detail pages at /show-details/{id} have OvationTix ticket links.
 // buyUrl = sourceUrl (detail page) since OvationTix link requires detail page fetch.
 //

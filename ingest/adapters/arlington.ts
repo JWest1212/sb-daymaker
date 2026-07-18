@@ -1,6 +1,6 @@
 // ingest/adapters/arlington.ts
 //
-// Arlington Theatre — server-detail scrape (§7.1). Mirrors the Lobero/Granada pattern.
+// Arlington Theatre, server-detail scrape (§7.1). Mirrors the Lobero/Granada pattern.
 // Resolution order: WP Tribe REST → iCal → server-detail HTML scrape.
 //
 // Venue-direct rule: ticket links become buyUrl. useManagedScrape: false.

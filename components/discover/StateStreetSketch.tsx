@@ -1,8 +1,8 @@
-// State Street sketch map — base SVG without marker circles.
+// State Street sketch map, base SVG without marker circles.
 // Markers are rendered as an overlay layer in GuideWalkSection so Phase 3
 // can recolor them per-stop without touching this asset.
 // Lifted from State_Street_Guide_Mockup_v8.html as drawn.
-// All colors use v9 CSS token variables — zero hardcoded hex.
+// All colors use v9 CSS token variables, zero hardcoded hex.
 
 export function StateStreetSketch({ className }: { className?: string }) {
   return (

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST { thing_id } or { thing_ids: string[] } -> Images desk "Looks right
 // as-is": persists the dismissal so these things stop reappearing in the
-// imageless queue on future loads. Mirrors /api/admin/venues/ack (V-4) — a
+// imageless queue on future loads. Mirrors /api/admin/venues/ack (V-4), a
 // cockpit-side flag, nothing the public site renders, so no revalidatePublic().
 // The bulk form backs the desk's "Keep motif (view)" tail-dismiss.
 const MAX_IDS = 500;

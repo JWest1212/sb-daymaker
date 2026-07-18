@@ -60,7 +60,7 @@ describe("sbDayOfWeek", () => {
   });
 });
 
-describe("withinHorizon — W1.3a day-aware Tier-2 on Today", () => {
+describe("withinHorizon, W1.3a day-aware Tier-2 on Today", () => {
   const thuMarket = thing({ id: "mkt", happening_tier: 2, recurring: [sched(4)] });
 
   it("a Thursday-scheduled Tier-2 shows on a Thursday Today, hides on a Friday Today", () => {
@@ -102,7 +102,7 @@ describe("withinHorizon — W1.3a day-aware Tier-2 on Today", () => {
   });
 });
 
-describe("pickEvergreenFallback — W1.3b deterministic parachute", () => {
+describe("pickEvergreenFallback, W1.3b deterministic parachute", () => {
   const pool = [
     thing({ id: "c", happening_tier: 3 }),
     thing({ id: "a", happening_tier: 3 }),
@@ -132,7 +132,7 @@ describe("pickEvergreenFallback — W1.3b deterministic parachute", () => {
   });
 });
 
-describe("cascade — W2.1a editorial_weight consumption", () => {
+describe("cascade, W2.1a editorial_weight consumption", () => {
   const ev = (id: string, over: Partial<Thing> = {}) =>
     thing({ id, ...over });
 
@@ -186,7 +186,7 @@ describe("cascade — W2.1a editorial_weight consumption", () => {
   // TRUST RULE regression (schema §A7 / wave §0.3): the ranker must never read
   // is_featured / sponsor_id. We set those adversarially on a fixture and assert the
   // order is identical to the same fixture without them. Cast through unknown because
-  // those fields aren't on the Thing type at all — proving the sort can't consume them.
+  // those fields aren't on the Thing type at all, proving the sort can't consume them.
   it("never reads is_featured / sponsor_id (order unchanged when set adversarially)", () => {
     const base = [
       ev("z", { happening_tier: 1, type: "event", starts_at: "2026-07-03T21:00:00Z" }),
@@ -200,7 +200,7 @@ describe("cascade — W2.1a editorial_weight consumption", () => {
   });
 });
 
-describe("pickAutoHero — W2.1a shared hero picker", () => {
+describe("pickAutoHero, W2.1a shared hero picker", () => {
   const TODAY = "2026-07-03";
   const todayEvent = (id: string, weight: number, hhmm: string) =>
     thing({ id, happening_tier: 1, type: "event", editorial_weight: weight, starts_at: `2026-07-03T${hhmm}:00Z` });
@@ -243,7 +243,7 @@ describe("pickAutoHero — W2.1a shared hero picker", () => {
   });
 });
 
-describe("ordinal — week header date suffixes", () => {
+describe("ordinal, week header date suffixes", () => {
   it("uses st/nd/rd for 1/2/3 (and 21/22/23, 31)", () => {
     expect(ordinal(1)).toBe("1st");
     expect(ordinal(2)).toBe("2nd");
@@ -267,7 +267,7 @@ describe("ordinal — week header date suffixes", () => {
   });
 });
 
-describe("groupByWeek — Month lead sticky header grouping", () => {
+describe("groupByWeek, Month lead sticky header grouping", () => {
   it("buckets items into SB-local Sun–Sat weeks, ascending", () => {
     const items = [
       thing({ id: "wk1", happening_tier: 1, type: "event", starts_at: "2026-07-03T19:00:00Z" }), // Fri Jul 3 → week of Jun 28–Jul 4
@@ -300,7 +300,7 @@ describe("groupByWeek — Month lead sticky header grouping", () => {
   });
 });
 
-// Home Rework spec §11.4 — the Activity door's filter, stacked with filterByLens.
+// Home Rework spec §11.4, the Activity door's filter, stacked with filterByLens.
 describe("filterByActivity", () => {
   it("passes everything through when no activity is selected", () => {
     const things = [thing({ id: "a", activities: ["outdoors"] }), thing({ id: "b", activities: [] })];

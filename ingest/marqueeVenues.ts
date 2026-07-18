@@ -1,21 +1,21 @@
 // ingest/marqueeVenues.ts
 //
-// Card Imagery Build Spec Phase 1 §4.4 — the founder-maintained marquee-venue
+// Card Imagery Build Spec Phase 1 §4.4, the founder-maintained marquee-venue
 // registry (same pattern as ingest/adapters/recurringRegistry.ts): the ~12 SB
 // landmarks whose events should inherit a founder-pinned, genuinely beautiful photo
-// instead of resolving generically per-event. Code-level, no DDL — `pinnedPhoto`
+// instead of resolving generically per-event. Code-level, no DDL, `pinnedPhoto`
 // ships empty; Jim fills it in later (cockpit pinning flow is a follow-up, not this
-// phase — see the 2026-07-09 Build Deltas ledger entry).
+// phase, see the 2026-07-09 Build Deltas ledger entry).
 //
 // Resolver priority (Build Spec §2 table): checked between "owned" and "direct
 // Google for food" (priority 2, "venue pool"). A match with no pinnedPhoto yet is a
-// no-op — the candidate falls through to the rest of the waterfall unchanged.
+// no-op, the candidate falls through to the rest of the waterfall unchanged.
 //
 // Coordinates geocoded via OpenStreetMap Nominatim, 2026-07-09 (same method as the
 // 2026-07-08 State Street ledger entry).
 
 import type { PhotoSource } from '../packages/shared/types';
-// Card Imagery Build Spec Phase 2 §5.2 — moved to lib/geo.ts so app-side code
+// Card Imagery Build Spec Phase 2 §5.2, moved to lib/geo.ts so app-side code
 // (lib/venuePool.ts) can share it too (lib/ can't import from ingest/); re-exported
 // here unchanged so this file's own existing haversineMeters call + every other
 // import site (ingest/images.ts, ingest/marqueeVenues.test.ts) keeps working as-is.
@@ -52,7 +52,7 @@ function normalize(s: string): string {
 
 /** Match a candidate to a marquee venue by name-token match OR haversine proximity
  *  (§4.4). Name match first (cheap, works with no coords); falls back to distance
- *  when the candidate has lat/lng. Pure — unit-tested independent of the resolver. */
+ *  when the candidate has lat/lng. Pure, unit-tested independent of the resolver. */
 export function matchMarqueeVenue(c: { title: string; lat?: number; lng?: number }): MarqueeVenue | null {
   const title = normalize(c.title);
   for (const v of MARQUEE_VENUES) {

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // POST { id } -> single-card free image fetch for a queue card with no options.
 // Was a Phase-13 stub; wired 2026-07-11 to the Images desk's findFreeCandidates
 // (Wikimedia geosearch top-5 when the thing has coordinates + best title-search
-// hit — free, never Google, never the paid cap). Persists the merged result to
+// hit, free, never Google, never the paid cap). Persists the merged result to
 // photo_options so the fetched candidates survive approve/reload, and returns
 // them so the queue card can show the picker immediately.
 export async function POST(req: Request) {
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     options,
     count: found,
     message: found
-      ? `Found ${found} free photo option(s) — arrow through and approve.`
-      : "No free photo found for this one — it will land with a motif, or set one from the Images tab after publishing.",
+      ? `Found ${found} free photo option(s), arrow through and approve.`
+      : "No free photo found for this one, it will land with a motif, or set one from the Images tab after publishing.",
   });
 }

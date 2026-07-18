@@ -141,7 +141,7 @@ export const goletaCivic: SourceAdapter = {
   label: 'City of Goleta',
   useManagedScrape: false,
   async fetch(w): Promise<RawCandidate[]> {
-    // 1. Localist API (if Goleta uses it — many CA cities do)
+    // 1. Localist API (if Goleta uses it, many CA cities do)
     try {
       const localistBase = 'https://events.cityofgoleta.org';
       const cands = await fetchLocalist(localistBase, w, {

@@ -1,6 +1,6 @@
 // ingest/adapters/libraries.ts
 //
-// Santa Barbara Public Library events — scrape of the Drupal 11 + Springshare
+// Santa Barbara Public Library events, scrape of the Drupal 11 + Springshare
 // LibCal integration at calendar.library.santabarbaraca.gov/events/upcoming.
 //
 // DOC MISMATCH (§6.3 says "LibCal iCal export"): the SB City Library calendar
@@ -12,7 +12,7 @@
 // appears to be a separate Santa Barbara County system not colocated on this
 // domain. No parseable calendar was found for it (2026-06-30). Deferred.
 //
-// Robots.txt (2026-06-30): Two User-agent:* blocks — block 1 allows /events/upcoming;
+// Robots.txt (2026-06-30): Two User-agent:* blocks, block 1 allows /events/upcoming;
 // block 2 is Drupal-generated boilerplate (Disallow:/ for unrecognized bots, named
 // search engines whitelisted below it). The events page is public, server-rendered,
 // and indexed by Google. Using skipRobots:true to bypass the false-positive block.
@@ -144,7 +144,7 @@ function parseCard(
   return {
     source: 'libraries',
     title,
-    venueName: branchInfo ? `${branchName.replace(/\b\w/g, (c) => c.toUpperCase())} — SBPL` : 'Santa Barbara Public Library',
+    venueName: branchInfo ? `${branchName.replace(/\b\w/g, (c) => c.toUpperCase())}, SBPL` : 'Santa Barbara Public Library',
     address: branchInfo?.address ?? '40 E Anapamu St, Santa Barbara, CA 93101',
     neighborhood: branchInfo?.neighborhood ?? 'downtown',
     tier: 1,

@@ -40,7 +40,7 @@ export function MyPlansDrawer({
   return (
     <BottomSheet open={open} onClose={onClose} kicker="Saved plans" title="My plans">
       {itineraries.length === 0 ? (
-        <p className="sbd-swap-empty">No saved plans yet — build a day and tap Save plan.</p>
+        <p className="sbd-swap-empty">No saved plans yet, build a day and tap Save plan.</p>
       ) : (
         itineraries.map((plan) => (
           <div key={plan.id} className="sbd-dayrow">

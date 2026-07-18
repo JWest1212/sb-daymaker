@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "SB Daymaker",
     short_name: "SB Daymaker",
     description:
-      "Find what's worth doing in Santa Barbara, daily — find it, save it, share it.",
+      "Find what's worth doing in Santa Barbara, daily. Find it, save it, share it.",
     start_url: "/",
     scope: "/",
     display: "standalone",

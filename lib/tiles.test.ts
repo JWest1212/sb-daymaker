@@ -82,7 +82,7 @@ describe("vibeTiles", () => {
     expect(tiles.find((t) => t.key === "rainy_day")?.count).toBe(1);
   });
 
-  it("self-gates the Dog Friendly tile — never dead-ends, appears only once a thing carries the tag", () => {
+  it("self-gates the Dog Friendly tile, never dead-ends, appears only once a thing carries the tag", () => {
     const noneMarked = [thing({ id: "a", tags: ["solo"] })];
     expect(vibeTiles(noneMarked).find((t) => t.key === "dog_friendly")).toBeUndefined();
 

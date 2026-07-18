@@ -33,11 +33,11 @@ for (const r of rows) {
   (byZone[z] ??= []).push(r.id as string);
 }
 
-console.log(`${rows.length} rows with no nearby_zone (${unzonable} unzonable — no coords, no mappable neighborhood):`);
+console.log(`${rows.length} rows with no nearby_zone (${unzonable} unzonable, no coords, no mappable neighborhood):`);
 for (const [z, ids] of Object.entries(byZone)) console.log(`  ${z.padEnd(12)} ${ids.length}`);
 
 if (!write) {
-  console.log("\nDRY RUN — pass --write to apply.");
+  console.log("\nDRY RUN, pass --write to apply.");
   process.exit(0);
 }
 

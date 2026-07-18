@@ -5,7 +5,7 @@ import type { SharedPlanPayload } from "@/lib/plan/types";
 import { SharedPlanView } from "./SharedPlanView";
 
 export const metadata: Metadata = {
-  title: "Shared day plan — SB Daymaker",
+  title: "Shared day plan · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

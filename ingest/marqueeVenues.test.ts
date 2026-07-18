@@ -33,7 +33,7 @@ describe('matchMarqueeVenue', () => {
   it('returns null with no coords and no name match', () => {
     expect(matchMarqueeVenue({ title: 'Farmers Market Downtown' })).toBeNull();
   });
-  it('every registry entry ships with an empty pinnedPhoto (Phase 1 — Jim pins later)', () => {
+  it('every registry entry ships with an empty pinnedPhoto (Phase 1, Jim pins later)', () => {
     for (const v of MARQUEE_VENUES) expect(v.pinnedPhoto).toBeUndefined();
   });
 });

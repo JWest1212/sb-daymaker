@@ -1,7 +1,7 @@
 // lib/recurringRhythms.ts
 //
 // Client-safe types + pure helpers for the Recurring Rhythms cockpit surface
-// (Data Arch Redesign — recurring-registry spec, Phase 3). Mirrors the
+// (Data Arch Redesign, recurring-registry spec, Phase 3). Mirrors the
 // neighborhoodSweep.ts / neighborhoodSweepServer.ts split: this file has no
 // server-only imports; lib/recurringRhythmsServer.ts holds the DB access.
 
@@ -42,7 +42,7 @@ export interface RecurringRhythmInput {
   occasionTags?: string[] | null;
 }
 
-// The 5 Tier-2 values (schema's happening_category enum) — the only categories
+// The 5 Tier-2 values (schema's happening_category enum), the only categories
 // a recurring rhythm can carry.
 export const RECURRING_CATEGORIES = [
   'weekly_special', 'recurring_nightlife', 'recurring_market', 'recurring_arts', 'recurring_outdoors',

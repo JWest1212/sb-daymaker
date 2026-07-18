@@ -3,7 +3,7 @@ import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { loadPendingEditions, loadEditionDraftDetail } from "@/lib/edition/cockpitServer";
 import { EditionDraftView } from "./EditionDraftView";
 
-export const metadata: Metadata = { title: "Edition draft — SB Daymaker", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Edition draft · SB Daymaker", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function EditionDraftPage() {

@@ -3,8 +3,7 @@
 // Build an ISO-8601 string with the correct America/Los_Angeles offset for a
 // given SB WALL-CLOCK time. Scrapers read a local clock time ("Jul 12 at 7:00 PM");
 // we must stamp it with -07:00 (PDT) or -08:00 (PST) depending on the date.
-// A wrong offset is a wrong start instant — exactly what the gate guards against —
-// so this is isolated and unit-tested.
+// A wrong offset is a wrong start instant, exactly what the gate guards against, // so this is isolated and unit-tested.
 
 const TZ = 'America/Los_Angeles';
 

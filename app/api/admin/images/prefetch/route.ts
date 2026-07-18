@@ -6,12 +6,12 @@ import { findFreeCandidates, type ImageOption } from "@/ingest/images";
 export const dynamic = "force-dynamic";
 
 // POST { thing_ids: string[] } -> Images desk background prefetch: run the free
-// Wikimedia search (findFreeCandidates — geosearch top-5 when the thing has
+// Wikimedia search (findFreeCandidates, geosearch top-5 when the thing has
 // coordinates, plus the best title-search hit; never Google, never the paid
 // cap) for a small batch of things and PERSIST the merged result to each
 // thing's photo_options, so the desk's candidate strips are pre-loaded and
 // survive a reload (same folding principle as /api/admin/catalog/photo).
-// Capped per call so a batch stays well inside a function timeout — the client
+// Capped per call so a batch stays well inside a function timeout, the client
 // sends pages of ids in successive calls.
 const MAX_IDS = 8;
 
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       lng: (t.lng as number) ?? null,
     }, existing);
     options[t.id as string] = merged;
-    // Persist only when the search actually widened the set — a no-hit search
+    // Persist only when the search actually widened the set, a no-hit search
     // shouldn't churn the row (or the audit-free photo_options write) at all.
     const before = new Set(existing.filter((o) => o.url).map((o) => o.url));
     if (merged.some((o) => o.url && !before.has(o.url))) {

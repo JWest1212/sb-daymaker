@@ -12,8 +12,8 @@ import { sbISO } from '../../tz';
  *
  * @param input.month     1-based month (1 = January)
  * @param input.day       day of month
- * @param input.weekday   expected day-of-week (0 = Sunday) — used as checksum
- * @param input.timeHHmm  "20:30" wall-clock time in SB local — REQUIRED for gate
+ * @param input.weekday   expected day-of-week (0 = Sunday), used as checksum
+ * @param input.timeHHmm  "20:30" wall-clock time in SB local, REQUIRED for gate
  * @param runDateISO      the ingest run date (determines forward window)
  * @returns ISO string with SB offset, or null if unresolvable / no time given
  */
@@ -22,7 +22,7 @@ export function resolveYearlessDate(
   runDateISO: string,
 ): string | null {
   const { month, day, weekday, timeHHmm } = input;
-  if (!timeHHmm) return null; // gate requires clock time — never infer
+  if (!timeHHmm) return null; // gate requires clock time, never infer
 
   const [hh, mm] = timeHHmm.split(':').map(Number);
   if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;

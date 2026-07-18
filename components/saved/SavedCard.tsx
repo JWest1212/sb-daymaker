@@ -78,7 +78,7 @@ export function SavedCard({
       )}
 
       {!selectMode ? (
-        /* C1: three equal-weight, quiet controls — no dominant pill */
+        /* C1: three equal-weight, quiet controls, no dominant pill */
         <div className="sbd-savedcard__actions">
           <button
             type="button"

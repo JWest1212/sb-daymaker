@@ -6,7 +6,7 @@
 // helper; ordering reuses the site's own cascade() ranker (never forked).
 //
 // NOTE: pins are founder INTENT. No edition-drafter consumes them yet (recon §6),
-// so this stores/validates pins but nothing acts on them downstream — that awaits
+// so this stores/validates pins but nothing acts on them downstream, that awaits
 // the edition-drafter build.
 
 import "server-only";
@@ -70,8 +70,7 @@ export async function loadHeroPlan(now: number = Date.now()): Promise<HeroPlan> 
   for (const p of pinsRes.data ?? []) pinByDate.set(p.pin_date as string, p.thing_id as string);
   const stars = (starRes.data ?? []) as unknown as StarRow[];
 
-  // Pinned things may have lost hero_eligible / been archived / had their date change —
-  // fetch their current rows so validity is computed from ground truth.
+  // Pinned things may have lost hero_eligible / been archived / had their date change, // fetch their current rows so validity is computed from ground truth.
   const pinnedIds = [...new Set([...pinByDate.values()])];
   const pinnedById = new Map<string, StarRow>();
   if (pinnedIds.length) {
@@ -85,8 +84,7 @@ export async function loadHeroPlan(now: number = Date.now()): Promise<HeroPlan> 
     const ordered = orderedThings as unknown as StarRow[];
     const candidates = ordered.map(toCandidate);
     // W2.1a: the projected "Auto" pick imports the site's own hero picker (never
-    // forked) so the cockpit rail shows exactly what the public hero will choose —
-    // a founder-boosted Tier-1 item on this date wins over the plain soonest card.
+    // forked) so the cockpit rail shows exactly what the public hero will choose, // a founder-boosted Tier-1 item on this date wins over the plain soonest card.
     const picked = pickAutoHero(orderedThings, date);
     const autoPick = picked ? toCandidate(picked as unknown as StarRow) : null;
 
@@ -111,8 +109,7 @@ export async function loadHeroPlan(now: number = Date.now()): Promise<HeroPlan> 
 
 /** Today's LIVE hero override: the thing_id of a valid pin for today, or null.
  *  Read by the public Explore hero path so same-day pins go live immediately.
- *  Deterministic + sponsor-blind (reads hero_pins only, never is_featured/sponsor_id) —
- *  a founder pin is explicitly allowed curation (build plan §0.1). Fail-soft: any
+ *  Deterministic + sponsor-blind (reads hero_pins only, never is_featured/sponsor_id), *  a founder pin is explicitly allowed curation (build plan §0.1). Fail-soft: any
  *  problem returns null and the ranker picks, so the public hero is never broken. */
 export async function getLiveHeroPinId(now: number = Date.now()): Promise<string | null> {
   const sb = getAdminSupabase();
@@ -135,7 +132,7 @@ export async function validatePin(pin_date: string, thing_id: string): Promise<{
   const row = data as unknown as StarRow | null;
   if (!row) return { ok: false, error: "thing not found" };
   if (row.status !== "published") return { ok: false, error: "not published" };
-  if (!row.hero_eligible) return { ok: false, error: "not hero-eligible (⭑) — flag it first" };
+  if (!row.hero_eligible) return { ok: false, error: "not hero-eligible (⭑), flag it first" };
   if (!occursOnDate(occThing(row), pin_date)) return { ok: false, error: "does not occur on that date" };
   return { ok: true };
 }

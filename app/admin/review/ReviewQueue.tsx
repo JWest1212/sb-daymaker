@@ -32,8 +32,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     () => queue.filter((c) => filter === "all" || String(c.happening_tier) === filter),
     [queue, filter],
   );
-  // Clamp at render time (an approval can shrink the list under the cursor) —
-  // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
+  // Clamp at render time (an approval can shrink the list under the cursor), // no state write needed, the next explicit ↑/↓ press re-anchors `active`.
   const activeIdx = Math.min(active, Math.max(0, visible.length - 1));
 
   const isHero = useCallback(
@@ -154,7 +153,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
     setEditingId(item.id);
   }, []);
 
-  // Leaving edit mode keeps the pending draft in state — nothing is saved to the
+  // Leaving edit mode keeps the pending draft in state, nothing is saved to the
   // server until Approve. There is no separate save step (§1.5).
   const exitEdit = useCallback(() => setEditingId(null), []);
 
@@ -316,7 +315,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
           <div className="panel">
             <h3>Shortcuts</h3>
             <div className="keys">
-              <div className="kr"><span className="kk">A</span> Approve — commits edits + publishes</div>
+              <div className="kr"><span className="kk">A</span> Approve, commits edits + publishes</div>
               <div className="kr"><span className="kk">E</span> Edit in place (title · blurb · tags · photo)</div>
               <div className="kr"><span className="kk">H</span> Toggle ★ Hero flag</div>
               <div className="kr"><span className="kk">R</span> Reject</div>

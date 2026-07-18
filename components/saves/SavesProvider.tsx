@@ -27,7 +27,7 @@ interface SavesContextValue {
   saveMany: (ids: string[]) => void; // add as "want" (skip already-saved)
   merge: (incoming: Record<string, SaveState>) => void; // restore (incoming wins)
   asMap: () => Record<string, SaveState>;
-  saves: SavesMap; // the raw value-bearing map — referentially fresh on every change (safe in deps)
+  saves: SavesMap; // the raw value-bearing map, referentially fresh on every change (safe in deps)
   ids: string[];
   counts: { want: number; been: number; total: number };
 }

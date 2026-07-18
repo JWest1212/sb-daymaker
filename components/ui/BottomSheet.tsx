@@ -30,7 +30,7 @@ export function BottomSheet({
   useEffect(() => {
     if (!open) return;
 
-    // Home Rework spec §11.2/§14 — focus returns to whatever opened the sheet
+    // Home Rework spec §11.2/§14, focus returns to whatever opened the sheet
     // (e.g. a Discovery door) on close. Same pattern as lib/useFocusTrap.ts.
     triggerRef.current = document.activeElement as HTMLElement | null;
 

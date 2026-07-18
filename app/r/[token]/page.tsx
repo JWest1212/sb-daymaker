@@ -5,7 +5,7 @@ import type { SaveState } from "@/components/saves/SavesProvider";
 import { RestoreView } from "./RestoreView";
 
 export const metadata: Metadata = {
-  title: "Restore saves — SB Daymaker",
+  title: "Restore saves · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";

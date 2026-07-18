@@ -15,7 +15,7 @@ export async function GET() {
     .select("id, scope_kind, scope_key, window_days, status, run_note, requested_at")
     .order("requested_at", { ascending: false })
     .limit(12);
-  // Table may not exist yet (migration pending) — degrade to empty rather than 500.
+  // Table may not exist yet (migration pending), degrade to empty rather than 500.
   if (error) return NextResponse.json({ directives: [], note: "restock_directives unavailable" });
   return NextResponse.json({ directives: data ?? [] });
 }

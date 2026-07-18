@@ -3,8 +3,8 @@ import { getPublishedGuides } from "@/lib/guides";
 import { GuideCard } from "@/components/discover/GuideCard";
 import { EmptyState } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Discover SB — SB Daymaker" };
-export const revalidate = 600; // ISR — refresh published content every 10 min
+export const metadata: Metadata = { title: "Discover SB · SB Daymaker" };
+export const revalidate = 600; // ISR, refresh published content every 10 min
 
 export default async function DiscoverPage() {
   const guides = await getPublishedGuides();

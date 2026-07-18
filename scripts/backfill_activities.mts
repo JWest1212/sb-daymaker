@@ -1,9 +1,9 @@
 // scripts/backfill_activities.mts
 //
-// Doc 21 — one-time (repeatable) backfill: derive `things.activities` from
+// Doc 21, one-time (repeatable) backfill: derive `things.activities` from
 // `happening_category` via the deterministic map in ingest/activityBackfill.ts.
 // Unions into activities[] where empty; NEVER overwrites a row that already
-// carries at least one tag (Doc 21 §4 — union, don't clobber).
+// carries at least one tag (Doc 21 §4, union, don't clobber).
 //
 //   node --env-file=.env.local --import tsx scripts/backfill_activities.mts          # dry run
 //   node --env-file=.env.local --import tsx scripts/backfill_activities.mts --write   # apply
@@ -55,12 +55,12 @@ console.log(`${rows.length} things total (all statuses)`);
 for (const [s, c] of Object.entries(byStatus)) console.log(`  ${s.padEnd(15)} ${c}`);
 console.log(`  ${alreadyTagged} already tagged (untouched, union-not-clobber)`);
 console.log(`  ${toUpdate.length} would be newly tagged from happening_category`);
-console.log(`  ${unmapped} remain empty (no mapped category — see Doc 21 §5 known-sparse slugs)`);
+console.log(`  ${unmapped} remain empty (no mapped category, see Doc 21 §5 known-sparse slugs)`);
 console.log(`\nProjected activities[] per-slug counts (after this pass, existing + newly mapped):`);
 for (const key of ACTIVITY_KEYS) console.log(`  ${key.padEnd(20)} ${bySlug[key]}`);
 
 if (!write) {
-  console.log("\nDRY RUN — writes nothing. Pass --write to apply.");
+  console.log("\nDRY RUN, writes nothing. Pass --write to apply.");
   process.exit(0);
 }
 

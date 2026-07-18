@@ -10,7 +10,7 @@ import {
 } from './venuePool';
 
 describe('pickFromPool', () => {
-  it('is deterministic — same thing + same day always picks the same index', () => {
+  it('is deterministic, same thing + same day always picks the same index', () => {
     const a = pickFromPool('thing-1', '2026-07-09', 4);
     const b = pickFromPool('thing-1', '2026-07-09', 4);
     expect(a).toBe(b);

@@ -13,10 +13,10 @@ export const dynamic = "force-dynamic";
 // second pass for items the free auto-assign skipped. Per thing, cheapest first:
 //   1. Resolve a venue the compliant way (already attached; exact place_id match
 //      against an existing venue; else auto-create from the thing's own
-//      place_id — the same "venue-backed, invisible" design the catalog picker
+//      place_id, the same "venue-backed, invisible" design the catalog picker
 //      uses). No place_id anywhere -> skipped; a bulk pass never guesses.
 //   2. If that venue already has approved pool photos, apply today's rotation
-//      pick — free, no Google call at all.
+//      pick, free, no Google call at all.
 //   3. Otherwise fetch ONLY the top Google photo (top-1, not the 10-candidate
 //      review spread: 2 counted calls, 1 billable), auto-approve it into the
 //      venue's pool (so it gets the nightly serving-URL refresh + dead-photo
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
     const prev = { url: curUrl, source: curSource, attribution: (t.photo_attribution as string) ?? null };
     const existingOptions = ((t.photo_options as PhotoOption[]) ?? []).filter((o) => o.url);
 
-    // 1 — resolve a venue (attached / exact place_id match / auto-create).
+    // 1, resolve a venue (attached / exact place_id match / auto-create).
     let venue = t.venue_id ? venueById.get(t.venue_id as string) : undefined;
     let attachedNow = false;
     if (!venue && t.place_id) {
@@ -146,8 +146,7 @@ export async function POST(req: Request) {
     }
     // No place_id anywhere -> one free-tier Text Search lookup (the same engine
     // as the Venues tab's place-id lookup; NOT counted against the photo cap).
-    // Only a STRONG hit — a real named business, not a bare geocoded address —
-    // proceeds; a weak hit is skipped, never guessed.
+    // Only a STRONG hit, a real named business, not a bare geocoded address, // proceeds; a weak hit is skipped, never guessed.
     if (!venue && !t.venue_id && !t.place_id) {
       const address = (t.address as string) ?? null;
       const q = address ? `${t.title as string}, ${address}` : `${t.title as string}, Santa Barbara, CA`;
@@ -192,7 +191,7 @@ export async function POST(req: Request) {
       continue;
     }
 
-    // 2 — an approved pool already exists: free rotation pick, no Google call.
+    // 2, an approved pool already exists: free rotation pick, no Google call.
     const { data: pool } = await sb
       .from("venue_photos").select("source, serving_url, attribution")
       .eq("venue_id", venue.id).eq("approved", true)
@@ -213,7 +212,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3 — top-1 paid Google fetch, auto-approved into the pool. A venue that
+    // 3, top-1 paid Google fetch, auto-approved into the pool. A venue that
     // exists but never got a place_id (e.g. auto-created earlier from a
     // coordless thing) gets one shot at the same free-tier name lookup first.
     if (!venue.place_id) {

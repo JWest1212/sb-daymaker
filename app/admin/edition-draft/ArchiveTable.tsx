@@ -20,7 +20,7 @@ export function ArchiveTable({ rows }: { rows: ArchiveRow[] | null }) {
           <tr key={r.edition_date}>
             <td className="ed-archive-date">{r.edition_date}</td>
             <td>{r.edition_type === "weekend" ? "Thu" : "Sun"}</td>
-            <td className="ed-archive-subject">{r.subject ?? "—"}</td>
+            <td className="ed-archive-subject">{r.subject ?? "·"}</td>
             <td><span className={`chip ${STATUS_CHIP[r.status] ?? "amber"}`}><span className="dot" />{r.status}</span></td>
             <td>{r.sent_count}</td>
             <td>{r.open_count}</td>

@@ -2,9 +2,9 @@
 //
 // The send path (edition_build_spec.md §7). Only ever called from Next.js API
 // routes (the send cron, and later a cockpit "send now" override), never the
-// ingest worker — safe to mark server-only, unlike draft.ts.
+// ingest worker, safe to mark server-only, unlike draft.ts.
 //
-// Renders ONCE (spec §0.6 / §6.1 — byte-identical per recipient except the
+// Renders ONCE (spec §0.6 / §6.1, byte-identical per recipient except the
 // unsubscribe link): the email HTML/text is built a single time with a
 // sentinel token in place of the unsubscribe URL, then each recipient's real
 // batch-send message is that same string with the sentinel substituted for
@@ -36,7 +36,7 @@ export async function sendEdition(sb: SupabaseClient, editionDate: string): Prom
   if (!ed) return { ok: false, sent: 0, skipReason: "no edition for this date" };
 
   // Spec §7.2: an edition sends at its normal time whether it was explicitly
-  // approved or just never touched ('draft') — approving is optional, not
+  // approved or just never touched ('draft'), approving is optional, not
   // required, so the twice-a-week promise holds either way. 'skipped' (Hold)
   // is the one deliberate exception: an operator clicking Hold is an explicit
   // "do not send this" and must actually stop the send, not just be a note.
@@ -44,8 +44,8 @@ export async function sendEdition(sb: SupabaseClient, editionDate: string): Prom
   // excluded.
   if (!["draft", "approved"].includes(ed.status)) {
     const reason = ed.status === "skipped"
-      ? "status is 'skipped' — operator put this edition on hold, so it will NOT send"
-      : `status is '${ed.status}' — not eligible to send`;
+      ? "status is 'skipped', operator put this edition on hold, so it will NOT send"
+      : `status is '${ed.status}', not eligible to send`;
     return { ok: false, sent: 0, skipReason: reason };
   }
 
@@ -53,11 +53,11 @@ export async function sendEdition(sb: SupabaseClient, editionDate: string): Prom
   const edition = await loadRenderableEdition(sb, editionDate, { siteUrl, unsubscribeToken: UNSUB_SENTINEL }, true);
   if (!edition) return { ok: false, sent: 0, skipReason: "could not render edition" };
 
-  const subject = stripEmDashes(edition.subject); // belt-and-suspenders — an operator-edited subject may not be clean
+  const subject = stripEmDashes(edition.subject); // belt-and-suspenders, an operator-edited subject may not be clean
   const htmlTemplate = renderEditionEmailHtml(edition);
   const textTemplate = renderEditionPlainText(edition);
 
-  // Spec §7.3: confirmed subscribers only — excludes pending, unsubscribed,
+  // Spec §7.3: confirmed subscribers only, excludes pending, unsubscribed,
   // bounced, complained by construction (not just convention).
   const { data: subs, error: subErr } = await sb
     .from("subscribers")

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 
 export const metadata: Metadata = {
-  title: "Unsubscribe — SB Daymaker",
+  title: "Unsubscribe · SB Daymaker",
   robots: { index: false, follow: false },
 };
 export const dynamic = "force-dynamic";
@@ -32,7 +32,7 @@ export default async function UnsubscribePage({
         </h1>
         <p className="sbd-public__desc">
           {ok
-            ? "You won't get the digest anymore. No hard feelings — you can resubscribe anytime."
+            ? "You won't get the digest anymore. No hard feelings, you can resubscribe anytime."
             : "This unsubscribe link is invalid or has expired."}
         </p>
         <Link href="/" className="sbd-public__link">

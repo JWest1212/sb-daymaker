@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // GET -> the live-preview HTML for the cockpit's iframe (spec §5.1: "Renders a
 // live preview of the edition, reuse the renderer"). Same renderer the public
-// permalink and the send path use — never forked. Admin-gated so draft/approved
+// permalink and the send path use, never forked. Admin-gated so draft/approved
 // (not-yet-sent) editions can be previewed, unlike the public route.
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getAdminUser();

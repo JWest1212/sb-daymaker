@@ -69,7 +69,7 @@ function parseIcsDate(raw: string | undefined): string | null {
     return `${y}-${mo}-${d}T${h}:${mi}:${s}Z`;
   }
   // Floating (no Z, no TZ): treat as ambiguous → null (no clock time we can trust)
-  // (LibCal actually ships UTC+0 for their public iCal feeds — handle as UTC)
+  // (LibCal actually ships UTC+0 for their public iCal feeds, handle as UTC)
   const floatMatch = raw.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
   if (floatMatch) {
     const [, y, mo, d, h, mi, s] = floatMatch;

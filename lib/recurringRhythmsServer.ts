@@ -1,7 +1,7 @@
 // lib/recurringRhythmsServer.ts
 //
 // Server-only DB access for the Recurring Rhythms cockpit surface (Data Arch
-// Redesign — recurring-registry spec, Phase 3). Reads/writes `recurring_rhythms`,
+// Redesign, recurring-registry spec, Phase 3). Reads/writes `recurring_rhythms`,
 // the table ingest/adapters/recurringRegistry.ts's nightly fetch() now reads.
 
 import { getAdminSupabase } from "./supabaseAdmin";

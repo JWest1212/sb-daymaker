@@ -45,7 +45,7 @@ const LABEL: Record<string, string> = {
   livenotes: "LiveNotes SB",
 };
 
-/** Source-health panel — latest run per source, green/amber/red (Doc 11 §9). */
+/** Source-health panel, latest run per source, green/amber/red (Doc 11 §9). */
 export function SourceHealth({ sources }: { sources: SourceRow[] }) {
   return (
     <div className="panel">
@@ -59,7 +59,7 @@ export function SourceHealth({ sources }: { sources: SourceRow[] }) {
               <span className="sdot" />
               <span className="sname">{LABEL[s.source] ?? s.source}</span>
               <span className="scount">
-                {s.status === "fail" ? "0 — down" : s.status === "warn" ? "refresh" : `${s.landed} new`}
+                {s.status === "fail" ? "0, down" : s.status === "warn" ? "refresh" : `${s.landed} new`}
               </span>
             </div>
           ))

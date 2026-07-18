@@ -21,8 +21,8 @@ export interface Occasion {
   label: string;
   pillLabel: string; // short label for the on-photo pill (never wraps at 90px max-width)
   icon: string;
-  color: string; // token CSS var — fill
-  text: string;  // token CSS var — text on that fill (AA-safe)
+  color: string; // token CSS var, fill
+  text: string;  // token CSS var, text on that fill (AA-safe)
 }
 
 export const OCCASIONS: Occasion[] = [
@@ -44,7 +44,7 @@ export const OCCASION_BY_KEY: Record<OccasionKey, Occasion> = Object.fromEntries
   OCCASIONS.map((o) => [o.key, o]),
 ) as Record<OccasionKey, Occasion>;
 
-// Doc 22 §2.2 — the Occasion door's static tile vocabulary. `catch_a_show`,
+// Doc 22 §2.2, the Occasion door's static tile vocabulary. `catch_a_show`,
 // `arts_culture`, `outdoors_active`, `wine_food` are now served by the Activity
 // door and drop out of this list, but stay in OCCASIONS/OCCASION_BY_KEY above so
 // existing thing_tags data still renders (card pills, admin tools, search).
@@ -52,7 +52,7 @@ export const OCCASION_BY_KEY: Record<OccasionKey, Occasion> = Object.fromEntries
 // founder request (2026-07-14) it's now always visible, same as every other
 // entry here. `dog_friendly` (Occasion Tags spec §3) stays conditional, gated
 // inside vibeTiles itself on whether any thing in the current horizon actually
-// carries the tag — so that tile can never dead-end.
+// carries the tag, so that tile can never dead-end.
 const DOOR_OCCASION_KEYS: OccasionKey[] = [
   "date_night",
   "family_day",

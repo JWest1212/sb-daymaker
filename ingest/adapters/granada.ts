@@ -1,10 +1,10 @@
 // ingest/adapters/granada.ts
 //
-// The Granada Theatre — server-detail scrape (§7.1). Mirrors the Lobero pattern.
+// The Granada Theatre, server-detail scrape (§7.1). Mirrors the Lobero pattern.
 // Resolution order: WP Tribe REST → iCal → server-detail HTML scrape.
 //
 // Venue-direct rule: ticket links (AXS) become buyUrl. Never query AXS directly.
-// useManagedScrape: false — plain fetch only.
+// useManagedScrape: false, plain fetch only.
 //
 // Robots.txt: checked at runtime via fetchHtmlPolite.
 // Addresses resolved from gate.ts VENUE_ADDRESSES ('The Granada Theatre').
@@ -45,7 +45,7 @@ function classifyTitle(title: string): HappeningCategory {
 
 /**
  * Parse og:description for a datetime like "Monday, October 12, 2026 at 7:30 PM"
- * (same format Lobero uses — Granada is the same WP theme family).
+ * (same format Lobero uses, Granada is the same WP theme family).
  */
 function parseOgDesc(desc: string): string | null {
   const m = desc.match(
@@ -117,7 +117,7 @@ async function scrapeVenue(w: { fromISO: string; toISO: string }): Promise<RawCa
     const title = rawTitle.replace(/\s*[-|]\s*(The\s+)?Granada Theatre\s*$/i, '').trim();
     if (!title) continue;
 
-    // Buy URL — first AXS or Ticketmaster link
+    // Buy URL, first AXS or Ticketmaster link
     const buyM = page.match(/href="(https:\/\/(www\.axs\.com|www\.ticketmaster\.com)\/[^"]+)"/i);
     const buyUrl = buyM?.[1] ?? url;
 

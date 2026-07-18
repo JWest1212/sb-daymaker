@@ -21,7 +21,7 @@ export interface Directive {
   status: string;
 }
 
-/** Does one of tonight's candidates fill a directive's gap? (Pure — unit-tested.) */
+/** Does one of tonight's candidates fill a directive's gap? (Pure, unit-tested.) */
 export function candidateMatchesScope(c: Candidate, kind: string, key: string): boolean {
   if (kind === 'vibe') return (c.proposed_tags ?? []).some((t) => t.tag === key);
   if (kind === 'zone') {
@@ -47,7 +47,7 @@ export async function finalizeRunNowDirective(sb: SupabaseClient, directiveId: s
   const now = new Date().toISOString();
   const d = dir as Directive;
   const matches = pool.filter((c) => candidateMatchesScope(c, d.scope_kind, d.scope_key)).length;
-  const run_note = `Run-now: refreshed all sources — ${matches} ${String(d.scope_key).replace(/_/g, ' ')} candidate(s) for the gap now in the queue.`;
+  const run_note = `Run-now: refreshed all sources, ${matches} ${String(d.scope_key).replace(/_/g, ' ')} candidate(s) for the gap now in the queue.`;
   await sb.from('restock_directives')
     .update({ status: 'done', finished_at: now, results_count: matches, run_note })
     .eq('id', directiveId);

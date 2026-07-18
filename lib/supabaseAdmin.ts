@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Service-role client (SUPABASE_SECRET_KEY) — bypasses RLS. SERVER-SIDE ONLY.
+ * Service-role client (SUPABASE_SECRET_KEY), bypasses RLS. SERVER-SIDE ONLY.
  * Used by the nightly pipeline and the admin cockpit to read draft/needs_review
  * rows and write published status. Never import this into client code.
  * Returns null if the secret key isn't configured.

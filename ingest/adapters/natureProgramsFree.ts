@@ -1,19 +1,19 @@
 // ingest/adapters/natureProgramsFree.ts
 //
-// Free nature programs — registry candidates (§8.7).
+// Free nature programs, registry candidates (§8.7).
 // Tier 2 · recurring_outdoors · seed outdoors_active, free_sb, solo, family_day.
 //
 // Confirmed recurring programs (verified 2026-06-30):
-//   Land Trust for SB County — Arroyo Hondo Preserve:
+//   Land Trust for SB County, Arroyo Hondo Preserve:
 //     Open to the public on 1st and 3rd full weekends of each month.
 //     Free docent-led hike at 10am on open Saturdays. Advance reservation required.
-//     (sblandtrust.org/reserves/arroyo-hondo-preserve/ — confirmed monthly rhythm)
+//     (sblandtrust.org/reserves/arroyo-hondo-preserve/, confirmed monthly rhythm)
 //
 //   Emitted as monthly registry candidate (day_of_week:6 = Saturday, frequency:'monthly').
 //   The "1st/3rd Saturday" specificity can be captured in the recurringRegistry.ts
 //   snippet the founder pastes after cockpit review.
 //
-// Sierra Club Los Padres: site uses Salesforce LWR (client-side rendered) — not
+// Sierra Club Los Padres: site uses Salesforce LWR (client-side rendered), not
 // scrapable via plain fetch. No iCal feed. Excluded pending a direct URL.
 //
 // useManagedScrape: false.
@@ -33,8 +33,8 @@ export const natureProgramsFree: SourceAdapter = {
     return [
       {
         source: SOURCE_KEY,
-        title: 'Arroyo Hondo Preserve — Docent-Led Guided Hike',
-        venueName: 'Land Trust for SB County — Arroyo Hondo Preserve',
+        title: 'Arroyo Hondo Preserve, Docent-Led Guided Hike',
+        venueName: 'Land Trust for SB County, Arroyo Hondo Preserve',
         address: '3001 Refugio Rd, Gaviota, CA 93117',
         neighborhood: 'goleta',
         tier: 2,

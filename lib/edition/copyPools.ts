@@ -3,12 +3,12 @@
 // The real subject/preheader/greeting pools from edition_copy_kit_v2.md §2-4,
 // verbatim, plus the deterministic selection mechanism (§1 / anatomy v3 §4):
 // index = stableHash(edition_id) % eligible_pool.length. No randomness, no
-// model call — same issue, same line, every render.
+// model call, same issue, same line, every render.
 //
 // Eligibility (copy_kit_v2 §1): [safe] lines always qualify UNLESS the hero is
 // an evergreen fallback, in which case ONLY [evergreen] lines are eligible (we
 // never want a quiet week reading like a marquee-event promise). [token] lines
-// additionally require every token they reference to resolve — and, per the
+// additionally require every token they reference to resolve, and, per the
 // {pick_count} note (§7), a line referencing {pick_count} drops out once that
 // count falls to 1 or 0 ("and 2 more" reads fine; "and 0 more" doesn't).
 
@@ -98,7 +98,7 @@ export const GREETING_POOLS: Record<EditionType, PoolLine[]> = {
   ],
 };
 
-// Neutral, always-safe last-resort text — used only if a pool is somehow
+// Neutral, always-safe last-resort text, used only if a pool is somehow
 // exhausted of eligible lines (shouldn't happen; every pool carries [safe] or
 // [evergreen] lines that need no token), so a bug never renders "{hero_title}".
 const FALLBACK: Record<"subject" | "preheader" | "greeting", string> = {
@@ -134,7 +134,7 @@ export function isEligible(line: PoolLine, ctx: CopyContext): boolean {
       return v !== null && v !== "";
     });
   }
-  return false; // evergreen-only line, hero is not evergreen — excluded
+  return false; // evergreen-only line, hero is not evergreen, excluded
 }
 
 function substitute(text: string, ctx: CopyContext): string {
@@ -144,7 +144,7 @@ function substitute(text: string, ctx: CopyContext): string {
   });
 }
 
-/** FNV-1a-style, deterministic, no Math.random — same edition_id always maps
+/** FNV-1a-style, deterministic, no Math.random, same edition_id always maps
  *  to the same index for a given pool length (spec's stableHash contract). */
 export function stableHash(input: string): number {
   let h = 0;

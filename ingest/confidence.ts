@@ -1,10 +1,10 @@
 // ingest/confidence.ts
 //
-// Data Arch Redesign 24 — the data_confidence score (Doc 16 §3.8, §2.5).
+// Data Arch Redesign 24, the data_confidence score (Doc 16 §3.8, §2.5).
 // Pure, no I/O, unit-testable: takes a thing + its resolved source metadata
 // and returns a 0-1 score plus the per-input breakdown (Phase 4 reuses the
 // breakdown for the Queue's "why it's here" reasons). The gate/publish
-// decision itself is NOT in this file — Phase 2/3 build that on top of the
+// decision itself is NOT in this file, Phase 2/3 build that on top of the
 // score this file computes.
 //
 // TRUST RULE: nothing here reads sponsor_id / is_featured. Source trust comes
@@ -28,12 +28,12 @@ export interface ThingForConfidence {
   activities: string[] | null;
   last_confirmed: string | null; // date-ish string
   source_count: number;          // things.source_count once Phase 1 DDL lands; default 1
-  /** Set by the caller from a recurring_schedules join — true only when a
+  /** Set by the caller from a recurring_schedules join, true only when a
    *  Tier-2 row has both a day_of_week and a real (non-TBD) start_time. */
   scheduleConfirmed?: boolean;
 }
 
-/** The whole dial, in one place. Weights sum to 1.0 — tighten/loosen a single
+/** The whole dial, in one place. Weights sum to 1.0, tighten/loosen a single
  *  input's influence by editing its number here, nothing else. */
 export const CONFIDENCE_WEIGHTS = {
   sourceTrust: 0.30,
@@ -71,7 +71,7 @@ export function sourceTrustScore(source: SourceMeta | undefined): number {
 }
 
 /** Structured (API/ICS/JSON-LD) scores highest. Spec 25 will start setting
- *  lane='generic' for AI-extracted rows — corroborated (source_count>=2)
+ *  lane='generic' for AI-extracted rows, corroborated (source_count>=2)
  *  scores above a single-source AI extraction. Every live source is
  *  'structured' today, so in practice this is a flat 1.0 across the whole
  *  catalog until spec 25 ships. */
@@ -99,7 +99,7 @@ export function fieldCompletenessScore(t: ThingForConfidence): number {
   return applicable.filter(Boolean).length / applicable.length;
 }
 
-/** source_count is always 1 until spec 26's dedupe sets it — a deliberately
+/** source_count is always 1 until spec 26's dedupe sets it, a deliberately
  *  neutral 0.5 (not a penalty) for the unconfirmed-single-source case, so this
  *  input doesn't drag every score down before cross-source data exists. */
 export function crossSourceAgreementScore(sourceCount: number): number {
@@ -119,7 +119,7 @@ export function recencyScore(lastConfirmed: string | null, now: Date = new Date(
   return 0.1;
 }
 
-/** Doc 18 — a resolved zone and at least one activity tag. Missing these
+/** Doc 18, a resolved zone and at least one activity tag. Missing these
  *  lowers confidence but never blocks (Place is a sort, not a gate). */
 export function findabilityScore(t: ThingForConfidence): number {
   const hasZone = !!t.nearby_zone;
@@ -127,7 +127,7 @@ export function findabilityScore(t: ThingForConfidence): number {
   return (hasZone ? 0.5 : 0) + (hasActivity ? 0.5 : 0);
 }
 
-/** The composite. A weighted sum, not a precise probability — the point is a
+/** The composite. A weighted sum, not a precise probability, the point is a
  *  defensible ordering (spec 24 §2.1). */
 export function computeDataConfidence(
   t: ThingForConfidence,
@@ -152,7 +152,7 @@ export function computeDataConfidence(
   return { score: Math.round(clamp01(raw) * 100) / 100, breakdown };
 }
 
-/** Doc 24 §4 — the Queue's "why it's here": the 1-3 weakest, specific,
+/** Doc 24 §4, the Queue's "why it's here": the 1-3 weakest, specific,
  *  plain-language facts behind a score (e.g. "no photo yet", "single
  *  source"), not the raw weight names. Only genuinely weak inputs are
  *  surfaced (nothing pushed in for an input that's already near-perfect), so

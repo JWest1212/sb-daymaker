@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST { thing_id } -> Phase 6 (V-4) "Leave on motif": persists the dismissal
 // so this thing stops reappearing in the no-match catcher on future loads.
-// Purely a cockpit-side flag — doesn't touch anything the public site renders,
+// Purely a cockpit-side flag, doesn't touch anything the public site renders,
 // so no revalidatePublic() here.
 export async function POST(req: Request) {
   const user = await getAdminUser();

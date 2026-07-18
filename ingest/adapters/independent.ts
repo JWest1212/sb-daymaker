@@ -1,6 +1,6 @@
 // ingest/adapters/independent.ts
 //
-// The Santa Barbara Independent events calendar (independent.com/events) — a
+// The Santa Barbara Independent events calendar (independent.com/events), a
 // server-rendered WordPress "Events" listing. Each card carries an explicit
 // .event-date + .event-time (server_detail), a detail URL, and a location.
 // Cards with no clock time emit startStrategy:'none' and the gate drops them.

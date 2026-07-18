@@ -23,7 +23,7 @@ describe('resolveYearlessDate', () => {
   });
 
   it('returns null when weekday does not match either this year or next', () => {
-    // 2026-07-04 = Saturday (6); 2027-07-04 = Sunday (0) — neither is Tuesday (2)
+    // 2026-07-04 = Saturday (6); 2027-07-04 = Sunday (0), neither is Tuesday (2)
     expect(resolveYearlessDate({ month: 7, day: 4, weekday: 2, timeHHmm: '20:00' }, RUN)).toBeNull();
   });
 

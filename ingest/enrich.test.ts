@@ -13,7 +13,7 @@ function cand(over: Partial<Candidate>): Candidate {
   };
 }
 
-describe('buildItems — the trust guarantee (no start time leaves the worker)', () => {
+describe('buildItems, the trust guarantee (no start time leaves the worker)', () => {
   it('never serializes starts_at or ends_at', () => {
     const items = buildItems([cand({})]);
     const json = JSON.stringify(items);
@@ -26,7 +26,7 @@ describe('buildItems — the trust guarantee (no start time leaves the worker)',
   });
 });
 
-describe('mergeEnrichment — AI only adds voice + tags, never edits a start', () => {
+describe('mergeEnrichment, AI only adds voice + tags, never edits a start', () => {
   it('leaves starts_at / ends_at byte-identical pre and post', () => {
     const before = cand({ id: 'a', starts_at: '2026-07-09T20:00:00-07:00' });
     const [after] = mergeEnrichment([before], [
@@ -48,7 +48,7 @@ describe('mergeEnrichment — AI only adds voice + tags, never edits a start', (
     expect(mergeEnrichment([c], [])[0]).toBe(c);
   });
 
-  // Home Rework spec §6.2 — Activity taxonomy, AI-proposed alongside occasion tags.
+  // Home Rework spec §6.2, Activity taxonomy, AI-proposed alongside occasion tags.
   it('carries proposed_activities through, filtered to the controlled vocabulary', () => {
     const [after] = mergeEnrichment([cand({ id: 'c' })], [
       { id: 'c', blurb: 'x', blurb_long: 'y', tags: [], activities: ['live-music', 'made-up' as ActivityTag] },
@@ -63,6 +63,42 @@ describe('mergeEnrichment — AI only adds voice + tags, never edits a start', (
   });
 });
 
+// G0.2, the daypart generator guard. buildItems must hand the model a derived
+// daypart (never the instant), and mergeEnrichment must strip any daypart word
+// the model returns that contradicts the event's true daypart.
+describe('daypart guard (G0.2)', () => {
+  it('buildItems derives the daypart bucket without leaking the start instant', () => {
+    const [item] = buildItems([cand({ starts_at: '2026-07-09T10:00:00-07:00' })]);
+    expect(item.daypart).toBe('morning');
+    expect(JSON.stringify(item)).not.toContain('10:00:00');
+  });
+  it('passes null daypart through when the candidate has no start (evergreen/recurring)', () => {
+    const [item] = buildItems([cand({ starts_at: null })]);
+    expect(item.daypart).toBeNull();
+  });
+  it('feeds a 10am event: merged output contains no evening/night/late tokens', () => {
+    const c = cand({ id: 'am', starts_at: '2026-07-09T10:00:00-07:00' });
+    const [after] = mergeEnrichment([c], [
+      { id: 'am', blurb: 'A free evening talk. Bring water and a hat.', blurb_long: 'A late-night garden session with the master gardeners. Come learn.', tags: [] },
+    ]);
+    expect(after.blurb).not.toMatch(/evening|night|late/i);
+    expect(after.blurb_long).not.toMatch(/evening|night|late/i);
+    // The non-conflicting sentences survive.
+    expect(after.blurb).toContain('Bring water');
+    expect(after.blurb_long).toContain('Come learn');
+  });
+  it('leaves a correctly-dayparted evening blurb intact', () => {
+    const c = cand({ id: 'pm', starts_at: '2026-07-09T20:00:00-07:00' });
+    const [after] = mergeEnrichment([c], [
+      { id: 'pm', blurb: 'An evening of acoustic guitar by the water.', blurb_long: 'x', tags: [] },
+    ]);
+    expect(after.blurb).toBe('An evening of acoustic guitar by the water.');
+  });
+  it('the SYSTEM prompt instructs against contradicting the daypart', () => {
+    expect(SYSTEM.toLowerCase()).toContain('daypart');
+  });
+});
+
 describe('filterActivities', () => {
   it('drops values outside the controlled vocabulary', () => {
     expect(filterActivities(['outdoors', 'invented' as ActivityTag])).toEqual(['outdoors']);
@@ -72,14 +108,14 @@ describe('filterActivities', () => {
   });
 });
 
-// Addendum Part C — the batch drafting prompt is retuned to the copy kit's
+// Addendum Part C, the batch drafting prompt is retuned to the copy kit's
 // knowing-local-friend voice. These guard the prompt text itself, not model output
 // (that's only verifiable against a live call), so they're regression guards against
 // the two easiest ways to silently drift: reintroducing an em dash, or losing the
 // before/after calibration examples Jim supplied.
-describe('SYSTEM prompt — Part C voice retune', () => {
-  it('never contains an em dash — the prompt cannot ban what it itself does', () => {
-    expect(SYSTEM).not.toContain('—');
+describe('SYSTEM prompt, Part C voice retune', () => {
+  it('never contains an em dash, the prompt cannot ban what it itself does', () => {
+    expect(SYSTEM).not.toContain(String.fromCharCode(0x2014));
   });
   it('explicitly instructs against em dashes', () => {
     expect(SYSTEM.toLowerCase()).toContain('em dash');
@@ -122,7 +158,7 @@ describe('applyNegativeRules', () => {
     expect(tags).toEqual([{ tag: 'solo', confidence: 0.9 }]);
   });
 
-  // W2.2 — the AI-only family_day guard for alcohol-primary venue titles.
+  // W2.2, the AI-only family_day guard for alcohol-primary venue titles.
   it('strips AI family_day from a brewery/taproom/winery title (not 21+ flagged)', () => {
     for (const title of ['Figueroa Mountain Brewing', 'Third Window Taproom', 'Sunstone Winery', 'The Good Lion cocktail bar']) {
       const tags = applyNegativeRules({ is_21_plus: false, price_band: '$$', title }, [
@@ -140,7 +176,7 @@ describe('applyNegativeRules', () => {
   it('is AI-only: a founder-sourced family_day is untouched (rule sits inside applyNegativeRules, not the publish path)', () => {
     // applyNegativeRules runs solely in mergeEnrichment on the model's proposed tags;
     // the founder's cockpit edits flow through review.filterTags, which has no such rule.
-    // We assert the boundary by confirming this function is what strips it — so a tag the
+    // We assert the boundary by confirming this function is what strips it, so a tag the
     // founder adds later (never routed here) can survive. Sanity: same title, no family_day
     // proposed → nothing stripped, other tags intact.
     const tags = applyNegativeRules({ is_21_plus: false, price_band: '$$', title: 'M Special Brewing' }, [
@@ -148,7 +184,7 @@ describe('applyNegativeRules', () => {
     ]);
     expect(tags.map((t) => t.tag).sort()).toEqual(['outdoors_active', 'wine_food']);
   });
-  it('title is optional — omitting it skips the alcohol rule (back-compat)', () => {
+  it('title is optional, omitting it skips the alcohol rule (back-compat)', () => {
     const tags = applyNegativeRules({ is_21_plus: false, price_band: null }, [
       { tag: 'family_day', confidence: 0.9 },
     ]);

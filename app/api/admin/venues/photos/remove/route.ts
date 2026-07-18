@@ -10,12 +10,11 @@ import type { HappeningCategory } from "@/packages/shared/types";
 export const dynamic = "force-dynamic";
 
 // POST { photo_id } -> Card Imagery Build Spec Phase 2 §5.3: "Reject hides it"
-// (an unapproved candidate) or removes an already-approved photo from the pool —
-// same action either way (delete the row; there's no `rejected` state in the
+// (an unapproved candidate) or removes an already-approved photo from the pool, // same action either way (delete the row; there's no `rejected` state in the
 // additive-only Phase 2 DDL, and an unapproved row is invisible to the public
 // regardless of RLS, so deleting is equivalent to hiding).
 //
-// Phase 7 (V-9) — a removed APPROVED photo no longer just leaves things stranded
+// Phase 7 (V-9), a removed APPROVED photo no longer just leaves things stranded
 // on a dead URL: every thing at this venue currently serving that exact photo is
 // re-picked from whatever pool remains (same deterministic rotation the resolver
 // uses), or falls to its own deterministic motif/big-type if the pool is now
@@ -37,7 +36,7 @@ export async function POST(req: Request) {
   const { error } = await sb.from("venue_photos").delete().eq("id", photo_id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // V-15 — consistent audit trail across all six venue mutations.
+  // V-15, consistent audit trail across all six venue mutations.
   await sb.from("audit_log").insert({
     entity_type: "venue_photo", entity_id: photo_id, action: "photo_removed", actor: "founder",
     payload: { venue_id: row.venue_id, approved: row.approved },

@@ -49,7 +49,7 @@ export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
         <div className="sbd-scard__thumb sbd-media--sage" aria-hidden="true" />
       )}
 
-      {/* Body — stretch link lives on the title for full-card tap */}
+      {/* Body, stretch link lives on the title for full-card tap */}
       <div className="sbd-scard__body">
         {timeStr ? (
           <span className="sbd-scard__eb">{timeStr}</span>
@@ -71,7 +71,7 @@ export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
       {/* Acts column */}
       <div className="sbd-scard__acts">
         <div className="sbd-scard__acttop">
-          {/* ⓘ info — visual affordance; stretch link is the keyboard path */}
+          {/* ⓘ info, visual affordance; stretch link is the keyboard path */}
           <Link
             href={`/thing/${thing.id}`}
             className="sbd-scard__info"

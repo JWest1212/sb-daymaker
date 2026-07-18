@@ -11,7 +11,7 @@ const TIER_LABEL: Record<number, string> = { 1: "T1", 2: "T2", 3: "T3" };
 const CATCHER_PAGE_SIZE = 40;
 type CatcherTier = "all" | "1" | "2" | "3";
 
-/** "google" -> "Google", "wikimedia" -> "Wikimedia" — the source pill always
+/** "google" -> "Google", "wikimedia" -> "Wikimedia", the source pill always
  *  spells the source out (not just a color cue), 2026-07-10 addendum. */
 function sourceLabel(source: string): string {
   return source.charAt(0).toUpperCase() + source.slice(1);
@@ -22,7 +22,7 @@ function PhotoStrip({
 }: {
   venue: VenueRow;
   onFetch: () => void;
-  /** 2026-07-10 addendum: an always-available override (Jim's ask) — Wikimedia
+  /** 2026-07-10 addendum: an always-available override (Jim's ask), Wikimedia
    *  stays the default via onFetch, but Google is never gated behind a
    *  quantity threshold; it's just a deliberate second click, always there. */
   onFetchGoogle: () => void;
@@ -37,7 +37,7 @@ function PhotoStrip({
         <h4>Approved pool ({venue.approvedPhotos.length})</h4>
       </div>
       {venue.approvedPhotos.length === 0 ? (
-        <p className="empty-note">No approved photos yet — fetch candidates below and approve a few (3–5 is the target pool size).</p>
+        <p className="empty-note">No approved photos yet, fetch candidates below and approve a few (3–5 is the target pool size).</p>
       ) : (
         <div className="approvedstrip">
           {venue.approvedPhotos.map((p, i) => (
@@ -74,19 +74,19 @@ function PhotoStrip({
       </div>
       {!venue.place_id ? (
         <p className="empty-note" style={{ marginTop: -4, fontWeight: 600 }}>
-          ⚠ &ldquo;Fetch via Google&rdquo; is greyed out — this venue has no place_id yet. Add one in the editor
+          ⚠ &ldquo;Fetch via Google&rdquo; is greyed out, this venue has no place_id yet. Add one in the editor
           above (Google&rsquo;s Place ID Finder, linked below, can look it up).
         </p>
       ) : null}
       <p className="empty-note" style={{ marginTop: -4 }}>
-        &ldquo;Fetch free candidates&rdquo; is strictly free (Wikimedia, never expires) — it never spends a Google
+        &ldquo;Fetch free candidates&rdquo; is strictly free (Wikimedia, never expires), it never spends a Google
         call, no matter how few results come back. Google only fetches on &ldquo;Fetch via Google&rdquo;, a
         deliberate second click. Google returns the same up-to-10 photos every time (there&rsquo;s no &ldquo;load
         more&rdquo; on its end) and each click spends real cap budget, so re-clicking it won&rsquo;t turn up
         anything new unless Google&rsquo;s own listing for this place has changed.
       </p>
       {!venue.place_id && !venue.lat ? (
-        <p className="empty-note">This venue has no coordinates either, so &ldquo;Fetch candidates&rdquo; is also greyed out — add at least one via the editor above.</p>
+        <p className="empty-note">This venue has no coordinates either, so &ldquo;Fetch candidates&rdquo; is also greyed out, add at least one via the editor above.</p>
       ) : venue.candidatePhotos.length === 0 ? (
         <p className="empty-note">No candidates fetched yet.</p>
       ) : (
@@ -122,7 +122,7 @@ function VenueDetailSheet({
   onApprove: (photoId: string) => void;
   onRemove: (photoId: string) => void;
   onReorder: (photoId: string, dir: "up" | "down") => void;
-  /** V-8 — fired after a successful detach so the parent can refresh the grid
+  /** V-8, fired after a successful detach so the parent can refresh the grid
    *  card's attachedCount; this sheet manages its own list's optimistic removal. */
   onDetached: () => void;
   onToast: (msg: string) => void;
@@ -134,11 +134,11 @@ function VenueDetailSheet({
   const [lat, setLat] = useState(venue.lat != null ? String(venue.lat) : "");
   const [lng, setLng] = useState(venue.lng != null ? String(venue.lng) : "");
   const [attached, setAttached] = useState<AttachedThing[] | null>(null);
-  // V-14 — the sheet only ever mounts while open, so the trap is active for its
+  // V-14, the sheet only ever mounts while open, so the trap is active for its
   // whole lifetime; unmount (closing) restores focus to the triggering vcard.
   const sheetRef = useRef<HTMLDivElement | null>(null);
   useFocusTrap(sheetRef, true);
-  // Derived, not its own state — avoids a synchronous setState at the top of
+  // Derived, not its own state, avoids a synchronous setState at the top of
   // the fetch effect below (same shape as BudgetChip.tsx's fetch-on-mount).
   const [attachedForVenueId, setAttachedForVenueId] = useState<string | null>(null);
   const loadingAttached = attachedForVenueId !== venue.id;
@@ -149,7 +149,7 @@ function VenueDetailSheet({
     setLng(venue.lng != null ? String(venue.lng) : "");
   }, [venue.id, venue.display_name, venue.radius_m, venue.place_id, venue.lat, venue.lng]);
 
-  // V-7 — fetched lazily per sheet open, not baked into the main loader's
+  // V-7, fetched lazily per sheet open, not baked into the main loader's
   // upfront payload (which already carries every venue).
   useEffect(() => {
     let cancelled = false;
@@ -209,7 +209,7 @@ function VenueDetailSheet({
           </div>
           {!venue.place_id && !venue.lat ? (
             <p className="empty-note">
-              No place_id or coordinates yet — nothing to fetch from until at least one is set. Find a place_id via
+              No place_id or coordinates yet, nothing to fetch from until at least one is set. Find a place_id via
               Google&rsquo;s <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noreferrer">Place ID Finder</a>, or coordinates via any map.
             </p>
           ) : null}
@@ -292,7 +292,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const [lookingUpPlaceIds, setLookingUpPlaceIds] = useState(false);
   const [retryingVenueId, setRetryingVenueId] = useState<string | null>(null);
 
-  // Phase 6 (V-1…V-6) — the no-match catcher.
+  // Phase 6 (V-1…V-6), the no-match catcher.
   const [catcherTier, setCatcherTier] = useState<CatcherTier>("all");
   const [catcherNoAddressOnly, setCatcherNoAddressOnly] = useState(false);
   const [catcherSearch, setCatcherSearch] = useState("");
@@ -306,7 +306,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
   const [addingVenue, setAddingVenue] = useState(false);
   const [newVenueName, setNewVenueName] = useState("");
 
-  // Occasion Tags spec §3.3 — the Dog Friendly checklist.
+  // Occasion Tags spec §3.3, the Dog Friendly checklist.
   const [dogSearch, setDogSearch] = useState("");
   const [dogSavingId, setDogSavingId] = useState<string | null>(null);
 
@@ -370,8 +370,8 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ photo_id: photoId }),
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
-      // V-9 — a removed approved photo can re-resolve things that were serving it.
-      if (res.reassigned) showToast(`Removed — ${res.reassigned} thing(s) re-picked from the remaining pool`);
+      // V-9, a removed approved photo can re-resolve things that were serving it.
+      if (res.reassigned) showToast(`Removed, ${res.reassigned} thing(s) re-picked from the remaining pool`);
     } else {
       showToast(res?.error ?? "Remove failed");
     }
@@ -413,7 +413,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     await refresh();
   }, [refresh, showToast]);
 
-  // V-11 — a first-class "New venue" control (previously venues only ever
+  // V-11, a first-class "New venue" control (previously venues only ever
   // got created indirectly, via a catalog auto-create or the catcher's
   // "Create venue from here"). Shares the same /venues/create route, just
   // without a from_thing_id to attach.
@@ -430,7 +430,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     } else showToast(res?.error ?? "Create failed");
   }, [newVenueName, showToast, refresh]);
 
-  // V-8 — refresh() re-pulls attachedCount for the grid card; the sheet's own
+  // V-8, refresh() re-pulls attachedCount for the grid card; the sheet's own
   // attached-events list (VenueDetailSheet) manages its optimistic removal
   // itself since it owns that fetch.
   const doDetach = useCallback(async () => { await refresh(); }, [refresh]);
@@ -486,10 +486,10 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     if (res.strongMatches?.length) {
       setWeakMatches((prev) => prev.filter((w) => w.venue_id !== venueId));
       setStrongMatches((prev) => [...(prev ?? []), ...res.strongMatches]);
-      showToast("Found a strong match — review it below");
+      showToast("Found a strong match, review it below");
     } else if (res.weakMatches?.length) {
       setWeakMatches((prev) => prev.map((w) => (w.venue_id === venueId ? res.weakMatches[0] : w)));
-      showToast("Still no confident business match — try a different search");
+      showToast("Still no confident business match, try a different search");
     } else {
       showToast("No match found for that search");
     }
@@ -499,7 +499,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     setData((d) => ({ ...d, noMatchCatcher: d.noMatchCatcher.filter((t) => t.id !== thingId) }));
   }, []);
 
-  // V-4 — persists via things.no_venue_ack; the row is gone for good, not just
+  // V-4, persists via things.no_venue_ack; the row is gone for good, not just
   // dismissed for this render (unlike the "Matches to review" pane's dismiss).
   const doAck = useCallback(async (thingId: string) => {
     setCatcherBusy(true);
@@ -511,7 +511,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     else showToast(res?.error ?? "Couldn't dismiss");
   }, [removeCatcherItem, showToast]);
 
-  // V-2 / V-5 — both the typeahead attach and the one-click weak-guess route
+  // V-2 / V-5, both the typeahead attach and the one-click weak-guess route
   // through the SAME /venues/match the main "Matches to review" pane uses (it
   // already applies a pool photo immediately when one exists).
   const doAttach = useCallback(async (thingId: string, venueId: string, venueName: string) => {
@@ -529,7 +529,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
     } else showToast(res?.error ?? "Attach failed");
   }, [removeCatcherItem, showToast, refresh]);
 
-  // V-3 — creates + attaches in one step. If the new venue still has no
+  // V-3, creates + attaches in one step. If the new venue still has no
   // place_id, reuses /venues/lookup-place-ids (single-venue mode) to try
   // filling one in immediately; a strong match saves straight through
   // /venues/edit, otherwise the founder fine-tunes it from the venue card below.
@@ -560,7 +560,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
         }).catch(() => null);
         setCreateLookup({ status: "done", note: `Found and saved a place_id: ${m.proposed_name}` });
       } else {
-        setCreateLookup({ status: "done", note: "No confident place_id match — fine-tune it from the venue card below." });
+        setCreateLookup({ status: "done", note: "No confident place_id match, fine-tune it from the venue card below." });
       }
     }
     refresh();
@@ -578,7 +578,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
 
   const visibleMatches = data.matches.filter((m) => !dismissed.has(m.thing_id));
 
-  // Occasion Tags spec §3.3 — suggested-first, then alphabetical, then filtered by search.
+  // Occasion Tags spec §3.3, suggested-first, then alphabetical, then filtered by search.
   const dogChecklist = [...data.venues]
     .filter((v) => !dogSearch || v.display_name.toLowerCase().includes(dogSearch.toLowerCase()))
     .sort((a, b) => {
@@ -606,7 +606,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       <div className="vsection">
         <h2 className="vsection-title">Matches to review ({visibleMatches.length})</h2>
         {visibleMatches.length === 0 ? (
-          <p className="empty-note">Nothing to review — every published/needs_review thing either has no address, is already attached, or scores no match against a known venue.</p>
+          <p className="empty-note">Nothing to review, every published/needs_review thing either has no address, is already attached, or scores no match against a known venue.</p>
         ) : (
           <div className="matchlist">
             {visibleMatches.slice(0, 40).map((m) => (
@@ -628,7 +628,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       <div className="vsection">
         <h2 className="vsection-title">No confident match ({filteredCatcher.length})</h2>
         <p className="vsub" style={{ marginBottom: 8 }}>
-          Unattached things that either have no address or scored no match against any known venue — they&rsquo;re
+          Unattached things that either have no address or scored no match against any known venue, they&rsquo;re
           quietly sitting on a motif until you resolve them here.
         </p>
         <div className="filters" style={{ marginBottom: 4 }}>
@@ -649,7 +649,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
         </label>
 
         {filteredCatcher.length === 0 ? (
-          <p className="empty-note">Nothing here — every unattached thing either scored a match above or has been resolved.</p>
+          <p className="empty-note">Nothing here, every unattached thing either scored a match above or has been resolved.</p>
         ) : (
           <div className="matchlist">
             {catcherPageItems.map((t) => (
@@ -767,7 +767,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
                   <div className="pickrow" key={p.venue_id}>
                     <div>
                       <div className="ttl">{p.venue_display_name}</div>
-                      <div className="pm">matched: <span className="venuename">{p.proposed_name}</span> — {p.proposed_address}</div>
+                      <div className="pm">matched: <span className="venuename">{p.proposed_name}</span>, {p.proposed_address}</div>
                     </div>
                     <div className="btnrow">
                       <button className="btn btn-approve btn-sm" onClick={() => applyPlaceCandidate(p.venue_id, p.venue_display_name, { place_id: p.proposed_place_id, lat: p.proposed_lat, lng: p.proposed_lng, name: p.proposed_name, address: p.proposed_address })}>Approve</button>
@@ -779,14 +779,14 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
                   <div className="pickrow weakmatch" key={w.venue_id}>
                     <div style={{ width: "100%" }}>
                       <div className="ttl">{w.venue_display_name}
-                        <span className="weakflag"> ⚠ weak match — probably just a geocoded address, not a real business</span>
+                        <span className="weakflag"> ⚠ weak match, probably just a geocoded address, not a real business</span>
                       </div>
                       {w.nearbyCandidates.length > 0 ? (
                         <>
                           <div className="pm">Found nearby, pick one if it&rsquo;s the right place:</div>
                           {w.nearbyCandidates.map((c, i) => (
                             <div className="pickrow" key={i} style={{ background: "transparent", border: "none", padding: "4px 0" }}>
-                              <div className="pm"><span className="venuename">{c.name}</span> — {c.address}</div>
+                              <div className="pm"><span className="venuename">{c.name}</span>, {c.address}</div>
                               <div className="btnrow">
                                 <button className="btn btn-approve btn-sm" onClick={() => applyPlaceCandidate(w.venue_id, w.venue_display_name, c)}>Use this</button>
                               </div>
@@ -870,10 +870,10 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       <div className="vsection">
         <h2 className="vsection-title">Dog Friendly checklist ({dogFriendlyCount} marked)</h2>
         <p className="vsub">
-          Mark the venues you know allow dogs — beaches, patios, trails, open-air tasting rooms. A thing
-          at a dog-friendly venue shows under the Dog Friendly door automatically, live — no separate step.
+          Mark the venues you know allow dogs, beaches, patios, trails, open-air tasting rooms. A thing
+          at a dog-friendly venue shows under the Dog Friendly door automatically, live, no separate step.
           {dogSuggestedUnconfirmedCount > 0 ? (
-            <> <b>{dogSuggestedUnconfirmedCount} suggested</b> below (name or category match) — check the ones that are actually right, the rest need no action.</>
+            <> <b>{dogSuggestedUnconfirmedCount} suggested</b> below (name or category match), check the ones that are actually right, the rest need no action.</>
           ) : null}
         </p>
         <div className="search" style={{ marginBottom: 10 }}>

@@ -10,7 +10,7 @@ const HORIZON_NOUN: Record<Horizon, string> = {
   month: "this month",
 };
 
-/** Home Rework spec §11.2 — the bottom sheet of tiles for the open dimension.
+/** Home Rework spec §11.2, the bottom sheet of tiles for the open dimension.
  *  Reuses BottomSheet verbatim (scrim, focus trap, Escape, body-scroll lock, the
  *  --shadow-sheet slide) so it's visually continuous with the rest of the app. */
 export function DiscoverySheet({
@@ -22,7 +22,7 @@ export function DiscoverySheet({
   onClose,
 }: {
   dimension: Dimension | null;
-  /** Horizon-scoped things (before vibe/place/activity filtering) — tile counts
+  /** Horizon-scoped things (before vibe/place/activity filtering), tile counts
    *  answer "how many show if I pick this," not "how many after my other filters." */
   things: Thing[];
   horizon: Horizon;

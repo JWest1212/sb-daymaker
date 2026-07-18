@@ -1,7 +1,7 @@
 // lib/coverageServer.ts
 //
 // Server-only coverage aggregation (service-role reads). One query per call over
-// published things, aggregated in-process — never N×M queries. Occurrence counts
+// published things, aggregated in-process, never N×M queries. Occurrence counts
 // come from the shared exact helper (lib/occurrences) so cockpit math and the
 // public feed can never disagree.
 
@@ -67,7 +67,7 @@ export async function loadCoverage(dim: CoverageDim, now: number = Date.now()): 
     );
     for (const key of thingKeys(dim, t)) {
       const row = rows[key];
-      if (!row) continue; // a tag/zone outside the fixed vocabulary — skip
+      if (!row) continue; // a tag/zone outside the fixed vocabulary, skip
       if (tier === 3) { row.evergreen += 1; continue; }
       for (const w of COVERAGE_WINDOWS) row.windows[w] += occ[w];
     }

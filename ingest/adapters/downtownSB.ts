@@ -1,6 +1,6 @@
 // ingest/adapters/downtownSB.ts
 //
-// Downtown Santa Barbara events — server-rendered HTML scrape (§7.6).
+// Downtown Santa Barbara events, server-rendered HTML scrape (§7.6).
 // Source: downtownsb.org/happenings/
 //
 // Category map (§7.6):
@@ -76,7 +76,7 @@ function parseListingDateTime(dateStr: string, timeStr: string): string | null {
  *  (the event always starts at 5pm; this is factual, not guessed). */
 const FIRST_THURSDAY_CANDIDATE: RawCandidate = {
   source: SOURCE_KEY,
-  title: '1st Thursdays — Downtown SB Gallery Walk',
+  title: '1st Thursdays, Downtown SB Gallery Walk',
   venueName: 'Downtown Santa Barbara (State Street)',
   address: '1 W Carrillo St, Santa Barbara, CA 93101',
   neighborhood: 'downtown',
@@ -125,7 +125,7 @@ export const downtownSB: SourceAdapter = {
     for (const el of eventEls) {
       const card = $(el);
 
-      // Title — from the first link or heading
+      // Title, from the first link or heading
       const titleEl = card.find('h2, h3, h4, .event-title, .title, a').first();
       const rawTitle = titleEl.text().trim();
       if (!rawTitle) continue;
@@ -154,7 +154,7 @@ export const downtownSB: SourceAdapter = {
       const href = titleEl.is('a') ? (titleEl.attr('href') ?? '') : card.find('a').first().attr('href') ?? '';
       const sourceUrl = href ? (href.startsWith('http') ? href : `${BASE}${href}`) : LISTING;
 
-      // Venue/address (optional — may not be present in listing view)
+      // Venue/address (optional, may not be present in listing view)
       const venueText = card.find('[class*="venue"], [class*="location"], [class*="address"]').first().text().trim();
       const address = venueText || 'Downtown Santa Barbara, CA 93101';
       const venueName = venueText || 'Downtown Santa Barbara';

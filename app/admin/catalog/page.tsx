@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { loadCatalog } from "@/lib/catalogServer";
 import { CatalogView } from "./CatalogView";
 
-export const metadata: Metadata = { title: "Live catalog — SB Daymaker", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Live catalog · SB Daymaker", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function CatalogPage() {

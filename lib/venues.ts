@@ -1,9 +1,9 @@
 // lib/venues.ts
 //
-// Card Imagery Build Spec Phase 2 §5.4 — public-side venue photo pool read, for the
+// Card Imagery Build Spec Phase 2 §5.4, public-side venue photo pool read, for the
 // feed's per-feed dedupe pass. Mirrors lib/things.ts's getPublishedThings(): the
 // anon/publishable key, RLS-gated (public_read_venue_photos exposes only
-// approved=true rows). Small dataset (a few hundred rows at most) — safe to fetch
+// approved=true rows). Small dataset (a few hundred rows at most), safe to fetch
 // in full alongside the things fetch.
 
 import { getSupabase } from "./supabase";
@@ -33,7 +33,7 @@ export async function getVenuePhotoPools(): Promise<Record<string, PoolPhoto[]>>
   return pools;
 }
 
-/** Home Rework spec §9.2/§18 — venue id -> display name, for header search's
+/** Home Rework spec §9.2/§18, venue id -> display name, for header search's
  *  "Venue" group. RLS (public_read_venues) already restricts this to active rows. */
 export async function getVenueNames(): Promise<Record<string, string>> {
   const sb = getSupabase();
@@ -46,7 +46,7 @@ export async function getVenueNames(): Promise<Record<string, string>> {
   return names;
 }
 
-/** Occasion Tags spec §3 — the ids of founder-marked dog-friendly venues.
+/** Occasion Tags spec §3, the ids of founder-marked dog-friendly venues.
  *  lib/things.ts joins this in at read time (same pattern as `indoor` ->
  *  `rainy_day`, Doc 22 §2.2): a thing at one of these venues is stamped
  *  `dog_friendly` live, no stored tag, always in sync with the venue flag. */

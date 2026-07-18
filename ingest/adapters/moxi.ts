@@ -1,13 +1,13 @@
 // ingest/adapters/moxi.ts
 //
-// MOXI Museum of Exploration and Innovation — WP Tribe REST or iCal (§7.2).
+// MOXI Museum of Exploration and Innovation, WP Tribe REST or iCal (§7.2).
 // Build doc constraint: "MOXI via feed (no scrape)" → no HTML fallback. If both
 // the Tribe REST endpoint and the iCal URL fail the adapter throws so run.ts marks
 // the source_run ok=false, which surfaces in SourceHealth as a warning to the founder.
 //
 // moxi.org runs WordPress + The Events Calendar; Tribe REST is the primary route.
 // Fallback: /events/?ical=1 (standard TEC iCal export).
-// useManagedScrape: false — no Scrapfly.
+// useManagedScrape: false, no Scrapfly.
 //
 // Robots.txt: checked at runtime via fetchHtmlPolite (not used here, but
 // fetchTribeEvents/parseIcsFeed use plain fetch with UA header, which is sufficient).
@@ -27,7 +27,7 @@ export const moxi: SourceAdapter = {
   label: 'MOXI Museum',
   useManagedScrape: false,
   async fetch(w): Promise<RawCandidate[]> {
-    // 1. WP Tribe REST (primary — build doc: "MOXI via feed")
+    // 1. WP Tribe REST (primary, build doc: "MOXI via feed")
     const route = await discoverWpEventsRoute(BASE).catch(() => 'ical' as const);
     if (route === 'tribe') {
       try {
@@ -42,7 +42,7 @@ export const moxi: SourceAdapter = {
       } catch { /* fall through to iCal */ }
     }
 
-    // 2. iCal (standard TEC export — "MOXI via feed" constraint: no scrape fallback)
+    // 2. iCal (standard TEC export, "MOXI via feed" constraint: no scrape fallback)
     for (const icalUrl of [`${BASE}/events/?ical=1`, `${BASE}/calendar/?ical=1`]) {
       try {
         return await parseIcsFeed(icalUrl, w, {
@@ -56,7 +56,7 @@ export const moxi: SourceAdapter = {
       } catch { /* try next URL */ }
     }
 
-    // Per build doc, MOXI must run via feed — throw rather than silently return empty.
+    // Per build doc, MOXI must run via feed, throw rather than silently return empty.
     throw new Error('moxi: both Tribe REST and iCal feeds unavailable');
   },
 };

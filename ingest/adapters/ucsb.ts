@@ -7,7 +7,7 @@
 // ?rhc_action=get_calendar_events&post_type[]=events. The fetchLocalist() helper
 // is NOT used. Code wins over doc.
 //
-// Robots.txt (confirmed 2026-06-30): Disallow: /wp-admin/ — the API endpoint
+// Robots.txt (confirmed 2026-06-30): Disallow: /wp-admin/, the API endpoint
 // at /?rhc_action=... is the root path, which is not disallowed.
 //
 // NOTE: events.ucsb.edu currently has very few events (summer break, academic
@@ -23,7 +23,7 @@ import { isInScope } from './_shared/geoFilter';
 const BASE = 'https://events.ucsb.edu';
 const UA = 'SBDaymaker-ingest/1.0 (+https://www.sbdaymaker.com)';
 
-// Academic/administrative noise — drop events matching these patterns.
+// Academic/administrative noise, drop events matching these patterns.
 const DENY: RegExp[] = [
   /\bexam\b/i,
   /dissertation defense/i,
@@ -74,7 +74,7 @@ export const ucsb: SourceAdapter = {
       if (!res.ok) throw new Error(`UCSB calendar API ${res.status}`);
       body = await res.json();
     } catch (err) {
-      throw new Error(`ucsb: fetch failed — ${(err as Error).message}`);
+      throw new Error(`ucsb: fetch failed, ${(err as Error).message}`);
     }
 
     const events: any[] = Array.isArray(body?.EVENTS) ? body.EVENTS : [];

@@ -9,11 +9,11 @@ import { ArchiveTable } from "./ArchiveTable";
 import type { ArchiveRow } from "@/lib/edition/cockpitTypes";
 
 const SLOT_TITLE: Record<EditionSlot, string> = {
-  hero: "Hero — The Move", secondary: "Secondary", nonevent: "Non-event", anchor: "Anchor — Always worth it",
+  hero: "Hero, The Move", secondary: "Secondary", nonevent: "Non-event", anchor: "Anchor, Always worth it",
 };
 
 // 'skipped' is the DB value (unchanged, avoids a migration) but reads as
-// permanent/terminal — it isn't. It stays fully editable and reversible; the
+// permanent/terminal, it isn't. It stays fully editable and reversible; the
 // one real effect is that it stops the send (see send.ts). Display label
 // only; never compare against this anywhere.
 const STATUS_LABEL: Record<string, string> = { draft: "Draft", approved: "Approved", skipped: "On hold" };
@@ -141,9 +141,9 @@ export function EditionDraftView({
 
   // Neither approving nor holding removes the edition from view or blocks
   // further edits (only Hold blocks the SEND, handled server-side in
-  // send.ts) — so this always just refreshes the current detail in place.
+  // send.ts), so this always just refreshes the current detail in place.
   // (Holding used to navigate away to "whatever's next," back when 'skipped'
-  // fell out of the pending list — it no longer does, so there's nothing to
+  // fell out of the pending list, it no longer does, so there's nothing to
   // navigate to.)
   const setStatus = async (status: "approved" | "skipped" | "draft", skip_reason?: string) => {
     if (!detail) return;
@@ -153,10 +153,9 @@ export function EditionDraftView({
     }).then((r) => r.json()).catch(() => null);
     if (res?.ok) {
       // Approving an edition whose send window already passed (e.g. it was on
-      // hold past its scheduled time) triggers an immediate send server-side —
-      // res.sent is only present when that happened.
+      // hold past its scheduled time) triggers an immediate send server-side, // res.sent is only present when that happened.
       if (res.sent) {
-        showToast(res.sent.ok ? `Approved — sent to ${res.sent.sent} reader${res.sent.sent === 1 ? "" : "s"} just now` : `Approved, but the send failed: ${res.sent.skipReason ?? "unknown error"}`);
+        showToast(res.sent.ok ? `Approved, sent to ${res.sent.sent} reader${res.sent.sent === 1 ? "" : "s"} just now` : `Approved, but the send failed: ${res.sent.skipReason ?? "unknown error"}`);
       } else {
         showToast(status === "approved" ? "Approved" : status === "skipped" ? "On hold" : "Reset to draft");
       }
@@ -285,7 +284,7 @@ export function EditionDraftView({
                 ) : null}
               </div>
               <p className="ed-hint">
-                This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it — approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.
+                This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it, approving is just a note to yourself. <strong>Hold is the one thing that stops it</strong>: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.
                 {detail.status !== "draft" ? " Reset to draft clears your Approve/Hold decision and lets the automatic drafter safely regenerate this edition's picks the next time it runs." : null}
               </p>
             </div>

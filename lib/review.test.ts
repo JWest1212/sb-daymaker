@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { chipFor, whenString, sbWhen, prioritize, rollupSources, sourceHealth, rankSourceHealth } from "./review";
 
-describe("chipFor — trust chip from tier + starts_at", () => {
+describe("chipFor, trust chip from tier + starts_at", () => {
   it("dated Tier-1 -> green", () => expect(chipFor(1, "2026-07-09T20:00:00-07:00")).toBe("green"));
   it("recurring Tier-2 (no start) -> amber", () => expect(chipFor(2, null)).toBe("amber"));
   it("Tier-3 place -> evergreen", () => expect(chipFor(3, null)).toBe("evergreen"));
@@ -30,7 +30,7 @@ describe("sbWhen handles the PST boundary", () => {
   });
 });
 
-describe("prioritize — highest confidence first, then dated soonest-first, then start-less", () => {
+describe("prioritize, highest confidence first, then dated soonest-first, then start-less", () => {
   it("orders dated rows ascending and pushes start-less to the end when no score is present", () => {
     const rows = [
       { id: "late", starts_at: "2026-07-20T00:00:00Z" },
@@ -39,7 +39,7 @@ describe("prioritize — highest confidence first, then dated soonest-first, the
     ];
     expect(prioritize(rows).map((r) => r.id)).toEqual(["soon", "late", "place"]);
   });
-  it("puts the highest data_confidence first — fast approvals sit at the top (Doc 24 §4)", () => {
+  it("puts the highest data_confidence first, fast approvals sit at the top (Doc 24 §4)", () => {
     const rows = [
       { id: "weak", starts_at: "2026-07-01T00:00:00Z", data_confidence: 0.4 },
       { id: "strong", starts_at: "2026-07-20T00:00:00Z", data_confidence: 0.9 },
@@ -56,7 +56,7 @@ describe("prioritize — highest confidence first, then dated soonest-first, the
   });
 });
 
-describe("rollupSources — latest run per source -> health", () => {
+describe("rollupSources, latest run per source -> health", () => {
   it("classifies ok / warn / fail and keeps the newest run", () => {
     const out = rollupSources([
       { source: "soho", landed: 0, fetched: 9, ok: true, started_at: "2026-06-25T09:00:00Z" },
@@ -70,7 +70,7 @@ describe("rollupSources — latest run per source -> health", () => {
   });
 });
 
-describe("sourceHealth — Phase 4, judged against the source's OWN baseline", () => {
+describe("sourceHealth, Phase 4, judged against the source's OWN baseline", () => {
   it("a source with no baseline yet (expected_yield 0) never false-alarms, even at 0 landed", () => {
     expect(sourceHealth({ status: "active", expected_yield: 0, last_yield: 0 })).toBe("ok");
   });
@@ -85,7 +85,7 @@ describe("sourceHealth — Phase 4, judged against the source's OWN baseline", (
   });
 });
 
-describe("rankSourceHealth — problems surface first", () => {
+describe("rankSourceHealth, problems surface first", () => {
   it("sorts below_baseline, then paused, then ok; worst (highest consecutive_empty) first within a group", () => {
     const rows = [
       { key: "a", label: "A", status: "active", expected_yield: 10, last_yield: 9, last_ok_at: null, consecutive_empty: 0 },

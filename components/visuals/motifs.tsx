@@ -1,15 +1,15 @@
 // components/visuals/motifs.tsx
 //
-// Card Imagery Build Spec Phase 3 §6.2 — the 9 house-drawn v3 ink motifs, ported
+// Card Imagery Build Spec Phase 3 §6.2, the 9 house-drawn v3 ink motifs, ported
 // directly from
 // docs/card-imagery/SBDaymaker_Explore_Feed_Mockup_v1.html (do not redraw the art
-// — see the 2026-07-10 kickoff ledger entry for why it's 9, not the spec prose's
+//, see the 2026-07-10 kickoff ledger entry for why it's 9, not the spec prose's
 // "8"). Each motif keeps its own filter assignment exactly as the mockup drew it
-// (`tremble` vs `tremble2`) — `MotifFrame` below only factors out the repeated
+// (`tremble` vs `tremble2`), `MotifFrame` below only factors out the repeated
 // vignette/grain overlay markup, the art itself is unchanged pixel-for-pixel.
 //
 // `--motif-stroke`/`--motif-stroke-soft` and the `--tint-*` background colors are
-// NOT semantic design tokens (`sbdaymaker_tokens.css`) — they're baked-in
+// NOT semantic design tokens (`sbdaymaker_tokens.css`), they're baked-in
 // illustration colors specific to this ported asset, the same exemption already
 // established for the hero skyline SVG ("scene colors are baked into the asset by
 // design," Hero.tsx). `--gold`/`--terracotta`/`--paper` ARE real tokens and are
@@ -34,7 +34,7 @@ function MotifFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-// 1 · Stage — arts/theater/live-music (Art Walk in the mockup)
+// 1 · Stage, arts/theater/live-music (Art Walk in the mockup)
 function StageArt() {
   return (
     <MotifFrame>
@@ -50,7 +50,7 @@ function StageArt() {
   );
 }
 
-// 2 · Sunset — scenic_chill (golden hour)
+// 2 · Sunset, scenic_chill (golden hour)
 function SunsetArt() {
   return (
     <MotifFrame>
@@ -66,7 +66,7 @@ function SunsetArt() {
   );
 }
 
-// 3 · Market — recurring_market/festival_fair/community_gathering
+// 3 · Market, recurring_market/festival_fair/community_gathering
 function MarketArt() {
   return (
     <MotifFrame>
@@ -83,7 +83,7 @@ function MarketArt() {
   );
 }
 
-// 4 · Trail — outdoor_activity/sports_outdoors_event/recurring_outdoors
+// 4 · Trail, outdoor_activity/sports_outdoors_event/recurring_outdoors
 function TrailArt() {
   return (
     <MotifFrame>
@@ -99,7 +99,7 @@ function TrailArt() {
   );
 }
 
-// 5 · Wharf — venue-family only (Stearns Wharf)
+// 5 · Wharf, venue-family only (Stearns Wharf)
 function WharfArt() {
   return (
     <MotifFrame>
@@ -120,7 +120,7 @@ function WharfArt() {
   );
 }
 
-// 6 · Mission — venue-family only (Old Mission); the "est. 1786" garnish is always
+// 6 · Mission, venue-family only (Old Mission); the "est. 1786" garnish is always
 // true here since this motif only ever renders on a real Old Mission match.
 function MissionArt() {
   return (
@@ -146,7 +146,7 @@ function MissionArt() {
   );
 }
 
-// 7 · Books — shopping_browse/culture_spot (Chaucer's in the mockup)
+// 7 · Books, shopping_browse/culture_spot (Chaucer's in the mockup)
 function BooksArt() {
   return (
     <MotifFrame>
@@ -161,7 +161,7 @@ function BooksArt() {
   );
 }
 
-// 8 · Taproom — food/drink categories (Topa Topa in the mockup)
+// 8 · Taproom, food/drink categories (Topa Topa in the mockup)
 function TaproomArt() {
   return (
     <MotifFrame>
@@ -177,7 +177,7 @@ function TaproomArt() {
   );
 }
 
-// 9 · Beach — scenic_chill's second variant (Butterfly Beach in the mockup; the
+// 9 · Beach, scenic_chill's second variant (Butterfly Beach in the mockup; the
 // sand fill #e9ddc2 is a one-off illustration color, not shared elsewhere)
 function BeachArt() {
   return (

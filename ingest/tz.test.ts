@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { sbISO } from './tz';
 
-describe('sbISO — America/Los_Angeles offset stamping', () => {
+describe('sbISO, America/Los_Angeles offset stamping', () => {
   it('uses PDT (-07:00) in summer', () => {
     expect(sbISO(2026, 7, 12, 19, 0)).toBe('2026-07-12T19:00:00-07:00');
   });

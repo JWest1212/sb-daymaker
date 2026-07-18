@@ -42,7 +42,7 @@ export function PinPickerSheet({ things, onBuild, onClose }: PinPickerSheetProps
     return (
       <BottomSheet open onClose={onClose} kicker="Your saved spots" title="Build around your saved">
         <div className="sbd-pinhelper sbd-pinhelper--empty">
-          <p>Nothing saved yet. Head to Explore and heart a few spots you&rsquo;re into — then come back and we&rsquo;ll build your day around them.</p>
+          <p>Nothing saved yet. Head to Explore and heart a few spots you&rsquo;re into, then come back and we&rsquo;ll build your day around them.</p>
           <Link href="/" className="sbd-btn sbd-btn--primary sbd-btn--block" style={{ textDecoration: "none", display: "block", textAlign: "center" }}>
             Browse Explore →
           </Link>

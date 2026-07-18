@@ -1,13 +1,13 @@
 // ingest/adapters/alcazar.ts
 //
-// The Alcazar Theater — server-detail scrape (§7.4). Carpinteria anchor venue.
-// thealcazar.org — WP Tribe REST → iCal → server-detail HTML scrape.
+// The Alcazar Theater, server-detail scrape (§7.4). Carpinteria anchor venue.
+// thealcazar.org, WP Tribe REST → iCal → server-detail HTML scrape.
 // useManagedScrape: false. Robots.txt checked at runtime.
 //
 // The Alcazar is a small community theater; ticket links are often direct (not AXS).
 // buyUrl defaults to the detail page URL when no external ticket link is found.
 //
-// NOTE: As of 2026-06, thealcazar.org is an empty Squarespace shell — no event
+// NOTE: As of 2026-06, thealcazar.org is an empty Squarespace shell, no event
 // items are published in any Squarespace collection. All three resolution paths
 // return 0 results correctly; this is not a scrape failure. Re-enable when the
 // venue begins publishing events on the site.

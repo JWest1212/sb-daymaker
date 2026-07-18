@@ -5,8 +5,7 @@ import { sbDay } from "@/lib/explore";
 
 export const dynamic = "force-dynamic";
 
-// Vercel Cron, Thursday + Sunday 07:00 America/Los_Angeles (see vercel.json —
-// fixed-UTC schedule, same DST-drift tradeoff the nightly ingest already
+// Vercel Cron, Thursday + Sunday 07:00 America/Los_Angeles (see vercel.json, // fixed-UTC schedule, same DST-drift tradeoff the nightly ingest already
 // accepts). The edition_date IS the send date (windowDaysFor computes the
 // days AFTER it), so "today" is exactly the row to send (spec §7.1/§7.2).
 export async function GET(req: NextRequest) {

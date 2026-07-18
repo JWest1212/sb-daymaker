@@ -38,7 +38,7 @@ const BASE_INPUT = {
   editionDateKey: "2026-07-09",
 };
 
-describe("hero selection — fallback chain", () => {
+describe("hero selection, fallback chain", () => {
   it("prefers a valid hero_pins pick over the ranked auto-pick", () => {
     const things = [
       draftThing({ id: "auto-best", starts_at: "2026-07-10T19:00:00Z", editorial_weight: 5 }),
@@ -101,7 +101,7 @@ describe("holistic ranking across the window", () => {
   });
 });
 
-describe("secondary selection — tier qualification + window", () => {
+describe("secondary selection, tier qualification + window", () => {
   it("qualifies Tier-1 dated-in-window and Tier-2 recurring-in-window; excludes out-of-window and Tier-3", () => {
     const things = [
       draftThing({ id: "hero", happening_tier: 1, starts_at: "2026-07-10T19:00:00Z", editorial_weight: 10 }),
@@ -219,7 +219,7 @@ describe("sponsor-blindness", () => {
   it("a thing flagged is_featured/sponsor_id (adversarially injected) never outranks on those fields", () => {
     const sponsored = draftThing({ id: "sponsored", starts_at: "2026-07-11T19:00:00Z", editorial_weight: 0 });
     const organic = draftThing({ id: "organic", starts_at: "2026-07-11T19:00:00Z", editorial_weight: 0 });
-    // Inject fields the DraftThing type never declares/selects — cascade() must
+    // Inject fields the DraftThing type never declares/selects, cascade() must
     // ignore them structurally (ranking reads only tier/weight/starts_at).
     (sponsored as unknown as Record<string, unknown>).is_featured = true;
     (sponsored as unknown as Record<string, unknown>).sponsor_id = "sponsor-1";

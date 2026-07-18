@@ -30,14 +30,14 @@ describe("parseGuideContent", () => {
         {
           k: "Stops 1–3 · Morning",
           name: "Pastry, science, murals",
-          sum: "The zone before the crowds — start with the croissant.",
+          sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
         },
       ],
       asides: [{ after_chapter: 2, text: "Come Sunday before noon." }],
       take: {
         h: "Best bite in the zone, ranked.",
-        items: [{ b: "The clam pie", rest: " at Lucky Penny — order it." }],
+        items: [{ b: "The clam pie", rest: " at Lucky Penny, order it." }],
         landing: "Disagree? Good.",
       },
       know_before: [{ k: "Parking", v: "Lot on Yanonali." }],
@@ -52,14 +52,14 @@ describe("parseGuideContent", () => {
         {
           k: "Stops 1–3 · Morning",
           name: "Pastry, science, murals",
-          sum: "The zone before the crowds — start with the croissant.",
+          sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
         },
       ],
       asides: [{ after_chapter: 2, text: "Come Sunday before noon." }],
       take: {
         h: "Best bite in the zone, ranked.",
-        items: [{ b: "The clam pie", rest: " at Lucky Penny — order it." }],
+        items: [{ b: "The clam pie", rest: " at Lucky Penny, order it." }],
         landing: "Disagree? Good.",
       },
       know_before: [{ k: "Parking", v: "Lot on Yanonali." }],
@@ -75,7 +75,7 @@ describe("parseGuideContent", () => {
     );
   });
 
-  it("malformed / wrong-typed input never throws — coerces to defaults", () => {
+  it("malformed / wrong-typed input never throws, coerces to defaults", () => {
     expect(parseGuideContent(null)).toEqual(parseGuideContent({}));
     expect(parseGuideContent("nope")).toEqual(parseGuideContent({}));
     expect(parseGuideContent(42)).toEqual(parseGuideContent({}));

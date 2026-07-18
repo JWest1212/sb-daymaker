@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SB Daymaker — Elevation v1 · Visual Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5; --ink:#241C16; --ink-2:#4A3F35; --ink-3:#8A7F6A;
+    --pacific:#16586A; --pacific-dark:#0E3C49; --terracotta:#C0532E; --gold:#E0A82E;
+    --gold-text:#7A5E13; --sage:#7E8B6B; --sage-text:#566049;
+    --bad-bg:#FBEEE8; --bad-line:#E4B9A6; --bad-ink:#8A2D0E;
+    --good-bg:#EAF0E7; --good-line:#B9CBAD; --good-ink:#3D5233;
+    --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plaster);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 140px}
+
+  /* Masthead */
+  header.mast{border-bottom:2px solid var(--ink);margin-bottom:10px;padding:46px 0 22px}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--pacific);margin:0 0 14px}
+  h1{font-family:var(--font-display);font-weight:900;font-size:clamp(36px,6.5vw,58px);line-height:1.02;margin:0 0 14px;letter-spacing:-.015em}
+  .dek{font-family:var(--font-display);font-weight:400;font-size:21px;color:var(--ink-2);margin:0;max-width:64ch}
+  .mast .meta{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);margin-top:20px;letter-spacing:.03em}
+
+  /* Legend */
+  .legend{display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin:26px 0 4px;font-size:14px}
+  .legend .k{display:inline-flex;align-items:center;gap:8px}
+  .swatch{width:15px;height:15px;border-radius:4px;border:1px solid rgba(0,0,0,.12)}
+
+  /* Gate section headers */
+  .gate{border-top:2px solid var(--ink);margin-top:64px;padding-top:16px}
+  .gate .g{font-family:var(--font-mono);font-size:13px;color:var(--terracotta);letter-spacing:.12em}
+  .gate h2{font-family:var(--font-display);font-weight:600;font-size:32px;margin:6px 0 8px;letter-spacing:-.01em}
+  .gate .sub{font-size:17px;color:var(--ink-2);max-width:70ch;margin:0}
+
+  /* Change block */
+  .change{margin:40px 0}
+  .change h3{font-family:var(--font-display);font-weight:600;font-size:20px;margin:0 0 4px}
+  .change .exp{font-size:15px;color:var(--ink-2);margin:0 0 16px;max-width:78ch}
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media(max-width:760px){.ba{grid-template-columns:1fr}}
+  .panel{border-radius:14px;padding:14px;position:relative}
+  .panel.before{background:var(--bad-bg);border:1px solid var(--bad-line)}
+  .panel.after{background:var(--good-bg);border:1px solid var(--good-line)}
+  .tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:500;padding:3px 9px;border-radius:100px;display:inline-block;margin-bottom:12px}
+  .tag.b{background:#F1D3C6;color:var(--bad-ink)}
+  .tag.a{background:#CFE0C4;color:var(--good-ink)}
+
+  /* Faux app card (mimics the real site card) */
+  .appcard{background:var(--paper);border:1px solid var(--plaster-2);border-radius:12px;overflow:hidden;font-size:14px}
+  .appcard .img{height:96px;background:#DAC7A6;display:flex;align-items:center;justify-content:center;color:#8A7355;font-family:var(--font-mono);font-size:11px;text-align:center;padding:0 8px}
+  .appcard .img.broken{background:repeating-linear-gradient(45deg,#E8DFcf,#E8DFcf 8px,#ddd2bd 8px,#ddd2bd 16px);color:#9a7b52}
+  .appcard .img.motif{background:radial-gradient(circle at 30% 30%,#EAD9AE,#D8C089);color:#7c6533}
+  .appcard .img.photo{background:linear-gradient(135deg,#C9B68A,#A88F63);color:#f6f1e7}
+  .appcard .body{padding:10px 12px}
+  .chip{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:.03em;background:#EFE7D8;color:var(--sage-text);padding:2px 8px;border-radius:100px;margin-bottom:6px}
+  .chip.tc{background:#F4E3D9;color:var(--terracotta)}
+  .appcard h4{font-family:var(--font-display);font-weight:600;font-size:16px;margin:2px 0 4px;line-height:1.2}
+  .appcard .meta{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin:0 0 6px}
+  .appcard .desc{font-size:13px;color:var(--ink-2);margin:0}
+  .appcard.compact{display:flex;gap:10px;align-items:center;padding:8px 10px}
+  .appcard.compact .thumb{width:44px;height:44px;border-radius:8px;flex-shrink:0;background:radial-gradient(circle at 30% 30%,#EAD9AE,#D8C089)}
+  .appcard.compact h4{font-size:14px;margin:0}
+  .appcard.compact .meta{margin:2px 0 0}
+
+  /* callout row inside a panel (for text-only fixes) */
+  .line{font-family:var(--font-mono);font-size:12.5px;background:var(--paper);border:1px solid rgba(0,0,0,.06);border-radius:8px;padding:9px 11px;margin:8px 0;line-height:1.5}
+  .strike{text-decoration:line-through;color:var(--bad-ink);opacity:.8}
+  .ins{color:var(--good-ink)}
+  .muted{color:var(--ink-3)}
+
+  /* Phone frame */
+  .phone{width:270px;margin:0 auto;background:var(--ink);border-radius:30px;padding:8px;box-shadow:0 6px 22px rgba(36,28,22,.16)}
+  .phone .screen{background:var(--plaster);border-radius:23px;overflow:hidden}
+  .phone .status{height:20px;background:var(--plaster);display:flex;align-items:center;justify-content:center}
+  .phone .notch{width:70px;height:5px;border-radius:100px;background:#cfc6b3}
+  .scr-pad{padding:12px}
+  .sbd-top{font-family:var(--font-display);font-size:15px;color:var(--ink);margin:0 0 2px}
+  .sbd-top b{color:var(--terracotta)}
+  .hero-strip{background:linear-gradient(120deg,#F3D9A0,#EBBF77);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .hero-strip .t{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:#7A5E13}
+  .hero-strip .h{font-family:var(--font-display);font-weight:600;font-size:13px;color:#3A2E12;margin-top:2px;line-height:1.15}
+  .cta-band{background:var(--terracotta);color:var(--paper);border-radius:10px;padding:9px 12px;font-size:12px;text-align:center;margin-bottom:8px;font-weight:500}
+  .cta-band .s{display:block;font-size:10px;opacity:.85;font-weight:400;margin-top:1px}
+  .navbar{display:flex;border-top:1px solid var(--plaster-2);background:var(--paper);border-radius:0 0 22px 22px}
+  .navbar div{flex:1;text-align:center;padding:8px 0;font-family:var(--font-mono);font-size:9px;color:var(--ink-3)}
+  .navbar div.on{color:var(--terracotta)}
+  .navbar .ic{font-size:15px;display:block}
+
+  /* Detail sheet mock */
+  .detail{background:var(--paper);border:1px solid var(--plaster-2);border-radius:12px;overflow:hidden}
+  .detail .dimg{height:110px;background:linear-gradient(135deg,#C9B68A,#A88F63)}
+  .detail .dbody{padding:12px 14px}
+  .detail h4{font-family:var(--font-display);font-weight:600;font-size:18px;margin:0 0 6px}
+  .drow{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--plaster-2);font-size:13px}
+  .drow .l{color:var(--ink-3);font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+  .drow .v{color:var(--ink)}
+  .secret{background:#F4EEDF;border-radius:8px;padding:9px 11px;margin-top:10px;font-size:12.5px}
+  .secret .h{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--gold-text);margin-bottom:3px}
+  .actions{display:flex;gap:7px;margin-top:12px}
+  .actions .btn{flex:1;text-align:center;border:1px solid var(--pacific);color:var(--pacific);border-radius:100px;padding:7px 0;font-size:12px;font-weight:500}
+  .actions .btn.solid{background:var(--pacific);color:var(--paper);border-color:var(--pacific)}
+  .stamp{display:inline-block;font-family:var(--font-mono);font-size:10px;color:var(--sage-text);background:#E4EAE0;border-radius:100px;padding:2px 9px;margin-top:8px}
+
+  /* Browser chrome for URL/SEO */
+  .browser{background:var(--paper);border:1px solid var(--plaster-2);border-radius:10px;overflow:hidden}
+  .browser .bar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--plaster-2)}
+  .browser .dot{width:9px;height:9px;border-radius:100px;background:#cbb}
+  .browser .url{flex:1;background:var(--paper);border-radius:6px;padding:4px 9px;font-family:var(--font-mono);font-size:11px;color:var(--ink-2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .browser .tab{padding:8px 12px;font-size:13px;border-bottom:1px solid var(--plaster-2)}
+  .browser .tab .ti{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase}
+
+  /* Search / OG / SERP mock */
+  .serp{background:var(--paper);border:1px solid var(--plaster-2);border-radius:10px;padding:12px 14px;font-family:Arial,sans-serif}
+  .serp .u{font-size:11px;color:#3a7d3a}
+  .serp .t{font-size:16px;color:#1a0dab;margin:2px 0}
+  .serp .d{font-size:12px;color:#4d5156}
+  .ogcard{background:var(--paper);border:1px solid var(--plaster-2);border-radius:10px;overflow:hidden;max-width:300px}
+  .ogcard .ogimg{height:120px;display:flex;align-items:flex-end}
+  .ogcard .ogimg.generic{background:#E8DFC9;align-items:center;justify-content:center;color:#8A7F6A;font-family:var(--font-display)}
+  .ogcard .ogimg.rich{background:linear-gradient(135deg,#B99A63,#8a6f42)}
+  .ogcard .ogimg.rich .cap{width:100%;padding:8px 11px;background:rgba(36,28,22,.5);color:var(--plaster);font-family:var(--font-display);font-size:14px}
+  .ogcard .ogb{padding:9px 11px}
+  .ogcard .ogb .ot{font-size:12px;font-weight:600;color:var(--ink)}
+  .ogcard .ogb .od{font-size:11px;color:var(--ink-3);margin-top:2px}
+
+  /* Planner comparison */
+  .filterform{background:var(--paper);border:1px solid var(--plaster-2);border-radius:10px;padding:12px}
+  .filterform .fl{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;margin:8px 0 4px}
+  .filterform .fchips{display:flex;flex-wrap:wrap;gap:5px}
+  .fchip{font-size:11px;border:1px solid var(--plaster-2);border-radius:100px;padding:3px 9px;color:var(--ink-2)}
+  .fchip.on{background:var(--pacific);color:var(--paper);border-color:var(--pacific)}
+  .itin{background:var(--paper);border:1px solid var(--plaster-2);border-radius:10px;overflow:hidden}
+  .stop{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--plaster-2)}
+  .stop .tm{font-family:var(--font-mono);font-size:11px;color:var(--terracotta);width:52px;flex-shrink:0;padding-top:2px}
+  .stop .sd h5{margin:0;font-family:var(--font-display);font-size:14px;font-weight:600}
+  .stop .sd p{margin:2px 0 0;font-size:11.5px;color:var(--ink-2)}
+  .transit{background:#F1EEE4;font-family:var(--font-mono);font-size:10px;color:var(--ink-3);padding:5px 12px;letter-spacing:.02em}
+  .gobar{display:flex;gap:8px;padding:10px 12px;background:var(--plaster-2)}
+  .gobar .gb{flex:1;text-align:center;font-size:12px;font-weight:500;padding:7px 0;border-radius:100px}
+  .gobar .gb.pri{background:var(--pacific);color:var(--paper)}
+  .gobar .gb.sec{border:1px solid var(--pacific);color:var(--pacific)}
+
+  /* small note under a comparison */
+  .why{font-size:14px;color:var(--ink-2);margin:12px 0 0;padding-left:14px;border-left:3px solid var(--gold)}
+  .why b{color:var(--ink)}
+
+  /* impact summary */
+  .impact{background:var(--pacific-dark);color:var(--plaster);border-radius:16px;padding:30px 30px;margin-top:70px}
+  .impact h2{font-family:var(--font-display);font-weight:600;font-size:26px;margin:0 0 16px;color:var(--paper)}
+  .impact ul{margin:0;padding-left:20px}
+  .impact li{margin-bottom:10px}
+  .impact li b{color:var(--gold)}
+
+  .foot{margin-top:50px;padding-top:22px;border-top:2px solid var(--ink);font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+  .anchor-nav{position:sticky;top:0;background:var(--plaster);border-bottom:1px solid var(--plaster-2);padding:10px 0;margin-bottom:0;z-index:10;display:flex;gap:6px;flex-wrap:wrap;font-family:var(--font-mono);font-size:11px}
+  .anchor-nav a{color:var(--pacific);text-decoration:none;border:1px solid var(--plaster-2);border-radius:100px;padding:4px 11px;background:var(--paper)}
+  .anchor-nav a:hover{background:var(--pacific);color:var(--paper)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">SB Daymaker · Elevation v1 · Visual Walkthrough</p>
+  <h1>Before &amp; after</h1>
+  <p class="dek">Every meaningful change in the six-gate build, shown side by side. Red panels are the site today; green panels are what ships. Read top to bottom, or jump to a gate.</p>
+  <p class="meta">Mockups are illustrative, in the real SB Daymaker palette · not pixel-final production screens · Jul 2026</p>
+  <div class="legend">
+    <span class="k"><span class="swatch" style="background:var(--bad-bg);border-color:var(--bad-line)"></span> Before — the site today</span>
+    <span class="k"><span class="swatch" style="background:var(--good-bg);border-color:var(--good-line)"></span> After — what ships</span>
+  </div>
+</header>
+
+<nav class="anchor-nav">
+  <a href="#g0">Gate 0 · Trust fixes</a>
+  <a href="#g1">Gate 1 · Quality &amp; detail</a>
+  <a href="#g2">Gate 2 · Findability</a>
+  <a href="#g3">Gate 3 · Nav &amp; search</a>
+  <a href="#g4">Gate 4 · The planner</a>
+  <a href="#g5">Gate 5 · Loops</a>
+  <a href="#impact">The payoff</a>
+</nav>
+
+<!-- ============ GATE 0 ============ -->
+<section class="gate" id="g0">
+  <p class="g">GATE 0</p>
+  <h2>Stop the Bleeding</h2>
+  <p class="sub">Eight fixes a visitor can catch in under two minutes. Each one directly contradicts the homepage promise that the site is "curated by someone who knows the town." No new code structure — just data and render truth.</p>
+</section>
+
+<div class="change">
+  <h3>1 · The leaked editorial note</h3>
+  <p class="exp">The Funk Zone Art Walk's "Local's secret" is currently an internal note to the operator, published word for word to the public. It's the machinery showing through the exact feature meant to prove human curation.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="secret">
+        <div class="h">🤫 LOCAL'S SECRET</div>
+        Bi-monthly (~every 8 weeks) on a FRIDAY evening, 5–8pm — NOT weekly; confirm the specific date on funkzone.net <b>before publishing.</b>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="secret">
+        <div class="h">🤫 LOCAL'S SECRET</div>
+        Come for the first hour: the pourers are fresh, the crowd is thin, and the food trucks on Yanonali haven't hit their line yet.
+      </div>
+    </div>
+  </div>
+  <p class="why"><b>How:</b> a nightly scan flags operator-note phrases ("before publishing," "confirm," ALL-CAPS hedges) across all published copy, so this class of leak can never reach a user again.</p>
+</div>
+
+<div class="change">
+  <h3>2 · Descriptions that contradict their own clock</h3>
+  <p class="exp">Blurbs were generated without reading the event's start time, so a 10&nbsp;AM talk is described as an "evening" event. This appears across at least six live entries.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="appcard">
+        <div class="body">
+          <span class="chip">Family Day</span>
+          <h4>LOTG | Oak Park</h4>
+          <p class="meta">Free · Fri 10 AM</p>
+          <p class="desc">Community gathering at Oak Park. Free <b>evening</b> event.</p>
+        </div>
+      </div>
+      <div class="line muted" style="margin-top:10px">Also live: "Family Garden Exploration… <b>evening</b> light" (11 AM) · "Coast Village Pop-Up… <b>late-night</b>" (4 PM)</div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="appcard">
+        <div class="body">
+          <span class="chip">Family Day</span>
+          <h4>LOTG (Library on the Go) | Oak Park</h4>
+          <p class="meta">Free · Fri 10 AM</p>
+          <p class="desc">The library's pop-up comes to Oak Park: books, crafts, and a morning on the grass for little kids.</p>
+        </div>
+      </div>
+      <div class="line ins" style="margin-top:10px">Generator now reads the start time + rejects any blurb whose daypart conflicts with it.</div>
+    </div>
+  </div>
+  <p class="why"><b>Bonus fix shown here:</b> the cryptic "LOTG" is expanded so a visitor knows what it actually is — the same fix applied to every acronym-only listing.</p>
+</div>
+
+<div class="change">
+  <h3>3 · The card and the detail page disagree on the time</h3>
+  <p class="exp">The feed rounds; the detail page doesn't. Thirty minutes matters for a movie locals camp out for and a tasting that sells out.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line">Card: Free Summer Cinema — <span class="strike">Fri 8 PM</span></div>
+      <div class="line">Detail: Free Summer Cinema — <b>Fri 8:30 PM</b></div>
+      <div class="line muted">Wine Festival: card 6 PM / detail 6:30 PM</div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line">Card: Free Summer Cinema — <span class="ins">Fri 8:30 PM</span></div>
+      <div class="line">Detail: Free Summer Cinema — <span class="ins">Fri 8:30 PM</span></div>
+      <div class="line ins">One shared time formatter · no rounding · ever</div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>4 · Duplicate entries &amp; broken images</h3>
+  <p class="exp">The Museum of Art exists twice as separate pages. Shoreline Park is illustrated with a scanned 1980 Federal Register page. Paradise Found (a vintage shop) shows the Granada Theatre. When wrong, blank is better — the clean motif fallback takes over.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="appcard">
+        <div class="img broken">1980 FEDERAL REGISTER<br>(scanned PDF page)</div>
+        <div class="body"><span class="chip tc">Date Night</span><h4>Shoreline Park</h4><p class="desc">Bluff views and grass.</p></div>
+      </div>
+      <div class="line muted" style="margin-top:8px">+ two "Santa Barbara Museum of Art" pages, different UUIDs</div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="appcard">
+        <div class="img motif">◐ scenic motif</div>
+        <div class="body"><span class="chip tc">Date Night</span><h4>Shoreline Park</h4><p class="desc">Bluff-top grass with the best west-facing sunset seats in town.</p></div>
+      </div>
+      <div class="line ins" style="margin-top:8px">Museum of Art merged to one page · broken images fall back to motif</div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>5 · Placeholder values &amp; the "every week" bug</h3>
+  <p class="exp">Users are shown literal placeholder text — "Where: Other," a bare "—" where a price belongs (even on a premium tasting). And the bi-monthly Art Walk sits under "Every week," which its own leaked note said was wrong.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line">Lizard's Mouth → Where: <span class="strike">Other</span></div>
+      <div class="line">Wine Festival → Price: <span class="strike">—</span></div>
+      <div class="line">Section "Every week": <span class="strike">Funk Zone Art Walk</span> <span class="muted">(actually bi-monthly)</span></div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line">Lizard's Mouth → <span class="ins">Goleta backcountry · Up Hwy 154</span></div>
+      <div class="line">Wine Festival → Price: <span class="ins">Check site ↗</span></div>
+      <div class="line">Art Walk → <span class="ins">moves to a dated event with its real next date</span></div>
+    </div>
+  </div>
+  <p class="why"><b>And:</b> a stray "Cancel" that currently renders at the top of nearly every page (a search overlay leaking into the HTML) is removed from the server output.</p>
+</div>
+
+<!-- ============ GATE 1 ============ -->
+<section class="gate" id="g1">
+  <p class="g">GATE 1</p>
+  <h2>Trust Infrastructure</h2>
+  <p class="sub">The load-bearing gate. It installs a publish rule so filler can't pose as curation, turns detail pages into things a visitor can actually navigate to, and propagates the guides' verification system down to every listing.</p>
+</section>
+
+<div class="change">
+  <h3>6 · Quality tiers — full cards vs. compact cards</h3>
+  <p class="exp">Instead of deleting weak entries, they're demoted. A Tier&nbsp;1 entry (complete, verified, with a real insider fact) renders full. A thin Tier&nbsp;2 entry renders as a lighter compact row — still discoverable, but visibly not pretending to be curated. Broken Tier&nbsp;3 entries are hidden from the public feed until fixed.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before — everything looks equally "curated"</span>
+      <div class="appcard">
+        <div class="img photo">photo</div>
+        <div class="body"><span class="chip tc">Date Night</span><h4>Santa Barbara Museum of Art</h4><p class="meta">Downtown</p><p class="desc">Paintings, sculpture, the usual good stuff.</p></div>
+      </div>
+      <div class="line muted" style="margin-top:8px">Filler blurb gets the same full-card real estate as a great one.</div>
+    </div>
+    <div class="panel after"><span class="tag a">After — tier tells the truth</span>
+      <div class="appcard">
+        <div class="img photo">photo</div>
+        <div class="body"><span class="chip tc">Date Night</span><h4>The Lark</h4><p class="meta">Funk Zone · $$$ · Verified Jul 2026</p><p class="desc">Seasonal Central Coast plates at communal tables — the neighborhood's marquee dinner. Book ahead for weekend tables.</p></div>
+      </div>
+      <div style="margin-top:8px" class="appcard compact">
+        <div class="thumb"></div>
+        <div><h4>Santa Barbara Museum of Art</h4><p class="meta">Downtown · Tier 2 · compact</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>7 · Detail pages become destinations</h3>
+  <p class="exp">Today a detail page can't tell you a street address — "Where: Downtown" — and there's no map, no directions, no share. The rebuilt page carries a real address <strong>with the neighborhood kept on its own line beneath it</strong> (Funk Zone, Downtown, Goleta…), a Directions deep link (opens the phone's maps app, zero map-API cost), open-now hours, a correctly labeled outbound link, a Save / Share / Directions row, and a "Verified" stamp.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="detail">
+        <div class="dimg"></div>
+        <div class="dbody">
+          <h4>The Lark</h4>
+          <div class="drow"><span class="l">Where</span><span class="v strike">Funk Zone</span></div>
+          <div class="drow"><span class="l">Price</span><span class="v">$$$</span></div>
+          <div class="drow"><span class="l">Setting</span><span class="v">Indoor</span></div>
+          <div class="secret"><div class="h">🤫 LOCAL'S SECRET</div>Suite A, on the Anacapa corner; book ahead for weekend tables.</div>
+          <div class="line muted" style="margin-top:10px">No address · no directions · no share · no way to reserve</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="detail">
+        <div class="dimg"></div>
+        <div class="dbody">
+          <h4>The Lark</h4>
+          <div class="drow"><span class="l">Address</span><span class="v">131 Anacapa St, Suite A</span></div>
+          <div class="drow"><span class="l">Neighborhood</span><span class="v">Funk Zone</span></div>
+          <div class="drow"><span class="l">Open</span><span class="v">Today until 10 PM</span></div>
+          <div class="drow"><span class="l">Price</span><span class="v">$$$ · Reserve ↗</span></div>
+          <div class="secret"><div class="h">🤫 LOCAL'S SECRET</div>Named for the Southern Pacific's overnight Pullman train. Weekend tables book out — reserve ahead.</div>
+          <span class="stamp">✓ Verified · Jul 2026</span>
+          <div class="actions"><span class="btn">♡ Save</span><span class="btn">Share</span><span class="btn solid">Directions</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>8 · Outbound links stop lying · Local's Secret stops faking it</h3>
+  <p class="exp">A free library gathering currently shows "Get tickets." A ticketed museum shows no link at all. And some "secrets" are just the venue's own marketing (MOXI's rooftop water deck is on its homepage). Labels now adapt to what the thing is, and the secret block hides entirely when there isn't a real one.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line">LOTG (free event) → <span class="strike">[ Get tickets ↗ ]</span></div>
+      <div class="line">MOXI (ticketed museum) → <span class="strike">(no link)</span></div>
+      <div class="secret"><div class="h">🤫 LOCAL'S SECRET</div>A rooftop water-play deck and a toddler area make it great for families. <span class="muted">(this is MOXI's marketing)</span></div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line">LOTG (free event) → <span class="ins">[ Event details ↗ ]</span></div>
+      <div class="line">MOXI (ticketed museum) → <span class="ins">[ Visit website ↗ ]</span></div>
+      <div class="line ins" style="margin-top:8px">MOXI's "secret" block is hidden — no real secret, no empty header.</div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>9 · The Occasion filter starts meaning something</h3>
+  <p class="exp">"Date Night" currently covers ~40% of everything. Gabriel Iglesias is tagged "Family Day." Cards show one arbitrary tag while details show four. Now: the schema's negative rules are enforced (no "Family Day" on a 21+ show), tags are capped and confidence-ordered, and the card's chip always matches the detail's top chip.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="appcard">
+        <div class="img photo">photo</div>
+        <div class="body"><span class="chip">👨‍👩‍👧 Family Day</span><h4>Gabriel 'Fluffy' Iglesias</h4><p class="meta">$$ · Fri 7 PM · SB Bowl</p><p class="desc">The Bowl fills up. Come ready to laugh.</p></div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="appcard">
+        <div class="img photo">photo</div>
+        <div class="body"><span class="chip tc">🎭 Catch a Show</span><h4>Gabriel 'Fluffy' Iglesias</h4><p class="meta">$$ · Fri 7 PM · SB Bowl</p><p class="desc">A major comedy name in one of the best outdoor venues in the state.</p></div>
+      </div>
+      <div class="line ins" style="margin-top:8px">21+ show → "Family Day" tag now impossible.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GATE 2 ============ -->
+<section class="gate" id="g2">
+  <p class="g">GATE 2</p>
+  <h2>Findability</h2>
+  <p class="sub">The entire organic-growth channel, currently switched off, for about a week of plumbing. Unique titles, real URLs, rich share previews, and the structured data that gets events into Google's carousel.</p>
+</section>
+
+<div class="change">
+  <h3>10 · Every page had the same title. Now each is its own.</h3>
+  <p class="exp">All 12 sampled detail pages returned the browser-tab title "Detail — SB Daymaker," and every URL was an opaque UUID. Now titles describe the thing, and URLs are readable slugs (old links 301-redirect, so nothing breaks).</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="browser">
+        <div class="bar"><span class="dot"></span><span class="url">sbdaymaker.com/thing/9efd51ca-2d17-5c45-945b-221273ff1b3e</span></div>
+        <div class="tab"><span class="ti">Browser tab</span><br>Detail — SB Daymaker</div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="browser">
+        <div class="bar"><span class="dot"></span><span class="url">sbdaymaker.com/thing/free-summer-cinema-courthouse</span></div>
+        <div class="tab"><span class="ti">Browser tab</span><br>Free Summer Cinema at the Courthouse — SB Daymaker</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>11 · Shared links preview as designed cards</h3>
+  <p class="exp">Paste any event link into a text today and it shows the generic brand tile — killing the "share it" loop in the tagline. Now each thing generates its own preview card with its photo, title, and key details.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before — every link looks identical</span>
+      <div class="ogcard">
+        <div class="ogimg generic">SB Daymaker</div>
+        <div class="ogb"><div class="ot">SB Daymaker</div><div class="od">Find what's worth doing in Santa Barbara, daily…</div></div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After — link renders the actual thing</span>
+      <div class="ogcard">
+        <div class="ogimg rich"><div class="cap">Free Summer Cinema: Say Anything…</div></div>
+        <div class="ogb"><div class="ot">Free · Fri 8:30 PM · Courthouse Sunken Garden</div><div class="od">Bring a blanket — locals stake spots from noon.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>12 · Getting into Google's event carousel</h3>
+  <p class="exp">With Event + LocalBusiness structured data added, the pages become eligible for Google's rich event results — the exact surface a "things to do in Santa Barbara this weekend" search shows. Today the site is invisible to it.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before — a plain blue link (if it ranks at all)</span>
+      <div class="serp">
+        <div class="u">sbdaymaker.com › thing › 9efd51ca…</div>
+        <div class="t">Detail — SB Daymaker</div>
+        <div class="d">Find what's worth doing in Santa Barbara, daily…</div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After — a rich result with date, place, price</span>
+      <div class="serp">
+        <div class="u">sbdaymaker.com › free-summer-cinema-courthouse</div>
+        <div class="t">Free Summer Cinema at the Courthouse Sunken Garden</div>
+        <div class="d"><b>Fri, Jul 17 · 8:30 PM</b> · Courthouse Sunken Garden · Free · Outdoor movie night…</div>
+      </div>
+    </div>
+  </div>
+  <p class="why"><b>Also in this gate:</b> your best prose — the guide walks — now renders server-side so Google can actually read it, plus a sitemap so every listing gets discovered.</p>
+</div>
+
+<!-- ============ GATE 3 ============ -->
+<section class="gate" id="g3">
+  <p class="g">GATE 3</p>
+  <h2>Navigation &amp; Search</h2>
+  <p class="sub">Makes the depth already in the database findable and connected: the differentiator moves to the front, search arrives, "this weekend" becomes real, recurring events show true dates, and the two content tiers finally link to each other.</p>
+</section>
+
+<div class="change">
+  <h3>13 · Search, a "This weekend" filter, and honest recurring dates</h3>
+  <p class="exp">There's no search today, no way to filter to "this weekend" despite the weekend newsletter, and recurring events say "every week" even when they aren't. All three fixed.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line">Search: <span class="strike">(none — scroll to find "Loquita")</span></div>
+      <div class="line">Horizons: Today · Week · Month <span class="muted">(no weekend)</span></div>
+      <div class="appcard" style="margin-top:8px"><div class="body"><span class="chip tc">Date Night</span><h4>Funk Zone Art Walk</h4><p class="meta strike">Every week</p></div></div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line"><span class="ins">🔍 Search "loquita" → Loquita</span> (fuzzy, instant)</div>
+      <div class="line">Horizons: Today · <span class="ins">This weekend</span> · Week · Month</div>
+      <div class="appcard" style="margin-top:8px"><div class="body"><span class="chip tc">Date Night</span><h4>Funk Zone Art Walk</h4><p class="meta ins">Next: Fri Jul 24 · 5–8 PM</p></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>14 · Cross-linking and one-tap corrections</h3>
+  <p class="exp">Nothing links to anything today. Now a thing links to the guide it stars in and shows nearby pairings, and a one-tap "something wrong?" flag feeds a review queue in the cockpit.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line muted">The Lark → no link to the Funk Zone guide it's in</div>
+      <div class="line muted">No "nearby" · no "pairs with"</div>
+      <div class="line muted">No way to report a wrong time</div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line ins">↪ Featured in: The Funk Zone (guide)</div>
+      <div class="line ins">Nearby: Lucky Penny · Helena Ave Bakery · MOXI</div>
+      <div class="line ins">⚑ Something off? → wrong time / closed / price…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ GATE 4 ============ -->
+<section class="gate" id="g4">
+  <p class="g">GATE 4</p>
+  <h2>The Concierge Day</h2>
+  <p class="sub">The moat. The planner goes from a filter form that hands back a list, to a constraint engine that hands back a validated day — open when it says, clustered so you're not driving in circles, parked where a local parks, and fed at mealtimes.</p>
+</section>
+
+<div class="change">
+  <h3>15 · From a filter form to a real itinerary</h3>
+  <p class="exp">Today "Build my day" takes a date, an area, a daypart, and a vibe chip — that's a query, not a plan. The engine adds who's coming, a start anchor, transport, budget, and meals, then solves for a day that actually works and can be shared with one link.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before — inputs are just filters</span>
+      <div class="filterform">
+        <div class="fl">When</div><div class="fchips"><span class="fchip on">Today</span><span class="fchip">Tomorrow</span></div>
+        <div class="fl">Time of day</div><div class="fchips"><span class="fchip">Morning</span><span class="fchip on">Afternoon</span><span class="fchip">Night</span></div>
+        <div class="fl">Vibe</div><div class="fchips"><span class="fchip on">Outdoors</span><span class="fchip">Wine</span><span class="fchip">Arts</span><span class="fchip">Free SB</span></div>
+        <div class="line muted" style="margin-top:12px">→ returns a filtered list. No sequence, no hours check, no meals, no parking, no share.</div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After — a solved, shareable day</span>
+      <div class="itin">
+        <div class="stop"><div class="tm">10:30</div><div class="sd"><h5>MOXI</h5><p>Hands-on science · open til 5 · toddler deck</p></div></div>
+        <div class="transit">↓ 4 min walk · park once on Anacapa above Yanonali</div>
+        <div class="stop"><div class="tm">12:30</div><div class="sd"><h5>Lucky Penny <span style="font-size:9px;color:var(--sage-text)">· lunch</span></h5><p>The clam pie · $$ · in-cluster</p></div></div>
+        <div class="transit">↓ 6 min walk</div>
+        <div class="stop"><div class="tm">2:00</div><div class="sd"><h5>Funk Zone Art Walk</h5><p>Galleries + murals · free · stroller-ok</p></div></div>
+        <div class="gobar"><span class="gb sec">Clear</span><span class="gb pri">Share day ↗</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="why"><b>Why it's the moat:</b> a generic AI can draft a <b>plausible</b> SB day. It can't draft a <b>validated</b> one — open at those hours, clustered, parked, fed on time, in budget — because that data is your locally-verified truth. The shared <b>/p/…</b> link opens the whole day on a partner's phone with no login.</p>
+</div>
+
+<!-- ============ GATE 5 ============ -->
+<section class="gate" id="g5">
+  <p class="g">GATE 5</p>
+  <h2>Loops &amp; Polish</h2>
+  <p class="sub">Turns one-way browsing into loops — shareable things, shareable saved lists, a newsletter with proof, a submit page that grows the supply side — while holding the accessibility floor and leaving clean revenue seams that never touch the ranker.</p>
+</section>
+
+<div class="change">
+  <h3>16 · "Share it" finally becomes true, and Saved stops being a dead end</h3>
+  <p class="exp">The tagline promises "find it, save it, share it" but there's no share anywhere, and saved items can't be shared, planned, or moved to another device. Now every thing and list shares as a designed card, a saved list becomes a plan in one tap, and the magic link moves saves phone→laptop — all with no accounts and no stored recipient info.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="detail">
+        <div class="dbody" style="padding-top:12px">
+          <h4>Your saved list</h4>
+          <p class="desc" style="font-size:13px;color:var(--ink-2)">3 things saved on this device.</p>
+          <div class="line muted" style="margin-top:8px">No share · no export · no "make a plan" · locked to one device</div>
+        </div>
+      </div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="detail">
+        <div class="dbody" style="padding-top:12px">
+          <h4>Your saved list</h4>
+          <div class="actions" style="margin-top:4px"><span class="btn">Share list</span><span class="btn solid">Build a day →</span></div>
+          <div class="line ins" style="margin-top:10px">View-only link · no login for your friend · move across devices via magic link</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="change">
+  <h3>17 · A newsletter worth joining, a submit page that gives back</h3>
+  <p class="exp">The subscribe box has no proof it's worth it, and the (genuinely smart) submit page only takes new items — never corrections, business claims, or local tips for existing spots, which is where your best future secrets live.</p>
+  <div class="ba">
+    <div class="panel before"><span class="tag b">Before</span>
+      <div class="line">"The weekend, in your inbox" → [ Subscribe ]</div>
+      <div class="line muted">No sample · no archive · no reason to trust it</div>
+      <div class="line" style="margin-top:8px">Submit: event / business only</div>
+      <div class="line muted">No corrections · no business claim · no tips</div>
+    </div>
+    <div class="panel after"><span class="tag a">After</span>
+      <div class="line">Subscribe → <span class="ins">"See a sample issue"</span> + what's inside</div>
+      <div class="line ins">Best submissions get featured in the digest</div>
+      <div class="line" style="margin-top:8px">Submit: event · business · <span class="ins">claim your venue</span></div>
+      <div class="line ins">+ "suggest a local secret for a spot we already list"</div>
+    </div>
+  </div>
+  <p class="why"><b>Held clean:</b> device-local saves and the no-login-wall stance stay exactly as they are — a real privacy differentiator. And revenue seams (affiliate-ready links, a labeled "Featured" slot) are built but switched off, so the ranker never reads sponsor status.</p>
+</div>
+
+<!-- IMPACT -->
+<section class="impact" id="impact">
+  <h2>What the whole build adds up to</h2>
+  <ul>
+    <li><b>Nothing contradicts itself.</b> The leaked notes, wrong dayparts, duplicates, and broken images are gone — and can't come back, because the pipeline now guards against them.</li>
+    <li><b>Every entry earns its place.</b> The quality gate means a full card is a promise: real address, real hours, a real insider fact, a verified date.</li>
+    <li><b>The site becomes findable.</b> Unique titles, readable URLs, rich share cards, and event schema switch on the one free growth channel — currently at zero.</li>
+    <li><b>The depth surfaces.</b> Search, a real "this weekend," honest recurring dates, and cross-links connect the 265 things behind the curtain.</li>
+    <li><b>The planner becomes the moat.</b> A validated, shareable Santa Barbara day is the one thing Google, the Independent, and a generic AI cannot hand a visitor.</li>
+    <li><b>The loops close.</b> Things, lists, and plans are all shareable artifacts; the newsletter can grow its list; the supply side grows itself — with the revenue seams clean enough to switch on later without ever touching the ranker.</li>
+  </ul>
+</section>
+
+<p class="foot">SB Daymaker · Elevation v1 Visual Walkthrough · companion to the six gate specs and the build guide · illustrative mockups in the house palette, not production screens · Jul 2026</p>
+
+</div>
+</body>
+</html>

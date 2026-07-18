@@ -10,8 +10,8 @@ import { SBIcon } from "./SBIcon";
 import { MOTIFS, BigTypeArt, BIGTYPE_TINT_CLASS } from "@/components/visuals";
 import type { MotifKey } from "@/lib/visualAssignment";
 
-/** Card Imagery Build Spec Phase 3 §6.2 — the motif tier's render-order input.
- *  `undefined`/no match means "no motif assigned" — the card falls through to the
+/** Card Imagery Build Spec Phase 3 §6.2, the motif tier's render-order input.
+ *  `undefined`/no match means "no motif assigned", the card falls through to the
  *  pre-existing occasion-gradient fallback (now the last-resort catch). Derived
  *  from a `Thing` by `components/explore/derive.ts`'s `cardVisual()` so callers
  *  don't hand-assemble this shape themselves. */
@@ -24,7 +24,7 @@ export interface CardVisual {
   category: string | null;
 }
 
-/** Card Imagery Build Spec Phase 2 §5.5 — "fallback resilience": a Google
+/** Card Imagery Build Spec Phase 2 §5.5, "fallback resilience": a Google
  *  `serving_url` can 403/404 between nightly refreshes (no cheap server-side way to
  *  detect that ahead of render), so the client falls back to the gradient itself.
  *  Resets whenever the photo URL changes so a fresh pick gets its own chance to
@@ -61,15 +61,15 @@ function CardTitle({
 }
 
 /**
- * PickCard — editorial feature card: 140px media band, occasion pill (top-left),
+ * PickCard, editorial feature card: 140px media band, occasion pill (top-left),
  * CardActions scrim cluster (top-right), optional DateEyebrow above title,
  * Fraunces 25px title, secondary text blurb, facts row.
  *
- * Home Rework spec §12/§15 — `ribbonLabel` turns this into the R1 "Today's pick"
+ * Home Rework spec §12/§15, `ribbonLabel` turns this into the R1 "Today's pick"
  * card (elevated atop the feed lead section): a folded-corner ribbon over the
  * media, plus a `contextEyebrow` (the old hero's heroEyebrow()) and `meta` (the
  * old hero's "{place} · {time}" line) between the title and blurb. The ribbon is
- * decorative (aria-hidden) — the card's accessible name is still just the title,
+ * decorative (aria-hidden), the card's accessible name is still just the title,
  * via CardTitle's stretched link, same as every other card.
  */
 export function PickCard({
@@ -94,11 +94,11 @@ export function PickCard({
   place?: string;
   facts?: string[];
   when?: string;
-  /** R1 — a single "{place} · {time}" line between the title and blurb. */
+  /** R1, a single "{place} · {time}" line between the title and blurb. */
   meta?: string;
-  /** R1 — the contextual eyebrow (e.g. "Catch a show", "Gray-day move") above the title. */
+  /** R1, the contextual eyebrow (e.g. "Catch a show", "Gray-day move") above the title. */
   contextEyebrow?: string;
-  /** R1 — folded-corner ribbon label ("Today's pick" or its horizon variant). Sponsor-blind: set purely from horizon, never from sponsor/featured status. */
+  /** R1, folded-corner ribbon label ("Today's pick" or its horizon variant). Sponsor-blind: set purely from horizon, never from sponsor/featured status. */
   ribbonLabel?: string;
   tone?: MediaTone;
   href?: string;
@@ -159,12 +159,11 @@ export function PickCard({
 }
 
 /**
- * ListCard — left-rail card: 108px image rail running the full card height,
+ * ListCard, left-rail card: 108px image rail running the full card height,
  * text column (title → blurb → meta) to its right. Vibe pill sits on the
  * photo top-left over a scrim. Render order when there's no photo (Card
  * Imagery Build Spec Phase 3 §6.2): motif -> bigtype -> occasion-color
- * gradient + centered icon (the pre-existing fallback, now the last resort —
- * every Tier-1 event and every resolver miss carries a `visual` since Phase 3,
+ * gradient + centered icon (the pre-existing fallback, now the last resort, * every Tier-1 event and every resolver miss carries a `visual` since Phase 3,
  * so this only fires if one is somehow missing). Used by Today briefs, This
  * Week rows, and Tier-2/3.
  */
@@ -233,7 +232,7 @@ export function ListCard({
             {occ ? occ.icon : <SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
           </span>
         )}
-        {/* Dark top gradient — pill legibility on any photo, motif, or gradient bg */}
+        {/* Dark top gradient, pill legibility on any photo, motif, or gradient bg */}
         <div className="sbd-listcard__scrim" aria-hidden="true" />
         {/* Occasion pill, top-left, over scrim */}
         {occasionKey && (

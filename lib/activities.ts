@@ -1,7 +1,7 @@
-// The Activity door's controlled vocabulary (Home Rework spec §6.1) — the third
+// The Activity door's controlled vocabulary (Home Rework spec §6.1), the third
 // discovery dimension alongside Place (lib/zones.ts) and Vibe (lib/occasions.ts).
 // Founder-maintained, same convention as ingest/adapters/recurringRegistry.ts.
-// Populated ONLY by the nightly batch-AI enrich path (ingest/enrich.ts) — never
+// Populated ONLY by the nightly batch-AI enrich path (ingest/enrich.ts), never
 // per-request AI. Written to the additive `things.activities text[]` column
 // (supabase/migrations/15_activities.sql).
 
@@ -21,7 +21,7 @@ export interface Activity {
   key: ActivityKey;
   label: string;
   description: string;
-  /** /public/tiles/activity/{key}.jpg — founder-curated (§6.3); missing files fall
+  /** /public/tiles/activity/{key}.jpg, founder-curated (§6.3); missing files fall
    *  back to a token-colored tile (the Activity door's terracotta accent), label only. */
   tile: string;
 }

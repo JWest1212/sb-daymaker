@@ -1,13 +1,13 @@
 // ingest/adapters/musicacademy.ts
 //
-// Music Academy of the West — custom WP REST API (§7.3).
+// Music Academy of the West, custom WP REST API (§7.3).
 // Summer festival campus in Montecito. Many events are free (lawn concerts, open rehearsals).
 //
 // The site uses a custom WordPress namespace `maw-api/v1` (not The Events Calendar/Tribe).
 // Standard Tribe REST, iCal, and listing-page scrapes all return 403 or empty pages.
 // The events-instances endpoint returns all upcoming events with ISO-8601 start times.
 //
-// WAF note: The API requires a real browser User-Agent — the default ingest UA gets 403.
+// WAF note: The API requires a real browser User-Agent, the default ingest UA gets 403.
 // useManagedScrape: false.
 
 import type { SourceAdapter } from './types';

@@ -35,7 +35,7 @@ function RegistrySnippetPanel({
   return (
     <div className="registry-panel" onClick={(e) => e.stopPropagation()}>
       <div className="registry-label">
-        REGISTRY RHYTHM — copy these details into{" "}
+        REGISTRY RHYTHM, copy these details into{" "}
         <Link href="/admin/coverage/recurring-rhythms" target="_blank" onClick={(e) => e.stopPropagation()}>
           Recurring Rhythms
         </Link>
@@ -64,9 +64,9 @@ function provenance(item: QueueRow): { text: string; href: string | null } {
   // The link target must be the FULL source URL (a bare host is a relative URL
   // and resolves to /admin/<host>). seed:google_places etc. -> no link.
   const url = item.source && /^https?:\/\//.test(item.source) ? item.source : null;
-  if (item.happening_tier === 3) return { text: "Place record — no start time to verify", href: url };
+  if (item.happening_tier === 3) return { text: "Place record, no start time to verify", href: url };
   if (item.starts_at) return { text: h ? `Start from ${h}` : "Start from source", href: url };
-  return { text: "Recurring — confirm cadence", href: url };
+  return { text: "Recurring, confirm cadence", href: url };
 }
 
 const priceLabel = (b: string | null) => (b == null ? "price n/a" : b === "free" ? "free" : b);
@@ -126,7 +126,7 @@ export function ReviewCard({
       className={`card${active ? " is-active" : ""}${editing ? " is-editing" : ""}${leaving ? " leaving" : ""}${isOverlay ? " is-overlay" : ""}`}
       onClick={onSelect}
     >
-      {isOverlay ? <div className="overlay-kicker">✎ Founder edit of a live thing — the live version stays up until you approve</div> : null}
+      {isOverlay ? <div className="overlay-kicker">✎ Founder edit of a live thing, the live version stays up until you approve</div> : null}
       <div className="card-grid">
         {editing ? (
           <ImagePicker
@@ -207,7 +207,7 @@ export function ReviewCard({
               </span>
             ) : null}
             {editing ? (
-              <span className="locknote">🔒 Start time is locked — reject &amp; re-ingest to change it.</span>
+              <span className="locknote">🔒 Start time is locked, reject &amp; re-ingest to change it.</span>
             ) : null}
           </div>
 
@@ -216,7 +216,7 @@ export function ReviewCard({
               <label className="editlabel">Neighborhood
                 <select className="edit-select" value={draft.neighborhood}
                   onChange={(e) => onDraftChange({ neighborhood: e.target.value })}>
-                  <option value="">— none —</option>
+                  <option value="">, none, </option>
                   {NEIGHBORHOODS.map((n) => <option key={n} value={n}>{n.replace(/_/g, " ")}</option>)}
                 </select>
               </label>

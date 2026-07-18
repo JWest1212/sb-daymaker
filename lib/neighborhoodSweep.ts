@@ -1,8 +1,7 @@
 // lib/neighborhoodSweep.ts
 //
 // Client-safe types for the Doc 19 Neighborhood Sweep. Server aggregation
-// (service-role reads + the resolver) lives in lib/neighborhoodSweepServer.ts —
-// same split as lib/coverage.ts / lib/coverageServer.ts.
+// (service-role reads + the resolver) lives in lib/neighborhoodSweepServer.ts, // same split as lib/coverage.ts / lib/coverageServer.ts.
 
 import type { ResolveMethod } from "../ingest/adapters/_shared/resolveNeighborhood";
 import type { DoorZoneKey } from "./doorZones";
@@ -19,7 +18,7 @@ export interface SweepZoneCount {
 }
 
 /** One thing the resolver could not confidently place (§4.2: confidence below
- *  0.75) — the Phase 3 triage queue's row shape. `suggestedZone`/`suggestedNeighborhood`
+ *  0.75), the Phase 3 triage queue's row shape. `suggestedZone`/`suggestedNeighborhood`
  *  are null when the resolver found nothing at all (method 'unresolved'). */
 export interface SweepTriageItem {
   id: string;
@@ -38,11 +37,11 @@ export interface SweepTriageItem {
 
 export interface SweepSummary {
   total: number;
-  resolved: number;        // autoWrites() true — would auto-write, no review needed
-  unresolved: number;      // autoWrites() false — a street-tier suggestion, or nothing at all
+  resolved: number;        // autoWrites() true, would auto-write, no review needed
+  unresolved: number;      // autoWrites() false, a street-tier suggestion, or nothing at all
   autoResolveRate: number; // resolved / total, 0 when total is 0
   byMethod: SweepMethodCount[];
-  /** Projected door-zone distribution — resolved (auto-write-eligible) things only,
+  /** Projected door-zone distribution, resolved (auto-write-eligible) things only,
    *  grouped by their target zone. Unresolved things carry no zone yet. */
   byZone: SweepZoneCount[];
   triage: SweepTriageItem[];

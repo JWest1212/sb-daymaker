@@ -20,7 +20,7 @@ export function SectionHeader({
   onToggle?: () => void;
   controlsId?: string;
   /** Lead mode only. False for Week/Month, whose per-group headers
-   *  (.sbd-dayhead / .sbd-weekhead) take over the sticky top slot — leaving
+   *  (.sbd-dayhead / .sbd-weekhead) take over the sticky top slot, leaving
    *  this one sticky too would let its translucent background ghost through
    *  underneath them. */
   sticky?: boolean;

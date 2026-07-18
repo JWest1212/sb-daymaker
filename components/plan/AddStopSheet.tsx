@@ -165,7 +165,7 @@ export function AddStopSheet({
 
       {totalVisible === 0 ? (
         <p className="sbd-swap-empty">
-          No spots found for this time — check back as more content is added.
+          No spots found for this time, check back as more content is added.
         </p>
       ) : null}
     </BottomSheet>

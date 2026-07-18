@@ -74,7 +74,7 @@ export function PlanResults({
       block,
       thingId: thing.id,
       fromSaved,
-      fromDraft: false,  // user-added — no Suggested chip
+      fromDraft: false,  // user-added, no Suggested chip
     };
     setStops((prev) => [...prev, newStop]);
     setPickerBlock(null);
@@ -186,7 +186,7 @@ export function PlanResults({
         <div style={{ height: "104px" }} />
       </main>
 
-      {/* Bottom bar: Share + Clear (ephemeral — no Save) */}
+      {/* Bottom bar: Share + Clear (ephemeral, no Save) */}
       <div className="sbd-plan-gobar">
         <button
           type="button"

@@ -98,7 +98,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
     <>
       <PlanHeader />
       <main id="main" className="sbd-shell__main sbd-plan-setup">
-        {/* When — segmented */}
+        {/* When, segmented */}
         <p className="sbd-miniq" id="plan-when-label">
           When
         </p>
@@ -134,7 +134,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
           </div>
         ) : null}
 
-        {/* Where — selector row → picker sheet */}
+        {/* Where, selector row → picker sheet */}
         <p className="sbd-miniq">Where</p>
         <button
           type="button"
@@ -150,7 +150,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
           </span>
         </button>
 
-        {/* Time of day — always visible, multi-select; selection = spine sections */}
+        {/* Time of day, always visible, multi-select; selection = spine sections */}
         <p className="sbd-miniq">Time of day</p>
         <div
           className="sbd-q__row sbd-q__row--span"
@@ -173,7 +173,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
           ))}
         </div>
 
-        {/* Fine-tune — collapsed soft signals */}
+        {/* Fine-tune, collapsed soft signals */}
         <div className="sbd-finetune">
           <button
             type="button"

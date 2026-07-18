@@ -3,7 +3,7 @@
 // The deterministic, sponsor-blind slot selection (edition_build_spec.md §3.3,
 // §3.6). Reuses pickEvergreenFallback (lib/explore.ts) and occursOnDate
 // (lib/occurrences.ts) rather than forking that logic a second time (spec §3,
-// heroServer.ts parallel) — but ranking itself (editionCascade, below) is
+// heroServer.ts parallel), but ranking itself (editionCascade, below) is
 // edition-specific, NOT the public site's cascade(). cascade() sorts Tier-1
 // primarily by starts_at, which is right for the live "what's happening now"
 // feed but wrong for a multi-day digest window: it lets the earliest day in
@@ -17,7 +17,7 @@
 // weekend/week rundown to read.
 //
 // Cooldown (§3.6) excludes a thing from the AUTO-PICK only, not from the
-// bench — the bench still shows a recently-featured thing (grayed out by the
+// bench, the bench still shows a recently-featured thing (grayed out by the
 // cockpit later) so an operator can deliberately re-select it (is_manual=true
 // overrides cooldown by design).
 
@@ -42,14 +42,14 @@ function occThing(t: DraftThing): OccThing {
 
 /** Does this thing occur on ANY day within the window (Tier-1 dated in-window,
  *  or Tier-2 recurring landing on one of the window's weekdays)? Tier-3 is
- *  intentionally excluded here — evergreens aren't "qualifying" secondaries,
+ *  intentionally excluded here, evergreens aren't "qualifying" secondaries,
  *  they're the anchor's own tier. */
 function qualifiesInWindow(t: DraftThing, windowDays: string[]): boolean {
   if (t.happening_tier !== 1 && t.happening_tier !== 2) return false;
   return windowDays.some((d) => occursOnDate(occThing(t), d));
 }
 
-/** The earliest window day a qualifying thing lands on — used only to render
+/** The earliest window day a qualifying thing lands on, used only to render
  *  secondaries in chronological order (spec §3.3). */
 function earliestWindowDay(t: DraftThing, windowDays: string[]): string {
   for (const d of windowDays) if (occursOnDate(occThing(t), d)) return d;
@@ -57,17 +57,16 @@ function earliestWindowDay(t: DraftThing, windowDays: string[]): string {
 }
 
 function asThings(things: DraftThing[]): Thing[] {
-  // editionCascade only reads happening_tier / editorial_weight / starts_at —
-  // safe to cast rather than build full Thing objects (mirrors heroServer.ts).
+  // editionCascade only reads happening_tier / editorial_weight / starts_at, // safe to cast rather than build full Thing objects (mirrors heroServer.ts).
   return things as unknown as Thing[];
 }
 
 /** Edition ranking: editorial_weight (founder curation) is the primary signal
- *  for every tier, across the ENTIRE window at once — a Sunday standout can
+ *  for every tier, across the ENTIRE window at once, a Sunday standout can
  *  outrank a mediocre Friday pick. starts_at only breaks a tie between two
  *  equally-weighted Tier-1 items (soonest first, for legibility). Mirrors
  *  cascade()'s tier-ordering and negative-weight-sinks conventions so the two
- *  rankers stay recognizably related, but is NOT cascade() — see module header. */
+ *  rankers stay recognizably related, but is NOT cascade(), see module header. */
 function editionCascade(things: Thing[]): Thing[] {
   return things
     .map((t, i) => [t, i] as const)
@@ -97,7 +96,7 @@ function freshnessKey(t: DraftThing): string {
 }
 
 /** Non-event ranking: First Look items first, then freshest-first (created_at,
- *  falling back to last_confirmed) — the "simple rule, not a rotation engine"
+ *  falling back to last_confirmed), the "simple rule, not a rotation engine"
  *  the anatomy doc (§2, non-event segment) calls for. */
 function rankNonEvent(things: DraftThing[]): DraftThing[] {
   return [...things].sort((a, b) => {
@@ -142,16 +141,16 @@ export function selectEdition(input: SelectEditionInput): EditionSelection {
     if (autoPick) {
       hero = { picks: [autoPick], rankedBench: heroBench, source: "auto" };
     } else {
-      // Evergreen fallback — cooldown-filtered first; if that empties the
+      // Evergreen fallback, cooldown-filtered first; if that empties the
       // pool, "never blank" wins over cooldown (spec §3.6 flags this case).
       if (heroRanked.length > 0) {
-        // heroRanked had candidates but EVERY one is in cooldown — the pool itself
+        // heroRanked had candidates but EVERY one is in cooldown, the pool itself
         // (not just this window) is too small for the 12-edition memory. Spec §3.6:
-        // "surface a warning in the ops digest" — console.warn is picked up by both
+        // "surface a warning in the ops digest", console.warn is picked up by both
         // the GitHub Action log and draftEdition.ts's own summary output.
         console.warn(
           `[edition select] hero pool (${heroRanked.length} candidates) fully exhausted by ` +
-            `12-edition cooldown — falling back to evergreen. Consider growing the evergreen pool.`,
+            `12-edition cooldown, falling back to evergreen. Consider growing the evergreen pool.`,
         );
       }
       const tier3Clear = things.filter((t) => t.happening_tier === 3 && !cooldownIds.has(t.id));
@@ -208,7 +207,7 @@ export function selectEdition(input: SelectEditionInput): EditionSelection {
     // "never skip" wins over cooldown here too, same as the hero's evergreen path.
     console.warn(
       `[edition select] anchor pool (${anchorRanked.length} candidates) fully exhausted by ` +
-        `12-edition cooldown — repeating the top-ranked anchor. Consider growing the evergreen pool.`,
+        `12-edition cooldown, repeating the top-ranked anchor. Consider growing the evergreen pool.`,
     );
     anchorPick = anchorRanked[0];
   }

@@ -29,16 +29,16 @@ interface PatchBody {
   skip_reason?: string;
 }
 
-// PATCH — edit chrome fields and/or move status (approve / hold / back to draft).
+// PATCH, edit chrome fields and/or move status (approve / hold / back to draft).
 // Never touches a 'sent' or 'failed' edition (those are the send path's + drafter's
-// own territory) — draft/approved/skipped (on hold) are all mutable here, including
-// moving OUT of 'skipped' again — a hold is an editorial note, not a lock.
+// own territory), draft/approved/skipped (on hold) are all mutable here, including
+// moving OUT of 'skipped' again, a hold is an editorial note, not a lock.
 //
 // Approving an edition whose normal send window (14:00 UTC on its own date) has
-// already passed sends it immediately, right here — otherwise it would silently
+// already passed sends it immediately, right here, otherwise it would silently
 // wait forever, since the send cron only ever sends "today's" edition and never
 // revisits a past date. Typical case: an edition was held past its scheduled
-// time, then later approved — that approval IS the send trigger.
+// time, then later approved, that approval IS the send trigger.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const sb = await requireAdmin();
   if (!sb) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -47,7 +47,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data: current, error: curErr } = await sb.from("editions").select("status, edition_date").eq("id", id).maybeSingle();
   if (curErr || !current) return NextResponse.json({ error: "not found" }, { status: 404 });
   if (!["draft", "approved", "skipped"].includes(current.status)) {
-    return NextResponse.json({ error: `edition is ${current.status} — no longer editable` }, { status: 400 });
+    return NextResponse.json({ error: `edition is ${current.status}, no longer editable` }, { status: 400 });
   }
 
   const body = (await req.json()) as PatchBody;
@@ -62,7 +62,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     update.status = body.status;
     if (body.status === "approved") update.approved_at = new Date().toISOString();
-    // Resetting to draft is a clean slate — clears the prior approval/hold
+    // Resetting to draft is a clean slate, clears the prior approval/hold
     // record so a stale approved_at or hold reason doesn't linger. This is
     // also what lets the automatic drafter safely regenerate this edition's
     // picks next time it runs (it only overwrites while status='draft').

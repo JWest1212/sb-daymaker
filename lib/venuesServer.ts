@@ -1,6 +1,6 @@
 // lib/venuesServer.ts
 //
-// Card Imagery Build Spec Phase 2 §5.3 — server-only data access for the cockpit's
+// Card Imagery Build Spec Phase 2 §5.3, server-only data access for the cockpit's
 // Venues tab. Mirrors lib/reviewServer.ts / lib/heroServer.ts's pattern: service-role
 // reads, no auth check here (the route/page caller gates via getAdminUser()).
 
@@ -36,11 +36,11 @@ export interface VenueRow {
   attachedCount: number;
   approvedPhotos: ApprovedPhoto[];
   candidatePhotos: CandidatePhoto[];
-  /** Data Arch Redesign — Occasion Tags spec §3. Founder-marked; a thing at a
+  /** Data Arch Redesign, Occasion Tags spec §3. Founder-marked; a thing at a
    *  dog_friendly venue is stamped `dog_friendly` live (lib/things.ts), the
    *  same read-time-derivation pattern as `indoor` -> `rainy_day` (Doc 22 §2.2). */
   dog_friendly: boolean;
-  /** Heuristic pre-fill only (§3.3) — never written to the DB on its own. A venue
+  /** Heuristic pre-fill only (§3.3), never written to the DB on its own. A venue
    *  whose attached things are majority outdoor_activity/scenic_chill, or whose
    *  name matches an obvious dog-welcoming keyword (beach, park, patio, trail...).
    *  The cockpit checklist uses this to pre-check a starter set for the founder
@@ -65,7 +65,7 @@ export interface ArchivedVenue {
   display_name: string;
 }
 
-/** Phase 6 (V-5) — a low-confidence guess surfaced ONLY for a no-match-catcher
+/** Phase 6 (V-5), a low-confidence guess surfaced ONLY for a no-match-catcher
  *  row: bestVenueMatch scored it above zero, but it didn't qualify for the main
  *  "Matches to review" pane (no address, so it was never in that scan). */
 export interface WeakGuess {
@@ -74,7 +74,7 @@ export interface WeakGuess {
   score: number;
 }
 
-/** Phase 6 (V-1) — an unattached, un-dismissed thing that either has no address
+/** Phase 6 (V-1), an unattached, un-dismissed thing that either has no address
  *  (never scored against the venue registry at all) or scored zero against
  *  every active venue. Surfaced so it doesn't just silently sit on a motif. */
 export interface NoMatchThing {
@@ -95,19 +95,19 @@ export interface VenuesData {
   /** 2026-07-10 addendum: archived venues, so an accidental archive is recoverable
    *  (the editor's "Archive venue" button has no separate confirm step). */
   archivedVenues: ArchivedVenue[];
-  /** Phase 6 (V-1) — the no-match catcher, all tiers, sorted soonest-first with
+  /** Phase 6 (V-1), the no-match catcher, all tiers, sorted soonest-first with
    *  T1 on top (lib/venuesServer.ts's own sort, not user-configurable). */
   noMatchCatcher: NoMatchThing[];
 }
 
 const MAX_MATCHES_PER_THING = 1; // surface only the single best-scoring venue per thing
-const MAX_MATCH_PROPOSALS = 200; // a display cap — the scoring pass itself no longer breaks early at this count (Phase 6 fix: the venues-audit flagged the old early-break as a silent scan truncation, not just a display cap)
-// Phase 6 — a generous, documented bound on the unattached-candidate scan (matches
+const MAX_MATCH_PROPOSALS = 200; // a display cap, the scoring pass itself no longer breaks early at this count (Phase 6 fix: the venues-audit flagged the old early-break as a silent scan truncation, not just a display cap)
+// Phase 6, a generous, documented bound on the unattached-candidate scan (matches
 // + catcher combined), not a silent truncation: the UI pages through everything
 // this returns rather than hard-slicing and hiding the rest.
 const MAX_UNATTACHED_SCAN = 1000;
 
-// Occasion Tags spec §3.3 — the "obvious starter set" name heuristic: known
+// Occasion Tags spec §3.3, the "obvious starter set" name heuristic: known
 // dog-welcoming venue types. Paired with the majority-outdoor-category signal
 // above; either one flags dogFriendlySuggested. Pure UI hint, never auto-saved.
 const DOG_FRIENDLY_KEYWORDS = /beach|park|trail|patio|garden|harbor|plaza|promenade|pier|preserve|greenway|creek|courtyard|outdoor|winery|vineyard|tasting room/i;
@@ -190,7 +190,7 @@ export async function loadVenuesData(): Promise<VenuesData> {
   });
 
   // Fuzzy matches to review: the single best-scoring venue for every unattached
-  // thing, computed live (no persisted queue — see the ledger's judgment-call note:
+  // thing, computed live (no persisted queue, see the ledger's judgment-call note:
   // the additive-only Phase 2 DDL has no rejection-tracking table, so "reject" is a
   // client-side dismiss for this render, not a durable write).
   const matchableVenues: MatchableVenue[] = venueRows.map((v) => ({
@@ -202,11 +202,11 @@ export async function loadVenuesData(): Promise<VenuesData> {
 
   // Phase 6 (V-1): one scan drives BOTH the existing "matches to review" pane AND
   // the new no-match catcher, so a thing is never silently dropped between the
-  // two — every unattached, un-acked candidate lands in exactly one of them.
+  // two, every unattached, un-acked candidate lands in exactly one of them.
   // Addressed + scores > 0 -> matches (unchanged, existing pane). Everything else
   // (no address at all, OR addressed but scores zero against every active venue)
   // -> the catcher, carrying a weakGuess when bestVenueMatch still found something
-  // (only possible for the no-address case — a zero score IS "nothing at all").
+  // (only possible for the no-address case, a zero score IS "nothing at all").
   const matches: MatchProposal[] = [];
   const noMatchCatcher: NoMatchThing[] = [];
   for (const t of unmatchedRes.data ?? []) {

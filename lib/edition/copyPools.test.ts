@@ -21,7 +21,7 @@ describe("stableHash", () => {
   });
 });
 
-describe("resolveEditionCopy — determinism", () => {
+describe("resolveEditionCopy, determinism", () => {
   it("same edition_id + same context -> identical copy every call", () => {
     const a = resolveEditionCopy("11111111-1111-1111-1111-111111111111", "weekend", baseCtx);
     const b = resolveEditionCopy("11111111-1111-1111-1111-111111111111", "weekend", baseCtx);
@@ -29,19 +29,19 @@ describe("resolveEditionCopy — determinism", () => {
   });
 });
 
-describe("resolveEditionCopy — no em dashes ever", () => {
+describe("resolveEditionCopy, no em dashes ever", () => {
   it("every pool line, substituted, is em-dash-free", () => {
     for (const pools of [SUBJECT_POOLS, PREHEADER_POOLS, GREETING_POOLS]) {
       for (const type of ["weekend", "week_ahead"] as const) {
         for (const line of pools[type]) {
-          expect(line.text).not.toContain("—");
+          expect(line.text).not.toContain(String.fromCharCode(0x2014));
         }
       }
     }
   });
 });
 
-describe("resolveEditionCopy — evergreen-hero eligibility", () => {
+describe("resolveEditionCopy, evergreen-hero eligibility", () => {
   const evergreenCtx: CopyContext = { ...baseCtx, hero_title: "MOXI", heroIsEvergreen: true };
 
   it("isEligible: only [evergreen]-tagged lines qualify when the hero is evergreen", () => {
@@ -69,7 +69,7 @@ describe("resolveEditionCopy — evergreen-hero eligibility", () => {
   });
 });
 
-describe("resolveEditionCopy — thin pick_count drops token lines", () => {
+describe("resolveEditionCopy, thin pick_count drops token lines", () => {
   it("never emits a {pick_count}-bearing line when pick_count < 2", () => {
     const thinCtx: CopyContext = { ...baseCtx, pick_count: 1 };
     for (let i = 0; i < 50; i++) {
@@ -79,7 +79,7 @@ describe("resolveEditionCopy — thin pick_count drops token lines", () => {
   });
 });
 
-describe("resolveEditionCopy — token substitution", () => {
+describe("resolveEditionCopy, token substitution", () => {
   it("substitutes {hero_title} when a token line is chosen", () => {
     // Force selection of the known token-only line by hashing many ids and
     // checking whichever token line comes up substitutes correctly.

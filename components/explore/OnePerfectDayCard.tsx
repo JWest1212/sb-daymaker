@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useSaves } from "@/components/saves/SavesProvider";
 
-/** One Perfect SB Day — seeds the saved list with a curated lineup in one tap. */
+/** One Perfect SB Day, seeds the saved list with a curated lineup in one tap. */
 export function OnePerfectDayCard({ ids }: { ids: string[] }) {
   const { saveMany } = useSaves();
   const router = useRouter();

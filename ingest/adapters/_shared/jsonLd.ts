@@ -3,7 +3,7 @@
 // Extract schema.org Event (and subtypes) from <script type="application/ld+json">
 // blocks embedded in server-rendered HTML. Primary time source for any venue page
 // or aggregator that ships JSON-LD (Lobero, UCSB detail pages, Eventbrite, etc.).
-// startDate/endDate are already ISO-8601 — use directly, no inference. (§2.2)
+// startDate/endDate are already ISO-8601, use directly, no inference. (§2.2)
 
 export interface LdEvent {
   name?: string;
@@ -82,7 +82,7 @@ function normalizeEvent(obj: any): LdEvent | null {
 /** Pull all schema.org Event objects from HTML. Returns events in document order. */
 export function extractEvents(html: string): LdEvent[] {
   const results: LdEvent[] = [];
-  // Regex over script tags — cheerio is overkill for JSON-LD and adds a dep import.
+  // Regex over script tags, cheerio is overkill for JSON-LD and adds a dep import.
   const scriptRx = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   let m: RegExpExecArray | null;
   while ((m = scriptRx.exec(html)) !== null) {

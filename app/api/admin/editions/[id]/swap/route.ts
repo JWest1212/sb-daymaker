@@ -20,10 +20,10 @@ interface SwapBody {
   thingId: string;
 }
 
-// POST — promote a candidate (from the ranked bench, or any published thing
+// POST, promote a candidate (from the ranked bench, or any published thing
 // via search-all) into a slot position. Resets overrides on the new pick
 // (they belonged to whatever thing was there before) and flips is_manual.
-// Cooldown is deliberately not consulted here — an explicit operator swap is
+// Cooldown is deliberately not consulted here, an explicit operator swap is
 // the documented cooldown override (spec §3.6).
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const sb = await requireAdmin();
@@ -33,7 +33,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { data: edition, error: edErr } = await sb.from("editions").select("status").eq("id", editionId).maybeSingle();
   if (edErr || !edition) return NextResponse.json({ error: "edition not found" }, { status: 404 });
   if (!["draft", "approved", "skipped"].includes(edition.status)) {
-    return NextResponse.json({ error: `edition is ${edition.status} — no longer editable` }, { status: 400 });
+    return NextResponse.json({ error: `edition is ${edition.status}, no longer editable` }, { status: 400 });
   }
 
   const body = (await req.json()) as SwapBody;
@@ -50,8 +50,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .maybeSingle();
   if (thingErr || !thing) return NextResponse.json({ error: "thing not found or not published" }, { status: 400 });
 
-  // A swapped-in thing may be a bench candidate or an ad-hoc search-all pick —
-  // neither goes through draftEdition()'s initial pass, so it may still be
+  // A swapped-in thing may be a bench candidate or an ad-hoc search-all pick, // neither goes through draftEdition()'s initial pass, so it may still be
   // missing a blurb or short on image options. Same guarantee as a fresh draft,
   // just scoped to this one thing (see draft.ts for the fuller rationale).
   await ensureBlurbs(sb, [thing]);
@@ -103,7 +102,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       .update({ selected: true })
       .eq("edition_id", editionId).eq("slot", body.slot).eq("thing_id", thing.id);
   } else {
-    // Ad-hoc pick via search-all — wasn't in the original ranked bench.
+    // Ad-hoc pick via search-all, wasn't in the original ranked bench.
     // rank -1 marks it as manually inserted rather than ranker-suggested.
     await sb.from("edition_candidates").insert({
       edition_id: editionId, slot: body.slot, thing_id: thing.id, rank: -1, selected: true,

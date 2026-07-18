@@ -1,15 +1,15 @@
 // ingest/eventKey.ts
 //
-// Data Arch Redesign 26 — canonical event identity (Doc 16 §3.6, §3.11, §2.4).
+// Data Arch Redesign 26, canonical event identity (Doc 16 §3.6, §3.11, §2.4).
 // Pure, no I/O, unit-testable: given a thing-shaped input and the
-// venue_neighborhoods dictionary (Doc 19's venue dictionary — NOT the
+// venue_neighborhoods dictionary (Doc 19's venue dictionary, NOT the
 // image-pool `venues` table; see Phase 0 findings), returns a stable
 // `event_key` so the same real-world event converges to one identity
 // regardless of which source reported it.
 //
 // Dated (Tier 1):     hash(canonicalVenue + normalizeTitle(title) + sbDateKey(starts_at))
 // Recurring (Tier 2): hash(canonicalVenue + normalizeTitle(title) + cadence)
-// Evergreen (Tier 3):  no event_key — these are places, not events; nothing here
+// Evergreen (Tier 3):  no event_key, these are places, not events; nothing here
 //                      to corroborate across sources the way a dated/recurring
 //                      event is (spec 26 is explicitly about event identity).
 
@@ -50,7 +50,7 @@ export interface VenueSignalInput {
 /** Same waterfall trust order as resolveNeighborhood.ts's place_id -> name/alias
  *  match, minus the neighborhood-only steps (source-implied, point-in-polygon)
  *  that don't identify a VENUE, only an area. Returns null ("unknown venue")
- *  rather than guessing — an unknown venue is a real signal downstream (the
+ *  rather than guessing, an unknown venue is a real signal downstream (the
  *  ambiguous band in Phase 3), not an error. */
 export function canonicalVenue(input: VenueSignalInput, dictionary: VenueDictEntry[]): string | null {
   if (input.place_id) {
@@ -67,7 +67,7 @@ export function canonicalVenue(input: VenueSignalInput, dictionary: VenueDictEnt
     }
   }
   // The raw-address fallback only counts as a venue identity when the address
-  // carries a street number — a generic city-level placeholder ("Santa
+  // carries a street number, a generic city-level placeholder ("Santa
   // Barbara, Santa Barbara, CA", seen on several civic-source rows with no
   // real venue captured) has zero distinguishing power and must NOT be
   // treated as "known" venue: it was empirically causing both false
@@ -108,7 +108,7 @@ export interface EventKeyInput {
 }
 
 /** Returns null when there's no natural event identity to key on (Tier 3
- *  evergreen, or a Tier 1/2 row missing the field its tier requires — should
+ *  evergreen, or a Tier 1/2 row missing the field its tier requires, should
  *  not happen post-gate, but this stays defensive since it may run over
  *  historical rows landed under older gate rules). */
 export function computeEventKey(input: EventKeyInput, dictionary: VenueDictEntry[]): string | null {

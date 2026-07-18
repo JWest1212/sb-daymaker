@@ -1,11 +1,10 @@
 // ingest/enrichDirectives.ts
 //
 // Queued-path re-enrich consumption (Cockpit Enhancements Phase 4, LC-10).
-// A founder's "Redraft blurb + tags tonight" click only inserts a queued row —
-// no live Claude call (batch-AI-only holds). Tonight's run picks up queued
+// A founder's "Redraft blurb + tags tonight" click only inserts a queued row, // no live Claude call (batch-AI-only holds). Tonight's run picks up queued
 // directives, re-drafts via the SAME enrich() Claude pass as regular ingest,
-// and lands the fresh copy as a PENDING thing_edits overlay — never a silent
-// live overwrite — so it goes through the Queue's normal glance-and-approve,
+// and lands the fresh copy as a PENDING thing_edits overlay, never a silent
+// live overwrite, so it goes through the Queue's normal glance-and-approve,
 // same as any other edit.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -19,8 +18,7 @@ interface Directive {
 }
 
 /** Consume queued enrich_directives: re-draft each thing_id's blurb/tags and land
- *  the result as a pending thing_edits overlay. Failure-isolated per directive —
- *  one bad row is marked 'error', never thrown, never sinks the run. */
+ *  the result as a pending thing_edits overlay. Failure-isolated per directive, *  one bad row is marked 'error', never thrown, never sinks the run. */
 export async function consumeEnrichDirectives(sb: SupabaseClient): Promise<number> {
   const { data, error } = await sb
     .from('enrich_directives')
@@ -35,12 +33,12 @@ export async function consumeEnrichDirectives(sb: SupabaseClient): Promise<numbe
     const now = new Date().toISOString();
     try {
       // A thing can only carry one pending overlay at a time (thing_edits_one_pending)
-      // — skip rather than error if the founder already has an edit in flight for it.
+      //, skip rather than error if the founder already has an edit in flight for it.
       const { data: existingOverlay } = await sb
         .from('thing_edits').select('id').eq('thing_id', dir.thing_id).eq('status', 'pending').maybeSingle();
       if (existingOverlay) {
         await sb.from('enrich_directives').update({ status: 'error', resolved_at: now }).eq('id', dir.id);
-        console.log(`  enrich-directives: ${dir.thing_id} already has a pending edit — skipped`);
+        console.log(`  enrich-directives: ${dir.thing_id} already has a pending edit, skipped`);
         continue;
       }
 
@@ -80,7 +78,7 @@ export async function consumeEnrichDirectives(sb: SupabaseClient): Promise<numbe
 
       if (!Object.keys(payload).length) {
         await sb.from('enrich_directives').update({ status: 'error', resolved_at: now }).eq('id', dir.id);
-        console.log(`  enrich-directives: ${dir.thing_id} produced nothing new — marked error`);
+        console.log(`  enrich-directives: ${dir.thing_id} produced nothing new, marked error`);
         continue;
       }
 

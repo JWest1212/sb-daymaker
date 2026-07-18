@@ -11,12 +11,12 @@ const svg = readFileSync(svgPath);
 const PACIFIC = "#16586A";
 
 await Promise.all([
-  // "any" purpose — rounded corners (transparent) are fine; Android masks them.
+  // "any" purpose, rounded corners (transparent) are fine; Android masks them.
   sharp(svg).resize(192, 192).png().toFile(out("icon-192.png")),
   sharp(svg).resize(512, 512).png().toFile(out("icon-512.png")),
-  // maskable — must be full-bleed (no transparent corners).
+  // maskable, must be full-bleed (no transparent corners).
   sharp(svg).flatten({ background: PACIFIC }).resize(512, 512).png().toFile(out("icon-maskable-512.png")),
-  // apple-touch — iOS adds its own rounding; give it an opaque square.
+  // apple-touch, iOS adds its own rounding; give it an opaque square.
   sharp(svg).flatten({ background: PACIFIC }).resize(180, 180).png().toFile(out("apple-icon-180.png")),
 ]);
 

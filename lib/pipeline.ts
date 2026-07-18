@@ -27,7 +27,7 @@ export async function runNightly(): Promise<PipelineSummary> {
 
   const summary: PipelineSummary = { gathered: 0, enriched: 0, flagged: 0, failed: 0 };
 
-  // (a) GATHER — new submissions → draft place things (no invented facts/dates).
+  // (a) GATHER, new submissions → draft place things (no invented facts/dates).
   const { data: subs } = await sb
     .from("submissions")
     .select("id, raw_payload")
@@ -53,7 +53,7 @@ export async function runNightly(): Promise<PipelineSummary> {
     summary.gathered++;
   }
 
-  // (b) ENRICH — every draft thing.
+  // (b) ENRICH, every draft thing.
   const { data: drafts } = await sb
     .from("things")
     .select(

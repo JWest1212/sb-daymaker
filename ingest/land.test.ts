@@ -23,7 +23,7 @@ function candidate(over: Partial<Candidate> = {}): Candidate {
   } as Candidate;
 }
 
-describe('toThingRow — Doc 21 Phase 4 activities self-heal', () => {
+describe('toThingRow, Doc 21 Phase 4 activities self-heal', () => {
   it('fills activities[] from happening_category when the AI proposed none', () => {
     const row = toThingRow(candidate({ happening_category: 'festival_fair' }));
     expect(row.activities).toEqual(['community-festivals']);
@@ -47,7 +47,7 @@ const DICTIONARY: VenueDictEntry[] = [
   { name: 'SOhO Restaurant & Music Club', name_norm: 'soho restaurant music club', neighborhood: 'downtown', place_id: 'place-soho', aliases: ['SOhO'] },
 ];
 
-describe('toThingRow — Doc 19 §6 Phase 5 neighborhood self-heal', () => {
+describe('toThingRow, Doc 19 §6 Phase 5 neighborhood self-heal', () => {
   it('fills neighborhood from a confident dictionary match when the candidate has none', () => {
     const row = toThingRow(candidate({ place_id: 'place-soho', address: undefined }), DICTIONARY);
     expect(row.neighborhood).toBe('downtown');
@@ -59,7 +59,7 @@ describe('toThingRow — Doc 19 §6 Phase 5 neighborhood self-heal', () => {
     expect(row.neighborhood).toBe('downtown');
   });
 
-  it('does not auto-write on a street-tier (0.6) suggestion — leaves the candidate value as-is', () => {
+  it('does not auto-write on a street-tier (0.6) suggestion, leaves the candidate value as-is', () => {
     // default fixture address "123 State St" is a funk_zone street match (0.6), below the 0.75 floor
     const row = toThingRow(candidate({ address: '123 State St' }), []);
     expect(row.neighborhood).toBeNull();

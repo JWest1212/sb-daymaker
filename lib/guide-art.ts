@@ -1,4 +1,4 @@
-// Living Postcard — sketch asset registry (Phase 1 scaffold, Phase 2 populated).
+// Living Postcard, sketch asset registry (Phase 1 scaffold, Phase 2 populated).
 //
 // Types + a lookup. The funk-zone entry was added in Phase 2: the base SVG
 // Component (FunkZoneSketch in components/discover/) renders everything except
@@ -24,7 +24,7 @@ export interface ArtMarker {
  *  key "1"–"9") to its center point; `secretMark` is the ✵ placement. */
 export interface GuideArt {
   kind: "sketch" | "emblem";
-  /** Base SVG component — renders art WITHOUT marker circles. */
+  /** Base SVG component, renders art WITHOUT marker circles. */
   Component: ComponentType<{ className?: string }>;
   markers: Record<string, ArtMarker>;
   secretMark?: ArtMarker;
@@ -36,7 +36,7 @@ const REGISTRY: Record<string, GuideArt> = {
   "funk-zone": {
     kind: "sketch",
     Component: FunkZoneSketch,
-    // cx/cy from mockup viewBox 360×330 — keyed by stop position
+    // cx/cy from mockup viewBox 360×330, keyed by stop position
     markers: {
       "1": { x: 96, y: 130 },   // Helena Avenue Bakery
       "2": { x: 54, y: 66 },    // MOXI
@@ -53,7 +53,7 @@ const REGISTRY: Record<string, GuideArt> = {
   "state-street": {
     kind: "sketch",
     Component: StateStreetSketch,
-    // cx/cy from mockup viewBox 360×330 — keyed by stop position (spec §5)
+    // cx/cy from mockup viewBox 360×330, keyed by stop position (spec §5)
     markers: {
       "1": { x: 136, y: 74 },   // Caje
       "2": { x: 182, y: 68 },   // The Arlington Theatre

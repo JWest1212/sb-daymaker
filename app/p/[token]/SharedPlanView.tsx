@@ -73,7 +73,7 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
       {/* Sticky header */}
       <header className="sbd-shplan__hd">
         <div className="sbd-shplan__hd-inner">
-          <Link href="/plan" className="sbd-shplan__brand" aria-label="SB Daymaker — make your own day">
+          <Link href="/plan" className="sbd-shplan__brand" aria-label="SB Daymaker, make your own day">
             <span className="sbd-shplan__mark" aria-hidden="true">SB</span>
             <span className="sbd-shplan__wordmark">Daymaker</span>
           </Link>
@@ -160,7 +160,7 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
       {/* Sticky footer */}
       <div className="sbd-shplan__foot">
         {saved ? (
-          <p className="sbd-shplan__saved">✓ Saved to your Days — find it in Saved › Days.</p>
+          <p className="sbd-shplan__saved">✓ Saved to your Days, find it in Saved › Days.</p>
         ) : (
           <button
             type="button"

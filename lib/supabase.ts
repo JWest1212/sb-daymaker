@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * aren't configured yet (so pages can show a friendly "not connected" state
  * instead of crashing the build).
  *
- * Phase 1 uses ONLY the publishable/anon key — public reads, no auth. The
+ * Phase 1 uses ONLY the publishable/anon key, public reads, no auth. The
  * database is protected by Row-Level Security (see sbdaymaker_schema.sql), so
  * this key is safe in the browser. The secret key is server-only and is not
  * introduced until Phase 8.

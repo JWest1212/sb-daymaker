@@ -47,7 +47,7 @@ export function ExploreClient({
   /** Founder's hero pin for today (server-resolved). Overrides the ranker when the
    *  pinned thing is present in the current view; otherwise the ranker picks. */
   pinnedHeroId?: string | null;
-  /** Card Imagery Build Spec Phase 2 §5.4 — approved venue photo pools, keyed by
+  /** Card Imagery Build Spec Phase 2 §5.4, approved venue photo pools, keyed by
    *  venue_id; threaded to CascadeFeed for the per-feed dedupe pass. */
   venuePools?: Record<string, PoolPhoto[]>;
 }) {
@@ -57,7 +57,7 @@ export function ExploreClient({
   const [activity, setActivity] = useState<ActivityKey | null>(null);
   const [horizon, setHorizon] = useState<Horizon>("today");
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
-  // Home Rework spec §11.4 — the order dimensions were (most recently) set, so
+  // Home Rework spec §11.4, the order dimensions were (most recently) set, so
   // "Show the closest matches" knows which filter to drop first.
   const [filterOrder, setFilterOrder] = useState<Dimension[]>([]);
 
@@ -95,7 +95,7 @@ export function ExploreClient({
     [things, horizon, nowMs],
   );
 
-  // Home Rework spec §4 — stacked three-dimension filtering: Vibe -> Activity ->
+  // Home Rework spec §4, stacked three-dimension filtering: Vibe -> Activity ->
   // cascade -> Place (nearMeSort stays outermost, preserving current behavior).
   const ordered = useMemo(() => {
     const lensed = filterByLens(inHorizon, vibe);
@@ -105,7 +105,7 @@ export function ExploreClient({
 
   const hasActiveFilters = vibe !== null || place !== null || activity !== null;
 
-  // Home Rework spec §4/§12 — the sponsor-blind ranker: a valid founder pin for
+  // Home Rework spec §4/§12, the sponsor-blind ranker: a valid founder pin for
   // today wins (only when it's actually in the current view), else pickAutoHero's
   // today-boosted-Tier-1-then-ordered[0] rule. Moved here from the old Hero.
   const rankedPick = useMemo(() => {
@@ -118,10 +118,10 @@ export function ExploreClient({
   }, [ordered, pinnedHeroId, nowMs]);
 
   // W1.3b (constraint C5, carried over from the old Hero): never blank when
-  // there are NO active filters — Layer 1 is a deterministic evergreen from the
+  // there are NO active filters, Layer 1 is a deterministic evergreen from the
   // full pool, Layer 2 a hardcoded static card if even that pool is empty. When
   // filters ARE active and empty, that's §11.4's job (Show closest matches /
-  // Clear filters) instead — an unrelated evergreen pick would only confuse a
+  // Clear filters) instead, an unrelated evergreen pick would only confuse a
   // deliberately-filtered empty result, so the fallback is skipped in that case.
   const fallbackPick = useMemo(() => {
     if (rankedPick || hasActiveFilters) return null;
@@ -150,7 +150,7 @@ export function ExploreClient({
     setFilterOrder([]);
   };
 
-  // Home Rework spec §11.4 (required) — drop the most-recently-added filter and
+  // Home Rework spec §11.4 (required), drop the most-recently-added filter and
   // re-check; keep dropping until something shows or every filter is gone. Probes
   // with the pure filter functions directly rather than trusting `ordered` (which
   // only reflects the already-committed, currently-empty state).
@@ -176,7 +176,7 @@ export function ExploreClient({
   const selectedForOpenSheet =
     sheetOpen === "place" ? place : sheetOpen === "vibe" ? vibe : sheetOpen === "activity" ? activity : null;
 
-  // Home Rework spec §11.2 — the tapped tile shows its selected state before the
+  // Home Rework spec §11.2, the tapped tile shows its selected state before the
   // sheet closes, rather than the sheet vanishing instantly on tap.
   const handleTileSelect = (key: string) => {
     if (!sheetOpen) return;

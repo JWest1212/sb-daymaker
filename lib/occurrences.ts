@@ -3,7 +3,7 @@
 // EXACT Tier-1 + Tier-2 occurrence math for the Cockpit v2 Coverage heatmap.
 //
 // Why this exists (recon §7 / delta A3): the public Explore feed never expands
-// recurring_schedules — Tier 2 items simply always pass the horizon filter. So
+// recurring_schedules, Tier 2 items simply always pass the horizon filter. So
 // there is no site function to "reuse" for counting recurring occurrences in a
 // window. This module is the single, shared definition Coverage (and the Hero
 // plan's candidate logic) build on. It reuses lib/explore's `sbDay` day-keying
@@ -58,7 +58,7 @@ function tier2Occurrences(row: RecurRow, days: DayCell[]): number {
   const matches = days.filter((c) => c.dow === row.day_of_week);
   const freq = (row.frequency ?? "weekly") as Frequency;
   if (freq === "monthly") {
-    // "1st {weekday} of the month" — day-of-month in 1..7 for that weekday.
+    // "1st {weekday} of the month", day-of-month in 1..7 for that weekday.
     return matches.filter((c) => c.dom >= 1 && c.dom <= 7).length;
   }
   if (freq === "biweekly") {
@@ -83,7 +83,7 @@ export function occurrencesInWindow(
     const days = sbWindowDays(now, windowDays);
     return (thing.recurring ?? []).reduce((sum, r) => sum + tier2Occurrences(r, days), 0);
   }
-  return 0; // Tier 3 evergreen — excluded from the RAG math (§1.1)
+  return 0; // Tier 3 evergreen, excluded from the RAG math (§1.1)
 }
 
 /** Does a thing occur on a specific SB calendar date ("YYYY-MM-DD")? Used by the

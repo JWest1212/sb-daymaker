@@ -1,6 +1,6 @@
 // ingest/db.ts
 //
-// Service-role Supabase client for the nightly worker. Bypasses RLS — SERVER/CI
+// Service-role Supabase client for the nightly worker. Bypasses RLS, SERVER/CI
 // ONLY, never imported into client code. Mirrors lib/supabaseAdmin.ts but reads
 // the GitHub-Action secret names first, falling back to the app's env names so
 // the worker also runs locally with the existing .env.

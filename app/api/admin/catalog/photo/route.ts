@@ -7,13 +7,13 @@ export const dynamic = "force-dynamic";
 // POST { thing_id, source, url?, attribution?, venue_photo_id? } -> instant photo
 // apply, no re-review. Founder-picked from the thing's own photo_options
 // (populated by the resolver) in the Live-catalog edit sheet. Metadata-immediate
-// like /api/admin/weight — applies straight to the live row. `source:
+// like /api/admin/weight, applies straight to the live row. `source:
 // "placeholder"` (url omitted) explicitly clears the photo back to the branded
 // gradient fallback.
 //
 // `venue_photo_id` (Card Imagery Phase 2, Live-catalog follow-up, 2026-07-10) is
 // set ONLY when the picked option came from the venue-backed fetch
-// (/api/admin/catalog/venue-photos/fetch) — approves that venue_photos row
+// (/api/admin/catalog/venue-photos/fetch), approves that venue_photos row
 // (approved=true + appended sort_order) in the SAME request, so the photo joins
 // the venue's compliant, auto-refreshed pool instead of just sitting as a raw URL
 // on this one thing. A plain "find more options" (Wikimedia) pick has no
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
   const photo_attribution = isPlaceholder ? null : (body.attribution ?? null);
 
   // Fold the applied pick into photo_options (dedup by url) so a "find more options"
-  // discovery survives closing the sheet — otherwise re-opening edit later can't
+  // discovery survives closing the sheet, otherwise re-opening edit later can't
   // recognize the live photo as one of its own alternates and mis-shows "Use this
   // photo" on an unrelated option. Read-modify-write is fine here: this route is a
   // single admin's deliberate click, not a concurrent hot path.

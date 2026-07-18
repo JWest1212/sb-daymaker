@@ -4,7 +4,7 @@ import { parseIndependentDate, classifyIndependent } from './independent';
 describe('parseIndependentDate', () => {
   it('combines a year-less date + time and stamps SB offset', () => {
     // The function infers the year (this year, or next if the date already passed
-    // by > a week) relative to "now" — mirror that same rule here instead of a
+    // by > a week) relative to "now", mirror that same rule here instead of a
     // hardcoded year, so the test doesn't rot as the calendar rolls forward.
     const now = new Date();
     const year = now.getUTCFullYear();

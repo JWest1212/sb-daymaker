@@ -1,6 +1,6 @@
 // lib/edition/cockpitTypes.ts
 //
-// Client-safe shapes for the cockpit "Edition Draft" module — no server-only
+// Client-safe shapes for the cockpit "Edition Draft" module, no server-only
 // imports here (mirrors the lib/review.ts / lib/reviewServer.ts split) so
 // client components can import these types directly.
 

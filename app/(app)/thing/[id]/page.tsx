@@ -7,20 +7,10 @@ import { DetailSaveButton } from "@/components/detail/DetailSaveButton";
 import { BackButton } from "@/components/detail/BackButton";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
 import { prettify } from "@/components/explore/derive";
+import { eventDetailWhen } from "@/lib/format/eventTime";
 
-export const metadata: Metadata = { title: "Detail — SB Daymaker" };
-export const revalidate = 600; // ISR — refresh published content every 10 min
-
-function eventWhen(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "America/Los_Angeles",
-  }).format(new Date(iso));
-}
+export const metadata: Metadata = { title: "Detail · SB Daymaker" };
+export const revalidate = 600; // ISR: refresh published content every 10 min
 
 const TONE_BY_TYPE: Record<string, string> = {
   event: "gold",
@@ -53,12 +43,27 @@ export default async function ThingPage({
   }
 
   const facts: { k: string; v: string }[] = [];
-  if (t.neighborhood) facts.push({ k: "Where", v: prettify(t.neighborhood) });
+  // G0.7, never render the literal placeholder "Other" as a location. The
+  // neighborhood enum's 'other' value means "unknown"; show nothing instead.
+  if (t.neighborhood && t.neighborhood !== "other")
+    facts.push({ k: "Where", v: prettify(t.neighborhood) });
   if (t.type === "event" && t.starts_at)
-    facts.push({ k: "When", v: eventWhen(t.starts_at) });
-  facts.push({ k: "Price", v: t.free ? "Free" : (t.price_band ?? "—") });
+    facts.push({ k: "When", v: eventDetailWhen(t.starts_at) });
+  // G0.7, never a bare "·" in the price slot. Free / a real band / (ticketed
+  // event with an outbound) "Check site" / else omit the row entirely.
+  const priceValue = t.free
+    ? "Free"
+    : t.price_band
+      ? t.price_band
+      : t.type === "event" && t.buy_url
+        ? "Check site"
+        : null;
+  if (priceValue) facts.push({ k: "Price", v: priceValue });
   if (t.is_21_plus) facts.push({ k: "Note", v: "21+" });
-  facts.push({ k: "Setting", v: t.indoor ? "Indoor" : "Outdoor" });
+  // G0.7, the `indoor` bit is a default-false binary that can't express "both"
+  // (Old Mission's own secret recommends its garden, yet the bit says Indoor).
+  // Rather than ship a label its own copy contradicts, the Setting row is
+  // suppressed in Gate 0; Gate 1 restores it from the real `setting` enum.
 
   const body = t.blurb_long ?? t.blurb;
 

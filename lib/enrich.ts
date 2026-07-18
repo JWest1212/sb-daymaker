@@ -35,16 +35,16 @@ export interface EnrichResult {
 
 const SYSTEM = `You write SB Daymaker's editorial copy for Santa Barbara listings.
 Use ONLY the facts provided. You must NEVER invent or alter a name, address, date,
-time, or price — those facts are fixed. Your job is voice + classification only.
+time, or price, those facts are fixed. Your job is voice + classification only.
 - blurb: 1-2 sentences, warm "knowing local friend" voice, never breathless or corporate.
 - blurb_long: 2-4 sentences for the detail screen, same voice.
-- reason_to_go: one short phrase — why go.
+- reason_to_go: one short phrase, why go.
 - local_note: ONE insider tip ONLY if it genuinely follows from the given facts;
   otherwise return an empty string. Do not fabricate insider knowledge.
 - happening_category: choose from the allowed list.
 - tags: 1-3 occasion tags from the allowed list.
 - confidence: 0-1; lower it when the facts are thin or ambiguous.
-Respond by calling the enrich tool — nothing else.`;
+Respond by calling the enrich tool, nothing else.`;
 
 /** Enrich one thing's facts via Haiku (strict tool). Returns null on any failure. */
 export async function enrichThing(facts: EnrichFacts): Promise<EnrichResult | null> {
@@ -91,6 +91,6 @@ export async function enrichThing(facts: EnrichFacts): Promise<EnrichResult | nu
     if (!block || block.type !== "tool_use") return null;
     return block.input as EnrichResult;
   } catch {
-    return null; // graceful fallback — skip & flag (caller leaves it as draft)
+    return null; // graceful fallback, skip & flag (caller leaves it as draft)
   }
 }

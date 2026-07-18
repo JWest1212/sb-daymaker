@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST { thing_id } (single) or { ids: string[] } (bulk, Phase 5) -> queue an
 // enrich_directives row per id, status='queued'. Batch-AI-only: this fires NO
-// Claude call — tonight's worker (ingest/enrichDirectives.ts) picks it up,
+// Claude call, tonight's worker (ingest/enrichDirectives.ts) picks it up,
 // re-drafts, and lands the result as a pending thing_edits overlay for a normal
 // glance-and-approve. Skips ids that already have a queued directive so a
 // founder re-clicking doesn't pile up redundant redrafts.

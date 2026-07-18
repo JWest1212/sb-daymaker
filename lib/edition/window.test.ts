@@ -35,7 +35,7 @@ describe("EDITION_CONFIG", () => {
   });
 });
 
-describe("scheduledSendPassed — has an edition's normal send window (14:00 UTC on its date) passed?", () => {
+describe("scheduledSendPassed, has an edition's normal send window (14:00 UTC on its date) passed?", () => {
   const scheduled = Date.parse("2026-07-09T14:00:00Z");
 
   it("is false before the scheduled hour on the edition's own date", () => {

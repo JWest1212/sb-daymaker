@@ -1,7 +1,7 @@
 // ingest/adapters/_shared/occasionTags.ts
 //
 // Seed-tag mapping: adapters pass category + optional text; this returns starter
-// OccasionTag[]. Enrich (Claude) confirms / extends later — adapters only seed.
+// OccasionTag[]. Enrich (Claude) confirms / extends later, adapters only seed.
 // These are hints, not final values: the negative rules (21+/non-free) are
 // enforced after the AI call in enrich.ts. (§2.8)
 
