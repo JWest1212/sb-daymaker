@@ -8,8 +8,9 @@
 // DRY_RUN=1 prints the per-source tallies and what it WOULD land, writing nothing.
 
 import { registry } from './adapters/registry';
+import { getLastGenericRunStats } from './adapters/generic';
 import { gate } from './gate';
-import { dedupe, type DropRecord, type ExistingRow } from './dedupe';
+import { dedupeVenueAware, evaluateMatch, sameDay, titleSimilarity, NEAR_THRESHOLD, type DropRecord, type ExistingRow } from './dedupe';
 import { isAlreadyInRegistry, loadRegistryCache } from './adapters/recurringRegistry';
 import {
   startRun, finishRun, landCandidates, landTags, landRecurring, recordDrops, toThingRow, type RunRow,
@@ -35,6 +36,8 @@ import { sbDay } from '../lib/explore';
 import { sourceKeyOf } from './dedupe';
 import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
 import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR, type PublishBand } from './publishGate';
+import { computeEventKey, canonicalVenue, type VenueDictEntry as EventKeyVenueDictEntry } from './eventKey';
+import { adjudicatePairs, type AdjudicationPair } from './dedupeAdjudicate';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -66,6 +69,29 @@ const CONFIDENCE_GATE_APPLY = process.env.CONFIDENCE_GATE_APPLY === '1';
 // Data Arch Redesign 24 Phase 5 — run the rescue pass once, on demand (the
 // nightly run also does this automatically every night; see main()).
 const CONFIDENCE_RESCUE = process.env.CONFIDENCE_RESCUE === '1';
+// Data Arch Redesign 26 Phase 1 — compute-only preview of event_key across the
+// current catalog. Writes nothing; dedupe.ts's actual matching is untouched
+// until Phase 2. Safe to run before the event_key DDL exists.
+const EVENT_KEY_DRYRUN = process.env.EVENT_KEY_DRYRUN === '1';
+// Data Arch Redesign 26 Phase 1 — one-off: actually persist event_key for the
+// whole existing catalog (the column now exists). Still doesn't change dedupe
+// behavior — see EVENT_KEY_DRYRUN comment above.
+const EVENT_KEY_BACKFILL = process.env.EVENT_KEY_BACKFILL === '1';
+// Data Arch Redesign 26 Phase 2 — read-only pairwise audit of dedupe.ts's live
+// venue-aware matcher (evaluateMatch/dedupeVenueAware) vs the plain
+// deterministic baseline (dedupe()), run over the existing catalog. Writes
+// nothing. Used to validate the matcher before go-live; kept afterward as a
+// standing audit tool (e.g. to watch the ambiguous-band count Phase 3 will consume).
+const DEDUPE_VENUE_SHADOW = process.env.DEDUPE_VENUE_SHADOW === '1';
+// Data Arch Redesign 26 Phase 3 — Sonnet batch adjudication on the ambiguous
+// band, run against the live catalog. SHADOW: reports verdicts + cost, writes
+// nothing, and does not change what dedupeVenueAware() actually merges.
+const DEDUPE_ADJUDICATE_SHADOW = process.env.DEDUPE_ADJUDICATE_SHADOW === '1';
+// Data Arch Redesign 26 Phase 4 — one-off: populate event_sources +
+// things.source_count for the whole existing catalog (event_key column
+// already backfilled in Phase 1). After this, the live nightly run keeps it
+// current on its own — see recordCorroboration() near the LAND step below.
+const EVENT_SOURCES_BACKFILL = process.env.EVENT_SOURCES_BACKFILL === '1';
 
 function window() {
   const from = new Date();
@@ -714,6 +740,311 @@ async function backfillConfidenceDryRun() {
   for (const e of examples) {
     console.log(`  ${e.score.toFixed(2)}  "${e.title}"  [${e.status}, source=${e.sourceKey}]`);
     console.log(`         source_trust=${e.breakdown.sourceTrust.toFixed(2)} extraction=${e.breakdown.extractionMethod.toFixed(2)} completeness=${e.breakdown.fieldCompleteness.toFixed(2)} cross_source=${e.breakdown.crossSourceAgreement.toFixed(2)} recency=${e.breakdown.recency.toFixed(2)} findability=${e.breakdown.findability.toFixed(2)}`);
+  }
+  console.log('');
+}
+
+interface EventKeyRow {
+  id: string; title: string; address: string | null; place_id: string | null;
+  happening_tier: number; starts_at: string | null; type: string; status: string;
+  recurring_schedules: { day_of_week: number | null; frequency: string | null }[] | null;
+}
+
+/** Reads every T1/T2 thing + the venue_neighborhoods dictionary and computes
+ *  event_key for each row, purely in memory. Shared by the dry-run report and
+ *  the persisting backfill so the two can never drift apart. */
+async function computeCatalogEventKeys(sb: SupabaseClient): Promise<{ typed: EventKeyRow[]; keyed: Map<string, string>; groups: Map<string, EventKeyRow[]> }> {
+  const { data: dictRows, error: dictErr } = await sb
+    .from('venue_neighborhoods')
+    .select('name_norm, place_id, aliases');
+  if (dictErr) throw new Error(`event-key dictionary read: ${dictErr.message}`);
+  const dictionary = (dictRows ?? []) as unknown as EventKeyVenueDictEntry[];
+
+  const { data: rows, error } = await sb
+    .from('things')
+    .select(`id, title, address, place_id, happening_tier, starts_at, type, status,
+      recurring_schedules ( day_of_week, frequency )`)
+    .in('happening_tier', [1, 2]);
+  if (error) throw new Error(`event-key things read: ${error.message}`);
+  const typed = (rows ?? []) as unknown as EventKeyRow[];
+
+  const keyed = new Map<string, string>();
+  const groups = new Map<string, EventKeyRow[]>();
+  for (const r of typed) {
+    const recurring = (r.recurring_schedules ?? [])
+      .filter((s): s is { day_of_week: number; frequency: string } => s.day_of_week != null && !!s.frequency);
+    const key = computeEventKey(
+      { title: r.title, address: r.address, place_id: r.place_id, happening_tier: r.happening_tier, starts_at: r.starts_at, recurring },
+      dictionary,
+    );
+    if (!key) continue;
+    keyed.set(r.id, key);
+    const list = groups.get(key) ?? [];
+    list.push(r);
+    groups.set(key, list);
+  }
+  return { typed, keyed, groups };
+}
+
+function printEventKeyReport(label: string, typed: EventKeyRow[], keyed: Map<string, string>, groups: Map<string, EventKeyRow[]>): void {
+  const collapsing = [...groups.values()].filter((g) => g.length > 1);
+  const collapsingRows = collapsing.reduce((n, g) => n + g.length, 0);
+  const unkeyed = typed.length - keyed.size;
+
+  console.log(`\n[${label}] ${typed.length} T1/T2 thing(s) read (of which ${unkeyed} produced no key -- missing venue+title+date/cadence signal)`);
+  console.log(`[${label}] ${groups.size} distinct event_key(s); ${collapsing.length} group(s) share a key across ${collapsingRows} thing(s) (net reduction of ${collapsingRows - collapsing.length} row(s) if merged)\n`);
+
+  const bySize = [...collapsing].sort((a, b) => b.length - a.length);
+  console.log(`[${label}] sample collapse groups (largest first, up to 15):\n`);
+  for (const g of bySize.slice(0, 15)) {
+    console.log(`  group of ${g.length}:`);
+    for (const r of g) {
+      console.log(`    "${r.title}"  [${r.type}/${r.status}, tier ${r.happening_tier}]  starts_at=${r.starts_at ?? 'null'}  address=${r.address ?? 'null'}`);
+    }
+  }
+  console.log('');
+}
+
+/** Data Arch Redesign 26 Phase 1 — compute event_key for the whole existing
+ *  catalog's dated (T1) + recurring (T2) rows, WITHOUT writing anything (the
+ *  event_key column doesn't need to exist yet for this to run). Groups by key
+ *  and reports how many things would collapse, plus sample groups, so the
+ *  normalization + venue-canonicalization rules can be eyeballed before the
+ *  column is added and before dedupe.ts's actual matching changes (Phase 2). */
+async function eventKeyDryRun() {
+  const sb = getDb();
+  const { typed, keyed, groups } = await computeCatalogEventKeys(sb);
+  printEventKeyReport('event-key-dryrun', typed, keyed, groups);
+}
+
+/** Data Arch Redesign 26 Phase 1 — actually persist event_key for the whole
+ *  existing catalog (the column now exists, applied by Jim). Does NOT change
+ *  dedup behavior — dedupe.ts still ignores event_key until Phase 2. */
+async function eventKeyBackfill() {
+  const sb = getDb();
+  const { typed, keyed, groups } = await computeCatalogEventKeys(sb);
+
+  let updated = 0;
+  for (const [id, key] of keyed) {
+    const { error } = await sb.from('things').update({ event_key: key }).eq('id', id);
+    if (error) { console.log(`  [event-key-backfill] update failed for ${id}: ${error.message}`); continue; }
+    updated++;
+  }
+  console.log(`\n[event-key-backfill] wrote event_key for ${updated} of ${typed.length} T1/T2 thing(s)`);
+  printEventKeyReport('event-key-backfill', typed, keyed, groups);
+}
+
+/** Data Arch Redesign 26 Phase 4 — one-off: populate event_sources and
+ *  things.source_count for the whole existing catalog (event_key already
+ *  backfilled in Phase 1). Reuses recordCorroboration() — the same function
+ *  the live nightly run calls — over the existing rows cast to the minimal
+ *  shape it needs, so backfill and live bookkeeping can never drift apart. */
+async function eventSourcesBackfill() {
+  const sb = getDb();
+  const { data: rows, error } = await sb.from('things').select('id, event_key, source, title').not('event_key', 'is', null);
+  if (error) throw new Error(`event-sources-backfill things read: ${error.message}`);
+  const typed = (rows ?? []) as { id: string; event_key: string; source: string | null; title: string }[];
+
+  const fakeCands = typed.map((r) => ({ event_key: r.event_key, source_url: r.source ?? undefined }) as unknown as Candidate);
+  await recordCorroboration(sb, fakeCands, []);
+
+  const { data: after, error: afterErr } = await sb
+    .from('things').select('id, title, event_key, source_count').not('event_key', 'is', null);
+  if (afterErr) throw new Error(`event-sources-backfill verify read: ${afterErr.message}`);
+  const byKey = new Map<string, { id: string; title: string; source_count: number }[]>();
+  for (const r of after ?? []) {
+    const ek = r.event_key as string;
+    const list = byKey.get(ek) ?? [];
+    list.push({ id: r.id as string, title: r.title as string, source_count: Number(r.source_count) });
+    byKey.set(ek, list);
+  }
+  const multi = [...byKey.entries()].filter(([, rs]) => (rs[0]?.source_count ?? 1) > 1);
+
+  console.log(`\n[event-sources-backfill] ${typed.length} thing(s) with an event_key; ${byKey.size} distinct event_key(s)`);
+  console.log(`[event-sources-backfill] ${multi.length} event_key(s) corroborated by more than one source\n`);
+
+  for (const [ek, rs] of multi.slice(0, 10)) {
+    const { data: sources } = await sb.from('event_sources').select('source_key').eq('event_key', ek);
+    console.log(`  event_key ${ek}  source_count=${rs[0].source_count}  sources=[${(sources ?? []).map((s) => s.source_key).join(', ')}]`);
+    for (const r of rs) console.log(`    "${r.title}"`);
+  }
+  console.log('');
+}
+
+interface ShadowRow {
+  id: string; title: string; address: string | null; place_id: string | null;
+  happening_tier: number; starts_at: string | null; source: string | null; status: string;
+  recurring_schedules: { day_of_week: number | null; frequency: string | null }[] | null;
+}
+
+/** Shared by dedupeVenueShadowReport and dedupeAdjudicateShadowReport — the
+ *  T1/T2 catalog plus the venue_neighborhoods dictionary, fetched once. */
+async function fetchShadowCatalog(sb: SupabaseClient): Promise<{ typed: ShadowRow[]; dictionary: EventKeyVenueDictEntry[] }> {
+  const { data: dictRows, error: dictErr } = await sb
+    .from('venue_neighborhoods')
+    .select('name_norm, place_id, aliases');
+  if (dictErr) throw new Error(`dedupe-shadow dictionary read: ${dictErr.message}`);
+  const dictionary = (dictRows ?? []) as unknown as EventKeyVenueDictEntry[];
+
+  const { data: rows, error } = await sb
+    .from('things')
+    .select(`id, title, address, place_id, happening_tier, starts_at, source, status,
+      recurring_schedules ( day_of_week, frequency )`)
+    .in('happening_tier', [1, 2]);
+  if (error) throw new Error(`dedupe-shadow things read: ${error.message}`);
+  const typed = (rows ?? []) as unknown as ShadowRow[];
+  return { typed, dictionary };
+}
+
+type ShadowItem = { title: string; starts_at: string | null; address: string | null; place_id: string | null; recurring: { day_of_week: number; frequency: string }[] };
+function asShadowItem(r: ShadowRow): ShadowItem {
+  return {
+    title: r.title, starts_at: r.starts_at, address: r.address, place_id: r.place_id,
+    recurring: (r.recurring_schedules ?? []).filter((s): s is { day_of_week: number; frequency: string } => s.day_of_week != null && !!s.frequency),
+  };
+}
+
+interface ShadowScan {
+  oldPairs: number;
+  newPairs: number;
+  newMerges: { a: ShadowRow; b: ShadowRow; sim: number; signal: string; venue: string }[];
+  newSplits: { a: ShadowRow; b: ShadowRow; sim: number }[];
+  ambiguous: { a: ShadowRow; b: ShadowRow; sim: number; venue: string }[];
+}
+
+/** Pairwise scan of every same-tier T1/T2 pair, classifying each under both
+ *  the OLD matcher (title + same day only) and the NEW venue-aware matcher
+ *  (evaluateMatch). Pure — no I/O. Shared by both Phase 2's diff report and
+ *  Phase 3's adjudication input (the `ambiguous` bucket). */
+function scanShadowPairs(typed: ShadowRow[], dictionary: EventKeyVenueDictEntry[]): ShadowScan {
+  const oldMatch = (a: ShadowItem, b: ShadowItem): boolean => sameDay(a.starts_at, b.starts_at) && titleSimilarity(a.title, b.title) > NEAR_THRESHOLD;
+
+  let oldPairs = 0, newPairs = 0;
+  const newMerges: ShadowScan['newMerges'] = [];
+  const newSplits: ShadowScan['newSplits'] = [];
+  const ambiguous: ShadowScan['ambiguous'] = [];
+
+  for (let i = 0; i < typed.length; i++) {
+    for (let j = i + 1; j < typed.length; j++) {
+      const a = typed[i], b = typed[j];
+      if (a.happening_tier !== b.happening_tier) continue; // dated vs recurring never compared, either way
+      const ai = asShadowItem(a), bi = asShadowItem(b);
+      const wasOld = oldMatch(ai, bi);
+      const verdict = evaluateMatch(ai, bi, dictionary);
+      if (wasOld) oldPairs++;
+      if (verdict.outcome === 'merge') newPairs++;
+      if (verdict.outcome === 'merge' && !wasOld) newMerges.push({ a, b, sim: verdict.titleSim, signal: verdict.signal, venue: verdict.venue });
+      if (verdict.outcome !== 'merge' && wasOld) newSplits.push({ a, b, sim: titleSimilarity(a.title, b.title) });
+      if (verdict.outcome === 'ambiguous') ambiguous.push({ a, b, sim: verdict.titleSim, venue: verdict.venue });
+    }
+  }
+  return { oldPairs, newPairs, newMerges, newSplits, ambiguous };
+}
+
+/** Data Arch Redesign 26 Phase 2 — pairwise diff of the OLD matcher (title +
+ *  same day only, sourceAuthority-blind to venue) vs the NEW venue-aware
+ *  matcher (evaluateMatch), run over every T1/T2 pair in the existing catalog.
+ *  Purely diagnostic: classifies each same-tier pair under both rules and
+ *  reports where they disagree. Nothing is written; dedupe() (the live
+ *  function) is never called here or anywhere in the real pipeline for this
+ *  input — this is a controlled A/B on real data, not a production run. */
+async function dedupeVenueShadowReport() {
+  const sb = getDb();
+  const { typed, dictionary } = await fetchShadowCatalog(sb);
+  const { oldPairs, newPairs, newMerges, newSplits, ambiguous } = scanShadowPairs(typed, dictionary);
+
+  console.log(`\n[dedupe-venue-shadow] ${typed.length} T1/T2 thing(s), ${(typed.length * (typed.length - 1)) / 2} pair(s) checked`);
+  console.log(`[dedupe-venue-shadow] OLD matcher flags ${oldPairs} pair(s) as duplicates; NEW (venue-aware) matcher flags ${newPairs} pair(s) as clear merges`);
+  console.log(`[dedupe-venue-shadow] NEW MERGES (old kept both separate, new clearly collapses them): ${newMerges.length}`);
+  console.log(`[dedupe-venue-shadow] NEW SPLITS (old would have merged, new keeps separate — false-merge kill): ${newSplits.length}`);
+  console.log(`[dedupe-venue-shadow] AMBIGUOUS (held apart for now — Phase 3's future AI-adjudication volume preview): ${ambiguous.length}\n`);
+
+  if (newMerges.length) {
+    console.log('[dedupe-venue-shadow] new-merge examples (up to 15):\n');
+    for (const m of newMerges.slice(0, 15)) {
+      console.log(`  [${m.signal}, venue=${m.venue}, titleSim=${m.sim.toFixed(2)}]`);
+      console.log(`    "${m.a.title}"  [${m.a.status}, tier ${m.a.happening_tier}, ${m.a.source ?? 'no source'}]  address=${m.a.address ?? 'null'}`);
+      console.log(`    "${m.b.title}"  [${m.b.status}, tier ${m.b.happening_tier}, ${m.b.source ?? 'no source'}]  address=${m.b.address ?? 'null'}`);
+    }
+    console.log('');
+  }
+  if (newSplits.length) {
+    console.log('[dedupe-venue-shadow] new-split examples (up to 15):\n');
+    for (const s of newSplits.slice(0, 15)) {
+      console.log(`  [titleSim=${s.sim.toFixed(2)}]`);
+      console.log(`    "${s.a.title}"  address=${s.a.address ?? 'null'}`);
+      console.log(`    "${s.b.title}"  address=${s.b.address ?? 'null'}`);
+    }
+    console.log('');
+  }
+  if (ambiguous.length) {
+    console.log('[dedupe-venue-shadow] ambiguous examples (up to 15, held apart — not merged, not confidently split):\n');
+    for (const am of ambiguous.slice(0, 15)) {
+      console.log(`  [venue=${am.venue}, titleSim=${am.sim.toFixed(2)}]`);
+      console.log(`    "${am.a.title}"  address=${am.a.address ?? 'null'}`);
+      console.log(`    "${am.b.title}"  address=${am.b.address ?? 'null'}`);
+    }
+    console.log('');
+  }
+}
+
+/** Human-readable, no-invention description of when a T1/T2 row occurs — the
+ *  only facts sent to the Phase 3 adjudicator, matching enrich.ts's trust
+ *  posture of never inventing/guessing what isn't in the record. */
+function describeShadowWhen(r: ShadowRow): string {
+  if (r.starts_at) return `dated: ${r.starts_at}`;
+  const sched = (r.recurring_schedules ?? []).filter((s) => s.day_of_week != null && s.frequency);
+  if (sched.length) {
+    const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return `recurring: ${sched.map((s) => `${DOW[s.day_of_week!]} (${s.frequency})`).join(', ')}`;
+  }
+  return 'unknown';
+}
+
+/** Data Arch Redesign 26 Phase 3 — Sonnet batch adjudication on the ambiguous
+ *  band only (Doc 16 §3.3), run against the live catalog. SHADOW: reports the
+ *  pairs, the model's verdicts, and the cost. Does not merge or write
+ *  anything — dedupeVenueAware() (the live matcher) still treats every
+ *  ambiguous pair as held-apart until this is wired in as a later, explicit
+ *  step. Requires ANTHROPIC_API_KEY; with no key set, prints the pair count
+ *  and stops (adjudicatePairs() fails soft). */
+async function dedupeAdjudicateShadowReport() {
+  const sb = getDb();
+  const { typed, dictionary } = await fetchShadowCatalog(sb);
+  const { ambiguous } = scanShadowPairs(typed, dictionary);
+
+  console.log(`\n[dedupe-adjudicate-shadow] ${ambiguous.length} ambiguous pair(s) to adjudicate\n`);
+  if (!ambiguous.length) return;
+
+  const canonicalOf = (r: ShadowRow) => canonicalVenue({ title: r.title, address: r.address, place_id: r.place_id }, dictionary);
+  const pairs: AdjudicationPair[] = ambiguous.map(({ a, b }) => ({
+    pairId: `${a.id}|${b.id}`,
+    titleA: a.title, titleB: b.title,
+    venueA: canonicalOf(a), venueB: canonicalOf(b),
+    whenA: describeShadowWhen(a), whenB: describeShadowWhen(b),
+    addressA: a.address, addressB: b.address,
+  }));
+
+  const { verdicts, costUsd } = await adjudicatePairs(pairs);
+  const byPairId = new Map(ambiguous.map(({ a, b }) => [`${a.id}|${b.id}`, { a, b }]));
+
+  const sameEvent = verdicts.filter((v) => v.sameEvent);
+  const different = verdicts.filter((v) => !v.sameEvent);
+  const noVerdict = ambiguous.length - verdicts.length;
+
+  console.log(`[dedupe-adjudicate-shadow] ${sameEvent.length} pair(s) judged SAME event (would merge if wired in)`);
+  console.log(`[dedupe-adjudicate-shadow] ${different.length} pair(s) judged DIFFERENT events (stays split)`);
+  if (noVerdict) console.log(`[dedupe-adjudicate-shadow] ${noVerdict} pair(s) got no verdict (chunk failure — stays split by default)`);
+  console.log(`[dedupe-adjudicate-shadow] total cost: $${costUsd.toFixed(4)} (Sonnet 5 intro rate)\n`);
+
+  console.log('[dedupe-adjudicate-shadow] verdicts (up to 25):\n');
+  for (const v of verdicts.slice(0, 25)) {
+    const pair = byPairId.get(v.pairId);
+    console.log(`  [${v.sameEvent ? 'SAME' : 'DIFFERENT'}, confidence=${v.confidence.toFixed(2)}] ${v.reasoning}`);
+    if (pair) {
+      console.log(`    "${pair.a.title}"  address=${pair.a.address ?? 'null'}`);
+      console.log(`    "${pair.b.title}"  address=${pair.b.address ?? 'null'}`);
+    }
   }
   console.log('');
 }
@@ -1474,6 +1805,85 @@ async function updateSourceBaselines(sb: SupabaseClient, runs: Map<string, RunRo
   return autoPaused;
 }
 
+/** Data Arch Redesign 26 Phase 4 — corroboration bookkeeping (Doc 16 §2.4,
+ *  §3.6). Writes one event_sources row per (event_key, source_key) confirmed
+ *  this run — both from candidates that actually landed and from near-dupes
+ *  that got dropped but still corroborate the surviving event (their
+ *  event_key was carried on the DropRecord by dedupeVenueAware()) — then
+ *  recomputes things.source_count = count(distinct source_key) for every
+ *  event_key touched. Idempotent (upsert, ignoreDuplicates on the composite
+ *  key) so re-running a night is safe. */
+export async function recordCorroboration(sb: SupabaseClient, landedCands: Candidate[], drops: DropRecord[]): Promise<void> {
+  const bySources = new Map<string, Set<string>>(); // event_key -> distinct source_key(s)
+  const add = (eventKey: string | null | undefined, sourceKey: string): void => {
+    if (!eventKey) return;
+    (bySources.get(eventKey) ?? bySources.set(eventKey, new Set()).get(eventKey)!).add(sourceKey);
+  };
+  for (const c of landedCands) add(c.event_key, sourceKeyOf(c.source_url));
+  for (const d of drops) add(d.event_key, d.source);
+  if (!bySources.size) return;
+
+  const insertRows = [...bySources.entries()].flatMap(([event_key, sources]) =>
+    [...sources].map((source_key) => ({ event_key, source_key })),
+  );
+  const { error: insErr } = await sb
+    .from('event_sources')
+    .upsert(insertRows, { onConflict: 'event_key,source_key', ignoreDuplicates: true });
+  if (insErr) { console.log(`  [corroboration] event_sources write failed: ${insErr.message}`); return; }
+
+  let updated = 0;
+  for (const event_key of bySources.keys()) {
+    const { count, error: cntErr } = await sb
+      .from('event_sources').select('source_key', { count: 'exact', head: true }).eq('event_key', event_key);
+    if (cntErr) { console.log(`  [corroboration] count failed for ${event_key}: ${cntErr.message}`); continue; }
+    const { error: updErr } = await sb.from('things').update({ source_count: count ?? 1 }).eq('event_key', event_key);
+    if (updErr) { console.log(`  [corroboration] source_count update failed for ${event_key}: ${updErr.message}`); continue; }
+    updated++;
+  }
+  console.log(`  [corroboration] ${bySources.size} event_key(s) touched, ${insertRows.length} source-contribution row(s), ${updated} source_count update(s)`);
+}
+
+/** Data Arch Redesign 26 Phase 5 — auditable, reversible merges (Doc 16 §4).
+ *  A venue-aware near-dupe drop (DropRecord.merged_into set) doesn't just get
+ *  discarded: its full candidate lands too, as status='archived' pointing at
+ *  its survivor via merged_into, so a founder can undo a wrong merge in the
+ *  cockpit (/admin/review's Merged panel -> /api/admin/dedupe/unmerge) and
+ *  get the row back exactly as it would have landed. Every merge also gets an
+ *  audit_log row with its evidence (which signal fired, title similarity,
+ *  venue verdict) — the durable record even if merged_into is later cleared.
+ *  Idempotent (upsert ignoreDuplicates on id) and isolated: a failure here
+ *  never blocks landing. */
+export async function recordMerges(sb: SupabaseClient, gated: { cand: Candidate; sourceKey: string }[], drops: DropRecord[]): Promise<void> {
+  const byId = new Map(gated.map((g) => [g.cand.id, g.cand]));
+  const merges = drops.filter((d): d is DropRecord & { id: string; merged_into: string } => !!d.id && !!d.merged_into);
+  if (!merges.length) return;
+
+  const rows: Record<string, unknown>[] = [];
+  const auditRows: Record<string, unknown>[] = [];
+  for (const d of merges) {
+    const cand = byId.get(d.id);
+    if (!cand) continue; // shouldn't happen — every merge drop comes from `gated`
+    // event_key set to the SURVIVOR's (not recomputed from this row's own
+    // title) so it lines up with the event_sources row recordCorroboration()
+    // writes for this same drop.
+    rows.push({ ...toThingRow(cand), status: 'archived', merged_into: d.merged_into, event_key: d.event_key ?? null });
+    auditRows.push({
+      entity_type: 'thing',
+      entity_id: cand.id,
+      action: 'dedupe_merge',
+      actor: 'rule',
+      payload: { merged_into: d.merged_into, event_key: d.event_key ?? null, detail: d.detail, evidence: d.evidence ?? null },
+    });
+  }
+  if (!rows.length) return;
+
+  const { error: landErr } = await sb.from('things').upsert(rows, { onConflict: 'id', ignoreDuplicates: true });
+  if (landErr) { console.log(`  [merge-log] archived-row write failed: ${landErr.message}`); return; }
+  const { error: auditErr } = await sb.from('audit_log').insert(auditRows);
+  if (auditErr) console.log(`  [merge-log] audit_log write failed: ${auditErr.message}`);
+  console.log(`  [merge-log] ${rows.length} merge(s) archived + logged (reversible via cockpit un-merge)`);
+}
+
 async function main() {
   if (BACKFILL) return backfillEnrich();
   if (IMAGE_BACKFILL) return backfillImages();
@@ -1488,6 +1898,11 @@ async function main() {
   if (CONFIDENCE_GATE_SHADOW) return confidenceGateShadowReport();
   if (CONFIDENCE_GATE_APPLY) return runPublishGateOnce();
   if (CONFIDENCE_RESCUE) return runRescueOnce();
+  if (EVENT_KEY_DRYRUN) return eventKeyDryRun();
+  if (EVENT_KEY_BACKFILL) return eventKeyBackfill();
+  if (DEDUPE_VENUE_SHADOW) return dedupeVenueShadowReport();
+  if (DEDUPE_ADJUDICATE_SHADOW) return dedupeAdjudicateShadowReport();
+  if (EVENT_SOURCES_BACKFILL) return eventSourcesBackfill();
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -1551,20 +1966,60 @@ async function main() {
   }
 
   // ---- DEDUPE (cross-source + against existing rows in the window) ----
+  // Data Arch Redesign 26 Phase 2 — venue-aware matching is now the live
+  // matcher (dedupeVenueAware, formerly the shadow candidate; see Doc 16
+  // §3.6). `existing` now also carries address/place_id (the venue signal)
+  // and, for Tier-2 rows, their recurring cadence — both needed by
+  // evaluateMatch(). Tier-1 stays windowed by starts_at as before; Tier-2 has
+  // no starts_at to window by, so it's a separate, small, unbounded read (the
+  // recurring catalog is on the order of dozens of rows, not thousands).
   let existing: ExistingRow[] = [];
+  let venueDictionary: EventKeyVenueDictEntry[] = [];
   if (sb) {
-    const { data } = await sb
-      .from('things')
-      .select('id, title, starts_at, source')
-      .not('starts_at', 'is', null)
-      .gte('starts_at', win.fromISO)
-      .lte('starts_at', win.toISO);
-    existing = (data ?? []) as ExistingRow[];
+    const [{ data: dated }, { data: recurring }, { data: dictRows }] = await Promise.all([
+      sb.from('things')
+        .select('id, title, starts_at, source, address, place_id, event_key')
+        .not('starts_at', 'is', null)
+        .gte('starts_at', win.fromISO)
+        .lte('starts_at', win.toISO),
+      sb.from('things')
+        .select('id, title, starts_at, source, address, place_id, event_key, recurring_schedules ( day_of_week, frequency )')
+        .eq('happening_tier', 2),
+      sb.from('venue_neighborhoods').select('name_norm, place_id, aliases'),
+    ]);
+    const datedRows = (dated ?? []) as ExistingRow[];
+    const recurringRows = ((recurring ?? []) as unknown as {
+      id: string; title: string; starts_at: string | null; source: string | null; address: string | null; place_id: string | null; event_key: string | null;
+      recurring_schedules: { day_of_week: number | null; frequency: string | null }[] | null;
+    }[]).map((r): ExistingRow => ({
+      id: r.id, title: r.title, starts_at: r.starts_at, source: r.source, address: r.address, place_id: r.place_id, event_key: r.event_key,
+      recurring: (r.recurring_schedules ?? []).filter((s): s is { day_of_week: number; frequency: string } => s.day_of_week != null && !!s.frequency),
+    }));
+    existing = [...datedRows, ...recurringRows];
+    venueDictionary = (dictRows ?? []) as unknown as EventKeyVenueDictEntry[];
   }
-  const { keep: deduped, drops: dedupeDrops } = dedupe(gated.map((g) => g.cand), existing, authorityByKey);
+  const { keep: deduped, drops: dedupeDrops } = dedupeVenueAware(gated.map((g) => g.cand), existing, authorityByKey, venueDictionary);
+
+  // Data Arch Redesign 26 Phase 4 — canonical event identity, computed once
+  // post-dedupe (the venue dictionary is already loaded above) and carried on
+  // every kept candidate through enrich/images/land. Tier-3 evergreen places
+  // get no event identity (computeEventKey returns null for them).
+  const dedupedWithEventKeys: Candidate[] = deduped.map((c) => ({
+    ...c,
+    event_key: computeEventKey(
+      {
+        title: c.title, address: c.address ?? null, place_id: c.place_id ?? null,
+        happening_tier: c.tier, starts_at: c.starts_at,
+        recurring: (c.recurring ?? [])
+          .filter((r): r is typeof r & { day_of_week: number } => r.day_of_week != null)
+          .map((r) => ({ day_of_week: r.day_of_week, frequency: r.frequency })),
+      },
+      venueDictionary,
+    ) ?? undefined,
+  }));
 
   // ---- ENRICH (one batched Claude call: voice + tags; never touches starts_at) ----
-  const keep = DRY ? deduped : await enrich(deduped, { sb: sb! });
+  const keep = DRY ? dedupedWithEventKeys : await enrich(dedupedWithEventKeys, { sb: sb! });
   if (DRY) console.log('  enrich skipped — dry run (no Claude call)');
 
   // ---- IMAGES (free -> paid waterfall; every card lands with a real image, capped) ----
@@ -1604,6 +2059,37 @@ async function main() {
     landed = await landCandidates(sb, toLand);
     await landTags(sb, toLand);
     await landRecurring(sb, toLand);
+
+    // Data Arch Redesign 26 Phase 4 — corroboration bookkeeping. Isolated so a
+    // failure here can't sink the run (same posture as updateSourceBaselines
+    // below) — this is provenance/audit data, not something landing depends on.
+    try {
+      await recordCorroboration(sb, toLand, dedupeDrops);
+    } catch (err) {
+      console.log(`  [corroboration] skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Data Arch Redesign 26 Phase 5 — auditable, reversible merges. Isolated
+    // for the same reason: a bookkeeping failure must never block landing.
+    try {
+      await recordMerges(sb, gated, dedupeDrops);
+    } catch (err) {
+      console.log(`  [merge-log] skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
+    // Data Arch Redesign 25 Phase 3 — fold the generic lane's AI spend into
+    // its source_runs row (runtime is already free via that row's own
+    // started_at/finished_at).
+    const genericRun = runs.get('generic');
+    if (genericRun) {
+      const stats = getLastGenericRunStats();
+      genericRun.ai_cost_usd = stats.aiCostUsd;
+      console.log(
+        `[generic] cost/runtime this run: $${stats.aiCostUsd.toFixed(4)} AI spend `
+        + `(${stats.sourcesExtracted} extracted, ${stats.sourcesSkippedUnchanged} unchanged-skipped, ${stats.sourcesDeferred} deferred)`,
+      );
+    }
+
     for (const run of runs.values()) await finishRun(sb, run, true);
 
     // Data Arch Redesign 23 Phase 3 — isolated so a baseline hiccup can't sink
@@ -1747,7 +2233,13 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('[ingest] fatal:', err);
-  process.exit(1);
-});
+// Guarded so importing this module for its exported helpers (recordMerges,
+// recordCorroboration — reused by e.g. one-off scripts) never re-triggers the
+// full nightly pipeline as a side effect. Only runs when this file is the
+// actual CLI entrypoint (`tsx ingest/run.ts` / `npm run ingest`).
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error('[ingest] fatal:', err);
+    process.exit(1);
+  });
+}

@@ -162,6 +162,19 @@ export interface DropRow {
   source_url: string | null;
 }
 
+/** Data Arch Redesign 26 Phase 5 — a dedupe merge the founder can reverse.
+ *  `id` is the dropped/archived thing's own row (status='archived',
+ *  merged_into=survivorId); `survivorTitle` is looked up for display so the
+ *  panel can show "X was merged into Y" without a second client-side fetch. */
+export interface MergedRow {
+  id: string;
+  title: string;
+  survivorId: string;
+  survivorTitle: string;
+  eventKey: string | null;
+  mergedAt: string;
+}
+
 export interface SourceRow {
   source: string;
   landed: number;

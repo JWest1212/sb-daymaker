@@ -51,7 +51,15 @@ export type VisualKind = 'motif' | 'bigtype';
  * Tier-2 only). Prose-derived guesses are NEVER a valid strategy — there is no
  * enum value for them.
  */
-export type StartStrategy = 'structured' | 'server_detail' | 'none';
+// 'ai_extracted' (spec 25) — a start read by the generic AI extraction lane
+// from page prose rather than a structured field or an explicit server-
+// rendered clock time. It still passes the gate's deterministic-start check
+// (a real date+time was found, never guessed), but is never treated as
+// trustworthy the way 'structured'/'server_detail' are: publishGate.ts's
+// requireStructuredLane keys off the resolved SOURCE's lane (not this field)
+// to keep every ai_extracted thing out of auto-publish, so this value is a
+// human-facing label, not the enforcement mechanism.
+export type StartStrategy = 'structured' | 'server_detail' | 'none' | 'ai_extracted';
 
 export type RecurFrequency = 'weekly' | 'biweekly' | 'monthly';
 
@@ -127,6 +135,10 @@ export interface Candidate {
   recurring?: RecurringSpec[];    // Tier-2 schedule rows to write at land time
   last_confirmed: string;         // run date
   start_strategy: StartStrategy;  // carried through for the cockpit trust chip
+  /** Data Arch Redesign 26 Phase 4 — canonical event identity, computed post-dedupe
+   *  (venue+title+date/cadence hash; see ingest/eventKey.ts). Undefined only for
+   *  Tier-3 evergreen places, which have no event identity to key on. */
+  event_key?: string;
   /** W2.1b founder-curation nudge (−5..+5). Set by classifyWeight() at gate time
    *  (−3 for civic filler, else 0); a founder ▲/▼ overrides it later. Never a
    *  sponsor/placement field — the ranker stays sponsor-blind. */

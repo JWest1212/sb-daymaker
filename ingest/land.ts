@@ -80,6 +80,9 @@ function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<str
     local_note: c.local_note ?? null,
     last_confirmed: c.last_confirmed,
     source: c.source_url,
+    // Data Arch Redesign 26 Phase 4 — canonical event identity, computed
+    // post-dedupe in run.ts's main() (undefined for Tier-3 evergreen places).
+    event_key: c.event_key ?? null,
   };
 }
 
@@ -90,6 +93,9 @@ export interface RunRow {
   qualified: number;
   dropped: number;
   landed: number;
+  /** Data Arch Redesign 25 Phase 3 — AI spend this run (USD). Only the
+   *  generic-lane adapter sets this; every other adapter leaves it at 0. */
+  ai_cost_usd?: number;
 }
 
 /** Open a source_runs row; returns its id for finishRun/recordDrops. */
@@ -117,6 +123,7 @@ export async function finishRun(
       qualified: run.qualified,
       dropped: run.dropped,
       landed: run.landed,
+      ai_cost_usd: run.ai_cost_usd ?? 0,
       ok,
       error: errorMsg ?? null,
     })

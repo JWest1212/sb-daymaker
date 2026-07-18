@@ -5,6 +5,7 @@ import type { CockpitData } from "@/lib/reviewServer";
 import { filterTags, type EditPayload, type QueueRow, type ReviewDraft } from "@/lib/review";
 import { ReviewCard } from "./ReviewCard";
 import { DroppedPanel } from "./DroppedPanel";
+import { MergedPanel } from "./MergedPanel";
 import { SourceHealth } from "./SourceHealth";
 import { ConfidenceMetrics } from "./ConfidenceMetrics";
 
@@ -311,6 +312,7 @@ export function ReviewQueue({ initial }: { initial: CockpitData }) {
           <ConfidenceMetrics metrics={initial.metrics} />
           <SourceHealth sources={initial.sources} />
           <DroppedPanel drops={initial.drops} />
+          <MergedPanel merges={initial.merges} onToast={showToast} />
           <div className="panel">
             <h3>Shortcuts</h3>
             <div className="keys">

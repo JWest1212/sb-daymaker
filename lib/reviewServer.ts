@@ -10,7 +10,7 @@ import { getAdminSupabase } from "./supabaseAdmin";
 import {
   chipFor, whenString, prioritize, rollupSources,
   isRegistryProposalSource, buildRegistrySnippet, dropRetiredPhotoOptions,
-  type QueueRow, type DropRow, type SourceRow, type PhotoOption,
+  type QueueRow, type DropRow, type SourceRow, type PhotoOption, type MergedRow,
 } from "./review";
 import { sourceKeyOf } from "../ingest/dedupe";
 import { confidenceReasons, type SourceMeta, type ThingForConfidence } from "../ingest/confidence";
@@ -37,6 +37,7 @@ export interface CockpitData {
   drops: DropRow[];
   sources: SourceRow[];
   metrics: ConfidenceMetrics;
+  merges: MergedRow[];
 }
 
 // The shared `things` column list — reused by the needs_review queue AND the
@@ -214,17 +215,45 @@ async function loadConfidenceMetrics(sb: NonNullable<ReturnType<typeof getAdminS
   };
 }
 
-/** Build { queue, drops, sources, metrics } from Supabase (service role). */
+/** Data Arch Redesign 26 Phase 5 — merged/archived rows the founder can
+ *  reverse. Two queries (not an embedded resource) so this doesn't depend on
+ *  guessing the merged_into foreign-key constraint name: fetch the archived
+ *  merged rows, then batch-fetch their survivors' titles by id. */
+async function loadMergedRows(sb: NonNullable<ReturnType<typeof getAdminSupabase>>): Promise<MergedRow[]> {
+  const { data: merged, error } = await sb
+    .from("things")
+    .select("id, title, merged_into, event_key, updated_at")
+    .not("merged_into", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(40);
+  if (error) { console.error("[cockpit] merged-rows read failed:", error.message); return []; }
+  if (!merged?.length) return [];
+
+  const survivorIds = [...new Set(merged.map((m) => m.merged_into as string))];
+  const { data: survivors } = await sb.from("things").select("id, title").in("id", survivorIds);
+  const titleById = new Map((survivors ?? []).map((s) => [s.id as string, s.title as string]));
+
+  return merged.map((m) => ({
+    id: m.id as string,
+    title: m.title as string,
+    survivorId: m.merged_into as string,
+    survivorTitle: titleById.get(m.merged_into as string) ?? "(unknown)",
+    eventKey: (m.event_key as string) ?? null,
+    mergedAt: m.updated_at as string,
+  }));
+}
+
+/** Build { queue, drops, sources, metrics, merges } from Supabase (service role). */
 export async function loadCockpitData(): Promise<CockpitData> {
   const sb = getAdminSupabase();
   const emptyMetrics: ConfidenceMetrics = { autoPublished: 0, autoHeld: 0, manuallyApproved: 0, autoPublishRatePct: null, queueDepth: 0 };
-  if (!sb) return { queue: [], drops: [], sources: [], metrics: emptyMetrics };
+  if (!sb) return { queue: [], drops: [], sources: [], metrics: emptyMetrics, merges: [] };
 
   // Loaded first (not in the Promise.all below) because both the main queue
   // query and loadPendingOverlays need it to compute confidence reasons.
   const sourceByKey = await loadSourceMetaByKey(sb);
 
-  const [thingsRes, dropsRes, runsRes, overlays, metrics] = await Promise.all([
+  const [thingsRes, dropsRes, runsRes, overlays, metrics, merges] = await Promise.all([
     sb
       .from("things")
       .select(THINGS_SELECT)
@@ -242,6 +271,7 @@ export async function loadCockpitData(): Promise<CockpitData> {
       .limit(40),
     loadPendingOverlays(sb, sourceByKey),
     loadConfidenceMetrics(sb),
+    loadMergedRows(sb),
   ]);
 
   // Resilient if a read fails: render an empty/partial cockpit rather than 500.
@@ -255,6 +285,7 @@ export async function loadCockpitData(): Promise<CockpitData> {
     drops: (dropsRes.data ?? []) as DropRow[],
     sources: rollupSources((runsRes.data ?? []) as never),
     metrics,
+    merges,
   };
 }
 

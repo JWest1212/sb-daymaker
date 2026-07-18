@@ -42,6 +42,8 @@ import { seatgeek } from './seatgeek';
 import { sbcountyArts } from './sbcountyArts';
 import { allevents } from './allevents';
 import { newVic } from './newVic';
+// Data Arch Redesign 25 — the generic AI extraction lane (one adapter, N `sources` rows)
+import { generic } from './generic';
 
 // Order mirrors SOURCE_PRIORITY in dedupe.ts:
 //   ticketmaster → venue-direct → institution-direct → civic/curated → aggregators
@@ -65,4 +67,9 @@ export const registry: SourceAdapter[] = [
   farmersMarkets,
   nightlifeRhythms, outdoorsOperators, natureProgramsFree,
   recurringRegistry, submissions,
+  // generic AI extraction lane — runs last; each candidate's own resolved
+  // source (by URL) carries its own authority/lane, so ordering here doesn't
+  // affect dedupe preference (dedupe.ts sorts by sources.authority, not
+  // registry position).
+  generic,
 ];

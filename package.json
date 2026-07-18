@@ -17,7 +17,13 @@
     "confidence:backfill": "CONFIDENCE_BACKFILL=1 tsx ingest/run.ts",
     "confidence:gate-shadow": "CONFIDENCE_GATE_SHADOW=1 tsx ingest/run.ts",
     "confidence:gate-apply": "CONFIDENCE_GATE_APPLY=1 tsx ingest/run.ts",
-    "confidence:rescue": "CONFIDENCE_RESCUE=1 tsx ingest/run.ts"
+    "confidence:rescue": "CONFIDENCE_RESCUE=1 tsx ingest/run.ts",
+    "event-key:dryrun": "EVENT_KEY_DRYRUN=1 tsx ingest/run.ts",
+    "event-key:backfill": "EVENT_KEY_BACKFILL=1 tsx ingest/run.ts",
+    "dedupe:venue-shadow": "DEDUPE_VENUE_SHADOW=1 tsx ingest/run.ts",
+    "dedupe:adjudicate-shadow": "DEDUPE_ADJUDICATE_SHADOW=1 tsx ingest/run.ts",
+    "event-sources:backfill": "EVENT_SOURCES_BACKFILL=1 tsx ingest/run.ts",
+    "extract:sample": "node --env-file=.env.local --import tsx ingest/extractSample.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
