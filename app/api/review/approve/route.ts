@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminUser, revalidatePublic } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { NEIGHBORHOODS, OCCASION_TAGS, filterTags, type EditPayload } from "@/lib/review";
+import { ensureSlugsForThings } from "@/lib/slug/ensureSlug";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +138,8 @@ export async function POST(req: Request) {
       entity_type: "thing", entity_id: id, action: "approve", actor: "founder",
       payload: { edits: changed, ...(typeof hero_eligible === "boolean" ? { hero_eligible } : {}) },
     });
+    // G2.1, assign the slug + redirect at publish time (not just the nightly).
+    await ensureSlugsForThings(sb, [id]);
     revalidatePublic();
     return NextResponse.json({ ok: true, published: 1 });
   }
@@ -151,6 +154,8 @@ export async function POST(req: Request) {
       ...(typeof hero_eligible === "boolean" ? { payload: { hero_eligible } } : {}),
     })),
   );
+  // G2.1, assign slugs + redirects at publish time (not just the nightly).
+  await ensureSlugsForThings(sb, ids);
   revalidatePublic();
   return NextResponse.json({ ok: true, published: ids.length });
 }

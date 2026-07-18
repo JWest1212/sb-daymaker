@@ -3055,6 +3055,12 @@
 .sbd-feed-section__list--inner {
   margin-top: var(--space-4);
 }
+/* Today's "pick" card is a sibling ABOVE the list, not a flex child of it, so it
+   was flush against the first list card. Match the same inter-card gap
+   (--space-4) the list uses between its own cards. */
+.sbd-pick + .sbd-feed-section__list {
+  margin-top: var(--space-4);
+}
 /* Home Rework spec §14 — visually-hidden aria-live region (feed result count) */
 .sbd-sr-only {
   position: absolute;
@@ -5564,6 +5570,198 @@
   flex-direction: column;
   gap: var(--space-3);
   margin-top: var(--space-5);
+}
+
+/* ---- Gate 1 · G1.6 verification stamp (image top-right overlay) --------- */
+/* Anchored to the top-right of the hero image. An opaque --paper pill so the
+   small --text (ink) label stays AA-legible over any photo behind it; the accent
+   lives in the dot (a fill), never the small label (§5 usage rule). */
+.sbd-detail__stamp {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semi);
+  letter-spacing: 0.04em;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.sbd-detail__stamp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--sage);
+  animation: sbd-verified-pulse 2.4s var(--ease-out) infinite;
+}
+@keyframes sbd-verified-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.82); }
+}
+
+/* ---- Gate 1 · G1.5 open-now line --------------------------------------- */
+.sbd-detail__hours {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text); /* small text on ink, AA-safe */
+}
+.sbd-detail__hours-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--text-muted);
+}
+.sbd-detail__hours--open .sbd-detail__hours-dot {
+  background: var(--sage);
+}
+
+/* ---- Gate 1 · G1.7 "Before you go" practical note ---------------------- */
+.sbd-detail__practical {
+  background: color-mix(in srgb, var(--pacific) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--pacific) 32%, var(--border));
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin: var(--space-5) 0;
+}
+.sbd-detail__practical-k {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pacific); /* Pacific is AA-safe for small text (§5) */
+  margin-bottom: var(--space-1);
+}
+.sbd-detail__practical p {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+
+/* ---- Gate 1 · G1.3 Save / Share / Directions action row ---------------- */
+.sbd-detail__actionrow {
+  display: flex;
+  gap: var(--space-3);
+}
+.sbd-detailact {
+  flex: 1 1 0;
+  min-height: 44px; /* §6 touch target */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 120ms var(--ease-out), background 120ms var(--ease-out);
+}
+.sbd-detailact:hover {
+  border-color: var(--pacific);
+}
+.sbd-detailact:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-detailact--on {
+  border-color: color-mix(in srgb, var(--terracotta) 55%, var(--border));
+  color: var(--terracotta);
+}
+.sbd-detailact--pop {
+  animation: sbd-heart-pop 320ms var(--ease-spring);
+}
+@keyframes sbd-heart-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sbd-detail__stamp-dot { animation: none; }
+  .sbd-detailact--pop { animation: none; }
+}
+
+/* ---- Gate 2 · G2.7 "/weekend" landing surface -------------------------- */
+.sbd-weekend {
+  padding-top: var(--space-5);
+}
+.sbd-weekend__eyebrow {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pacific);
+  margin: 0 0 var(--space-2);
+}
+.sbd-weekend__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semi);
+  line-height: var(--leading-tight);
+  color: var(--text);
+  margin: 0;
+}
+.sbd-weekend__sub,
+.sbd-weekend__empty {
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  margin: var(--space-3) 0 0;
+}
+.sbd-weekend__sub a,
+.sbd-weekend__empty a {
+  color: var(--text-link);
+  font-weight: var(--weight-semi);
+}
+.sbd-weekend__list {
+  list-style: none;
+  margin: var(--space-5) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.sbd-weekend__link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+}
+.sbd-weekend__link:hover {
+  border-color: var(--pacific);
+}
+.sbd-weekend__link:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-weekend__name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+}
+.sbd-weekend__meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }
 
 /* ---- Submit form ------------------------------------------------------- */

@@ -114,6 +114,11 @@ export function buildItems(cands: Candidate[]): EnrichItem[] {
 
 /** W2.2, alcohol-primary venue titles, for the AI-only family_day guard below. */
 const ALCOHOL_VENUE_RE = /\b(brewer|brewing|taproom|winery|wine bar|tasting room|distiller|cocktail|pub)\b/i;
+/** Elevation v1 · Gate 1 · G1.9, adult-leaning concert/comedy programming that is
+ *  not family_day by default (e.g. a show at the Santa Barbara Bowl, a comedy set).
+ *  AI-ONLY, like ALCOHOL_VENUE_RE, the founder can still add family_day in the
+ *  cockpit for a genuinely all-ages show. */
+const ADULT_SHOW_RE = /\b(santa barbara bowl|the bowl|comedy|stand[\s-]?up|burlesque|drag show|dj set)\b/i;
 
 /** Code-side negative rules (Doc 11 §7 / schema B4), applied AFTER the model, so they
  *  scrub the AI's PROPOSED tags only. These are NOT publish-time hard rules (that's
@@ -139,6 +144,14 @@ export function applyNegativeRules(
   if (cand.title && ALCOHOL_VENUE_RE.test(cand.title)) {
     out = out.filter((t) => t.tag !== 'family_day');
   }
+  // G1.9, same AI-only posture for adult-leaning concert/comedy programming.
+  if (cand.title && ADULT_SHOW_RE.test(cand.title)) {
+    out = out.filter((t) => t.tag !== 'family_day');
+  }
+  // G1.9, cap tag sprawl: at most 3 occasion tags, the highest-confidence ones.
+  // The card shows tags[0] (top confidence), the detail shows up to these 3, both
+  // derived from this one ordered set (no arbitrary card/detail divergence).
+  out = out.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
   return out;
 }
 

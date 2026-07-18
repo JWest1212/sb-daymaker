@@ -7,11 +7,11 @@
 
 ## Why this gate exists
 
-The site has depth it doesn't surface (75 shown, "+264 more" teased), no way to find a named place, no "this weekend" construct despite a "weekend, in your inbox" newsletter, and no cross-linking between its two content tiers (things ↔ guides). This gate makes the existing inventory findable and connected.
+The site has depth it doesn't surface (75 shown, "+264 more" teased), a solid search that has drifted from the live door taxonomy and matches too narrowly, no "this weekend" construct despite a "weekend, in your inbox" newsletter, and no cross-linking between its two content tiers (things ↔ guides). This gate makes the existing inventory findable and connected.
 
 **Read before coding:** `ExploreClient.tsx`, `CascadeFeed.tsx`, `explore.ts`, `things.ts`, `SavedClient.tsx`, `BottomNav` (note: a dormant Plan icon already exists there per `CLAUDE.md` §3), `CLAUDE.md` §9 (V1 scope — Near Me is a sort, not a map).
 
-**Decisions locked:** Search **and** Weekend filter on Explore · recurring events get their **own section with computed next-dates** · one-tap flag → review queue (table built in Gate 1) · **the "Build your day" CTA banner is untouched this build** (do not move or restyle it) · **no `/about` page this build.** Nav stays three tabs.
+**Decisions locked:** Search already exists and is **reconciled + extended, not rebuilt** (see G3.2; four scoped changes only) · Weekend filter on Explore · recurring events get their **own section with computed next-dates** · one-tap flag → review queue (table built in Gate 1) · **the "Build your day" CTA banner is untouched this build** (do not move or restyle it) · **no `/about` page this build.** Nav stays three tabs.
 
 ---
 
@@ -21,18 +21,53 @@ The site has depth it doesn't surface (75 shown, "+264 more" teased), no way to 
 
 ---
 
-## G3.2 — Search
+## G3.2 — Search (RECONCILE AND EXTEND — do not rebuild)
 
-**Evidence:** no search exists; with 75 shown and ~265 in the DB, "I heard about a place called Loquita" has no path but scrolling.
+**Search already exists and is well-built.** A full read of the live implementation (documented in `docs/search-current-spec.md`) shows a solid, deterministic, no-AI search feature. This task is NOT a rebuild. It keeps everything that works and makes four scoped changes. Read `docs/search-current-spec.md` in full before touching anything.
 
-**Task:**
-- Add a search entry in the header (the expanding-icon pattern already hinted by the stray "Cancel" overlay Gate 0 cleaned up — reuse that overlay, now correctly gated).
-- Query `things` by title (the `things_title_trgm_idx` trigram index already exists — use it for fuzzy match) plus `blurb`/`category`/`nearby_zone`. Deterministic, server-side; no AI (constraint §3).
-- Results are a simple ranked list (Tier 1 above Tier 2; Tier 3 excluded), each linking to the slug URL.
-- Empty state: "No matches — try a neighborhood or a vibe" with the occasion chips as fallback.
-- Accessible: input has a label, results are keyboard-navigable, focus is trapped in the overlay and returns on close (WCAG 2.2 AA per §6).
+### What already exists — LEAVE IT ALONE
 
-**Acceptance test A3.2:** searching "loquita" returns Loquita; "funk zone" returns Funk Zone things; a typo ("loqita") still matches via trigram; Tier-3 things never appear; keyboard-only operation works with correct focus return.
+Do not rebuild, restyle, or re-architect any of this; it already meets the build's requirements:
+- **Entry + overlay:** header magnifier (`SearchButton.tsx`) opening a full-width slide-down panel (`SearchPanel.tsx`), state owned by `HeaderSearch.tsx`, available on every `(app)` page via `BrandHeader.tsx`.
+- **Server route:** `GET /api/search?q=` (`app/api/search/route.ts`), `force-dynamic`, per-IP in-memory rate limit (40 req / 10s → 429), debounced 180ms client-side with `AbortController`.
+- **Deterministic matcher, no AI:** pure `searchThings()` in `lib/search.ts` (constraint C3, "no Claude call, ever" — this aligns with our §3 invariant; keep it).
+- **Three result groups:** Events / Venues / Tags, each capped at 5 with "+N more" overflow, fixed render order.
+- **Tier-3 already excluded:** search reads `getPublishedThings()` which already filters out `quality_tier === 3`. (Our Gate 1 tier work is already respected here — no change needed.)
+- **Accessibility is already solid:** `role="search"`, labelled input, `useFocusTrap` (trap + focus return to trigger), Esc-to-close, `aria-live` match count, 44px targets, reduced-motion handling. Do not regress any of this.
+- **The "Cancel" SSR leak is already fixed** here via the `everOpened` gate in `HeaderSearch.tsx` (this is Gate 0's G0.8 concern — it's handled; coordinate, don't duplicate).
+
+### CHANGE 1 — Extend event match to neighborhood/zone (not full blurb)
+
+**Today:** `searchEvents()` in `lib/search.ts` matches `thing.title` ONLY. A neighborhood or vibe word returns nothing.
+**Change:** extend event matching to also match `neighborhood` / `nearby_zone`, with **title still ranked above** a neighborhood-only match. Do NOT add `blurb`/`blurb_long` matching (decision: title + neighborhood/zone only — blurb matching produces noisy, hard-to-explain hits and disconnects the bare result row from the query). Keep the existing prefix-over-substring rank; a title hit outranks a zone hit at the same rank tier.
+
+### CHANGE 2 — Add light fuzzy / typo tolerance
+
+**Today:** `matchRank()` is pure `startsWith`/`includes`, so "loqita" does NOT match "Loquita" (proven in the current spec). 
+**Change:** add lightweight typo tolerance inside the existing pure function (the corpus is ~265 rows, so this stays in-memory; do NOT introduce trigram, a DB full-text index, or any network/AI call — preserve C3 and §3). A small bounded edit-distance (e.g. Levenshtein ≤1 for tokens ≥4 chars, or a similar cheap approach) is sufficient. **Ranking rule:** exact prefix (rank 0) and substring (rank 1) hits must still sort ABOVE fuzzy hits (introduce a rank 2 for fuzzy). Fuzzy must never reorder or displace an exact match. Cap and group behavior unchanged.
+
+### CHANGE 3 — Re-sync ALL THREE door vocabularies to the LIVE taxonomy, and wire Activity
+
+**Today:** the Tags group matches two hardcoded vocabularies (`lib/occasions.ts`, `lib/doorZones.ts`) that have **drifted from the live site**, and the Activity dimension is stubbed/unwired. This must be corrected to the exact live door labels (confirmed from the live site, July 2026):
+
+- **Place (8)** — `DOOR_ZONES`: Downtown & State Street · Funk Zone · Waterfront & Harbor · The Mesa · Mission & Riviera · Uptown & Upper State · Goleta & Isla Vista · Montecito · Summerland · Carpinteria.
+- **Occasion (8)** — `OCCASIONS` must be re-synced to EXACTLY these 8: Date Night · Family Day · Nightlife · Hosting Visitors · Solo · Free in SB · Rainy Day · Dog Friendly. **Remove the stale labels no longer on the live Occasion door** (Catch a Show, Arts & Culture, Outdoors & Active, Wine & Food — these moved into the Activity door).
+- **Activity (10)** — NEW searchable vocabulary: Live music · Arts & galleries · Food & drink · Outdoors · Markets · Family & kids · Film & talks · Wellness & fitness · Nightlife · Community & Festivals.
+
+Requirements:
+- The search vocabularies must read from the **same single source of truth** the doors render from (import the live taxonomy arrays; do not re-hardcode a second copy that can drift again). If the live doors are defined in canonical files, `lib/search.ts` imports those, so re-sync is structural, not a manual copy.
+- **Wire the Activity tag route end-to-end.** Tag hits currently route via `?vibe=` / `?place=`; add `?activity=<key>` and have `ExploreClient` read and apply it (mirroring the existing vibe/place handling, then clear the param). **Gate this on the Activity filter existing** — an Activity tag hit must land on a working Activity-filtered Explore, never a dead tap. If `ExploreClient` has no activity filter setter yet, add it as part of this change.
+
+### CHANGE 4 — Door labels on tag rows + slug links
+
+- **Overlapping tag labels get a door label.** "Nightlife" exists in BOTH the Occasion and Activity doors (and "Family Day" / "Family & kids" are near-duplicates). Decision: **keep both, and label the door on each tag row** so the two Nightlife rows are distinguishable (e.g. a small "Occasion" vs "Activity" qualifier on the row, in addition to the existing kind chip). Do not merge or suppress duplicates. Extend the tag result row to carry its door origin.
+- **Link results to slugs, not UUIDs.** Today event/venue hits link to `/thing/{UUID}`. After Gate 2 lands slugs, results must link to `/thing/{slug}` so search stops eating a needless 301. (Dependency: Gate 2. If Gate 2 isn't merged when this ships, leave UUID links and add a TODO referencing the slug switch.)
+
+### What stays out of scope
+- **Guides are not searchable** in this change (decision deferred). Search remains things + venues + tags.
+- **Search stays horizon-agnostic** — it searches the full published corpus regardless of Today/Weekend/Month. "This weekend" is a filter concern (G3.3), not a search concern. Do not add date/horizon filtering to search.
+
+**Acceptance test A3.2:** (a) "funk zone" returns Funk Zone things AND the Funk Zone Place tag; (b) a neighborhood-only query returns things in that zone even when the title lacks the word; (c) the typo "loqita" now matches "Loquita", and an exact "loquita" still ranks above any fuzzy hit; (d) the Occasion tag vocabulary matches exactly the 8 live labels (no stale Wine & Food / Catch a Show), Place matches 8, Activity matches 10; (e) searching "nightlife" returns two distinguishable rows labelled Occasion and Activity, each routing to its own filter; (f) an Activity tag hit lands on a working Activity-filtered Explore (no dead tap); (g) event/venue results link to slugs once Gate 2 is present; (h) all pre-existing accessibility behavior (focus trap, focus return, Esc, aria-live, reduced motion) and the no-AI/rate-limit/Tier-3-exclusion behavior are unchanged.
 
 ---
 
@@ -107,7 +142,7 @@ The site has depth it doesn't surface (75 shown, "+264 more" teased), no way to 
 ## Gate 3 acceptance summary
 
 - [ ] **A3.1** ~~Planner CTA placement~~ — **out of scope this build** (banner untouched).
-- [ ] **A3.2** Search works (fuzzy, tier-filtered, keyboard-accessible, focus-managed).
+- [ ] **A3.2** Search RECONCILED and EXTENDED (not rebuilt): event match adds neighborhood/zone; light fuzzy added with exact ranked above fuzzy; all 3 door vocabularies re-synced to live labels (Occasion=8, Place=8, Activity=10) with Activity wired end-to-end; overlapping tags (Nightlife) shown twice with door labels; results link to slugs post-Gate 2; existing a11y / no-AI / rate-limit / Tier-3-exclusion unchanged.
 - [ ] **A3.3** "This weekend" horizon + `/weekend` URL with correct in-window content.
 - [ ] **A3.4** Recurring cards show real next-dates or honest "check schedule"; no false cadence.
 - [ ] **A3.5** Thing↔guide links both directions; nearby/pairs-with on Tier-1 pages.
