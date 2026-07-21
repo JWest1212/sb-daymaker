@@ -5,7 +5,7 @@
 // posts a content_flags row, shows a thank-you. NO contact fields (PII boundary).
 // Device-side throttle (localStorage) on top of the server's per-IP soft cap.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FLAG_REASONS, FLAG_DETAIL_MAX, type FlagReason } from "@/lib/flags";
 
 const LS_KEY = "sbd.flags.v1";
@@ -40,6 +40,27 @@ export function FlagButton({ thingId, guideId }: { thingId?: string; guideId?: s
   const [detail, setDetail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "capped" | "error">("idle");
 
+  // Gate 5 · G5.5, focus management for the inline correction panel: move focus
+  // into it on open, Esc closes, and focus returns to the trigger on close.
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const returnFocus = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      // Focus the first control inside the panel.
+      panelRef.current?.querySelector<HTMLElement>("button, input")?.focus();
+    } else if (returnFocus.current) {
+      returnFocus.current = false;
+      triggerRef.current?.focus();
+    }
+  }, [open]);
+
+  function close() {
+    returnFocus.current = true;
+    setOpen(false);
+  }
+
   const submit = async () => {
     if (!reason) return;
     if (overDeviceCap()) {
@@ -66,14 +87,27 @@ export function FlagButton({ thingId, guideId }: { thingId?: string; guideId?: s
 
   if (!open) {
     return (
-      <button type="button" className="sbd-flag__trigger" onClick={() => setOpen(true)}>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="sbd-flag__trigger"
+        onClick={() => setOpen(true)}
+      >
         Something off? Let us know
       </button>
     );
   }
 
   return (
-    <div className="sbd-flag" role="group" aria-label="Report a correction">
+    <div
+      ref={panelRef}
+      className="sbd-flag"
+      role="group"
+      aria-label="Report a correction"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") close();
+      }}
+    >
       {state === "done" ? (
         <p className="sbd-flag__thanks">Thanks, a local will take a look.</p>
       ) : state === "capped" ? (
@@ -107,7 +141,7 @@ export function FlagButton({ thingId, guideId }: { thingId?: string; guideId?: s
           </label>
           {state === "error" ? <p className="sbd-flag__err">Could not send, please try again.</p> : null}
           <div className="sbd-flag__actions">
-            <button type="button" className="sbd-flag__cancel" onClick={() => setOpen(false)}>
+            <button type="button" className="sbd-flag__cancel" onClick={close}>
               Cancel
             </button>
             <button

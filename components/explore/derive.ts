@@ -4,6 +4,7 @@ import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
 import { eventCardWhen } from "@/lib/format/eventTime";
+import { isTicketingUrl } from "@/lib/format/outboundLink";
 import { nextOccurrenceForThing, formatNextDate } from "@/lib/recurring/nextOccurrence";
 
 /** Shared by Hero (sky variant) and the R1 "Today's pick" card's contextual
@@ -172,7 +173,6 @@ export function heroTime(t: Thing): string {
 /** Card CTA affordance: ticketing handoffs get "Get tickets", else "See details".
  *  Rendered as text inside the card's single tap target, never a nested link. */
 export function heroCta(t: Thing): string {
-  const url = (t.buy_url ?? "").toLowerCase();
-  const ticketing = url.includes("axs") || url.includes("ticketmaster");
-  return ticketing ? "Get tickets ↗" : "See details ↗";
+  // Shared ticketing-host definition (G5.7), so cards and the detail row agree.
+  return isTicketingUrl(t.buy_url) ? "Get tickets ↗" : "See details ↗";
 }

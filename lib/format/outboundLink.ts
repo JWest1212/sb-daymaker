@@ -27,6 +27,13 @@ const TICKET_HOSTS =
 // Reservation platforms (link only; SB Daymaker never books).
 const RESERVE_HOSTS = /\b(opentable\.|resy\.com|sevenrooms\.|exploretock\.|tockhq\.|yelp\.com\/reservations)/i;
 
+/** A URL points at a ticketing handoff (AXS/Ticketmaster/Eventbrite/etc). Shared
+ *  so card CTAs and the detail action row agree on one definition, and so the
+ *  affiliate seam (lib/links/outbound.ts) has one host list to key off. */
+export function isTicketingUrl(url: string | null | undefined): boolean {
+  return !!url && TICKET_HOSTS.test(url);
+}
+
 function isEvent(input: OutboundInput): boolean {
   return input.type === "event" || input.type === "happyhour" || !!input.starts_at;
 }
