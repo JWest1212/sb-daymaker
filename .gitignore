@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# operational backfill backups (data snapshots, not source)
+/scripts/backups/
