@@ -2289,6 +2289,19 @@ async function main() {
       console.log(`  qa-note-scan         skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    // Elevation v1 · Gate 4/5, keep venue open-hours + setting current so the
+    // Concierge Day planner can validate "open when it says" for new/changed
+    // venues. Fetches Google hours only for published places MISSING them (tiny
+    // volume, inside the Place Details Enterprise free tier). Idempotent; isolated
+    // so a hiccup can't sink the run.
+    try {
+      const { refreshVenueHoursAndSetting } = await import('./venueData');
+      const v = await refreshVenueHoursAndSetting(sb);
+      console.log(`  venue-data           hours +${v.hoursWritten} (calls ${v.calls}, none ${v.noHours}, fail ${v.failed}) · setting +${v.settingWritten}`);
+    } catch (err) {
+      console.log(`  venue-data           skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     await sendDigest(sb, {
       landed,
       gateDropped: totalGateDropped,

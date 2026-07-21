@@ -13,7 +13,7 @@ import { track } from "@vercel/analytics";
  */
 export function trackEvent(name: "save_add", props: { thingId: string } | { count: number }): void;
 export function trackEvent(name: "save_been", props: { thingId: string }): void;
-export function trackEvent(name: "share_create", props: { kind: "list" | "plan" | "single"; count: number }): void;
+export function trackEvent(name: "share_create", props: { kind: "list" | "plan" | "single" | "guide"; count: number }): void;
 export function trackEvent(name: "share_open", props: { kind: "list" | "plan"; count: number }): void;
 export function trackEvent(name: "lens_select", props: { tag: string }): void;
 export function trackEvent(name: "plan_built", props: { stops: number }): void;

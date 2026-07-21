@@ -40,6 +40,24 @@ function inBlockWindow(iso: string, block: Block): boolean {
   return h >= lo && h < hi;
 }
 
+/** True when a 24h hour lands inside a block's window. */
+export function hourInBlockRange(hour: number, block: Block): boolean {
+  const [lo, hi] = blockHourRange(block);
+  return hour >= lo && hour < hi;
+}
+
+/** The start hours (0-23) declared by a thing's recurring schedules. A recurring
+ *  event (starts_at is null) carries its real time here: a 9pm karaoke night has
+ *  start_time "21:00:00", so it belongs to the night block, never afternoon,
+ *  regardless of a mis-enriched time_of_day_fit. Empty when no schedule has a time. */
+export function recurringStartHours(t: Thing): number[] {
+  return (t.recurring ?? [])
+    .map((r) => r.start_time)
+    .filter((s): s is string => typeof s === "string" && s.length >= 2)
+    .map((s) => parseInt(s.slice(0, 2), 10))
+    .filter((h) => Number.isFinite(h) && h >= 0 && h <= 23);
+}
+
 function sameDay(iso: string, dateISO: string): boolean {
   return sbDay(iso) === dateISO;
 }
@@ -87,6 +105,13 @@ export function rankCandidates(
       // Dated items: must be on the chosen date AND within the block window.
       if (t.starts_at) {
         return sameDay(t.starts_at, answers.dateISO) && inBlockWindow(t.starts_at, block);
+      }
+      // Recurring events with a known start time must fall in this block's window
+      // (a 9pm karaoke night is a night stop, never an afternoon one). A recurring
+      // thing with no start_time carries no time signal, so it stays eligible.
+      const recHours = recurringStartHours(t);
+      if (recHours.length > 0) {
+        return recHours.some((h) => hourInBlockRange(h, block));
       }
       return true;
     })

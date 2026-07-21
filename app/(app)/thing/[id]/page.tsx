@@ -12,7 +12,7 @@ import { BackButton } from "@/components/detail/BackButton";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
 import { prettify } from "@/components/explore/derive";
 import { eventDetailWhen } from "@/lib/format/eventTime";
-import { outboundLink } from "@/lib/format/outboundLink";
+import { resolveOutbound } from "@/lib/links/outbound";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
 import { absoluteUrl, thingPath, guidePath } from "@/lib/seo/site";
@@ -159,7 +159,7 @@ export default async function ThingPage({
   if (t.is_21_plus) facts.push({ k: "Note", v: "21+" });
 
   // G1.4, the outbound link label adapts to type/price/destination.
-  const outbound = outboundLink(t);
+  const outbound = resolveOutbound(t);
 
   // G1.6, the verification stamp: Tier 1 shows a dated "Verified" stamp (from
   // verified_at, else last_confirmed); Tier 2 shows a quieter "Listed".
@@ -182,7 +182,7 @@ export default async function ThingPage({
       />
       <BackButton />
 
-      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"}>
+      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={t.title}>
         {/* G1.6, Verified stamp anchored to the image top-right. Shown ONLY for
             Tier-1 entries; nothing is shown otherwise (no "Listed"). The freshness
             dot pulses but stops under prefers-reduced-motion (static). */}

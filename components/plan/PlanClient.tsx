@@ -1,36 +1,70 @@
 "use client";
 
-import { useState } from "react";
-import { PlanSetup } from "./PlanSetup";
+import { useEffect, useRef, useState } from "react";
+import { PlanSetup, type ShowDayOptions } from "./PlanSetup";
 import { PlanResults } from "./PlanResults";
-import { buildDraft } from "@/lib/plan/buildDraft";
-import { useSaves } from "@/components/saves/SavesProvider";
-import { trackEvent } from "@/lib/analytics";
-import type { PlanAnswers, Stop } from "@/lib/plan/types";
+import type { PlanAnswers } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
+// The "Solving your day..." beat sells the validated-day promise. Purely
+// cosmetic (the engine is instant); skipped under prefers-reduced-motion.
+const SOLVE_STEPS = [
+  "Checking what's open",
+  "Clustering by neighborhood",
+  "Placing your stops",
+  "Adding parking and a lunch stop",
+  "Validating the day",
+];
+
+function BuildingScreen() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % SOLVE_STEPS.length), 460);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <main id="main" className="sbd-shell__main sbd-wizbuild" aria-live="polite">
+      <div className="sbd-wizbuild__spinner" aria-hidden="true" />
+      <p className="sbd-wizbuild__title">Solving your day…</p>
+      <p className="sbd-wizbuild__step">{SOLVE_STEPS[i]}</p>
+    </main>
+  );
+}
+
 export function PlanClient({ things }: { things: Thing[] }) {
-  const [view, setView] = useState<"setup" | "results">("setup");
+  const [view, setView] = useState<"setup" | "building" | "results">("setup");
   const [answers, setAnswers] = useState<PlanAnswers | null>(null);
-  const [initialStops, setInitialStops] = useState<Stop[]>([]);
+  const [blank, setBlank] = useState(false);
   const [planKey, setPlanKey] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { state } = useSaves();
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
-  function showDay(a: PlanAnswers) {
-    const draft = buildDraft(a, things, (id) => (state(id) as "want" | "been" | null) ?? null);
-    // Event 6: the draft spine is first produced from the questionnaire.
-    trackEvent("plan_built", { stops: draft.length });
+  function showDay(a: PlanAnswers, opts?: ShowDayOptions) {
+    const isBlank = opts?.blank ?? false;
     setAnswers(a);
-    setInitialStops(draft);
+    setBlank(isBlank);
     setPlanKey((k) => k + 1);
-    setView("results");
+
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    // A blank day has nothing to "solve"; skip straight to the empty spine.
+    if (isBlank || reduced) {
+      setView("results");
+      return;
+    }
+    setView("building");
+    timer.current = setTimeout(() => setView("results"), 1350);
   }
 
   function handleBack() {
-    setInitialStops([]);
+    if (timer.current) clearTimeout(timer.current);
     setView("setup");
   }
+
+  if (view === "building") return <BuildingScreen />;
 
   if (view === "results" && answers) {
     return (
@@ -38,7 +72,7 @@ export function PlanClient({ things }: { things: Thing[] }) {
         key={planKey}
         answers={answers}
         things={things}
-        initialStops={initialStops}
+        blank={blank}
         onBack={handleBack}
       />
     );

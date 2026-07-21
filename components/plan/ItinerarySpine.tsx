@@ -2,7 +2,7 @@
 
 import { SpineStopCard } from "./SpineStopCard";
 import { BLOCK_LABEL } from "@/lib/plan/labels";
-import type { Block, Stop } from "@/lib/plan/types";
+import type { Block, Stop, Transition } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 
 const BLOCK_NODE: Record<Block, { glyph: string; color: string }> = {
@@ -15,16 +15,21 @@ interface ItinerarySpineProps {
   sections: Block[];              // from answers.periods, in selected order
   stops: Stop[];                  // all user-added stops, insertion order
   things: Map<string, Thing>;
+  /** Gate 4 · G4.4, transition annotation keyed by the arrival stop id. */
+  transitions?: Map<string, Transition>;
   onAddStop: (block: Block) => void;
   onRemoveStop: (stopId: string) => void;
+  onSwapStop?: (stopId: string) => void;
 }
 
 export function ItinerarySpine({
   sections,
   stops,
   things,
+  transitions,
   onAddStop,
   onRemoveStop,
+  onSwapStop,
 }: ItinerarySpineProps) {
   return (
     <div className="sbd-spine">
@@ -53,13 +58,25 @@ export function ItinerarySpine({
               {sectionStops.map((s) => {
                 const thing = things.get(s.thingId);
                 if (!thing) return null;
+                const tr = transitions?.get(s.id);
                 return (
-                  <SpineStopCard
-                    key={s.id}
-                    stop={s}
-                    thing={thing}
-                    onRemove={() => onRemoveStop(s.id)}
-                  />
+                  <div key={s.id}>
+                    {tr ? (
+                      <div className="sbd-transit">
+                        <span className="sbd-transit__ln" aria-hidden="true" />
+                        <span className="sbd-transit__tx">
+                          <span aria-hidden="true">{tr.mode === "walk" ? "🚶" : "🚗"}</span> {tr.label}
+                        </span>
+                        <span className="sbd-transit__ln" aria-hidden="true" />
+                      </div>
+                    ) : null}
+                    <SpineStopCard
+                      stop={s}
+                      thing={thing}
+                      onRemove={() => onRemoveStop(s.id)}
+                      onSwap={onSwapStop ? () => onSwapStop(s.id) : undefined}
+                    />
+                  </div>
                 );
               })}
 

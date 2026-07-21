@@ -1,13 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ItinerarySpine } from "./ItinerarySpine";
 import { AddStopSheet } from "./AddStopSheet";
 import { shortStamp } from "@/lib/plan/dates";
-import { blockShortName, planZoneLabel, BLOCK_LABEL } from "@/lib/plan/labels";
-import { buildDraft } from "@/lib/plan/buildDraft";
+import { planZoneLabel, BLOCK_LABEL } from "@/lib/plan/labels";
+import { buildConciergeDay, nextBestAlternate } from "@/lib/plan/buildConciergeDay";
+import { annotateTransitions } from "@/lib/plan/transitions";
+import { isFood } from "@/lib/plan/meals";
+import {
+  resolveParams,
+  whoLabel,
+  transportLabel,
+  budgetLabel,
+  mealsLabel,
+} from "@/lib/plan/params";
 import { useSaves } from "@/components/saves/SavesProvider";
-import type { PlanAnswers, Block, Stop } from "@/lib/plan/types";
+import type { PlanAnswers, Block, Stop, PlanNote } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
 import { shareUrl } from "@/components/saved/share";
@@ -30,43 +39,69 @@ function autoTitle(answers: PlanAnswers): string {
 interface PlanResultsProps {
   answers: PlanAnswers;
   things: Thing[];
-  initialStops?: Stop[];
+  /** Start with an empty spine (the "blank day" express path); the user adds
+   *  stops manually. Regenerate still fills it with a validated draft. */
+  blank?: boolean;
   onBack: () => void;
 }
 
-export function PlanResults({
-  answers,
-  things,
-  initialStops = [],
-  onBack,
-}: PlanResultsProps) {
-  const [stops, setStops] = useState<Stop[]>(initialStops);
+export function PlanResults({ answers, things, blank = false, onBack }: PlanResultsProps) {
+  const { state } = useSaves();
+  const savedStateFor = useMemo(
+    () => (id: string) => (state(id) as "want" | "been" | null) ?? null,
+    [state],
+  );
+
+  const thingMap = useMemo(() => new Map(things.map((t) => [t.id, t])), [things]);
+  const params = useMemo(() => resolveParams(answers), [answers]);
+
+  // Build the concierge draft once on mount (unless this is a blank day); keep
+  // its honest notes. A new plan remounts via PlanClient's key, so this never
+  // clobbers edits.
+  const initial = useMemo(
+    () => (blank ? { stops: [], notes: [] } : buildConciergeDay(answers, things, savedStateFor)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+  const [stops, setStops] = useState<Stop[]>(initial.stops);
+  const [notes, setNotes] = useState<PlanNote[]>(initial.notes);
+
   const [pickerBlock, setPickerBlock] = useState<Block | null>(null);
   const [clearConfirm, setClearConfirm] = useState(false);
+  const [didRegen, setDidRegen] = useState(false);
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
   >("idle");
 
-  const { state } = useSaves();
+  // Event 6: the draft spine is first produced from the questionnaire.
+  useEffect(() => {
+    trackEvent("plan_built", { stops: stops.length });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // fire once on mount; stops.length at mount is the built draft size
 
-  const thingMap = useMemo(
-    () => new Map(things.map((t) => [t.id, t])),
-    [things],
+  // Transitions are recomputed from the current stop order (pure).
+  const transitions = useMemo(
+    () => annotateTransitions(stops, thingMap, params),
+    [stops, thingMap, params],
+  );
+  const transitionByStop = useMemo(
+    () => new Map(transitions.map((t) => [t.beforeStopId, t])),
+    [transitions],
   );
 
-  // Subline from selected periods range.
-  const firstPeriod = answers.periods[0];
-  const lastPeriod  = answers.periods[answers.periods.length - 1];
-  const subline = [
-    shortStamp(answers.dateISO),
-    firstPeriod && lastPeriod && firstPeriod !== lastPeriod
-      ? `${blockShortName(firstPeriod)} → ${blockShortName(lastPeriod)}`
-      : firstPeriod
-        ? blockShortName(firstPeriod)
-        : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  // Subline from the resolved params date.
+  const subline = shortStamp(answers.dateISO);
+
+  // Params chips (shared with the OG/share payload).
+  const paramChips = useMemo(() => {
+    return [
+      shortStamp(answers.dateISO),
+      whoLabel(params),
+      transportLabel(answers.transport),
+      budgetLabel(answers.budget),
+      mealsLabel(params.meals),
+    ].filter(Boolean) as string[];
+  }, [answers, params]);
 
   function addStop(block: Block, thing: Thing, fromSaved: boolean) {
     const newStop: Stop = {
@@ -74,7 +109,7 @@ export function PlanResults({
       block,
       thingId: thing.id,
       fromSaved,
-      fromDraft: false,  // user-added, no Suggested chip
+      fromDraft: false, // user-added, no Suggested chip
     };
     setStops((prev) => [...prev, newStop]);
     setPickerBlock(null);
@@ -84,12 +119,32 @@ export function PlanResults({
     setStops((prev) => prev.filter((s) => s.id !== stopId));
   }
 
+  // G4.4, tap-to-swap: replace a stop with the next-best eligible alternate.
+  // Re-runs the hard filter, so a swap can never introduce a violation. A meal
+  // stop swaps to the next-best food; an activity to the next-best activity.
+  function swapStop(stopId: string) {
+    setStops((prev) => {
+      const idx = prev.findIndex((s) => s.id === stopId);
+      if (idx < 0) return prev;
+      const stop = prev[idx];
+      const exclude = new Set(prev.map((s) => s.thingId));
+      const pool = stop.meal ? things.filter(isFood) : things;
+      const alt = nextBestAlternate(answers, stop.block, pool, savedStateFor, exclude);
+      if (!alt) return prev;
+      const next = [...prev];
+      next[idx] = { ...stop, thingId: alt.id, fromSaved: savedStateFor(alt.id) !== null };
+      return next;
+    });
+  }
+
   function handleRegenerate() {
     // Keep user-added stops; replace only fromDraft ones with fresh picks.
     const userStops = stops.filter((s) => !s.fromDraft);
     const alreadyPlaced = new Set(userStops.map((s) => s.thingId));
-    const freshDraft = buildDraft(answers, things, (id) => (state(id) as "want" | "been" | null) ?? null, alreadyPlaced);
-    setStops([...userStops, ...freshDraft]);
+    const fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced });
+    setStops([...userStops, ...fresh.stops]);
+    setNotes(fresh.notes);
+    setDidRegen(true);
   }
 
   function handleClear() {
@@ -99,6 +154,7 @@ export function PlanResults({
       return;
     }
     setStops([]);
+    setNotes([]);
     setClearConfirm(false);
   }
 
@@ -113,6 +169,7 @@ export function PlanResults({
         const t = thingMap.get(s.thingId);
         if (!t) return [];
         const area = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
+        const tr = transitionByStop.get(s.id);
         return [{
           block: s.block,
           blockLabel: BLOCK_LABEL[s.block],
@@ -123,8 +180,17 @@ export function PlanResults({
           category: t.happening_category ?? t.type ?? "",
           thingId: t.id,
           photo_url: t.photo_url ?? null,
+          meal: s.meal ?? null,
+          transition: tr ? { label: tr.label, parkingNote: tr.parkingNote } : null,
         }];
       }),
+      params: {
+        when: shortStamp(answers.dateISO),
+        who: whoLabel(params),
+        transport: transportLabel(answers.transport),
+        budget: budgetLabel(answers.budget),
+        meals: mealsLabel(params.meals),
+      },
     };
     const token = await createSharedPlan(payload);
     if (!token) {
@@ -141,7 +207,12 @@ export function PlanResults({
   }
 
   const hasStops = stops.length > 0;
-  const hasDraftStops = stops.some((s) => s.fromDraft);
+  const shareLabel =
+    shareState === "pending" ? "Sharing…"
+    : shareState === "shared" ? "✓ Shared!"
+    : shareState === "copied" ? "✓ Link copied"
+    : shareState === "failed" ? "Share failed"
+    : "↗ Share day";
 
   return (
     <>
@@ -156,62 +227,76 @@ export function PlanResults({
             ‹
           </button>
           <div>
-            <div className="sbd-header__name">Your SB Day</div>
-            <div className="sbd-header__tag">Tap + to add stops</div>
+            <div className="sbd-header__name">Your draft, editable</div>
+            <div className="sbd-header__tag">Open when it says, clustered, parked, fed</div>
           </div>
         </div>
-        {hasDraftStops ? (
-          <button
-            type="button"
-            className="sbd-regen-btn"
-            onClick={handleRegenerate}
-            aria-label="Regenerate suggested stops"
-          >
-            ↺ Regenerate
-          </button>
-        ) : null}
       </header>
 
       <main id="main" className="sbd-shell__main">
         <p className="sbd-subline" aria-live="polite">{subline}</p>
 
+        {paramChips.length > 0 ? (
+          <div className="sbd-plan-params" aria-label="Your plan settings">
+            {paramChips.map((c, i) => (
+              <span key={i} className="sbd-ptag">{c}</span>
+            ))}
+          </div>
+        ) : null}
+
+        {notes.length > 0 ? (
+          <ul className="sbd-plan-notes" aria-label="Notes about your plan">
+            {notes.map((n, i) => (
+              <li key={i} className="sbd-plan-note">{n.text}</li>
+            ))}
+          </ul>
+        ) : null}
+
         <ItinerarySpine
           sections={answers.periods}
           stops={stops}
           things={thingMap}
+          transitions={transitionByStop}
           onAddStop={(block) => setPickerBlock(block)}
           onRemoveStop={removeStop}
+          onSwapStop={swapStop}
         />
 
-        <div style={{ height: "104px" }} />
+        <div style={{ height: "120px" }} />
       </main>
 
-      {/* Bottom bar: Share + Clear (ephemeral, no Save) */}
-      <div className="sbd-plan-gobar">
+      {/* Go-bar: three equal Pacific pills, Share solid (concierge prototype). */}
+      <div className="sbd-plan-gobar sbd-plan-gobar--tri">
         <button
           type="button"
-          className="sbd-btn sbd-btn--primary sbd-plan-gobar__share"
+          className={`sbd-gb${clearConfirm ? " sbd-gb--warn" : ""}`}
+          onClick={handleClear}
+          disabled={!hasStops}
+        >
+          {clearConfirm ? "Tap again" : "Clear"}
+        </button>
+        <button
+          type="button"
+          className="sbd-gb"
+          onClick={handleRegenerate}
+          aria-label="Redo: fresh draft, same rules"
+        >
+          ↺ Redo
+        </button>
+        <button
+          type="button"
+          className="sbd-gb sbd-gb--share"
           onClick={handleShare}
           disabled={shareState === "pending" || !hasStops}
         >
-          {shareState === "pending"
-            ? "Sharing…"
-            : shareState === "shared"
-              ? "✓ Shared!"
-              : shareState === "copied"
-                ? "✓ Link copied"
-                : shareState === "failed"
-                  ? "Share failed"
-                  : "↗ Share day"}
-        </button>
-        <button
-          type="button"
-          className={`sbd-btn sbd-btn--ghost sbd-plan-gobar__clear${clearConfirm ? " sbd-btn--warn" : ""}`}
-          onClick={handleClear}
-        >
-          {clearConfirm ? "Tap again to clear" : "✕ Clear"}
+          {shareLabel}
         </button>
       </div>
+      {didRegen ? (
+        <p className="sbd-regennote" aria-live="polite">
+          Fresh draft, same rules, different picks
+        </p>
+      ) : null}
 
       {pickerBlock != null ? (
         <AddStopSheet

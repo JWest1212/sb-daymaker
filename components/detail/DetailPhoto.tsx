@@ -11,10 +11,14 @@ import { usePhotoFallback } from "@/components/ui/Card";
 export function DetailPhoto({
   photoUrl,
   tone,
+  alt,
   children,
 }: {
   photoUrl: string | null;
   tone: string;
+  /** Gate 5 · G5.5, meaningful alt for the lead content image (the thing title).
+   *  This is the primary photo, not decorative, so a screen reader should name it. */
+  alt?: string;
   /** Optional overlay anchored inside the media (e.g. the G1.6 Verified stamp,
    *  top-right). Sits inside the overflow-hidden media so it clips to the image. */
   children?: React.ReactNode;
@@ -24,7 +28,7 @@ export function DetailPhoto({
     <div className={`sbd-detail__media sbd-media--${tone}`}>
       {photoUrl && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="sbd-card__img" src={photoUrl} alt="" onError={markBroken} />
+        <img className="sbd-card__img" src={photoUrl} alt={alt ?? ""} onError={markBroken} />
       ) : null}
       {children}
     </div>

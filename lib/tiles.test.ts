@@ -121,3 +121,18 @@ describe("tilesFor", () => {
     expect(tilesFor("activity", things)).toHaveLength(10);
   });
 });
+
+describe("trust rule, tiles blind to sponsor status (G5.7)", () => {
+  it("produces identical tiles when is_featured / sponsor_id are set adversarially", () => {
+    const base = [
+      thing({ id: "a", nearby_zone: "funk", activities: ["food-drink"], tags: ["wine_food"] }),
+      thing({ id: "b", nearby_zone: "downtown", activities: ["live-music"], tags: ["catch_a_show"] }),
+    ];
+    const spiked = base.map(
+      (t) => ({ ...t, is_featured: true, sponsor_id: "paid-placement-123" }) as unknown as Thing,
+    );
+    for (const dim of ["place", "vibe", "activity"] as const) {
+      expect(tilesFor(dim, spiked)).toEqual(tilesFor(dim, base));
+    }
+  });
+});

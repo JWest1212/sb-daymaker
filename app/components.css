@@ -2052,6 +2052,482 @@
   color: var(--terracotta);
 }
 
+/* ===========================================================================
+   Elevation v1 · Gate 4: The Concierge Day
+   Tokens only (no hardcoded hex); pacific tints via color-mix. No em dash.
+   =========================================================================== */
+
+/* --- Setup: prototype single-select option list (transport / budget / kids) - */
+.sbd-optlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 var(--space-4);
+}
+.sbd-opt {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 14px 15px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  min-height: var(--tap-min);
+  font-family: var(--font-body);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+.sbd-opt:hover { border-color: var(--pacific); }
+.sbd-opt[aria-pressed="true"] {
+  border-color: var(--pacific);
+  background: color-mix(in srgb, var(--pacific) 8%, var(--paper));
+}
+.sbd-opt:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+.sbd-opt__ic { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.sbd-opt__tx { display: flex; flex-direction: column; min-width: 0; }
+.sbd-opt__lab {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  line-height: 1.25;
+}
+.sbd-opt__desc {
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+
+/* --- Results: params chip row --------------------------------------------- */
+.sbd-plan-params {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 var(--space-3);
+}
+.sbd-ptag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+  background: var(--plaster-2);
+  color: var(--sage-text);
+  border-radius: var(--radius-pill);
+  padding: 3px 9px;
+}
+
+/* --- Results: honest notes (never a silent broken plan) ------------------- */
+.sbd-plan-notes {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.sbd-plan-note {
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+  background: color-mix(in srgb, var(--gold) 14%, var(--paper));
+  border: 1px solid color-mix(in srgb, var(--gold) 34%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  line-height: 1.35;
+}
+
+/* --- Results: transition + parking rows between stops --------------------- */
+.sbd-transit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-2);
+  letter-spacing: 0.01em;
+}
+.sbd-transit__ln {
+  flex: 1;
+  border-top: 1px dashed var(--line);
+}
+.sbd-transit__tx {
+  flex-shrink: 1;
+  min-width: 0;
+  text-align: center;
+}
+
+/* --- Results: meal chip on a stop card ------------------------------------ */
+.sbd-scard__meal {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  background: color-mix(in srgb, var(--sage) 24%, var(--paper));
+  color: var(--sage-text);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  margin-left: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* --- Results: swap pill in the card action column ------------------------- */
+.sbd-scard__actbottom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.sbd-scard__swap {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 5px 9px;
+  font-size: 9.5px;
+  font-weight: var(--weight-bold);
+  color: var(--pacific);
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  min-height: var(--tap-min);
+}
+.sbd-scard__swap:hover { border-color: var(--pacific); }
+.sbd-scard__swap:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+
+/* --- Results: three equal Pacific pills, Share solid (concierge go-bar) --- */
+.sbd-plan-gobar--tri { gap: 9px; }
+.sbd-gb {
+  flex: 1;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+  border: 1.5px solid var(--pacific);
+  background: transparent;
+  color: var(--pacific);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.sbd-gb:active { transform: scale(0.98); }
+.sbd-gb:disabled { opacity: 0.5; cursor: not-allowed; }
+.sbd-gb--share {
+  background: var(--pacific);
+  color: var(--paper);
+  border-color: var(--pacific);
+}
+.sbd-gb--warn {
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+.sbd-regennote {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 108px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-2);
+  z-index: 56;
+  pointer-events: none;
+}
+
+/* --- Guided interview: intro screen --------------------------------------- */
+.sbd-wizintro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+}
+.sbd-wizintro__hero {
+  background: linear-gradient(135deg, var(--pacific-dark), var(--pacific));
+  border-radius: var(--radius-lg, 18px);
+  padding: var(--space-6) var(--space-5);
+  color: var(--paper);
+}
+.sbd-wizintro__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  margin: 0 0 var(--space-2);
+}
+.sbd-wizintro__title {
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: var(--weight-semi);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin: 0 0 var(--space-3);
+}
+.sbd-wizintro__sub {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  opacity: 0.94;
+  margin: 0 0 var(--space-5);
+}
+.sbd-wizintro__cta { margin-top: var(--space-2); }
+.sbd-wizintro__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  color: color-mix(in srgb, var(--paper) 82%, transparent);
+}
+.sbd-wizintro__link {
+  background: none;
+  border: none;
+  color: var(--paper);
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  padding: 6px 2px;
+  min-height: var(--tap-min);
+}
+.sbd-wizintro__diff {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sbd-wizintro__diff li {
+  position: relative;
+  padding-left: 24px;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.sbd-wizintro__diff li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: var(--pacific);
+  font-weight: var(--weight-bold);
+}
+
+/* --- Guided interview: step chrome ---------------------------------------- */
+.sbd-wiz { padding-top: var(--space-4); }
+.sbd-wiz__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.sbd-wiz__back {
+  background: none;
+  border: none;
+  color: var(--pacific);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: -8px;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+}
+.sbd-wiz__dots {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  align-items: center;
+}
+.sbd-wiz__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--plaster-2);
+  transition: width var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+.sbd-wiz__dot--on {
+  width: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--terracotta);
+}
+.sbd-wiz__count {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+.sbd-wiz__q {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: var(--weight-semi);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 var(--space-2);
+}
+.sbd-wiz__sub {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  line-height: 1.4;
+  margin: 0 0 var(--space-5);
+}
+.sbd-wiz__next { margin-top: var(--space-4); }
+.sbd-opt__chev {
+  margin-left: auto;
+  color: var(--ink-2);
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sbd-opt__check {
+  margin-left: auto;
+  color: var(--pacific);
+  font-weight: var(--weight-bold);
+  flex-shrink: 0;
+  min-width: 16px;
+  text-align: center;
+}
+.sbd-opt--pending {
+  border-color: var(--pacific);
+  background: color-mix(in srgb, var(--pacific) 12%, var(--paper));
+}
+
+/* --- Guided interview: solving beat --------------------------------------- */
+.sbd-wizbuild {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: var(--space-4);
+  text-align: center;
+}
+.sbd-wizbuild__spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 3px solid var(--plaster-2);
+  border-top-color: var(--pacific);
+  animation: sbd-wizspin 0.9s linear infinite;
+}
+@keyframes sbd-wizspin { to { transform: rotate(360deg); } }
+.sbd-wizbuild__title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: var(--weight-semi);
+  color: var(--text);
+  margin: 0;
+}
+.sbd-wizbuild__step {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sbd-wizbuild__spinner { animation: none; }
+}
+
+/* ===========================================================================
+   Elevation v1 · Gate 5: Loops and Polish
+   =========================================================================== */
+
+/* G5.1, guide share control (footer, above the correction flag). */
+.sbd-gd-sharerow {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-5) 0 var(--space-2);
+}
+.sbd-gd-share {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-5);
+  border: 1.5px solid var(--pacific);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--pacific);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.sbd-gd-share:hover { background: color-mix(in srgb, var(--pacific) 8%, transparent); }
+.sbd-gd-share:focus-visible { outline: 2px solid var(--pacific); outline-offset: 2px; }
+
+/* G5.3, newsletter proof line (sample link + supply-side hook). */
+.sbd-signup__proof {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+}
+.sbd-signup__sample {
+  color: var(--pacific);
+  font-weight: var(--weight-semi);
+  text-decoration: underline;
+}
+.sbd-signup__sample:focus-visible { outline: 2px solid var(--pacific); outline-offset: 2px; }
+.sbd-signup__hook { color: var(--ink-2); }
+
+/* G5.7, inert Featured placement label (rendered nowhere yet). */
+.sbd-featured-label {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
+  color: var(--gold-text);
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+}
+
+/* G5.4, submit-page expectation-setting list. */
+.sbd-submit-expect {
+  list-style: none;
+  margin: var(--space-3) 0 var(--space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.sbd-submit-expect li {
+  position: relative;
+  padding-left: 22px;
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.sbd-submit-expect li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: var(--pacific);
+  font-weight: var(--weight-bold);
+}
+
 /* Interim results list (Phase 3 only — replaced by the spine in Phase 4). */
 .sbd-plan-interim {
   list-style: none;

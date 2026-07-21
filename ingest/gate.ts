@@ -50,6 +50,31 @@ function bucketTod(startISO: string): Tod[] {
   return ['late'];
 }
 
+const TOD_ORDER: Tod[] = ['morning', 'afternoon', 'evening', 'late'];
+
+/** Bucket a HH:MM clock time (SB-local, from a recurring schedule) into tod(s),
+ *  same thresholds as bucketTod. */
+function bucketTodFromClock(hhmm: string): Tod[] {
+  const h = parseInt(hhmm.slice(0, 2), 10);
+  if (h >= 5 && h < 11) return ['morning'];
+  if (h >= 11 && h < 17) return ['afternoon'];
+  if (h >= 17 && h < 22) return ['evening'];
+  return ['late'];
+}
+
+/** time_of_day_fit derived from a recurring rhythm's start time(s), or null when
+ *  no schedule carries a clock time. A recurring 9pm karaoke night resolves to
+ *  ['late'], never the generic tod3Default (which mislabeled it as afternoon). */
+function recurringTod(c: RawCandidate): Tod[] | null {
+  const times = (c.recurring ?? [])
+    .map((r) => r.start_time)
+    .filter((s): s is string => typeof s === 'string' && /^\d{2}:\d{2}$/.test(s));
+  if (times.length === 0) return null;
+  const set = new Set<Tod>();
+  for (const t of times) for (const tod of bucketTodFromClock(t)) set.add(tod);
+  return TOD_ORDER.filter((t) => set.has(t));
+}
+
 function mapPrice(c: RawCandidate): PriceBand | null {
   if (c.explicitlyFree) return 'free';
   if (c.priceLow == null) return null;          // never infer
@@ -122,7 +147,7 @@ export function gate(c: RawCandidate): GateResult {
     address,
     lat: c.lat, lng: c.lng,
     price_band: mapPrice(c),
-    time_of_day_fit: startISO ? bucketTod(startISO) : tod3Default(c),
+    time_of_day_fit: startISO ? bucketTod(startISO) : (recurringTod(c) ?? tod3Default(c)),
     starts_at: startISO,
     ends_at: c.endISO ?? null,
     buy_url: c.buyUrl,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { useItineraries } from "@/lib/plan/itineraries";
 import { shortStamp } from "@/lib/plan/dates";
@@ -92,6 +92,15 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
           <p className="sbd-shplan__meta">
             {dateLabel} · {stopCount} {stopCount === 1 ? "stop" : "stops"}
           </p>
+          {payload.params ? (
+            <div className="sbd-plan-params" aria-label="Plan settings">
+              {[payload.params.who, payload.params.transport, payload.params.budget, payload.params.meals]
+                .filter(Boolean)
+                .map((c, i) => (
+                  <span key={i} className="sbd-ptag">{c}</span>
+                ))}
+            </div>
+          ) : null}
         </div>
 
         {/* Read-only spine */}
@@ -111,7 +120,15 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
             const blockLabel = s.blockLabel ?? BLOCK_LABEL[safeBlock];
 
             return (
-              <div key={idx} className="sbd-stop">
+              <Fragment key={idx}>
+                {s.transition ? (
+                  <div className="sbd-transit">
+                    <span className="sbd-transit__ln" aria-hidden="true" />
+                    <span className="sbd-transit__tx">{s.transition.label}</span>
+                    <span className="sbd-transit__ln" aria-hidden="true" />
+                  </div>
+                ) : null}
+                <div className="sbd-stop">
                 <div
                   className="sbd-node"
                   style={{ background: node.color }}
@@ -135,7 +152,10 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
                     <span className="sbd-rcard__eb">
                       {timeStr ? `${blockLabel} · ${timeStr}` : blockLabel}
                     </span>
-                    <h2 className="sbd-rcard__nm">{s.title}</h2>
+                    <h2 className="sbd-rcard__nm">
+                      {s.title}
+                      {s.meal ? <span className="sbd-scard__meal">{s.meal}</span> : null}
+                    </h2>
                     <span className="sbd-rcard__mt">
                       {s.area}
                       {s.blurb ? ` · ${s.blurb}` : ""}
@@ -149,7 +169,8 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
                     Details ›
                   </Link>
                 </div>
-              </div>
+                </div>
+              </Fragment>
             );
           })}
         </div>

@@ -21,9 +21,10 @@ interface SpineStopCardProps {
   stop: Stop;
   thing: Thing;
   onRemove: () => void;
+  onSwap?: () => void;
 }
 
-export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
+export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardProps) {
   const { isSaved, toggle } = useSaves();
   const saved = isSaved(thing.id);
 
@@ -58,6 +59,9 @@ export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
           <Link href={`/thing/${thing.id}`} className="sbd-stretch">
             {thing.title}
           </Link>
+          {stop.meal ? (
+            <span className="sbd-scard__meal">{stop.meal}</span>
+          ) : null}
         </h3>
         {meta ? <span className="sbd-scard__mt">{meta}</span> : null}
         {stop.fromDraft ? (
@@ -87,14 +91,26 @@ export function SpineStopCard({ stop, thing, onRemove }: SpineStopCardProps) {
             title={thing.title}
           />
         </div>
-        <button
-          type="button"
-          className="sbd-scard__remove"
-          aria-label={`Remove ${thing.title}`}
-          onClick={onRemove}
-        >
-          ×
-        </button>
+        <div className="sbd-scard__actbottom">
+          {onSwap ? (
+            <button
+              type="button"
+              className="sbd-scard__swap"
+              aria-label={`Swap ${thing.title} for the next best option`}
+              onClick={onSwap}
+            >
+              ↺ Swap
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="sbd-scard__remove"
+            aria-label={`Remove ${thing.title}`}
+            onClick={onRemove}
+          >
+            ×
+          </button>
+        </div>
       </div>
     </div>
   );

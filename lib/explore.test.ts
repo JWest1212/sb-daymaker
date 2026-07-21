@@ -235,6 +235,18 @@ describe("cascade, W2.1a editorial_weight consumption", () => {
   });
 });
 
+describe("trust rule, pickAutoHero blind to sponsor status (G5.7)", () => {
+  it("picks the same hero when is_featured / sponsor_id are set adversarially", () => {
+    const base = [
+      thing({ id: "plain", happening_tier: 1, type: "event", editorial_weight: 0, starts_at: "2026-07-03T18:00:00Z" }),
+      thing({ id: "boost", happening_tier: 1, type: "event", editorial_weight: 3, starts_at: "2026-07-03T20:00:00Z" }),
+    ];
+    const spiked = base.map((t) => ({ ...t, is_featured: true, sponsor_id: "paid-placement-123" }) as unknown as Thing);
+    const TODAY = "2026-07-03";
+    expect(pickAutoHero(cascade(spiked), TODAY)?.id).toBe(pickAutoHero(cascade(base), TODAY)?.id);
+  });
+});
+
 describe("pickAutoHero, W2.1a shared hero picker", () => {
   const TODAY = "2026-07-03";
   const todayEvent = (id: string, weight: number, hhmm: string) =>

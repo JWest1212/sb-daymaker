@@ -1,0 +1,53 @@
+// Shared Thing fixture for the Gate 4 plan-engine tests. Mirrors the shape used
+// by lib/search.test.ts. Not a *.test file, so vitest won't collect it directly.
+
+import type { Thing } from "@/lib/things";
+
+export function thing(over: Partial<Thing> = {}): Thing {
+  return {
+    id: over.id ?? "x",
+    type: over.type ?? "place",
+    title: over.title ?? over.id ?? "x",
+    blurb: null,
+    blurb_long: null,
+    local_note: null,
+    reason_to_go: null,
+    happening_tier: 1,
+    editorial_weight: 0,
+    happening_category: null,
+    neighborhood: null,
+    nearby_zone: null,
+    address: null,
+    lat: null,
+    lng: null,
+    quality_tier: 1,
+    hours: null,
+    verified_at: null,
+    verified_by: null,
+    last_confirmed: null,
+    setting: null,
+    practical_note: null,
+    slug: null,
+    updated_at: null,
+    price_band: null,
+    free: null,
+    starts_at: null,
+    ends_at: null,
+    buy_url: null,
+    time_of_day_fit: null,
+    is_21_plus: false,
+    indoor: false,
+    photo_url: null,
+    photo_source: null,
+    photo_attribution: null,
+    visual_kind: null,
+    visual_key: null,
+    visual_seed: null,
+    venue_id: null,
+    tags: [],
+    activities: [],
+    happyHours: [],
+    recurring: [],
+    ...over,
+  };
+}

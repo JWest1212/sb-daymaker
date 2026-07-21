@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/ui";
 import { GuideWalkSection } from "@/components/discover/GuideWalkSection";
 import type { StopDisplay } from "@/components/discover/GuideWalkSection";
 import { FlagButton } from "@/components/detail/FlagButton";
+import { GuideShare } from "@/components/discover/GuideShare";
 import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
 import { guidePath } from "@/lib/seo/site";
 
@@ -366,6 +367,11 @@ export default async function GuidePage({
           WRITTEN BY A LOCAL
           {refreshedLabel ? ` · REFRESHED ${refreshedLabel}` : ""}
         </span>
+      </div>
+
+      {/* G5.1, share the guide as a designed OG card (no PII, native share). */}
+      <div className="sbd-gd-sharerow">
+        <GuideShare path={guidePath(guide)} title={guide.title} />
       </div>
 
       {/* G3.6, one-tap correction flag for the guide (no PII). */}
