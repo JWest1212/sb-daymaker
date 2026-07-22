@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker Cockpit · Phase 3 Mockups · Round 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+  --ink:#241C16; --ink-2:#4A4038;
+  --pacific:#16586A; --pacific-dark:#0E3C49;
+  --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+  --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+  --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  --bg:var(--plaster); --surface:var(--paper); --text:var(--ink); --text-muted:var(--ink-2);
+  --text-link:var(--pacific); --border:var(--line);
+  --sev-blocker:#B23A2E; --sev-high:#C77D1E; --sev-low:#3E7C5A;
+  --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.25rem; --text-xl:1.563rem; --text-2xl:1.953rem; --text-3xl:2.441rem;
+  --leading-tight:1.1; --leading-snug:1.3; --leading-body:1.6;
+  --tap-min:44px;
+  --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  --shadow-sheet:0 -8px 40px rgba(36,28,22,.18);
+  --ease-out:cubic-bezier(.16,1,.3,1); --dur-fast:140ms; --dur-base:240ms;
+  --tint-pacific-06:color-mix(in srgb,var(--pacific) 6%,transparent);
+  --tint-pacific-12:color-mix(in srgb,var(--pacific) 12%,transparent);
+  --tint-gold-16:color-mix(in srgb,var(--gold) 16%,transparent);
+  --tint-terra-10:color-mix(in srgb,var(--terracotta) 10%,transparent);
+  --tint-sage-14:color-mix(in srgb,var(--forest) 14%,transparent);
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#E9E2D2;font-family:var(--font-body);color:var(--text);line-height:var(--leading-body)}
+a{color:var(--text-link)}
+:focus-visible{outline:3px solid var(--pacific);outline-offset:2px;border-radius:4px}
+button{font-family:var(--font-body);cursor:pointer}
+input,textarea,select{font-family:var(--font-body);font-size:var(--text-base);color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;width:100%}
+label{font-size:var(--text-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:5px}
+kbd{font-family:var(--font-mono);font-size:.72rem;background:var(--plaster-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink-2)}
+
+.mk-nav{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--paper);padding:12px 24px;display:flex;gap:20px;align-items:baseline;flex-wrap:wrap}
+.mk-nav strong{font-family:var(--font-mono);font-size:.8rem;letter-spacing:.08em}
+.mk-nav a{color:#C9E0E6;font-size:.85rem;text-decoration:none}
+.mk-section{max-width:1280px;margin:0 auto;padding:56px 24px 24px}
+.mk-label{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--terra-text);margin-bottom:8px}
+.mk-h{font-family:var(--font-display);font-weight:900;font-size:var(--text-2xl);line-height:var(--leading-tight);margin-bottom:8px}
+.mk-note{max-width:74ch;color:var(--ink-2);font-size:var(--text-sm);margin-bottom:28px}
+.mk-frame{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);position:relative}
+
+/* shell */
+.topbar{background:var(--pacific-dark);color:var(--paper);padding:14px 28px;display:flex;align-items:center;gap:28px;flex-wrap:wrap}
+.brand{font-family:var(--font-display);font-weight:900;font-size:1.35rem}
+.brand .sb{color:var(--gold)}
+.brand-kicker{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:#C9E0E6;display:block;margin-top:1px}
+.top-stats{display:flex;gap:26px;margin-left:auto}
+.tstat{text-align:right}
+.tstat b{font-family:var(--font-mono);font-size:1.15rem;font-weight:600;display:block;line-height:1.1}
+.tstat span{font-size:.72rem;color:#C9E0E6;letter-spacing:.06em;text-transform:uppercase}
+.tabs{background:var(--pacific-dark);display:flex;gap:2px;padding:0 20px;overflow-x:auto}
+.tab{appearance:none;background:none;border:none;color:#C9E0E6;font-size:.9rem;font-weight:500;padding:12px 16px 14px;min-height:var(--tap-min);border-bottom:3px solid transparent;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tab[aria-current="page"]{color:var(--paper);border-bottom-color:var(--gold);font-weight:600}
+.badge{font-family:var(--font-mono);font-size:.68rem;font-weight:600;min-width:20px;height:20px;padding:0 6px;border-radius:var(--radius-pill);display:inline-flex;align-items:center;justify-content:center;background:rgba(252,250,245,.16);color:var(--paper)}
+.badge.hot{background:var(--gold);color:var(--ink)}
+
+/* queue layout */
+.qlayout{display:grid;grid-template-columns:1fr 320px;gap:28px;padding:28px;align-items:start}
+.qhead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.qtitle{font-family:var(--font-display);font-weight:900;font-size:var(--text-2xl)}
+.qcount{font-family:var(--font-mono);font-size:.9rem;color:var(--ink-2)}
+.digest{font-size:var(--text-sm);color:var(--ink-2);margin-bottom:16px}
+.digest b{color:var(--ink)}
+.filters{display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+.fpill{border:1.5px solid var(--line);background:var(--paper);border-radius:var(--radius-pill);min-height:36px;padding:0 16px;font-size:.85rem;font-weight:600;color:var(--ink-2)}
+.fpill[aria-pressed="true"]{background:var(--pacific);border-color:var(--pacific);color:var(--paper)}
+.bulkbtn{margin-left:auto;border:1.5px solid var(--pacific);background:none;color:var(--pacific);border-radius:var(--radius-pill);min-height:36px;padding:0 16px;font-size:.85rem;font-weight:600;display:inline-flex;gap:8px;align-items:center}
+
+/* field card */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;border-radius:var(--radius-pill);padding:4px 12px}
+.chip.green{background:var(--tint-sage-14);color:var(--sage-text)}
+.chip.amber{background:var(--tint-gold-16);color:var(--gold-text)}
+.conf{font-family:var(--font-mono);font-size:.72rem;font-weight:600;border-radius:var(--radius-pill);padding:3px 10px;background:var(--tint-sage-14);color:var(--sage-text)}
+.heropill{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:none;border-radius:var(--radius-pill);padding:5px 12px;font-size:.8rem;font-weight:600;color:var(--ink-2);min-height:32px}
+.heropill.on{border-color:var(--gold);background:var(--tint-gold-16);color:var(--gold-text)}
+.wnudge{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.8rem;color:var(--ink-2)}
+.wnudge button{width:26px;height:26px;border-radius:6px;border:1px solid var(--line);background:var(--paper);color:var(--pacific);font-size:.7rem;line-height:1}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px}
+.tg{font-size:.75rem;border:1px solid var(--line);border-radius:var(--radius-pill);padding:5px 12px;color:var(--ink-2);background:var(--paper);min-height:28px}
+.tg.on{background:var(--tint-pacific-12);border-color:var(--pacific);color:var(--pacific);font-weight:600}
+.tg[disabled]{opacity:.45}
+.cardA{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);overflow:hidden;margin-bottom:22px;position:relative}
+.cardA.is-active{border-color:var(--pacific);box-shadow:0 0 0 3px var(--tint-pacific-12),var(--shadow-card)}
+.cardA.is-editing{border-color:var(--gold);box-shadow:0 0 0 3px var(--tint-gold-16),var(--shadow-card)}
+.cardA .spine{position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--pacific)}
+.cardA.t2 .spine{background:var(--sage)}
+.cardA .body{display:grid;grid-template-columns:210px 1fr;gap:22px;padding:20px 24px 16px 26px}
+.qimg{border-radius:var(--radius-md);overflow:hidden;background:linear-gradient(135deg,var(--pacific),var(--pacific-dark));aspect-ratio:4/3;position:relative;display:flex;align-items:flex-end}
+.qimg .src{font-family:var(--font-mono);font-size:.62rem;color:#C9E0E6;padding:8px 10px}
+.imgnav{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:8px}
+.imgnav button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--paper);color:var(--pacific);font-size:.9rem}
+.imgnav .ct{font-family:var(--font-mono);font-size:.72rem;color:var(--ink-2)}
+.eyebrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tierword{font-family:var(--font-mono);font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--terra-text);font-weight:600}
+.qtitleA{font-family:var(--font-display);font-weight:700;font-size:var(--text-xl);line-height:var(--leading-snug);margin-bottom:6px}
+.whenA{font-family:var(--font-mono);font-size:.85rem;font-weight:500;margin-bottom:8px}
+.blurbA{font-size:var(--text-base);color:var(--ink-2);max-width:56ch;margin-bottom:12px}
+.provA{font-size:.8rem;color:var(--ink-2);margin-bottom:12px}
+.metaA{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.actA{display:flex;align-items:center;gap:10px;border-top:1px solid var(--plaster-2);padding:12px 24px 14px 26px;background:color-mix(in srgb,var(--paper) 60%,var(--plaster));flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap-min);padding:0 20px;border-radius:var(--radius-pill);font-size:.92rem;font-weight:600;border:none}
+.btn.approve{background:var(--pacific);color:var(--paper)}
+.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink-2)}
+.btn.reject{background:none;border:1.5px solid var(--tint-terra-10);color:var(--terra-text)}
+.actA .status{margin-left:auto;font-size:.8rem;color:var(--sage-text);font-weight:600}
+.kbd-on-dark{background:rgba(252,250,245,.2);border-color:transparent;color:var(--paper)}
+
+/* edit mode extras */
+.editgrid{display:grid;gap:14px}
+.editgrid .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.locknote{display:flex;gap:8px;align-items:center;font-size:.8rem;color:var(--ink-2);background:var(--plaster-2);border-radius:var(--radius-sm);padding:8px 12px}
+.editbanner{background:var(--tint-gold-16);border:1.5px dashed var(--gold);border-radius:var(--radius-sm);padding:8px 12px;font-size:.8rem;color:var(--gold-text);font-weight:600;margin-top:12px}
+
+/* sidebar */
+.spanel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:16px 18px;margin-bottom:16px}
+.spanel h4{font-family:var(--font-display);font-weight:700;font-size:var(--text-base);margin-bottom:10px;display:flex;align-items:baseline;gap:8px}
+.spanel h4 .n{font-family:var(--font-mono);font-size:.78rem;color:var(--ink-2);font-weight:400}
+.srow{display:flex;justify-content:space-between;gap:10px;font-size:var(--text-sm);color:var(--ink-2);padding:5px 0;border-bottom:1px solid var(--plaster-2)}
+.srow:last-child{border-bottom:none}
+.srow b{color:var(--ink);font-family:var(--font-mono);font-weight:600}
+.sdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
+.sdot.ok{background:var(--sev-low)}.sdot.warn{background:var(--sev-high)}
+.rrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--plaster-2);font-size:var(--text-sm)}
+.rrow:last-child{border-bottom:none}
+.rrow .t{color:var(--ink);line-height:1.35}
+.rrow .t small{display:block;font-family:var(--font-mono);font-size:.68rem;color:var(--ink-2)}
+.restore{border:1.5px solid var(--pacific);background:none;color:var(--pacific);border-radius:var(--radius-pill);font-size:.75rem;font-weight:600;min-height:30px;padding:0 12px;white-space:nowrap}
+.legend .srow span:first-child{display:flex;gap:8px;align-items:center}
+
+/* toast */
+.toast{position:absolute;left:50%;transform:translateX(-50%);bottom:26px;background:var(--ink);color:var(--paper);border-radius:var(--radius-pill);padding:12px 12px 12px 22px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sheet);font-size:.9rem}
+.toast .undo{background:var(--gold);color:var(--ink);border:none;border-radius:var(--radius-pill);font-weight:700;font-size:.82rem;min-height:34px;padding:0 16px;display:inline-flex;gap:8px;align-items:center}
+.toast .undo kbd{background:rgba(36,28,22,.15);border-color:transparent;color:var(--ink)}
+.toast .bar{width:44px;height:4px;border-radius:2px;background:rgba(252,250,245,.25);overflow:hidden}
+.toast .bar i{display:block;height:100%;width:60%;background:var(--gold)}
+
+/* ============ SHEET PRIMITIVE ============ */
+.sheet-stage{position:relative;min-height:760px;background:var(--tint-ink,rgba(36,28,22,.5));display:flex;align-items:center;justify-content:center;padding:40px 20px;background:color-mix(in srgb,var(--ink) 45%,transparent)}
+.sheet{width:min(620px,94vw);background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-sheet);overflow:hidden;max-height:100%}
+.sheet-head{display:flex;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid var(--plaster-2)}
+.sheet-head h3{font-family:var(--font-display);font-weight:700;font-size:var(--text-lg);flex:1}
+.sheet-head .esc{font-size:.75rem;color:var(--ink-2)}
+.sheet-x{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:none;color:var(--ink-2);font-size:1rem}
+.sheet-body{padding:20px 22px;display:grid;gap:18px}
+.zone{border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden}
+.zone-head{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.zone.live .zone-head{background:var(--tint-terra-10);color:var(--terra-text)}
+.zone.draft .zone-head{background:var(--tint-pacific-06);color:var(--pacific)}
+.zone-body{padding:14px}
+.photo-row{display:flex;gap:10px;align-items:center}
+.pthumb{width:92px;aspect-ratio:4/3;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--pacific),var(--pacific-dark));flex:none}
+.pthumb.alt{background:linear-gradient(135deg,var(--sage),var(--forest))}
+.pthumb.sel{outline:3px solid var(--gold);outline-offset:2px}
+.zonebtn{border:1.5px solid var(--pacific);background:none;color:var(--pacific);border-radius:var(--radius-pill);font-size:.8rem;font-weight:600;min-height:36px;padding:0 14px}
+.zone-note{font-size:.75rem;color:var(--ink-2);margin-top:10px}
+.sheet-foot{display:flex;align-items:center;gap:12px;padding:16px 22px;border-top:1px solid var(--plaster-2);background:color-mix(in srgb,var(--paper) 60%,var(--plaster))}
+.dirty{font-size:.8rem;color:var(--gold-text);font-weight:600}
+.sheet-foot .spacer{flex:1}
+
+@media (max-width:980px){.qlayout{grid-template-columns:1fr}.cardA .body{grid-template-columns:1fr}.qimg{max-width:280px}}
+</style>
+</head>
+<body>
+
+<nav class="mk-nav" aria-label="Mockup sections">
+  <strong>SBD COCKPIT · PHASE 3 · ROUND 2</strong>
+  <a href="#queue-full">Queue screen</a>
+  <a href="#queue-edit">Edit mode</a>
+  <a href="#sheet">Sheet primitive</a>
+</nav>
+
+<!-- ================= FULL QUEUE SCREEN ================= -->
+<section class="mk-section" id="queue-full">
+  <p class="mk-label">Approved Field Card, in context</p>
+  <h2 class="mk-h">The Queue, whole screen</h2>
+  <p class="mk-note">Browse mode with the active card ringed, the digest line in prose instead of a strip, filter pills, and the sidebar rebuilt in the shop's voice. New in the sidebar: <b>Recently rejected</b> (Decision D3) with one-click restore. Bottom center: the undo toast, now a real button with a keyboard hint and a visible countdown. Everything the change-safety map protects is present: key hints on every action, hero pill, weight nudge, provenance with view source, trust chip, confidence.</p>
+
+  <div class="mk-frame">
+    <header class="topbar">
+      <div><span class="brand"><span class="sb">SB</span> Daymaker</span><span class="brand-kicker">Cockpit</span></div>
+      <div class="top-stats">
+        <div class="tstat"><b>14</b><span>In queue</span></div>
+        <div class="tstat"><b>6</b><span>Dropped</span></div>
+        <div class="tstat"><b>0</b><span>Source down</span></div>
+      </div>
+    </header>
+    <nav class="tabs" aria-label="Cockpit views">
+      <button class="tab">Today</button>
+      <button class="tab" aria-current="page">Queue <span class="badge hot">14</span></button>
+      <button class="tab">Coverage <span class="badge">2</span></button>
+      <button class="tab">Live catalog</button>
+      <button class="tab">Hero plan <span class="badge">1</span></button>
+      <button class="tab">Edition <span class="badge hot">1</span></button>
+      <button class="tab">Venues <span class="badge">34</span></button>
+      <button class="tab">Images <span class="badge">118</span></button>
+      <button class="tab">Flags <span class="badge">1</span></button>
+    </nav>
+
+    <div class="qlayout">
+      <main>
+        <div class="qhead">
+          <h1 class="qtitle">Review queue</h1>
+          <span class="qcount">14 items · latest run 02:04</span>
+        </div>
+        <p class="digest">Tonight's run: <b>14 in queue</b> · 6 dropped (4 duplicates, 2 no start) · all sources healthy.</p>
+        <div class="filters" role="group" aria-label="Filter by tier">
+          <button class="fpill" aria-pressed="true">All</button>
+          <button class="fpill" aria-pressed="false">Events</button>
+          <button class="fpill" aria-pressed="false">Recurring</button>
+          <button class="fpill" aria-pressed="false">Places</button>
+          <button class="bulkbtn">▣ Bulk-approve green <kbd>B</kbd></button>
+        </div>
+
+        <article class="cardA is-active">
+          <span class="spine" aria-hidden="true"></span>
+          <div class="body">
+            <div class="qimg"><span class="src">santabarbaraca.gov · 1/4</span></div>
+            <div>
+              <div class="eyebrow">
+                <span class="tierword">Event</span>
+                <span class="chip green">✓ Deterministic start</span>
+                <span class="conf">91% confidence</span>
+              </div>
+              <h3 class="qtitleA">Twilight Concert at the Sunken Garden</h3>
+              <p class="whenA">Fri · Jul 24 · 6:00 PM</p>
+              <p class="blurbA">Bring a low chair and something from the Public Market: the courthouse lawn turns into the town's living room for a free brass-and-swing evening.</p>
+              <p class="provA">Start from santabarbaraca.gov · <a href="#">view source ↗</a> · trusted host, clean parse</p>
+              <div class="metaA">
+                <button class="heropill">⭑ Hero <kbd>H</kbd></button>
+                <span class="wnudge"><button aria-label="Lower weight">▼</button> 0 <button aria-label="Boost weight">▲</button></span>
+                <span class="tagrow"><span class="tg on">free_sb</span><span class="tg on">family_day</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="actA">
+            <button class="btn approve">Approve & publish <kbd class="kbd-on-dark">A</kbd></button>
+            <button class="btn ghost">Edit <kbd>E</kbd></button>
+            <button class="btn reject">Reject <kbd>R</kbd></button>
+            <span class="status">✓ trusted source</span>
+          </div>
+        </article>
+
+        <article class="cardA t2">
+          <span class="spine" aria-hidden="true"></span>
+          <div class="body">
+            <div class="qimg" style="background:linear-gradient(135deg,var(--sage),var(--forest))"><span class="src">no image yet</span></div>
+            <div>
+              <div class="eyebrow">
+                <span class="tierword">Recurring</span>
+                <span class="chip amber">◔ Confirm cadence</span>
+                <span class="conf" style="background:var(--tint-gold-16);color:var(--gold-text)">58% confidence</span>
+              </div>
+              <h3 class="qtitleA">Sunday Jazz Brunch at the Mesa Cafe</h3>
+              <p class="whenA">Sundays · 10:00 AM to 1:00 PM</p>
+              <p class="blurbA">A standing weekend rhythm the scrapers half-see: live trio, patio seats, and a line that says get there before 10:30.</p>
+              <p class="provA">Recurring, confirm cadence · <a href="#">view source ↗</a></p>
+              <div class="metaA">
+                <button class="heropill">⭑ Hero <kbd>H</kbd></button>
+                <span class="wnudge"><button aria-label="Lower weight">▼</button> 0 <button aria-label="Boost weight">▲</button></span>
+                <span class="tagrow"><span class="tg on">wine_food</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="actA">
+            <button class="btn approve">Approve & publish <kbd class="kbd-on-dark">A</kbd></button>
+            <button class="btn ghost">Edit <kbd>E</kbd></button>
+            <button class="btn reject">Reject <kbd>R</kbd></button>
+            <span class="status" style="color:var(--gold-text)">⚠ needs a glance</span>
+          </div>
+        </article>
+      </main>
+
+      <aside>
+        <div class="spanel">
+          <h4>Time reclaimed</h4>
+          <div class="srow"><span>Auto-published (all-time)</span><b>212</b></div>
+          <div class="srow"><span>You approved by hand</span><b>318</b></div>
+          <div class="srow"><span>Auto-publish rate</span><b>40%</b></div>
+          <div class="srow"><span>Held back (below floor)</span><b>3</b></div>
+        </div>
+
+        <div class="spanel">
+          <h4>Recently rejected <span class="n">last 14 days</span></h4>
+          <div class="rrow"><span class="t">Wine Cask Barrel Tasting<small>rejected Sat · founder reject</small></span><button class="restore">Restore</button></div>
+          <div class="rrow"><span class="t">IV Farmers Market pop-up<small>rejected Thu · founder reject</small></span><button class="restore">Restore</button></div>
+          <div class="rrow"><span class="t">Yoga on the Bluff<small>rejected Tue · founder reject</small></span><button class="restore">Restore</button></div>
+        </div>
+
+        <div class="spanel">
+          <h4>Source health</h4>
+          <div class="srow"><span><i class="sdot ok"></i>Ticketmaster API</span><b>6 new</b></div>
+          <div class="srow"><span><i class="sdot ok"></i>SOhO ticketing</span><b>2 new</b></div>
+          <div class="srow"><span><i class="sdot warn"></i>KCSB events</span><b>refresh</b></div>
+          <div class="srow"><span><i class="sdot ok"></i>Independent arts</span><b>4 new</b></div>
+        </div>
+
+        <div class="spanel">
+          <h4>Dropped tonight <span class="n">6</span></h4>
+          <div class="srow"><span>Copper Coffee open mic</span><b style="font-weight:400;font-family:var(--font-body);color:var(--ink-2)">duplicate</b></div>
+          <div class="srow"><span>Gallery pop-in (untitled)</span><b style="font-weight:400;font-family:var(--font-body);color:var(--ink-2)">no start</b></div>
+        </div>
+
+        <div class="spanel legend">
+          <h4>Shortcuts</h4>
+          <div class="srow"><span><kbd>A</kbd> Approve</span><span>commits edits + publishes</span></div>
+          <div class="srow"><span><kbd>E</kbd> Edit in place</span><span>title · blurb · tags · photo</span></div>
+          <div class="srow"><span><kbd>H</kbd> Hero flag</span><span></span></div>
+          <div class="srow"><span><kbd>R</kbd> Reject</span><span>restorable for 14 days</span></div>
+          <div class="srow"><span><kbd>↑↓</kbd> Move</span><span></span></div>
+          <div class="srow"><span><kbd>B</kbd> Bulk green</span><span></span></div>
+          <div class="srow"><span><kbd>U</kbd> Undo</span><span>while the toast shows</span></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="toast" role="status">
+      <span>Published "Twilight Concert"</span>
+      <span class="bar" aria-hidden="true"><i></i></span>
+      <button class="undo">Undo <kbd>U</kbd></button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EDIT MODE ================= -->
+<section class="mk-section" id="queue-edit">
+  <h2 class="mk-h">The Field Card in edit mode</h2>
+  <p class="mk-note">Gold ring, inputs in place, the image picker's arrows under the photo (◂ ▸ still cycle from the keyboard), tag toggles with the negative rules visibly disabled, the starts_at lock note verbatim, and the pending-edit banner. R stays withheld in this mode, exactly as today.</p>
+
+  <div class="mk-frame" style="padding:28px">
+    <article class="cardA is-editing" style="margin-bottom:0">
+      <span class="spine" aria-hidden="true"></span>
+      <div class="body">
+        <div>
+          <div class="qimg"><span class="src">wikimedia · 2/4</span></div>
+          <div class="imgnav">
+            <button aria-label="Previous image option">◂</button>
+            <span class="ct">2/4 · wikimedia</span>
+            <button aria-label="Next image option">▸</button>
+          </div>
+        </div>
+        <div class="editgrid">
+          <div class="eyebrow" style="margin-bottom:0">
+            <span class="tierword">Event</span>
+            <span class="chip green">✓ Deterministic start</span>
+            <span class="conf">91% confidence</span>
+          </div>
+          <div><label for="t1">Title</label><input id="t1" value="Twilight Concert at the Sunken Garden"></div>
+          <div><label for="b1">Blurb</label><textarea id="b1" rows="2">Bring a low chair and something from the Public Market: the courthouse lawn turns into the town's living room.</textarea></div>
+          <div class="two">
+            <div><label for="n1">Neighborhood</label><select id="n1"><option>Downtown</option></select></div>
+            <div><label>Start time</label><div class="locknote">🔒 Start time is locked, reject & re-ingest to change it.</div></div>
+          </div>
+          <div>
+            <label>Occasion tags</label>
+            <div class="tagrow">
+              <button class="tg on" aria-pressed="true">free_sb</button>
+              <button class="tg on" aria-pressed="true">family_day</button>
+              <button class="tg" aria-pressed="false">date_night</button>
+              <button class="tg" aria-pressed="false">catch_a_show</button>
+              <button class="tg" disabled title="Not allowed for this item">nightlife</button>
+            </div>
+          </div>
+          <div class="editbanner">Edited: blurb, photo · press <b>A</b> to commit & publish</div>
+        </div>
+      </div>
+      <div class="actA">
+        <button class="btn approve">Approve & publish <kbd class="kbd-on-dark">A</kbd></button>
+        <button class="btn ghost">Done editing <kbd>E</kbd></button>
+        <span class="status">◂ ▸ cycle images · Esc keeps the draft</span>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ================= SHEET PRIMITIVE ================= -->
+<section class="mk-section" id="sheet">
+  <p class="mk-label">S3 · one dialog to rule them all</p>
+  <h2 class="mk-h">The sheet primitive, shown as the Catalog edit sheet</h2>
+  <p class="mk-note">Every Cockpit dialog becomes this one component: focus-trapped, Escape to close (shown in the header so it's teachable), scrim click closes, focus returns to the opener. The catalog sheet's two commit models are finally visually honest: the terracotta <b>LIVE</b> zone applies immediately with per-action Undo; the pacific <b>DRAFT</b> zone holds changes until Save. Cancel now warns only about the draft zone, because that's the truth.</p>
+
+  <div class="mk-frame">
+    <div class="sheet-stage">
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+        <div class="sheet-head">
+          <h3 id="sh-t">Edit · Twilight Concert at the Sunken Garden</h3>
+          <span class="esc">Esc closes</span>
+          <button class="sheet-x" aria-label="Close">✕</button>
+        </div>
+        <div class="sheet-body">
+
+          <div class="zone live">
+            <div class="zone-head">⚡ Photo · applies to the live site immediately</div>
+            <div class="zone-body">
+              <div class="photo-row">
+                <div class="pthumb sel"></div>
+                <div class="pthumb alt"></div>
+                <div class="pthumb" style="background:linear-gradient(135deg,var(--terracotta),var(--tile-light))"></div>
+                <button class="zonebtn">Use this photo</button>
+                <button class="zonebtn" style="border-color:var(--line);color:var(--ink-2)">Search wider</button>
+              </div>
+              <p class="zone-note">Each apply goes live at once and gets its own Undo toast. 14/1200 Google calls this month.</p>
+            </div>
+          </div>
+
+          <div class="zone draft">
+            <div class="zone-head">✎ Details · saved together when you press Save</div>
+            <div class="zone-body" style="display:grid;gap:14px">
+              <div><label for="ct">Title</label><input id="ct" value="Twilight Concert at the Sunken Garden"></div>
+              <div><label for="cb">Blurb</label><textarea id="cb" rows="2">Bring a low chair and something from the Public Market: the courthouse lawn turns into the town's living room.</textarea></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+                <div><label for="cn">Neighborhood</label><select id="cn"><option>Downtown</option></select></div>
+                <div><label>Start time</label><div class="locknote">🔒 Locked · reject & re-ingest in the Queue</div></div>
+              </div>
+              <div>
+                <label>Occasion tags</label>
+                <div class="tagrow">
+                  <button class="tg on" aria-pressed="true">free_sb</button>
+                  <button class="tg on" aria-pressed="true">family_day</button>
+                  <button class="tg" aria-pressed="false">date_night</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="sheet-foot">
+          <span class="dirty">● 2 unsaved changes</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" style="min-height:40px">Cancel</button>
+          <button class="btn approve" style="min-height:40px">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="mk-note" style="margin-top:24px">This same shell (head with Esc, body, footed actions, trap + restore) becomes the restock modal, sources sheet, rhythms sheet, hero picker, swap picker, and venue detail sheet in the build, with window.confirm replaced by a small centered variant of it for destructive confirms.</p>
+</section>
+
+</body>
+</html>

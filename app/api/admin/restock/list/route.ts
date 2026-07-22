@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminUser } from "@/lib/reviewServer";
 import { getAdminSupabase } from "@/lib/supabaseAdmin";
+import { workflowRunsUrl } from "@/lib/githubActions";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +18,11 @@ export async function GET() {
     .limit(12);
   // Table may not exist yet (migration pending), degrade to empty rather than 500.
   if (error) return NextResponse.json({ directives: [], note: "restock_directives unavailable" });
-  return NextResponse.json({ directives: data ?? [] });
+
+  // QW8, "view runs" is the same Actions page for every in-flight directive.
+  const runsUrl = workflowRunsUrl();
+  const directives = (data ?? []).map((d) => (
+    d.status === "running" || d.status === "queued" ? { ...d, runsUrl } : d
+  ));
+  return NextResponse.json({ directives });
 }

@@ -31,13 +31,20 @@ export async function GET(req: NextRequest) {
   if (missed) {
     const to = process.env.DIGEST_TO;
     if (to) {
-      await sendEmail({
+      const sent = await sendEmail({
         to,
         subject: "SB Daymaker, nightly ingest did not run",
         html: `<p>No ingest run has been recorded in the last ${MISSED_RUN_CUTOFF_HOURS} hours` +
           `${lastRunAt ? ` (last one started ${lastRunAt})` : " (none found at all)"}.` +
           ` Check the GitHub Action.</p>`,
       });
+      if (!sent) {
+        console.error("heartbeat: missed-run alert email failed to send", { lastRunAt, hoursSince: Math.round(hoursSince) });
+        return NextResponse.json({
+          ok: false, missed, lastRunAt: lastRunAt ?? null, hoursSince: Math.round(hoursSince),
+          detail: "missed-run detected but the alert email failed to send",
+        }, { status: 502 });
+      }
     }
   }
   return NextResponse.json({ ok: true, missed, lastRunAt: lastRunAt ?? null, hoursSince: Math.round(hoursSince) });

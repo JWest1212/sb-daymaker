@@ -289,28 +289,3 @@ export async function loadCockpitData(): Promise<CockpitData> {
   };
 }
 
-export interface CockpitCounts {
-  queue: number;   // things awaiting review
-  dropped: number; // rows dropped in the latest run window
-  down: number;    // sources whose latest run failed
-}
-
-/** Cheap head-count queries for the shell topbar + tab strip (no full-row fetch). */
-export async function loadCockpitCounts(): Promise<CockpitCounts> {
-  const sb = getAdminSupabase();
-  if (!sb) return { queue: 0, dropped: 0, down: 0 };
-
-  const [queueRes, dropRes, runsRes] = await Promise.all([
-    sb.from("things").select("id", { count: "exact", head: true }).eq("status", "needs_review"),
-    sb.from("ingest_drops").select("id", { count: "exact", head: true }),
-    sb.from("source_runs").select("source, landed, fetched, ok, started_at")
-      .order("started_at", { ascending: false }).limit(60),
-  ]);
-
-  const down = rollupSources((runsRes.data ?? []) as never).filter((s) => s.status === "fail").length;
-  return {
-    queue: queueRes.count ?? 0,
-    dropped: dropRes.count ?? 0,
-    down,
-  };
-}

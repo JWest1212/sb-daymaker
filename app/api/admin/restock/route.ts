@@ -4,6 +4,7 @@ import { getAdminSupabase } from "@/lib/supabaseAdmin";
 import { OCCASION_TAGS } from "@/lib/review";
 import { ZONES } from "@/lib/zones";
 import { COVERAGE_WINDOWS, type CoverageWindow } from "@/lib/coverage";
+import { workflowRunsUrl } from "@/lib/githubActions";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
     if (dispatch.ok) {
       await sb.from("restock_directives")
         .update({ status: "running", started_at: new Date().toISOString() }).eq("id", data.id);
-      return NextResponse.json({ ok: true, id: data.id, dispatched: true });
+      return NextResponse.json({ ok: true, id: data.id, dispatched: true, runsUrl: workflowRunsUrl() });
     }
     return NextResponse.json({ ok: false, id: data.id, queued: true, error: dispatch.error }, { status: 502 });
   }

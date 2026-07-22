@@ -1,0 +1,990 @@
+{
+  "spec": "SB Daymaker Cockpit build spec, Appendix A",
+  "generatedAt": "2026-07-20T22:43:29Z",
+  "commit": "b9e1b17fa41d03f19ab18c29ed1a7c0912312942",
+  "screens": [
+    {
+      "id": "SCR-01",
+      "name": "Review queue",
+      "route": "/admin/review",
+      "files": [
+        "app/admin/review/page.tsx",
+        "app/admin/review/ReviewQueue.tsx",
+        "app/admin/review/ReviewCard.tsx",
+        "app/admin/review/ImagePicker.tsx",
+        "app/admin/review/SourceHealth.tsx",
+        "app/admin/review/DroppedPanel.tsx",
+        "app/admin/review/MergedPanel.tsx",
+        "app/admin/review/ConfidenceMetrics.tsx"
+      ]
+    },
+    {
+      "id": "SCR-02",
+      "name": "Coverage",
+      "route": "/admin/coverage",
+      "files": [
+        "app/admin/coverage/page.tsx",
+        "app/admin/coverage/CoverageView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-03",
+      "name": "Sources",
+      "route": "/admin/coverage/sources",
+      "files": [
+        "app/admin/coverage/sources/page.tsx",
+        "app/admin/coverage/sources/SourcesView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-04",
+      "name": "Neighborhood Sweep",
+      "route": "/admin/coverage/neighborhood-sweep",
+      "files": [
+        "app/admin/coverage/neighborhood-sweep/page.tsx",
+        "app/admin/coverage/neighborhood-sweep/NeighborhoodSweepView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-05",
+      "name": "Recurring Rhythms",
+      "route": "/admin/coverage/recurring-rhythms",
+      "files": [
+        "app/admin/coverage/recurring-rhythms/page.tsx",
+        "app/admin/coverage/recurring-rhythms/RecurringRhythmsView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-06",
+      "name": "Live catalog",
+      "route": "/admin/catalog",
+      "files": [
+        "app/admin/catalog/page.tsx",
+        "app/admin/catalog/CatalogView.tsx",
+        "app/admin/catalog/CatalogImagePicker.tsx"
+      ]
+    },
+    {
+      "id": "SCR-07",
+      "name": "Hero plan",
+      "route": "/admin/heroes",
+      "files": [
+        "app/admin/heroes/page.tsx",
+        "app/admin/heroes/HeroPlanView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-08",
+      "name": "Edition draft",
+      "route": "/admin/edition-draft",
+      "files": [
+        "app/admin/edition-draft/page.tsx",
+        "app/admin/edition-draft/EditionDraftView.tsx",
+        "app/admin/edition-draft/PickEditor.tsx",
+        "app/admin/edition-draft/SwapPicker.tsx",
+        "app/admin/edition-draft/EditionImageEditor.tsx",
+        "app/admin/edition-draft/ArchiveTable.tsx"
+      ]
+    },
+    {
+      "id": "SCR-09",
+      "name": "Venues",
+      "route": "/admin/venues",
+      "files": [
+        "app/admin/venues/page.tsx",
+        "app/admin/venues/VenuesView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-10",
+      "name": "Images",
+      "route": "/admin/images",
+      "files": [
+        "app/admin/images/page.tsx",
+        "app/admin/images/ImagesView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-11",
+      "name": "Flags",
+      "route": "/admin/flags",
+      "files": [
+        "app/admin/flags/page.tsx",
+        "app/admin/flags/FlagsView.tsx"
+      ]
+    },
+    {
+      "id": "SCR-12",
+      "name": "Cockpit login",
+      "route": "/cockpit/login",
+      "files": [
+        "app/cockpit/login/page.tsx",
+        "app/cockpit/login/LoginForm.tsx"
+      ]
+    },
+    {
+      "id": "SCR-13",
+      "name": "Legacy cockpit redirect",
+      "route": "/cockpit",
+      "files": [
+        "app/cockpit/page.tsx"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "CMP-01",
+      "name": "CockpitTabs",
+      "path": "app/admin/CockpitTabs.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-02",
+      "name": "BudgetChip",
+      "path": "app/admin/BudgetChip.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-03",
+      "name": "WeightNudge",
+      "path": "app/admin/WeightNudge.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-04",
+      "name": "TabStub",
+      "path": "app/admin/TabStub.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-05",
+      "name": "ReviewQueue",
+      "path": "app/admin/review/ReviewQueue.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-06",
+      "name": "ReviewCard",
+      "path": "app/admin/review/ReviewCard.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-07",
+      "name": "ImagePicker",
+      "path": "app/admin/review/ImagePicker.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-08",
+      "name": "SourceHealth",
+      "path": "app/admin/review/SourceHealth.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-09",
+      "name": "DroppedPanel",
+      "path": "app/admin/review/DroppedPanel.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-10",
+      "name": "MergedPanel",
+      "path": "app/admin/review/MergedPanel.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-11",
+      "name": "ConfidenceMetrics",
+      "path": "app/admin/review/ConfidenceMetrics.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-12",
+      "name": "CoverageView",
+      "path": "app/admin/coverage/CoverageView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-13",
+      "name": "SourcesView",
+      "path": "app/admin/coverage/sources/SourcesView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-14",
+      "name": "NeighborhoodSweepView",
+      "path": "app/admin/coverage/neighborhood-sweep/NeighborhoodSweepView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-15",
+      "name": "RecurringRhythmsView",
+      "path": "app/admin/coverage/recurring-rhythms/RecurringRhythmsView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-16",
+      "name": "CatalogView",
+      "path": "app/admin/catalog/CatalogView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-17",
+      "name": "CatalogImagePicker",
+      "path": "app/admin/catalog/CatalogImagePicker.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-18",
+      "name": "HeroPlanView",
+      "path": "app/admin/heroes/HeroPlanView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-19",
+      "name": "EditionDraftView",
+      "path": "app/admin/edition-draft/EditionDraftView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-20",
+      "name": "PickEditor",
+      "path": "app/admin/edition-draft/PickEditor.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-21",
+      "name": "SwapPicker",
+      "path": "app/admin/edition-draft/SwapPicker.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-22",
+      "name": "EditionImageEditor",
+      "path": "app/admin/edition-draft/EditionImageEditor.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-23",
+      "name": "ArchiveTable",
+      "path": "app/admin/edition-draft/ArchiveTable.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-24",
+      "name": "VenuesView",
+      "path": "app/admin/venues/VenuesView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-25",
+      "name": "ImagesView",
+      "path": "app/admin/images/ImagesView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-26",
+      "name": "FlagsView",
+      "path": "app/admin/flags/FlagsView.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-27",
+      "name": "LoginForm",
+      "path": "app/cockpit/login/LoginForm.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": false
+    },
+    {
+      "id": "CMP-28",
+      "name": "ReviewCard (legacy, orphaned)",
+      "path": "app/cockpit/ReviewCard.tsx",
+      "sharedWithPublicApp": false,
+      "orphaned": true
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "API-01",
+      "method": "POST",
+      "route": "/api/admin/catalog/bulk",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-02",
+      "method": "POST",
+      "route": "/api/admin/catalog/delete",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-03",
+      "method": "POST",
+      "route": "/api/admin/catalog/edit",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-04",
+      "method": "POST",
+      "route": "/api/admin/catalog/find-more-images",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-05",
+      "method": "POST",
+      "route": "/api/admin/catalog/photo",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-06",
+      "method": "POST",
+      "route": "/api/admin/catalog/redraft",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-07",
+      "method": "GET",
+      "route": "/api/admin/catalog",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-08",
+      "method": "POST",
+      "route": "/api/admin/catalog/venue-photos/fetch",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-09",
+      "method": "GET",
+      "route": "/api/admin/coverage/cell",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-10",
+      "method": "POST",
+      "route": "/api/admin/coverage/neighborhood-sweep/apply",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-11",
+      "method": "GET, POST",
+      "route": "/api/admin/coverage/neighborhood-sweep/dictionary",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-12",
+      "method": "GET",
+      "route": "/api/admin/coverage/neighborhood-sweep",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-13",
+      "method": "POST",
+      "route": "/api/admin/coverage/neighborhood-sweep/triage",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-14",
+      "method": "PATCH",
+      "route": "/api/admin/coverage/recurring-rhythms/[id]",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-15",
+      "method": "GET, POST",
+      "route": "/api/admin/coverage/recurring-rhythms",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-16",
+      "method": "GET",
+      "route": "/api/admin/coverage",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-17",
+      "method": "PATCH",
+      "route": "/api/admin/coverage/sources/[key]",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-18",
+      "method": "GET, POST",
+      "route": "/api/admin/coverage/sources",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-19",
+      "method": "POST",
+      "route": "/api/admin/dedupe/unmerge",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-20",
+      "method": "POST",
+      "route": "/api/admin/editions/[id]/picks/[pickId]/blurb-edit",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-21",
+      "method": "POST",
+      "route": "/api/admin/editions/[id]/picks/[pickId]/find-more-images",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-22",
+      "method": "POST",
+      "route": "/api/admin/editions/[id]/picks/[pickId]/image",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-23",
+      "method": "PATCH",
+      "route": "/api/admin/editions/[id]/picks/[pickId]",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-24",
+      "method": "GET",
+      "route": "/api/admin/editions/[id]/preview",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-25",
+      "method": "GET, PATCH",
+      "route": "/api/admin/editions/[id]",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-26",
+      "method": "GET",
+      "route": "/api/admin/editions/[id]/search-things",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-27",
+      "method": "POST",
+      "route": "/api/admin/editions/[id]/swap",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-28",
+      "method": "GET",
+      "route": "/api/admin/editions/archive",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-29",
+      "method": "GET",
+      "route": "/api/admin/editions",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-30",
+      "method": "POST",
+      "route": "/api/admin/flags/[id]",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-31",
+      "method": "POST",
+      "route": "/api/admin/hero-eligible",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-32",
+      "method": "GET, POST, DELETE",
+      "route": "/api/admin/hero-pins",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-33",
+      "method": "GET",
+      "route": "/api/admin/image-budget",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-34",
+      "method": "POST",
+      "route": "/api/admin/images/ack",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-35",
+      "method": "POST",
+      "route": "/api/admin/images/auto-assign",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-36",
+      "method": "POST",
+      "route": "/api/admin/images/auto-google",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-37",
+      "method": "POST",
+      "route": "/api/admin/images/locate",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-38",
+      "method": "POST",
+      "route": "/api/admin/images/pool-build",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-39",
+      "method": "POST",
+      "route": "/api/admin/images/prefetch",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-40",
+      "method": "GET",
+      "route": "/api/admin/images",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-41",
+      "method": "GET",
+      "route": "/api/admin/restock/list",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-42",
+      "method": "POST",
+      "route": "/api/admin/restock",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-43",
+      "method": "GET",
+      "route": "/api/admin/venues/[id]/things",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-44",
+      "method": "POST",
+      "route": "/api/admin/venues/ack",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-45",
+      "method": "POST",
+      "route": "/api/admin/venues/create",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-46",
+      "method": "POST",
+      "route": "/api/admin/venues/detach",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-47",
+      "method": "POST",
+      "route": "/api/admin/venues/edit",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-48",
+      "method": "POST",
+      "route": "/api/admin/venues/lookup-place-ids",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-49",
+      "method": "POST",
+      "route": "/api/admin/venues/match",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-50",
+      "method": "POST",
+      "route": "/api/admin/venues/photos/approve",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-51",
+      "method": "POST",
+      "route": "/api/admin/venues/photos/fetch",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-52",
+      "method": "POST",
+      "route": "/api/admin/venues/photos/remove",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-53",
+      "method": "POST",
+      "route": "/api/admin/venues/photos/reorder",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-54",
+      "method": "GET",
+      "route": "/api/admin/venues",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-55",
+      "method": "POST",
+      "route": "/api/admin/weight",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-56",
+      "method": "POST",
+      "route": "/api/review/approve",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-57",
+      "method": "POST",
+      "route": "/api/review/image-fetch",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-58",
+      "method": "GET",
+      "route": "/api/review/queue",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-59",
+      "method": "POST",
+      "route": "/api/review/reject",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    },
+    {
+      "id": "API-60",
+      "method": "POST",
+      "route": "/api/review/update",
+      "authMechanism": "per-route getAdminUser() check; 401 JSON when unauthenticated"
+    }
+  ],
+  "tables": [
+    {
+      "name": "things",
+      "readBy": [
+        "SCR-01",
+        "SCR-02",
+        "SCR-04",
+        "SCR-06",
+        "SCR-07",
+        "SCR-09",
+        "SCR-10",
+        "SCR-11",
+        "API-07",
+        "API-09",
+        "API-12",
+        "API-16",
+        "API-26",
+        "API-40",
+        "API-43",
+        "API-54",
+        "API-58"
+      ],
+      "writtenBy": [
+        "API-01",
+        "API-02",
+        "API-03",
+        "API-05",
+        "API-10",
+        "API-13",
+        "API-19",
+        "API-21",
+        "API-27",
+        "API-31",
+        "API-34",
+        "API-35",
+        "API-36",
+        "API-44",
+        "API-45",
+        "API-46",
+        "API-49",
+        "API-55",
+        "API-56",
+        "API-59",
+        "API-60"
+      ]
+    },
+    {
+      "name": "thing_tags",
+      "readBy": [
+        "SCR-01",
+        "SCR-06"
+      ],
+      "writtenBy": [
+        "API-01",
+        "API-03",
+        "API-56",
+        "API-60"
+      ]
+    },
+    {
+      "name": "thing_edits",
+      "readBy": [
+        "SCR-01",
+        "SCR-06",
+        "API-58"
+      ],
+      "writtenBy": [
+        "API-56",
+        "API-59"
+      ]
+    },
+    {
+      "name": "recurring_schedules",
+      "readBy": [
+        "SCR-01",
+        "SCR-02",
+        "SCR-07"
+      ],
+      "writtenBy": []
+    },
+    {
+      "name": "source_runs",
+      "readBy": [
+        "SCR-01"
+      ],
+      "writtenBy": []
+    },
+    {
+      "name": "ingest_drops",
+      "readBy": [
+        "SCR-01"
+      ],
+      "writtenBy": []
+    },
+    {
+      "name": "sources",
+      "readBy": [
+        "SCR-01",
+        "SCR-03",
+        "API-18"
+      ],
+      "writtenBy": [
+        "API-17",
+        "API-18"
+      ]
+    },
+    {
+      "name": "audit_log",
+      "readBy": [
+        "SCR-01"
+      ],
+      "writtenBy": [
+        "API-05",
+        "API-06",
+        "API-31",
+        "API-50",
+        "API-52",
+        "API-53",
+        "API-55",
+        "API-56",
+        "API-59",
+        "API-60"
+      ]
+    },
+    {
+      "name": "hero_pins",
+      "readBy": [
+        "SCR-07",
+        "API-32"
+      ],
+      "writtenBy": [
+        "API-32"
+      ]
+    },
+    {
+      "name": "restock_directives",
+      "readBy": [
+        "API-41"
+      ],
+      "writtenBy": [
+        "API-42"
+      ]
+    },
+    {
+      "name": "enrich_directives (drift: live-DB only)",
+      "readBy": [
+        "API-06"
+      ],
+      "writtenBy": [
+        "API-06"
+      ]
+    },
+    {
+      "name": "venues",
+      "readBy": [
+        "SCR-06",
+        "SCR-09",
+        "SCR-10",
+        "API-40",
+        "API-54"
+      ],
+      "writtenBy": [
+        "API-08",
+        "API-45",
+        "API-47",
+        "API-51"
+      ]
+    },
+    {
+      "name": "venue_photos",
+      "readBy": [
+        "SCR-09",
+        "SCR-10",
+        "API-40",
+        "API-54"
+      ],
+      "writtenBy": [
+        "API-05",
+        "API-36",
+        "API-38",
+        "API-50",
+        "API-51",
+        "API-52",
+        "API-53"
+      ]
+    },
+    {
+      "name": "venue_neighborhoods",
+      "readBy": [
+        "SCR-04",
+        "API-11"
+      ],
+      "writtenBy": [
+        "API-11",
+        "API-13"
+      ]
+    },
+    {
+      "name": "recurring_rhythms",
+      "readBy": [
+        "SCR-05",
+        "API-15"
+      ],
+      "writtenBy": [
+        "API-14",
+        "API-15"
+      ]
+    },
+    {
+      "name": "editions",
+      "readBy": [
+        "SCR-08",
+        "API-24",
+        "API-25",
+        "API-28",
+        "API-29"
+      ],
+      "writtenBy": [
+        "API-25"
+      ]
+    },
+    {
+      "name": "edition_picks",
+      "readBy": [
+        "SCR-08",
+        "API-24",
+        "API-25"
+      ],
+      "writtenBy": [
+        "API-22",
+        "API-23",
+        "API-27"
+      ]
+    },
+    {
+      "name": "edition_candidates",
+      "readBy": [
+        "SCR-08",
+        "API-25"
+      ],
+      "writtenBy": [
+        "API-27"
+      ]
+    },
+    {
+      "name": "image_spend",
+      "readBy": [
+        "API-33"
+      ],
+      "writtenBy": [
+        "API-08",
+        "API-36",
+        "API-38",
+        "API-51",
+        "API-57"
+      ]
+    },
+    {
+      "name": "image_cache",
+      "readBy": [],
+      "writtenBy": [
+        "API-39",
+        "API-57"
+      ]
+    },
+    {
+      "name": "content_flags (drift: live-DB only)",
+      "readBy": [
+        "SCR-11"
+      ],
+      "writtenBy": [
+        "API-30"
+      ]
+    },
+    {
+      "name": "subscribers",
+      "readBy": [],
+      "writtenBy": [
+        "API-25 (send path reads; no cockpit writes)"
+      ]
+    },
+    {
+      "name": "guides",
+      "readBy": [
+        "SCR-11"
+      ],
+      "writtenBy": []
+    },
+    {
+      "name": "url_redirects (drift: live-DB only)",
+      "readBy": [],
+      "writtenBy": [
+        "API-56"
+      ]
+    }
+  ]
+}
