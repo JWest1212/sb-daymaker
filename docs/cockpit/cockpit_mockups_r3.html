@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SB Daymaker Cockpit · Phase 3 Mockups · Round 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7; --plaster-2:#EFE7D8; --paper:#FCFAF5;
+  --ink:#241C16; --ink-2:#4A4038;
+  --pacific:#16586A; --pacific-dark:#0E3C49;
+  --terracotta:#C0532E; --tile-light:#E08A5B; --gold:#E0A82E; --sage:#7E8B6B;
+  --line:#D8CDB8; --purple:#9C6B9E; --forest:#3E7C5A;
+  --gold-text:#7A5E13; --sage-text:#566049; --terra-text:#9E3F20;
+  --bg:var(--plaster); --surface:var(--paper); --text:var(--ink);
+  --sev-blocker:#B23A2E; --sev-high:#C77D1E; --sev-low:#3E7C5A;
+  --font-display:'Fraunces',Georgia,serif; --font-body:'Inter',system-ui,sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.25rem; --text-xl:1.563rem; --text-2xl:1.953rem;
+  --leading-tight:1.1; --leading-snug:1.3; --leading-body:1.6;
+  --tap-min:44px;
+  --radius-sm:7px; --radius-md:12px; --radius-lg:16px; --radius-pill:999px;
+  --shadow-card:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  --shadow-sheet:0 -8px 40px rgba(36,28,22,.18);
+  --tint-pacific-06:color-mix(in srgb,var(--pacific) 6%,transparent);
+  --tint-pacific-12:color-mix(in srgb,var(--pacific) 12%,transparent);
+  --tint-gold-16:color-mix(in srgb,var(--gold) 16%,transparent);
+  --tint-terra-10:color-mix(in srgb,var(--terracotta) 10%,transparent);
+  --tint-sage-14:color-mix(in srgb,var(--forest) 14%,transparent);
+  --rag-red:rgba(178,58,46,.15); --rag-red-2:rgba(178,58,46,.28);
+  --rag-amber:rgba(199,125,30,.16); --rag-green:rgba(62,124,90,.16); --rag-green-2:rgba(62,124,90,.30);
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#E9E2D2;font-family:var(--font-body);color:var(--text);line-height:var(--leading-body)}
+a{color:var(--pacific)}
+:focus-visible{outline:3px solid var(--pacific);outline-offset:2px;border-radius:4px}
+button{font-family:var(--font-body);cursor:pointer}
+input,textarea,select{font-family:var(--font-body);font-size:var(--text-base);color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;width:100%}
+label{font-size:var(--text-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);display:block;margin-bottom:5px}
+kbd{font-family:var(--font-mono);font-size:.72rem;background:var(--plaster-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink-2)}
+
+.mk-nav{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--paper);padding:12px 24px;display:flex;gap:20px;align-items:baseline;flex-wrap:wrap}
+.mk-nav strong{font-family:var(--font-mono);font-size:.8rem;letter-spacing:.08em}
+.mk-nav a{color:#C9E0E6;font-size:.85rem;text-decoration:none}
+.mk-section{max-width:1280px;margin:0 auto;padding:56px 24px 24px}
+.mk-label{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--terra-text);margin-bottom:8px}
+.mk-h{font-family:var(--font-display);font-weight:900;font-size:var(--text-2xl);line-height:var(--leading-tight);margin-bottom:8px}
+.mk-note{max-width:74ch;color:var(--ink-2);font-size:var(--text-sm);margin-bottom:28px}
+.mk-frame{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);position:relative}
+.pad{padding:28px}
+.shead{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.stitle{font-family:var(--font-display);font-weight:900;font-size:var(--text-2xl)}
+.ssub{font-size:var(--text-sm);color:var(--ink-2);max-width:68ch;margin-bottom:22px}
+.mono{font-family:var(--font-mono)}
+
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap-min);padding:0 20px;border-radius:var(--radius-pill);font-size:.92rem;font-weight:600;border:none}
+.btn.primary{background:var(--pacific);color:var(--paper)}
+.btn.ghost{background:none;border:1.5px solid var(--line);color:var(--ink-2)}
+.btn.hold{background:none;border:1.5px solid var(--terracotta);color:var(--terra-text)}
+.btn.sm{min-height:36px;padding:0 14px;font-size:.85rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-card)}
+.panel-h{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--plaster-2)}
+.panel-h h3{font-family:var(--font-display);font-weight:700;font-size:var(--text-lg);flex:1}
+.chipstat{font-size:.75rem;font-weight:600;border-radius:var(--radius-pill);padding:4px 12px}
+.chipstat.draft{background:var(--tint-pacific-12);color:var(--pacific)}
+
+/* ============ EDITION ============ */
+.edlayout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.preview{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius-md);margin:16px 20px 20px;overflow:hidden}
+.pv-hero{background:linear-gradient(135deg,var(--pacific),var(--pacific-dark));aspect-ratio:16/8;display:flex;align-items:flex-end;padding:14px}
+.pv-hero span{font-family:var(--font-display);color:var(--paper);font-weight:700;font-size:var(--text-lg)}
+.pv-body{padding:14px 16px;font-size:.85rem;color:var(--ink-2)}
+.pickcard{border:1px solid var(--line);border-radius:var(--radius-md);margin:0 20px 14px;overflow:hidden}
+.pickcard.dirty{border-color:var(--gold)}
+.pick-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:color-mix(in srgb,var(--paper) 60%,var(--plaster));font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.pick-h .slot{color:var(--terra-text)}
+.dirtydot{width:8px;height:8px;border-radius:50%;background:var(--gold);margin-left:auto}
+.pick-b{padding:14px;display:grid;gap:12px}
+.savebar{position:sticky;bottom:0;display:flex;align-items:center;gap:14px;background:var(--ink);color:var(--paper);padding:12px 20px;border-radius:var(--radius-md);margin:8px 20px 20px;box-shadow:var(--shadow-sheet)}
+.savebar .who{font-size:.85rem}
+.savebar .who b{color:var(--gold)}
+.savebar .spacer{flex:1}
+.savebar .discard{background:none;border:1.5px solid rgba(252,250,245,.35);color:var(--paper);border-radius:var(--radius-pill);min-height:38px;padding:0 16px;font-size:.85rem;font-weight:600}
+.savebar .saveall{background:var(--gold);border:none;color:var(--ink);border-radius:var(--radius-pill);min-height:38px;padding:0 18px;font-size:.85rem;font-weight:700}
+.decision{margin:0 20px 20px;border:1px solid var(--line);border-radius:var(--radius-md);padding:16px}
+.decision h4{font-family:var(--font-display);font-weight:700;margin-bottom:8px}
+.decision p{font-size:.85rem;color:var(--ink-2);margin-bottom:14px}
+.decision .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ============ IMAGES ============ */
+.imtool{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.imtool .budget{margin-left:auto;font-family:var(--font-mono);font-size:.78rem;background:var(--tint-gold-16);color:var(--gold-text);border-radius:var(--radius-pill);padding:5px 12px}
+.resume{display:flex;gap:12px;align-items:center;background:var(--tint-gold-16);border:1px solid var(--gold);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:18px}
+.resume .rb{background:var(--gold);border:none;color:var(--ink);font-weight:700;border-radius:var(--radius-pill);min-height:36px;padding:0 16px;font-size:.85rem}
+.resume p{font-size:.85rem;color:var(--ink)}
+.resume .prog{flex:1;height:6px;border-radius:3px;background:var(--plaster-2);overflow:hidden;max-width:220px}
+.resume .prog i{display:block;height:100%;width:71%;background:var(--gold)}
+.imcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--shadow-card);margin-bottom:18px;overflow:hidden}
+.imcard.is-active{border-color:var(--pacific);box-shadow:0 0 0 3px var(--tint-pacific-12),var(--shadow-card)}
+.im-b{display:grid;grid-template-columns:170px 1fr;gap:18px;padding:16px 20px}
+.im-thumb{border-radius:var(--radius-md);background:linear-gradient(135deg,var(--sage),var(--forest));aspect-ratio:4/3;display:flex;align-items:flex-end}
+.im-thumb span{font-family:var(--font-mono);font-size:.6rem;color:#DCE8DF;padding:6px 8px}
+.im-title{font-family:var(--font-display);font-weight:700;font-size:var(--text-lg);line-height:var(--leading-snug)}
+.im-meta{font-family:var(--font-mono);font-size:.75rem;color:var(--ink-2);margin:3px 0 8px}
+.venueline{font-size:.85rem;color:var(--ink-2);margin-bottom:10px}
+.venueline b{color:var(--sage-text)}
+.strip{display:flex;gap:8px;margin-bottom:4px}
+.cand{width:76px;aspect-ratio:4/3;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--pacific),var(--pacific-dark))}
+.cand.sel{outline:3px solid var(--gold);outline-offset:2px}
+.cand.alt{background:linear-gradient(135deg,var(--tile-light),var(--terracotta))}
+.im-act{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--plaster-2);padding:10px 20px;background:color-mix(in srgb,var(--paper) 60%,var(--plaster))}
+.im-act .free{font-size:.7rem;color:var(--sage-text);font-weight:700;letter-spacing:.04em}
+.im-act .paid{font-size:.7rem;color:var(--terra-text);font-weight:700;letter-spacing:.04em}
+.sessrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--plaster-2);font-size:var(--text-sm)}
+.sessrow:last-child{border-bottom:none}
+.sessrow small{display:block;font-family:var(--font-mono);font-size:.68rem;color:var(--ink-2)}
+.revert{border:1.5px solid var(--pacific);background:none;color:var(--pacific);border-radius:var(--radius-pill);font-size:.75rem;font-weight:600;min-height:30px;padding:0 12px}
+.imlayout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+.spanel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:16px 18px;margin-bottom:16px}
+.spanel h4{font-family:var(--font-display);font-weight:700;font-size:var(--text-base);margin-bottom:10px}
+.srow{display:flex;justify-content:space-between;gap:10px;font-size:var(--text-sm);color:var(--ink-2);padding:5px 0;border-bottom:1px solid var(--plaster-2)}
+.srow:last-child{border-bottom:none}
+.srow b{color:var(--ink);font-family:var(--font-mono);font-weight:600}
+
+/* ============ COVERAGE ============ */
+.covgrid{border:1px solid var(--line);border-radius:var(--radius-md);overflow:hidden;background:var(--surface)}
+table{border-collapse:collapse;width:100%}
+th,td{padding:0;border-bottom:1px solid var(--plaster-2)}
+th{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);text-align:left;padding:12px 16px;background:color-mix(in srgb,var(--paper) 60%,var(--plaster))}
+td.rowname{font-family:var(--font-display);font-weight:700;font-size:var(--text-base);padding:0 16px;white-space:nowrap}
+.cell{width:100%;min-height:52px;border:none;background:none;font-family:var(--font-mono);font-size:.95rem;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px}
+.cell .floor{font-size:.62rem;color:var(--sev-blocker);font-weight:700}
+td.c-red{background:var(--rag-red)} td.c-red2{background:var(--rag-red-2)}
+td.c-amb{background:var(--rag-amber)} td.c-grn{background:var(--rag-green)} td.c-grn2{background:var(--rag-green-2)}
+.covhead-links{display:flex;gap:16px;font-size:.85rem;margin-left:auto;flex-wrap:wrap;align-items:center}
+.minibadge{font-family:var(--font-mono);font-size:.68rem;background:var(--sev-blocker);color:var(--paper);border-radius:var(--radius-pill);padding:2px 8px}
+.legend{display:flex;gap:16px;align-items:center;font-size:.75rem;color:var(--ink-2);margin-top:12px;flex-wrap:wrap}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block;vertical-align:-2px;margin-right:5px;border:1px solid var(--line)}
+
+@media (max-width:980px){.edlayout,.imlayout{grid-template-columns:1fr}.im-b{grid-template-columns:1fr}.im-thumb{max-width:240px}}
+</style>
+</head>
+<body>
+
+<nav class="mk-nav" aria-label="Mockup sections">
+  <strong>SBD COCKPIT · PHASE 3 · ROUND 3</strong>
+  <a href="#edition">Edition desk</a>
+  <a href="#images">Images desk</a>
+  <a href="#coverage">Coverage</a>
+</nav>
+
+<!-- ================= EDITION ================= -->
+<section class="mk-section" id="edition">
+  <p class="mk-label">S6 · Decision D4 · save-all with dirty rollup</p>
+  <h2 class="mk-h">The Edition desk</h2>
+  <p class="mk-note">Preview left, editor right, same bones as today. New: every edited pick gets a gold dirty dot, and a dark save bar pins to the bottom of the editor naming exactly what's unsaved; one press saves the pass, one press discards it. The Decision card keeps its hard-won copy word for word, restyled only. Per-pick machinery (swap, AI edit, image editor) is unchanged behind the chrome.</p>
+
+  <div class="mk-frame pad">
+    <div class="shead">
+      <h1 class="stitle">Edition draft</h1>
+      <span class="chipstat draft">Draft</span>
+      <span class="mono" style="font-size:.85rem;color:var(--ink-2)">Sun Jul 26 · week-ahead · sends Thu 7:00 AM</span>
+    </div>
+    <p class="ssub">Shape the Sunday email before it goes. Hold is the only thing that stops the send.</p>
+
+    <div class="edlayout">
+      <div class="panel">
+        <div class="panel-h"><h3>Draft preview</h3><span class="mono" style="font-size:.72rem;color:var(--ink-2)">refreshes after each save</span></div>
+        <div class="preview">
+          <div class="pv-hero"><span>The Move: Twilight at the Sunken Garden</span></div>
+          <div class="pv-body">Bring a low chair and something from the Public Market: the courthouse lawn turns into the town's living room for a free brass-and-swing evening. Gates at 5, music at 6.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h3>Draft editor</h3></div>
+
+        <div class="pickcard dirty" style="margin-top:16px">
+          <div class="pick-h"><span class="slot">Hero · The Move</span><span>Twilight Concert</span><span class="dirtydot" title="Unsaved changes"></span></div>
+          <div class="pick-b">
+            <div><label for="e1">Blurb (blurb_long sends for the hero)</label><textarea id="e1" rows="2">Bring a low chair and something from the Public Market: the courthouse lawn turns into the town's living room.</textarea></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn ghost sm">Swap pick</button>
+              <button class="btn ghost sm">Images (6)</button>
+              <input placeholder='Describe an edit… e.g. "make it warmer"' style="flex:1;min-width:180px">
+              <button class="btn ghost sm">Claude edit for me</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="pickcard dirty">
+          <div class="pick-h"><span class="slot">Secondary · 1</span><span>First Thursday Art Walk</span><span class="dirtydot" title="Unsaved changes"></span></div>
+          <div class="pick-b"><div><label for="e2">Blurb</label><textarea id="e2" rows="2">Galleries pour, doors open, and the whole block wanders.</textarea></div></div>
+        </div>
+
+        <div class="pickcard">
+          <div class="pick-h"><span class="slot">Anchor · Always worth it</span><span>Douglas Preserve at golden hour</span></div>
+          <div class="pick-b"><div><label for="e3">Blurb</label><textarea id="e3" rows="2">The bluff-top meadow where the whole town walks its dogs into the sunset.</textarea></div></div>
+        </div>
+
+        <div class="savebar" role="status">
+          <span class="who">● <b>2 picks</b> have unsaved changes: Hero, Secondary 1</span>
+          <span class="spacer"></span>
+          <button class="discard">Discard all</button>
+          <button class="saveall">Save all changes</button>
+        </div>
+
+        <div class="decision">
+          <h4>Decision</h4>
+          <p>This edition sends automatically at its normal time (07:00 PT on send day) whether or not you approve it, approving is just a note to yourself. Hold is the one thing that stops it: click it and this edition will NOT send until you take it off hold. It stays fully editable either way. If its normal send time has already passed (e.g. it was on hold), clicking Approve sends it right away instead of waiting for the next scheduled window.</p>
+          <div class="row">
+            <button class="btn primary">Approve</button>
+            <input placeholder="Note (optional)" style="flex:1;min-width:160px">
+            <button class="btn hold">Hold</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IMAGES ================= -->
+<section class="mk-section" id="images">
+  <p class="mk-label">S7 · Decision D5 · resumable bulk runs</p>
+  <h2 class="mk-h">The Images desk</h2>
+  <p class="mk-note">The keyboard-first backlog worker in Field Card language. New: an interrupted bulk run persists and greets you with a resume banner ("stopped at 143 of 200") instead of vanishing. Free stays visibly free (sage), paid stays visibly paid (terracotta), the budget chip rides the toolbar, and the session strip's revert contract is untouched.</p>
+
+  <div class="mk-frame pad">
+    <div class="shead">
+      <h1 class="stitle">Images</h1>
+      <span class="mono" style="font-size:.85rem;color:var(--ink-2)">118 need an image</span>
+    </div>
+    <p class="ssub">Free first, paid only on an explicit press. Everything you assign lands in the session strip with one-click revert.</p>
+
+    <div class="imlayout">
+      <main>
+        <div class="imtool">
+          <button class="btn ghost sm">▣ Auto-free (page)</button>
+          <button class="btn ghost sm">▣ Auto-free (all 118)</button>
+          <button class="btn ghost sm" style="border-color:var(--terracotta);color:var(--terra-text)">▣ Auto-Google (all $)</button>
+          <button class="btn ghost sm">Keep motif (view)</button>
+          <span class="budget">14/1200 Google calls</span>
+        </div>
+
+        <div class="resume" role="status">
+          <p><b>Auto-free run interrupted.</b> Stopped at <span class="mono">143 of 200</span> when the tab closed Saturday. Finished work is saved.</p>
+          <span class="prog" aria-hidden="true"><i></i></span>
+          <button class="rb">Resume run</button>
+          <button class="btn ghost sm">Dismiss</button>
+        </div>
+
+        <article class="imcard is-active">
+          <div class="im-b">
+            <div class="im-thumb"><span>motif · no image</span></div>
+            <div>
+              <h3 class="im-title">Sunday Jazz Brunch at the Mesa Cafe</h3>
+              <p class="im-meta">RECURRING · now: no image</p>
+              <p class="venueline"><b>Likely venue:</b> Mesa Cafe · score 0.87 · 4 approved photos · <a href="#">Attach & use pool photo</a> <kbd>V</kbd></p>
+              <div class="strip">
+                <button class="cand sel" aria-label="Candidate 1 of 3 (wikimedia)"></button>
+                <button class="cand alt" aria-label="Candidate 2 of 3 (wikimedia)"></button>
+                <button class="cand" aria-label="Candidate 3 of 3 (venue pool)"></button>
+              </div>
+              <span class="mono" style="font-size:.65rem;color:var(--ink-2)">wikimedia commons · CC BY-SA</span>
+            </div>
+          </div>
+          <div class="im-act">
+            <button class="btn primary sm">Use selected <kbd style="background:rgba(252,250,245,.2);border-color:transparent;color:var(--paper)">A</kbd></button>
+            <button class="btn ghost sm">Top pick <kbd>W</kbd></button>
+            <span class="free">FREE</span>
+            <button class="btn ghost sm">Search free <kbd>F</kbd></button>
+            <span class="paid">PAID</span>
+            <button class="btn ghost sm" style="border-color:var(--terracotta);color:var(--terra-text)">Google ($) <kbd>G</kbd></button>
+            <button class="btn ghost sm" style="margin-left:auto">Looks right as-is <kbd>M</kbd></button>
+          </div>
+        </article>
+      </main>
+
+      <aside>
+        <div class="spanel">
+          <h4>Assigned this session · 3</h4>
+          <div class="sessrow"><span>Wine Cask patio night<small>Venue pool</small></span><button class="revert">Revert</button></div>
+          <div class="sessrow"><span>Arroyo Burro tidepools<small>Wikimedia (auto)</small></span><button class="revert">Revert</button></div>
+          <div class="sessrow"><span>Granada organ series<small>Picked</small></span><button class="revert">Revert</button></div>
+        </div>
+        <div class="spanel">
+          <h4>Shortcuts</h4>
+          <div class="srow"><span><kbd>A</kbd> Use selected</span><span></span></div>
+          <div class="srow"><span><kbd>W</kbd> Top pick</span><span></span></div>
+          <div class="srow"><span><kbd>V</kbd> Attach venue</span><span>strong match only</span></div>
+          <div class="srow"><span><kbd>F</kbd> Free search</span><span></span></div>
+          <div class="srow"><span><kbd>G</kbd> Google ($)</span><span></span></div>
+          <div class="srow"><span><kbd>M</kbd> Keep motif</span><span>permanent</span></div>
+        </div>
+        <div class="spanel">
+          <h4>Queue</h4>
+          <div class="srow"><span>Without a real image</span><b>118</b></div>
+          <div class="srow"><span>Catalog coverage</span><b>81%</b></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COVERAGE ================= -->
+<section class="mk-section" id="coverage">
+  <p class="mk-label">The heatmap, on its own purpose-built tokens</p>
+  <h2 class="mk-h">Coverage</h2>
+  <p class="mk-note">The RAG tints were designed for this screen and stay exactly as tokened; count text stays Ink per the a11y rule. Rows get Fraunces names, cells stay real buttons with full aria-labels, the floor marker is explicit, and the deep links carry their badges. The restock modal becomes the round-2 sheet primitive (not re-shown here).</p>
+
+  <div class="mk-frame pad">
+    <div class="shead">
+      <h1 class="stitle">Coverage</h1>
+      <div class="covhead-links">
+        <a href="#">Neighborhood Sweep → <span class="minibadge">7 no zone</span></a>
+        <a href="#">Recurring Rhythms →</a>
+        <a href="#">Sources →</a>
+      </div>
+    </div>
+    <p class="ssub">Published Tier 1 + Tier 2 occurrences per window, cumulative from today. Click a cell to see what's in it.</p>
+
+    <div class="covgrid">
+      <table>
+        <thead><tr><th>By vibe</th><th>next 7d</th><th>next 14d</th><th>next 30d</th><th>next 45d</th></tr></thead>
+        <tbody>
+          <tr><td class="rowname">Date night</td><td class="c-grn"><button class="cell" aria-label="Date night, next 7d: 9 occurrences">9</button></td><td class="c-grn2"><button class="cell">17</button></td><td class="c-grn2"><button class="cell">31</button></td><td class="c-grn2"><button class="cell">44</button></td></tr>
+          <tr><td class="rowname">Nightlife</td><td class="c-red2"><button class="cell" aria-label="Nightlife, next 7d: 2 occurrences, below floor">2 <span class="floor">▼ floor</span></button></td><td class="c-amb"><button class="cell">6</button></td><td class="c-grn"><button class="cell">14</button></td><td class="c-grn"><button class="cell">21</button></td></tr>
+          <tr><td class="rowname">Family day</td><td class="c-grn"><button class="cell">7</button></td><td class="c-grn"><button class="cell">13</button></td><td class="c-grn2"><button class="cell">27</button></td><td class="c-grn2"><button class="cell">39</button></td></tr>
+          <tr><td class="rowname">Free SB</td><td class="c-amb"><button class="cell">4</button></td><td class="c-grn"><button class="cell">11</button></td><td class="c-grn"><button class="cell">19</button></td><td class="c-grn2"><button class="cell">33</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="background:var(--rag-red-2)"></span>below floor</span>
+      <span><span class="sw" style="background:var(--rag-amber)"></span>thin for its column</span>
+      <span><span class="sw" style="background:var(--rag-green-2)"></span>deep</span>
+      <span>Shading is relative within each column; the ▼ floor marker is absolute.</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

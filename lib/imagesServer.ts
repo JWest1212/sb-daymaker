@@ -70,6 +70,23 @@ export interface ImagesDeskData {
 // everything this returns rather than hard-slicing and hiding the rest.
 const MAX_SCAN = 1000;
 
+/** S1 (Today screen), the backlog's true count without the full desk payload
+ *  (venues, photo options, fuzzy suggestions). Same photo_ack-filtered/
+ *  fallback pattern as loadImagesDesk's scan, just a head-count instead of rows. */
+export async function countImagesBacklog(): Promise<number> {
+  const sb = getAdminSupabase();
+  if (!sb) return 0;
+  const base = () =>
+    sb.from("things")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "published")
+      .or("photo_url.is.null,photo_source.in.(placeholder,motif)");
+  const filtered = await base().eq("photo_ack", false);
+  if (!filtered.error) return filtered.count ?? 0;
+  const fallback = await base();
+  return fallback.count ?? 0;
+}
+
 export async function loadImagesDesk(): Promise<ImagesDeskData> {
   const sb = getAdminSupabase();
   if (!sb) return { rows: [], venues: [], scanCapped: false, publishedTotal: 0, noImageTotal: 0 };

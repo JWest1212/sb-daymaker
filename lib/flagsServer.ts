@@ -26,6 +26,17 @@ interface Target {
   slug: string | null;
 }
 
+/** S1 (Today screen), the open-flags count without resolving each target. */
+export async function countOpenFlags(): Promise<number> {
+  const sb = getAdminSupabase();
+  if (!sb) return 0;
+  const { count } = await sb
+    .from("content_flags")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["new", "reviewing"]);
+  return count ?? 0;
+}
+
 /** Open (new + reviewing) flags, newest first, each resolved to its target. */
 export async function loadFlags(): Promise<FlagRow[]> {
   const sb = getAdminSupabase();

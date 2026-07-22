@@ -259,6 +259,45 @@ export async function loadVenuesData(): Promise<VenuesData> {
   return { venues, matches: matchesCapped, archivedVenues, noMatchCatcher };
 }
 
+/** S1 (Today screen), the "Matches to review" true count without paying for
+ *  the full venues + photo-pool payload loadVenuesData() assembles. Runs the
+ *  same scoring pass (matches aren't persisted anywhere, there's no count
+ *  query to run instead), just doesn't build the display objects. */
+export async function countMatchesToReview(): Promise<number> {
+  const sb = getAdminSupabase();
+  if (!sb) return 0;
+
+  const [venuesRes, unmatchedRes] = await Promise.all([
+    sb.from("venues")
+      .select("id, place_id, lat, lng, radius_m, name_patterns")
+      .eq("status", "active"),
+    sb.from("things")
+      .select("title, address, lat, lng, place_id")
+      .is("venue_id", null)
+      .in("status", ["published", "needs_review"])
+      .eq("no_venue_ack", false)
+      .limit(MAX_UNATTACHED_SCAN),
+  ]);
+
+  const matchableVenues: MatchableVenue[] = (venuesRes.data ?? []).map((v) => ({
+    id: v.id as string, place_id: (v.place_id as string) ?? null,
+    lat: (v.lat as number) ?? null, lng: (v.lng as number) ?? null,
+    radius_m: (v.radius_m as number) ?? 150, name_patterns: (v.name_patterns as string[]) ?? [],
+  }));
+
+  let count = 0;
+  for (const t of unmatchedRes.data ?? []) {
+    if (t.address == null) continue; // no address at all -> the catcher, never a match
+    const thing: MatchableThing = {
+      title: t.title as string, address: t.address as string,
+      lat: (t.lat as number) ?? null, lng: (t.lng as number) ?? null,
+      place_id: (t.place_id as string) ?? null,
+    };
+    if (bestVenueMatch(thing, matchableVenues)) count++;
+  }
+  return count;
+}
+
 export interface CreatedVenue {
   id: string;
   key: string;

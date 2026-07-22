@@ -1,20 +1,10 @@
-import type { Metadata } from "next";
-import { LoginForm } from "./LoginForm";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Cockpit, sign in",
-  robots: { index: false, follow: false },
-};
+// D6, login moved to /admin/login (cockpit-styled, part of the same admin
+// route tree). This legacy URL just forwards; force-dynamic so it resolves
+// per-request rather than being collapsed at build.
+export const dynamic = "force-dynamic";
 
-export default function CockpitLoginPage() {
-  return (
-    <main className="sbd-public">
-      <div className="sbd-public__inner" style={{ maxWidth: 380 }}>
-        <p className="sbd-public__eyebrow">SB Daymaker · admin</p>
-        <h1 className="sbd-public__title">Cockpit</h1>
-        <p className="sbd-public__desc">Sign in to review and publish content.</p>
-        <LoginForm />
-      </div>
-    </main>
-  );
+export default function CockpitLoginRedirect() {
+  redirect("/admin/login");
 }
