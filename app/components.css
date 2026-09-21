@@ -7316,3 +7316,111 @@ textarea.sbd-field__input {
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   R1 Wave 1. Saves that never delete, and a share link that is always visible.
+   Tokens only, no new values.
+   --------------------------------------------------------------------------- */
+
+/* W1.1 — a saved id the database no longer returns. Deliberately quiet: it is
+   information, not an error, and the visitor decides whether to remove it. */
+.sbd-savedcard--missing {
+  border-style: dashed;
+}
+.sbd-savedcard--missing .sbd-savedcard__top {
+  padding: var(--space-4);
+}
+.sbd-savedcard--missing .sbd-savedcard__title {
+  color: var(--text-muted);
+}
+.sbd-savedcard--missing .sbd-savedcard__meta {
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
+}
+.sbd-saved__missing {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+/* W1.1 — an archived (already happened) row still renders as a normal card. */
+.sbd-savedcard__past {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* W1.1 — the brief window while the by-id lookup is in flight. */
+.sbd-saved__resolving {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin: var(--space-5) 0;
+}
+
+/* W1.4 — the 1-to-4-saves backup form: one line, the field, Send. */
+.sbd-restore--compact {
+  border-left-width: 2px;
+  padding: var(--space-4);
+}
+.sbd-restore--compact .sbd-restore__title {
+  font-size: var(--text-base);
+  margin-bottom: var(--space-3);
+}
+
+/* W1.5 — the share sheet. Shown whenever the native share sheet does not take
+   the link, so the visitor always has something they can copy. */
+.sbd-sharelink__note {
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
+}
+.sbd-sharelink__url {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  word-break: break-all;
+  color: var(--text-link);
+  background: var(--plaster-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+}
+.sbd-sharelink__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.sbd-sharelink__copy,
+.sbd-sharelink__done {
+  flex: 1;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semi);
+  cursor: pointer;
+}
+.sbd-sharelink__copy {
+  border: none;
+  background: var(--pacific);
+  color: var(--paper);
+}
+.sbd-sharelink__done {
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+.sbd-sharelink__copy:focus-visible,
+.sbd-sharelink__done:focus-visible {
+  outline: 2px solid var(--pacific);
+  outline-offset: 2px;
+}
+/* The visible "Copied" confirmation doubles as the live region. */
+.sbd-sharelink__live {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semi);
+  color: var(--text-link);
+  margin: var(--space-2) 0 0;
+  min-height: 1.2em;
+}

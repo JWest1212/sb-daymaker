@@ -6,16 +6,18 @@
 // (app/(app)/discover/[id]/opengraph-image.tsx). No em dash (Golden Rule).
 
 import { useState } from "react";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { SBIcon } from "@/components/ui/SBIcon";
 import { trackEvent } from "@/lib/analytics";
 
 export function GuideShare({ path, title }: { path: string; title: string }) {
   const [result, setResult] = useState<"idle" | "copied" | "shared" | "failed">("idle");
+  // R1 W1.5, "Try again" was the old dead end; now the link is shown instead.
+  const { share, sheet } = useShareLink();
 
   async function onShare() {
     const url = `${window.location.origin}${path}`;
-    const r = await shareUrl(url, title);
+    const r = await share(url, title);
     trackEvent("share_create", { kind: "guide", count: 1 });
     setResult(r === "copied" ? "copied" : r === "shared" ? "shared" : "failed");
     if (r !== "shared") setTimeout(() => setResult("idle"), 2200);
@@ -24,13 +26,16 @@ export function GuideShare({ path, title }: { path: string; title: string }) {
   const label =
     result === "copied" ? "Link copied"
     : result === "shared" ? "Shared"
-    : result === "failed" ? "Try again"
+    : result === "failed" ? "Share this guide"
     : "Share this guide";
 
   return (
-    <button type="button" className="sbd-gd-share" onClick={onShare} aria-label={`Share ${title}`}>
-      <SBIcon name="share" size={18} strokeWidth={2} />
-      <span>{label}</span>
-    </button>
+    <>
+      <button type="button" className="sbd-gd-share" onClick={onShare} aria-label={`Share ${title}`}>
+        <SBIcon name="share" size={18} strokeWidth={2} />
+        <span>{label}</span>
+      </button>
+      {sheet}
+    </>
   );
 }

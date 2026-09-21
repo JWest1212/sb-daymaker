@@ -55,3 +55,40 @@ export function beenList(things: Thing[], saves: SavesMap): Thing[] {
   }
   return out;
 }
+
+/**
+ * R1 Wave 1 (W1.1). Split the saved ids into the ones the database returned and
+ * the ones it did not.
+ *
+ * Pure on purpose. The bug this replaces (SavedClient's ghost-save cleanup) was
+ * an effect that could call `remove()`, so a truncated pool silently deleted real
+ * saves off the visitor's device. Nothing in here can delete anything: it has no
+ * access to the saves store, only to a list of ids and what came back for them.
+ *
+ * `answered` is the set of ids a lookup has actually completed for. An id that is
+ * still in flight, or whose fetch failed, is in neither list, so a slow network
+ * never reads as "gone".
+ *
+ * `found` is ordered the way the browse pool used to hand these over, by
+ * happening_tier then soonest start, so the grouping downstream is unchanged.
+ */
+export function partitionSaves(
+  ids: string[],
+  lookup: Map<string, Thing>,
+  answered: Set<string>,
+): { found: Thing[]; missing: string[] } {
+  const found: Thing[] = [];
+  const missing: string[] = [];
+  for (const id of ids) {
+    const thing = lookup.get(id);
+    if (thing) found.push(thing);
+    else if (answered.has(id)) missing.push(id);
+  }
+  found.sort(
+    (a, b) =>
+      a.happening_tier - b.happening_tier ||
+      (a.starts_at ? new Date(a.starts_at).getTime() : Infinity) -
+        (b.starts_at ? new Date(b.starts_at).getTime() : Infinity),
+  );
+  return { found, missing };
+}

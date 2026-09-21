@@ -21,7 +21,7 @@ import { GuideShare } from "@/components/discover/GuideShare";
 import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
 import { guidePath } from "@/lib/seo/site";
 
-export const revalidate = 600;
+export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
 function truncate(s: string, n: number): string {
   const clean = s.trim();

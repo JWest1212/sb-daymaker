@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { SBIcon } from "./SBIcon";
 
 export function CardActions({
@@ -19,6 +19,8 @@ export function CardActions({
   const { isSaved, toggle } = useSaves();
   const [pop, setPop] = useState(false);
   const saved = isSaved(id);
+  // R1 W1.5. This used to call shareUrl fire-and-forget with no feedback at all.
+  const { share, sheet } = useShareLink();
 
   return (
     <div className={`sbd-cardact${onImage ? " sbd-cardact--on-image" : ""}`}>
@@ -49,11 +51,12 @@ export function CardActions({
           const absolute = url.startsWith("http")
             ? url
             : window.location.origin + url;
-          shareUrl(absolute, title);
+          void share(absolute, title);
         }}
       >
         <SBIcon name="share" size={18} strokeWidth={2} />
       </button>
+      {sheet}
     </div>
   );
 }

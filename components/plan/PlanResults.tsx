@@ -19,7 +19,7 @@ import { useSaves } from "@/components/saves/SavesProvider";
 import type { PlanAnswers, Block, Stop, PlanNote } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { trackEvent } from "@/lib/analytics";
 
 function genStopId(): string {
@@ -72,6 +72,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
   >("idle");
+  // R1 W1.5, the share sheet that guarantees the link is visible.
+  const { share: shareLink, sheet: shareSheet } = useShareLink();
 
   // Event 6: the draft spine is first produced from the questionnaire.
   useEffect(() => {
@@ -201,9 +203,11 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     // Event 3: a shared plan link was created (token never sent to analytics).
     trackEvent("share_create", { kind: "plan", count: stops.length });
     const url = `${window.location.origin}/p/${token}`;
-    const result = await shareUrl(url, title);
-    setShareState(result === "shared" ? "shared" : result === "copied" ? "copied" : "failed");
-    setTimeout(() => setShareState("idle"), 2200);
+    // R1 W1.5. Anything short of a completed native share opens the link sheet,
+    // so "Share failed" is no longer a dead end with the link thrown away.
+    const result = await shareLink(url, title);
+    setShareState(result === "shared" ? "shared" : "idle");
+    if (result === "shared") setTimeout(() => setShareState("idle"), 2200);
   }
 
   const hasStops = stops.length > 0;
@@ -211,7 +215,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     shareState === "pending" ? "Sharing…"
     : shareState === "shared" ? "✓ Shared!"
     : shareState === "copied" ? "✓ Link copied"
-    : shareState === "failed" ? "Share failed"
+    : shareState === "failed" ? "Couldn't make a link, try again"
     : "↗ Share day";
 
   return (
@@ -297,6 +301,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           Fresh draft, same rules, different picks
         </p>
       ) : null}
+
+      {shareSheet}
 
       {pickerBlock != null ? (
         <AddStopSheet

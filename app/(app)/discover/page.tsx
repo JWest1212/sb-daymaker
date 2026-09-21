@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     "Local guides to Santa Barbara's neighborhoods and themes: the Funk Zone, State Street, and more, with the live happenings scoped to each.",
   alternates: { canonical: "/discover" },
 };
-export const revalidate = 600; // ISR, refresh published content every 10 min
+export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
 export default async function DiscoverPage() {
   const guides = await getPublishedGuides();

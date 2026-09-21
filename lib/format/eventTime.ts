@@ -17,6 +17,7 @@ const CLOCK = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", 
 const WEEKDAY_SHORT = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" });
 const WEEKDAY_LONG = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" });
 const MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
+const MONTH_DAY_YEAR = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric", year: "numeric" });
 
 function only(fmt: Intl.DateTimeFormat, iso: string): string {
   // Single-field formatters render exactly one meaningful part; join non-literals.
@@ -46,4 +47,17 @@ export function eventCardWhen(iso: string): string {
  *  Shares eventClock() with the card, so the time portion is byte-identical. */
 export function eventDetailWhen(iso: string): string {
   return `${only(WEEKDAY_LONG, iso)}, ${only(MONTH_DAY, iso)}, ${eventClock(iso)}`;
+}
+
+/** R1 W1.1 / W2.2. Full date WITH the year, e.g. "Saturday, June 27, 2026".
+ *  Used wherever a date is being called out as already past (the Saved list's
+ *  "Already happened" line, the archived detail page's banner). A past date
+ *  without a year is the ambiguity DET-001 is about, so this formatter always
+ *  prints one. Assembled from parts for the same server/client stability reason
+ *  as the formatters above. */
+export function eventDateWithYear(iso: string): string {
+  const d = new Date(iso);
+  const md = MONTH_DAY_YEAR.formatToParts(d);
+  const val = (type: Intl.DateTimeFormatPartTypes) => md.find((p) => p.type === type)?.value ?? "";
+  return `${only(WEEKDAY_LONG, iso)}, ${val("month")} ${val("day")}, ${val("year")}`;
 }

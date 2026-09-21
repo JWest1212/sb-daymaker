@@ -17,7 +17,7 @@ import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
 import { absoluteUrl, thingPath, guidePath } from "@/lib/seo/site";
 
-export const revalidate = 600; // ISR: refresh published content every 10 min
+export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
 const TONE_BY_TYPE: Record<string, string> = {
   event: "gold",

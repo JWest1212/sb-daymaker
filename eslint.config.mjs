@@ -9,9 +9,14 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".next.nosync/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // iCloud: dependencies live here with node_modules as a symlink to it, so
+    // eslint's built-in node_modules ignore does not match the real path.
+    "node_modules.nosync/**",
+    "experiments/**",
   ]),
 ]);
 

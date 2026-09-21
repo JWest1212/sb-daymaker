@@ -5,6 +5,7 @@ import type { Thing } from "@/lib/things";
 import type { SaveState } from "@/components/saves/SavesProvider";
 import { Tag } from "@/components/ui";
 import { cardTag, cardFacts, cardTone } from "@/components/explore/derive";
+import { eventDateWithYear } from "@/lib/format/eventTime";
 
 export function SavedCard({
   thing,
@@ -29,6 +30,11 @@ export function SavedCard({
 }) {
   const tag = cardTag(thing);
   const meta = cardFacts(thing).join(" · ");
+  // R1 W1.1. An archived row still renders as a normal saved card, keeping its
+  // want/been controls, because "Did you make it?" only works if past items
+  // survive. It just says out loud that it is in the past.
+  const alreadyHappened =
+    thing.status === "archived" && thing.starts_at ? eventDateWithYear(thing.starts_at) : null;
 
   return (
     <article
@@ -55,6 +61,9 @@ export function SavedCard({
             {tag ? <Tag color="sage" micro>{tag}</Tag> : null}
             <h3 className="sbd-savedcard__title">{thing.title}</h3>
             {meta ? <div className="sbd-savedcard__meta">{meta}</div> : null}
+            {alreadyHappened ? (
+              <div className="sbd-savedcard__past">Already happened, {alreadyHappened}</div>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -73,6 +82,9 @@ export function SavedCard({
             {tag ? <Tag color="sage" micro>{tag}</Tag> : null}
             <h3 className="sbd-savedcard__title">{thing.title}</h3>
             {meta ? <div className="sbd-savedcard__meta">{meta}</div> : null}
+            {alreadyHappened ? (
+              <div className="sbd-savedcard__past">Already happened, {alreadyHappened}</div>
+            ) : null}
           </div>
         </Link>
       )}

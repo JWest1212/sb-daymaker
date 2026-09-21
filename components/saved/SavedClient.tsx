@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { Thing } from "@/lib/things";
+import { getThingsByIds, type Thing } from "@/lib/things";
 import { nearMeSort } from "@/lib/explore";
-import { filterByState, splitPast, beenList } from "@/lib/savedView";
+import { filterByState, splitPast, beenList, partitionSaves } from "@/lib/savedView";
 import { groupSaved } from "@/lib/savedGroups";
 import type { Zone } from "@/lib/zones";
 import { ZONE_LABEL } from "@/lib/zones";
@@ -16,10 +16,11 @@ import { NearMeSheet } from "@/components/explore/NearMeSheet";
 import { createSharedList } from "@/lib/shares";
 import { trackEvent } from "@/lib/analytics";
 import { SavedCard } from "./SavedCard";
+import { MissingSavedCard } from "./MissingSavedCard";
 import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
 import { MemoryRecap } from "./MemoryRecap";
-import { shareUrl } from "./share";
+import { useShareLink } from "./useShareLink";
 
 const WORDS = ["One","Two","Three","Four","Five","Six","Seven","Eight","Nine"];
 function spellCount(n: number): string {
@@ -48,9 +49,11 @@ function persistDismissed(ids: Set<string>) {
   try { localStorage.setItem("sbd_c2_dismissed", JSON.stringify([...ids])); } catch {}
 }
 
-export function SavedClient({ things }: { things: Thing[] }) {
-  const { ids, saves, state, setState, remove, counts } = useSaves();
+export function SavedClient() {
+  const { ids, saves, state, setState, remove, counts, hydrated } = useSaves();
   const { openTour } = useTour();
+  // R1 W1.5, the link is always shown when the native sheet does not take it.
+  const { share: shareLink, sheet: shareSheet } = useShareLink();
 
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
   const [zone, setZone] = useState<Zone | null>(null);
@@ -73,12 +76,77 @@ export function SavedClient({ things }: { things: Thing[] }) {
     return () => clearTimeout(id);
   }, [beenAck]);
 
-  // Remove ghost saves that no longer exist in the data pool.
+  // R1 W1.1. /saved resolves each saved id directly and NEVER auto-deletes.
+  //
+  // What used to be here: an effect that diffed the saved ids against the
+  // published browse pool and called remove(id) on anything missing. That pool
+  // was silently truncated to 1,000 rows by the database, so a third of the
+  // catalog looked "deleted" and was wiped off the visitor's device. Saving
+  // anything from a Discover guide erased itself within seconds
+  // (docs/audits/2026-09-21-technical-pass.md, TP-A1-01 and TP-A1-10).
+  //
+  // Saves live in localStorage, so the lookup has to happen after hydration and
+  // on the client. `lookup` is append-only: an id that resolves once keeps its
+  // row for the rest of the session, so a later network failure can never
+  // downgrade a real card into "no longer listed", and a title stays available
+  // for the missing-row card.
+  const [lookup, setLookup] = useState<Map<string, Thing>>(() => new Map());
+  // Ids a lookup has actually come back for. Kept as state, not a ref, because
+  // the "no longer listed" list below is derived from it and has to re-render
+  // when it changes. An id is only in here once the database has answered for
+  // it, so a pending or failed fetch never reads as "gone".
+  const [answered, setAnswered] = useState<Set<string>>(() => new Set());
+  const inFlight = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (things.length === 0 || things.length >= 1000) return;
-    const live = new Set(things.map((t) => t.id));
-    for (const id of ids) if (!live.has(id)) remove(id);
-  }, [things, ids, remove]);
+    if (!hydrated) return;
+    const pending = ids.filter((id) => !answered.has(id) && !inFlight.current.has(id));
+    if (pending.length === 0) return;
+    let cancelled = false;
+    for (const id of pending) inFlight.current.add(id);
+    getThingsByIds(pending)
+      .then((found) => {
+        if (cancelled) return;
+        if (found.size > 0) {
+          setLookup((prev) => {
+            const next = new Map(prev);
+            for (const [id, thing] of found) next.set(id, thing);
+            return next;
+          });
+        }
+        setAnswered((prev) => {
+          const next = new Set(prev);
+          for (const id of pending) next.add(id);
+          return next;
+        });
+      })
+      .catch(() => {
+        // A transient failure must not read as "deleted". Leaving these ids out
+        // of `answered` keeps them in the loading state and lets a later render
+        // retry them.
+      })
+      .finally(() => {
+        for (const id of pending) inFlight.current.delete(id);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, ids, answered]);
+
+  const resolving = hydrated && ids.some((id) => !answered.has(id));
+
+  // Resolved rows and unresolvable ids, from the pure selector in lib/savedView.
+  // Missing ids are shown, never deleted; the visitor decides whether to let one go.
+  const { found: things, missing: allMissingIds } = useMemo(
+    () => partitionSaves(ids, lookup, answered),
+    [ids, lookup, answered],
+  );
+  // Keep the unresolvable ids on the same Want/Been tab the visitor filed them
+  // under, so the section never contradicts the toggle's counts.
+  const missingIds = useMemo(
+    () => allMissingIds.filter((id) => (saves[id] ?? "want") === stateFilter),
+    [allMissingIds, saves, stateFilter],
+  );
 
   // Value-sensitive: keying on the `saves` map (not just its keys) means a
   // want→been flip re-derives immediately. See lib/savedView.ts.
@@ -165,14 +233,10 @@ export function SavedClient({ things }: { things: Thing[] }) {
     // Event 3: a shared list link was created (token never sent to analytics).
     trackEvent("share_create", { kind, count: shareIds.length });
     const url = `${window.location.origin}/s/${token}`;
-    const result = await shareUrl(url, "My Santa Barbara picks");
-    setToast(
-      result === "shared"
-        ? "Shared!"
-        : result === "copied"
-          ? "Link copied to clipboard"
-          : `Link ready: ${url}`,
-    );
+    // Anything other than a completed native share opens the link sheet, which
+    // the hook renders. No toast is needed for those, the sheet IS the feedback.
+    const result = await shareLink(url, "My Santa Barbara picks");
+    if (result === "shared") setToast("Shared!");
   };
 
   const shareSelected = async () => {
@@ -301,7 +365,9 @@ export function SavedClient({ things }: { things: Thing[] }) {
       ) : null}
 
       {viewItems.length === 0 ? (
-        stateFilter === "been" ? null : (
+        resolving && things.length === 0 ? (
+          <p className="sbd-saved__resolving" aria-live="polite">Loading your list...</p>
+        ) : stateFilter === "been" ? null : missingIds.length > 0 ? null : (
           <EmptyState icon="❤️" message="Nothing in your want-to-go list right now." />
         )
       ) : (
@@ -332,6 +398,30 @@ export function SavedClient({ things }: { things: Thing[] }) {
           </section>
         ))
       )}
+
+      {/* R1 W1.1. Saved ids the database did not return. Never auto-removed. */}
+      {missingIds.length > 0 && !selectMode ? (
+        <section className="sbd-saved__group sbd-saved__missing">
+          <div className="sbd-group-hdr">
+            <span className="sbd-group-dot" style={{ background: "var(--ink-2)" }} />
+            No longer listed
+            <span className="sbd-group-hdr__chip">{missingIds.length}</span>
+            <span className="sbd-group-hdr__rule" role="presentation" />
+          </div>
+          <p className="sbd-saved__pasthint">
+            We kept these on your list. Remove one whenever you like.
+          </p>
+          <div className="sbd-saved__list">
+            {missingIds.map((id) => (
+              <MissingSavedCard
+                key={id}
+                title={lookup.get(id)?.title ?? null}
+                onRemove={() => remove(id)}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {pastItems.length > 0 ? (
         <section className="sbd-saved__group sbd-saved__past">
@@ -385,7 +475,8 @@ export function SavedClient({ things }: { things: Thing[] }) {
             Share my list
           </button>
 
-          {counts.total >= 5 ? <RestorePanel /> : null}
+          {/* R1 W1.4. Offered from the very first save, compact until five. */}
+          {counts.total >= 1 ? <RestorePanel compact={counts.total < 5} /> : null}
         </div>
       ) : null}
 
@@ -409,6 +500,8 @@ export function SavedClient({ things }: { things: Thing[] }) {
           }}
         />
       ) : null}
+
+      {shareSheet}
 
       {toast ? <div className="sbd-toast">{toast}</div> : null}
 

@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
 import type { Thing } from "./things";
-import { filterByState, splitPast, beenList, type SavesMap } from "./savedView";
+import { filterByState, splitPast, beenList, partitionSaves, type SavesMap } from "./savedView";
 
 // Minimal Thing factory, only the fields these selectors read matter.
 function thing(id: string, over: Partial<Thing> = {}): Thing {
   return {
     id,
     type: "place",
+    status: "published",
     title: id,
     blurb: null,
     blurb_long: null,
@@ -100,5 +101,60 @@ describe("beenList", () => {
     // d is been but absent from the pool → excluded; order follows map keys.
     const saves: SavesMap = { c: "been", a: "want", b: "been", d: "been" };
     expect(beenList(pool, saves).map((t) => t.id)).toEqual(["c", "b"]);
+  });
+});
+
+describe("partitionSaves (R1 W1.1, saves are never deleted)", () => {
+  const a = thing("a", { happening_tier: 1, starts_at: "2026-09-22T18:00:00Z" });
+  const b = thing("b", { happening_tier: 3, starts_at: null });
+
+  it("renders the rows it has and lists the rest as missing, keeping every id", () => {
+    // The spec case: three saved ids, the lookup returns two.
+    const lookup = new Map([
+      ["a", a],
+      ["b", b],
+    ]);
+    const answered = new Set(["a", "b", "c"]);
+    const { found, missing } = partitionSaves(["a", "b", "c"], lookup, answered);
+    expect(found.map((t) => t.id)).toEqual(["a", "b"]);
+    expect(missing).toEqual(["c"]);
+    // Nothing is dropped on the floor: every saved id is accounted for.
+    expect(found.length + missing.length).toBe(3);
+  });
+
+  it("does not call an id missing until the lookup has actually answered for it", () => {
+    // In flight: neither rendered nor reported gone. This is the guard against a
+    // slow or failed network reading as "deleted".
+    const { found, missing } = partitionSaves(["a", "c"], new Map([["a", a]]), new Set(["a"]));
+    expect(found.map((t) => t.id)).toEqual(["a"]);
+    expect(missing).toEqual([]);
+  });
+
+  it("treats an archived row as found, not missing", () => {
+    const archived = thing("z", { status: "archived", happening_tier: 1, starts_at: "2026-06-27T18:00:00Z" });
+    const { found, missing } = partitionSaves(["z"], new Map([["z", archived]]), new Set(["z"]));
+    expect(found.map((t) => t.id)).toEqual(["z"]);
+    expect(missing).toEqual([]);
+  });
+
+  it("orders found rows by tier, then soonest start, with evergreen last", () => {
+    const soon = thing("soon", { happening_tier: 1, starts_at: "2026-09-21T18:00:00Z" });
+    const later = thing("later", { happening_tier: 1, starts_at: "2026-09-25T18:00:00Z" });
+    const ever = thing("ever", { happening_tier: 1, starts_at: null });
+    const lookup = new Map([
+      ["ever", ever],
+      ["later", later],
+      ["soon", soon],
+    ]);
+    const { found } = partitionSaves(
+      ["ever", "later", "soon"],
+      lookup,
+      new Set(["ever", "later", "soon"]),
+    );
+    expect(found.map((t) => t.id)).toEqual(["soon", "later", "ever"]);
+  });
+
+  it("returns empty lists for an empty save set", () => {
+    expect(partitionSaves([], new Map(), new Set())).toEqual({ found: [], missing: [] });
   });
 });

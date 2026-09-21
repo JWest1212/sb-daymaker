@@ -1,4 +1,5 @@
 import { getSupabase } from "./supabase";
+import { PUBLIC_STATUSES } from "./things";
 import type { Thing } from "./things";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
@@ -135,10 +136,22 @@ export async function getStopThingMap(
   if (ids.length === 0) return new Map();
   const sb = getSupabase();
   if (!sb) return new Map();
+  // R1 W1.3, one row-eligibility rule across every id lookup. A guide renders a
+  // save heart on each stop, so the set of rows a guide can resolve must never be
+  // wider than the set /saved can resolve, or a guide offers a heart on something
+  // Saved cannot render (TP-A1-07). PUBLIC_STATUSES is the shared answer, and it
+  // is the same set getThingsByIds() uses.
+  //
+  // The COLUMN list stays narrow on purpose. These are the curated fields the
+  // stop derivations read, and `category` in particular is a hand-set guide field
+  // populated on ~109 rows; it is NOT the same thing as `happening_category`, so
+  // this read cannot simply be swapped for the pool's select without changing
+  // what guide sub-lines say.
   const { data, error } = await sb
     .from("things")
     .select("id, category, address, lat, lng, price_band, free, slug")
-    .in("id", ids);
+    .in("id", ids)
+    .in("status", [...PUBLIC_STATUSES]);
   if (error || !data) return new Map();
   const map = new Map<string, StopThingFields & { id: string }>();
   for (const row of data as Record<string, unknown>[]) {

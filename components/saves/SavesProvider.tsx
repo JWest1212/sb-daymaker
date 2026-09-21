@@ -47,18 +47,41 @@ export function SavesProvider({ children }: { children: ReactNode }) {
     savesRef.current = saves;
   }, [saves]);
 
+  // R1 W1.1. True when the stored value existed but could not be read back as a
+  // saves map. While that is true and we are still holding nothing, the persist
+  // effect below must not write, or a single bad parse silently replaces the
+  // visitor's real list with `{}`. Same rule as /saved: never destroy a save on
+  // the strength of something we could not read.
+  const loadFailed = useRef(false);
+
   useEffect(() => {
+    let raw: string | null = null;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSaves(JSON.parse(raw) as SavesMap);
+      raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          setSaves(parsed as SavesMap);
+        } else {
+          loadFailed.current = true;
+        }
+      }
     } catch {
-      /* ignore corrupt storage */
+      loadFailed.current = true;
+    }
+    if (loadFailed.current && raw) {
+      // Keep the unreadable original so it is recoverable instead of lost.
+      try { localStorage.setItem(`${STORAGE_KEY}.unreadable`, raw); } catch {}
     }
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
+    // Nothing loaded and nothing held: writing now would only overwrite whatever
+    // we failed to read. A real save clears this, because then the map is not
+    // empty and the visitor has actually asked for a change.
+    if (loadFailed.current && Object.keys(saves).length === 0) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(saves));
     } catch {

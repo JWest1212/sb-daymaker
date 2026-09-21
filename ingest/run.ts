@@ -2312,6 +2312,34 @@ async function main() {
       venueFallbacks,
       autoPausedSources,
     });
+
+    // R1 W1.6. Purge the ISR-cached public surfaces now that this run has
+    // written. Without this, /saved, /plan and /discover keep serving the
+    // pre-update pool until their own window lapses, and a save made inside that
+    // window lands on a page that does not know the thing exists (TP-A3-04,
+    // TP-A3-05). Never fatal: a failed purge costs freshness, and the lowered
+    // revalidate windows are the safety net underneath it.
+    await revalidatePublicSurfaces();
+  }
+}
+
+/** POST /api/revalidate with the shared cron secret. Logs, never throws. */
+async function revalidatePublicSurfaces(): Promise<void> {
+  const site = process.env.NEXT_PUBLIC_SITE_URL;
+  const secret = process.env.CRON_SECRET;
+  if (!site || !secret) {
+    console.log('  revalidate           skipped: NEXT_PUBLIC_SITE_URL or CRON_SECRET not set');
+    return;
+  }
+  try {
+    const res = await fetch(`${site.replace(/\/$/, '')}/api/revalidate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const body = await res.text();
+    console.log(`  revalidate           HTTP ${res.status} ${body.slice(0, 120)}`);
+  } catch (err) {
+    console.log(`  revalidate           failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

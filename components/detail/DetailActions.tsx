@@ -9,7 +9,7 @@
 
 import { useState } from "react";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { SBIcon } from "@/components/ui/SBIcon";
 
 export function DetailActions({
@@ -24,6 +24,8 @@ export function DetailActions({
   const { isSaved, toggle } = useSaves();
   const [pop, setPop] = useState(false);
   const saved = isSaved(id);
+  // R1 W1.5. Previously fire-and-forget, so a dismissed share left nothing.
+  const { share, sheet } = useShareLink();
 
   return (
     <div className="sbd-detail__actionrow">
@@ -54,7 +56,7 @@ export function DetailActions({
         aria-label={`Share ${title}`}
         onClick={() => {
           const url = `${window.location.origin}/thing/${id}`;
-          shareUrl(url, title);
+          void share(url, title);
         }}
       >
         <SBIcon name="share" size={20} strokeWidth={2} />
@@ -73,6 +75,7 @@ export function DetailActions({
           <span>Directions</span>
         </a>
       ) : null}
+      {sheet}
     </div>
   );
 }
