@@ -42,23 +42,61 @@ function isFree(input: OutboundInput): boolean {
   return input.free === true || input.price_band === "free";
 }
 
-/** The correctly-labeled outbound link, or null when there's no URL (never a
- *  dead label). */
+/** Named ticketing destinations, so the label can say where the link goes. */
+const TICKET_BRAND: Array<[RegExp, string]> = [
+  [/ticketmaster\./i, "Ticketmaster"],
+  [/axs\.com/i, "AXS"],
+  [/livenation\./i, "Live Nation"],
+  [/eventbrite\./i, "Eventbrite"],
+  [/dice\.fm/i, "DICE"],
+  [/seetickets\./i, "See Tickets"],
+  [/etix\./i, "Etix"],
+  [/showclix\./i, "ShowClix"],
+  [/frontgatetickets\./i, "Front Gate"],
+  [/tix\./i, "Tix"],
+];
+
+/** A readable name for a host: the brand when we know it, else the bare domain
+ *  with the www and the TLD-noise stripped ("sbbowl.com" -> "sbbowl.com"). */
+export function hostLabel(url: string): string | null {
+  for (const [re, name] of TICKET_BRAND) if (re.test(url)) return name;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The correctly-labelled outbound link, or null when there is no URL (never a
+ * dead label).
+ *
+ * R1 W5.6 (DET-005): the label now names the DESTINATION. "Get tickets" told the
+ * visitor what the button did but not where it would take them, and it appeared
+ * on free events, where there is nothing to buy. The venue's own site says so,
+ * and a free event says "Event details".
+ */
 export function outboundLink(input: OutboundInput): OutboundLink | null {
   const href = input.buy_url?.trim();
   if (!href) return null;
 
-  // Destination host wins first: a ticket host is always "Get tickets," a
-  // reservation host is always "Reserve," regardless of type/price.
-  if (TICKET_HOSTS.test(href)) return { href, label: "Get tickets ↗" };
+  // A free row never says "tickets": there is nothing to buy.
+  if (isFree(input)) {
+    const where = hostLabel(href);
+    return { href, label: where ? `Event details at ${where} ↗` : "Event details ↗" };
+  }
+
+  // Destination host wins next: a ticket host is a ticket handoff whatever the
+  // type says, and the label names which one.
+  if (TICKET_HOSTS.test(href)) {
+    const brand = hostLabel(href);
+    return { href, label: brand ? `Tickets at ${brand} ↗` : "Get tickets ↗" };
+  }
   if (RESERVE_HOSTS.test(href)) return { href, label: "Reserve ↗" };
 
-  // Then type/price: a free event's link is informational; a priced event's is a
-  // ticket handoff; a place's link is its website.
   if (isEvent(input)) {
-    return isFree(input)
-      ? { href, label: "Event details ↗" }
-      : { href, label: "Get tickets ↗" };
+    const where = hostLabel(href);
+    return { href, label: where ? `Tickets at ${where} ↗` : "Get tickets ↗" };
   }
   return { href, label: "Visit website ↗" };
 }

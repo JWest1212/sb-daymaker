@@ -190,7 +190,7 @@ export function SourcesView({ initialSources }: { initialSources: SourceRow[] })
           <input className="edit-input" type="url" value={form.url} onChange={(e) => setForm({ ...form, url: e.target.value })} />
         </label>
         <div className="rr-dayrow">
-          <label className="editlabel">Authority (0–1, how much dedupe trusts this source)
+          <label className="editlabel">Authority (0-1, how much dedupe trusts this source)
             <input className="edit-input" type="number" min={0} max={1} step={0.01} value={form.authority} onChange={(e) => setForm({ ...form, authority: e.target.value })} />
           </label>
           {sheetTarget === "new" ? (

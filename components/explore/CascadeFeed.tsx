@@ -8,7 +8,7 @@ import type { Thing } from "@/lib/things";
 import type { Weather } from "@/lib/weather";
 import type { Horizon } from "@/lib/explore";
 import { dedupeFeedVenuePhotos, type PoolPhoto } from "@/lib/venuePool";
-import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay, recurringWhen } from "./derive";
+import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay, recurringWhen, imageAlt } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
@@ -106,6 +106,7 @@ function TodayPick({
       contextEyebrow={contextEyebrow}
       ribbonLabel={ribbonLabel}
       photo={pick.photo_url ?? undefined}
+      photoAlt={imageAlt(pick)}
       tone="gold"
     />
   );
@@ -140,6 +141,7 @@ function TodayLead({ tier1 }: { tier1: Thing[] }) {
             blurb={cardBlurb(t)}
             when={cardFacts(t).join(" · ")}
             photo={t.photo_url ?? undefined}
+            photoAlt={imageAlt(t)}
             visual={cardVisual(t)}
           />
         </div>
@@ -423,6 +425,7 @@ export function CascadeFeed({
                     blurb={cardBlurb(t)}
                     when={recurringWhen(t) ?? cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
+                    photoAlt={imageAlt(t)}
                     visual={cardVisual(t)}
                   />
                 </div>
@@ -459,6 +462,7 @@ export function CascadeFeed({
                     blurb={cardBlurb(t)}
                     when={cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
+                    photoAlt={imageAlt(t)}
                     visual={cardVisual(t)}
                   />
                 </div>

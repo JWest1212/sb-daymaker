@@ -15,6 +15,7 @@ import { cascade } from "@/lib/explore";
 import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
 import { GuideWalkSection } from "@/components/discover/GuideWalkSection";
+import { isNowNoteFresh } from "@/lib/guides";
 import type { StopDisplay } from "@/components/discover/GuideWalkSection";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { GuideShare } from "@/components/discover/GuideShare";
@@ -243,6 +244,7 @@ export default async function GuidePage({
         chapters={content.chapters}
         asides={content.asides}
         stopCount={stopCount}
+        walkLine={content.walk_line}
       />
 
       {/* title block */}
@@ -259,7 +261,7 @@ export default async function GuidePage({
           )}
           {content.meta.plan_hrs.length >= 2 && (
             <span className="sbd-gd-meta__new">
-              PLAN {content.meta.plan_hrs[0]}–{content.meta.plan_hrs[1]} HRS
+              PLAN {content.meta.plan_hrs[0]}-{content.meta.plan_hrs[1]} HRS
             </span>
           )}
           {refreshedLabel && <span>REFRESHED {refreshedLabel}</span>}
@@ -274,8 +276,11 @@ export default async function GuidePage({
         </span>
       </div>
 
-      {/* now block (only if now_note is present) */}
-      {guide.now_note && (
+      {/* R1 W5.9 (DSC-006). Shown only while the note is still true: a "Right
+          now" written 76 days ago was still promising long July evenings in late
+          September. Past the window it hides, and REFRESHED in the stat line
+          above carries the freshness story instead. */}
+      {guide.now_note && isNowNoteFresh(guide.now_note_on) && (
         <div className="sbd-gd-now" role="note" aria-label={`Right now in ${shortTitle}`}>
           <div className="sbd-gd-now__eyebrow">
             Right now{nowDateLabel ? ` · updated ${nowDateLabel}` : ""}

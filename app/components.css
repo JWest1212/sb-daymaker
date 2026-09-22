@@ -7494,3 +7494,11 @@ textarea.sbd-field__input {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+
+/* R1 W5.5 — the price-band key, so "$$" means something the first time. */
+.sbd-detail__pricekey {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

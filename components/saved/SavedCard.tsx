@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Thing } from "@/lib/things";
 import type { SaveState } from "@/components/saves/SavesProvider";
 import { Tag } from "@/components/ui";
-import { cardTag, cardFacts, cardTone, alreadyHappenedLine } from "@/components/explore/derive";
+import { cardTag, cardFacts, cardTone, alreadyHappenedLine, imageAlt } from "@/components/explore/derive";
 
 export function SavedCard({
   thing,
@@ -52,7 +52,7 @@ export function SavedCard({
           >
             {thing.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="sbd-card__img" src={thing.photo_url} alt="" loading="lazy" />
+              <img className="sbd-card__img" src={thing.photo_url} alt={imageAlt(thing)} loading="lazy" />
             ) : null}
           </div>
           <div className="sbd-savedcard__body">
@@ -73,7 +73,7 @@ export function SavedCard({
           >
             {thing.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="sbd-card__img" src={thing.photo_url} alt="" loading="lazy" />
+              <img className="sbd-card__img" src={thing.photo_url} alt={imageAlt(thing)} loading="lazy" />
             ) : null}
           </div>
           <div className="sbd-savedcard__body">

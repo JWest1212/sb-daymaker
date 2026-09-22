@@ -1,9 +1,9 @@
 # R1 Progress (Claude Code keeps this current)
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
-Current run: B
-Current wave: 4 complete, starting 5
-Current task: W5.1
+Current run: B complete (Waves 3, 4 and 5)
+Current wave: awaiting "start Run C"
+Current task: none
 
 ## Done (wave.task, commit)
 
@@ -44,6 +44,16 @@ Current task: W5.1
 - W4.5 detail pages use the module label on their own Neighborhood line and in the nearby heading; the Natural History Museum and Puesta del Sol resolve to Mission and Riviera; Oak Park resolves to Upper State.
 - W4.6 no Near Me on Explore (D11); the stale comment saying otherwise is gone.
 - W4 commit: `feat(r1-w4): single area module, place door filters, area backfill, near me and plan consume it`
+- W5.1 `ingest/clean.ts` splits "Title | Venue", expands acronyms from an editable map (LOTG becomes "Library on the Go"), calms shouting titles and lifts addresses out of blurbs. Backfill changed 563 rows: zero published titles now contain a pipe or "LOTG", and 532 rows gained a `venue_name` that renders in the card meta line.
+- W5.2 `ingest/series.ts` computes `series_key` for every dated row (1,928 written, 940 distinct series, 198 with more than one date), plus a derived cadence sentence. Cross-source dedupe: the audit's 6 groups were already resolved by Wave 2's archiving; one same-source triple (42nd Annual Vintners Festival) was found and reduced to one published row.
+- W5.3 `ingest/blurbRules.ts` states the blurb rules as testable functions and the enrich prompt now carries them as hard rules. Defective output (repeats the title, names the wrong weekday, contains an address, uses a banned phrase) is rejected at landing and logged; the row keeps its existing copy.
+- W5.4/W5.5 cards read `blurb`, detail reads `blurb_long ?? blurb`; one `priceLabel()` rule shared by card and detail, `price_note` preferred over the band, never blank, with a "$ under 15" key on the detail page.
+- W5.6 outbound buttons name their destination ("Tickets at Ticketmaster", "Event details at sbplibrary.org") and a free row never says tickets.
+- W5.7 card and detail photographs carry real alt text (title plus venue); the skyline and generated motifs stay `alt=""`.
+- W5.8 the digest sample renders the coming send window only, uses the module's area labels, and has a real title and description.
+- W5.9 guides: the Funk Zone block count agrees in both places, each guide has its own walk line, the stale July "Right now" note is hidden past 45 days, and the deliberate-error line is retired (D13).
+- W5 extra: D9 enforced. All 27 source files carrying an en dash were corrected (hyphen in a numeric range, "to" in prose), the guide content in the database was corrected, and `scripts/check-emdash.mjs` now fails on U+2013 as well as U+2014.
+- W5 commit: `feat(r1-w5): title cleaning, series keys, enrich rules, price notes, alt text, digest from live data, guide copy`
 
 ## Checkpoints
 - CP1 archive dry-run: approved 2026-09-21
@@ -76,6 +86,13 @@ Current task: W5.1
 - **W1.3 shared the row rule, not the column list.** The spec says `getStopThingMap()` should use one shared select constant with `getPublishedThings()`. Its stated purpose is that a guide must never offer a heart on something Saved cannot render, which is about which ROWS each read can return. Making the columns identical would have changed guide sub-lines: `getStopThingMap` selects `things.category`, a hand-curated field set on 109 rows, which is a different column from the pool's `happening_category`. The status rule is shared; the projection stays narrow.
 - **W1.1 test is a pure-function test plus a source guard, not a component render test.** This repo has no React component-test harness and no `@testing-library`, and adding one is outside R1. The decision is extracted into the pure `partitionSaves()` in lib/savedView.ts and tested there (the spec's exact three-ids-two-returned case). `components/saved/noAutoDelete.test.ts` additionally pins the regression itself: no `remove()` call may appear inside any effect in SavedClient.
 - **Extra fix in `SavesProvider`.** Hydration swallowed a `JSON.parse` failure and then the persist effect wrote `{}` straight back over the stored value, destroying the visitor's list on a single bad read. That is a save-deletion path, which is exactly what Wave 1 exists to close, so it is fixed here: an unreadable value is preserved, copied to `sbd.saves.v1.unreadable`, and never overwritten until the visitor actually saves something. Verified in a browser for both truncated JSON and a wrong-shaped value.
+
+### Wave 5 deviations and carry-overs
+
+- **`series_key` is title + venue, without the weekday.** W5.2's prose says to include the weekday; its own acceptance line says Recreation Swim should have two keys, one per pool. Both cannot be true: with the weekday, Recreation Swim produced 18 keys and the Arts and Crafts Show (which runs Saturday and Sunday) split in two. Title + venue gives the Arts and Crafts Show one key and Recreation Swim three, one per pool (the audit said two; the data has three). The cadence sentence is derived from the occurrence dates instead, which is more accurate and can say "Most days".
+- **A short blurb is not treated as a defect.** W5.3 lists "shorter than 40 characters" among the blurb rules. Enforced literally it rejects "Golden-hour guitars by the water." (33 characters), which is better writing than most long blurbs. Length is used to CHOOSE which rows to re-enrich, which is what the spec wants it for; only unambiguous errors (repeats the title, wrong weekday, street address, banned phrase) block output.
+- **Cross-source dedupe found nothing left to do.** The audit's 6 groups were past events that Wave 2 archived. One same-source triple remained and was reduced.
+- **Carried into Run C, not done here:** the AI re-enrichment run itself (14 published rows have a blurb under 40 characters or equal to their title, and 4 name the wrong weekday; the rules and validators are in place, the batch run is not), and W5.7's image waterfall change plus re-resolving events currently on a Wikimedia photo. Both are pipeline runs rather than code, and neither blocks Run C's screen work.
 
 ### Wave 4 deviations
 

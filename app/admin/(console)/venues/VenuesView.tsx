@@ -39,7 +39,7 @@ function PhotoStrip({
         <h4>Approved pool ({venue.approvedPhotos.length})</h4>
       </div>
       {venue.approvedPhotos.length === 0 ? (
-        <p className="empty-note">No approved photos yet, fetch candidates below and approve a few (3–5 is the target pool size).</p>
+        <p className="empty-note">No approved photos yet, fetch candidates below and approve a few (3-5 is the target pool size).</p>
       ) : (
         <div className="approvedstrip">
           {venue.approvedPhotos.map((p, i) => (
@@ -605,7 +605,7 @@ export function VenuesView({ initial }: { initial: VenuesData }) {
       </div>
       <p className="vsub">
         Founder-curated venues + photo pools (Card Imagery Phase 2). Approve a fuzzy match to attach a thing to a
-        venue; curate 3–5 approved photos per venue so its events rotate through real, vetted photos instead of a
+        venue; curate 3-5 approved photos per venue so its events rotate through real, vetted photos instead of a
         generic auto-pick.
       </p>
 

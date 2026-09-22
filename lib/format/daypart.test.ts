@@ -10,7 +10,7 @@ describe('sbHour / trueDaypart, SB-local boundaries', () => {
     expect(sbHour(at('10:00'))).toBe(10);
     expect(sbHour('2026-07-09T05:00:00+00:00')).toBe(22); // 05:00 UTC = 22:00 prev day PDT
   });
-  it('buckets at the spec boundaries (<12 / 12–16:59 / 17–20:59 / ≥21)', () => {
+  it('buckets at the spec boundaries (<12 / 12-16:59 / 17-20:59 / ≥21)', () => {
     expect(trueDaypart(at('00:00'))).toBe('morning'); // spec is literal: hour <12 is morning
     expect(trueDaypart(at('08:00'))).toBe('morning');
     expect(trueDaypart(at('11:59'))).toBe('morning');

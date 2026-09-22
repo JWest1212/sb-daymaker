@@ -23,9 +23,9 @@ function sbDay(iso: string): string {
 }
 
 // Returns [startHour, endHour) in 24h SB local time for a block.
-//   morning:   12am – 12pm  (0–12)
-//   afternoon: 12pm – 5pm   (12–17)
-//   night:     5pm – 12am   (17–24)
+//   morning:   12am to 12pm  (0-12)
+//   afternoon: 12pm to 5pm   (12-17)
+//   night:     5pm to 12am   (17-24)
 export function blockHourRange(block: Block): [number, number] {
   switch (block) {
     case "morning":   return [0,  12];

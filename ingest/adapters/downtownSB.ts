@@ -14,10 +14,10 @@
 //
 // Dedupe note (§7.6): downtownSB re-lists venue-direct events (Lobero, Historical
 // Museum, etc.). SOURCE_PRIORITY (dedupe.ts) makes venue-direct win; downtownSB
-// catches venue-direct–less listings that no other adapter covers.
+// catches venue-direct to less listings that no other adapter covers.
 //
 // 1st Thursdays is Santa Barbara's monthly gallery walk (first Thursday of every
-// month, State Street area, typically 5–8pm). It is emitted as a registry
+// month, State Street area, typically 5-8pm). It is emitted as a registry
 // candidate so the founder can paste it into recurringRegistry.ts. We use 17:00
 // as the start_time since the event reliably starts at 5pm.
 //

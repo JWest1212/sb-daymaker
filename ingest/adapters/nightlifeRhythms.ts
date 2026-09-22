@@ -9,11 +9,11 @@
 // Confirmed published schedules (verified 2026-06-30):
 //   Figueroa Mountain Brewing (Funk Zone, 137 Anacapa St):
 //     Tuesdays 7pm, Head Games Trivia (published at figmtnbrew.com/santabarbara)
-//     Fridays 7–10pm, Live music
-//     Saturdays 7–10pm, Live music
+//     Fridays 7-10pm, Live music
+//     Saturdays 7-10pm, Live music
 //   Dargan's Irish Pub (18 E Ortega St):
-//     Tuesdays 9pm–1am, Karaoke (darganssb.com/karaoke)
-//     Thursdays 9pm–1am, Karaoke
+//     Tuesdays 9pm to 1am, Karaoke (darganssb.com/karaoke)
+//     Thursdays 9pm to 1am, Karaoke
 //
 // Out of scope (Instagram-only or schedule not on venue website):
 //   Brass Bear Brewing, Wine Therapy SB, Hotel Californian, Validation Ale

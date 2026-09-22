@@ -4,6 +4,7 @@ import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
 import { eventCardWhen, eventDateWithYear } from "@/lib/format/eventTime";
+import { areaShortForThing } from "@/lib/areas";
 import { isTicketingUrl } from "@/lib/format/outboundLink";
 import { nextOccurrenceForThing, formatNextDate } from "@/lib/recurring/nextOccurrence";
 
@@ -80,14 +81,26 @@ export function cardTagColor(t: Thing): TagColor {
   return "terracotta";
 }
 
+/** R1 W4.1/W5.1. The card's place line: the venue when we lifted one out of the
+ *  title, otherwise the area. Never the raw enum, never "other". */
 export function cardPlace(t: Thing): string | undefined {
-  return t.neighborhood ? prettify(t.neighborhood) : undefined;
+  if (t.venue_name?.trim()) return t.venue_name.trim();
+  return areaShortForThing(t) ?? undefined;
+}
+
+/** R1 W5.5 (DET-011). What a card says about price. `price_note` is the written
+ *  version ("$15 to $25", "Free, RSVP") and wins when present; the band is the
+ *  fallback; nothing renders blank. */
+export function priceLabel(t: Thing): string {
+  if (t.price_note?.trim()) return t.price_note.trim();
+  if (t.free) return "Free";
+  if (t.price_band) return t.price_band;
+  return "Check site";
 }
 
 export function cardFacts(t: Thing): string[] {
   const facts: string[] = [];
-  if (t.free) facts.push("Free");
-  else if (t.price_band) facts.push(t.price_band);
+  facts.push(priceLabel(t));
   // G0.3, the exact time, via the one shared formatter the detail page also uses.
   // Previously this dropped minutes ("Fri 8 PM"), disagreeing with the detail's
   // "8:30 PM". Now both build the clock token from eventClock().
@@ -192,7 +205,7 @@ const SB_YMD = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
-/** Hero meta time, e.g. `4–6 PM`. Empty when the pick has no start time
+/** Hero meta time, e.g. `4-6 PM`. Empty when the pick has no start time
  *  (evergreen places, recurring items, venue then stands alone). */
 export function heroTime(t: Thing): string {
   if (!t.starts_at) return "";
@@ -203,8 +216,8 @@ export function heroTime(t: Thing): string {
     return `${s.time} ${s.period}`;
   const e = clockParts(t.ends_at);
   return s.period === e.period
-    ? `${s.time}–${e.time} ${e.period}`
-    : `${s.time} ${s.period}–${e.time} ${e.period}`;
+    ? `${s.time}-${e.time} ${e.period}`
+    : `${s.time} ${s.period}-${e.time} ${e.period}`;
 }
 
 /** Card CTA affordance: ticketing handoffs get "Get tickets", else "See details".
@@ -221,4 +234,18 @@ export function heroCta(t: Thing): string {
 export function alreadyHappenedLine(t: Thing): string | null {
   if (t.status !== "archived") return null;
   return t.starts_at ? `Already happened, ${eventDateWithYear(t.starts_at)}` : "Already happened";
+}
+
+/**
+ * R1 W5.7 (A11Y-005). Alt text for a listing's photograph: the title, plus the
+ * venue when we know one.
+ *
+ * Card images carried `alt=""`, which tells a screen reader the image is
+ * decorative. On a card it is not: it is the only picture of the thing being
+ * recommended. The skyline and the generated category motifs genuinely ARE
+ * decorative and keep `alt=""`, because describing them would add noise without
+ * adding information.
+ */
+export function imageAlt(t: Thing): string {
+  return t.venue_name?.trim() ? `${t.title} at ${t.venue_name.trim()}` : t.title;
 }

@@ -57,14 +57,14 @@ export function titleCaseLabel(snake: string): string {
   return snake.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-/** Display string for a rhythm's single day/time, e.g. "Saturdays, 8:30am–1pm" or
+/** Display string for a rhythm's single day/time, e.g. "Saturdays, 8:30am to 1pm" or
  *  "Fridays (time TBD)". Mirrors the label wording toRecurringSpecs() computes for land. */
 export function formatDayTime(freq: string, day: RecurringRhythmDay): string {
   const dayWord = DOW_LABELS[day.dow] ?? '?';
   const freqPrefix = freq === 'monthly' ? '1st ' : freq === 'biweekly' ? 'Biweekly ' : '';
   const dayLabel = `${freqPrefix}${freq === 'monthly' ? dayWord : `${dayWord}s`}`;
   if (day.start == null) return `${dayLabel} (time TBD)`;
-  const range = day.end ? `${fmtTime(day.start)}–${fmtTime(day.end)}` : fmtTime(day.start);
+  const range = day.end ? `${fmtTime(day.start)}-${fmtTime(day.end)}` : fmtTime(day.start);
   return `${dayLabel}, ${range}`;
 }
 

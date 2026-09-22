@@ -4,6 +4,7 @@ import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { areaLabelForThing } from "@/lib/areas";
+import { priceLabel, imageAlt } from "@/components/explore/derive";
 import { Tag, EmptyState } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
 import { FlagButton } from "@/components/detail/FlagButton";
@@ -156,14 +157,8 @@ export default async function ThingPage({
     facts.push({ k: "When", v: eventDetailWhenWithYear(t.starts_at) });
   // G0.7, never a bare separator in the price slot. Free / a real band / a
   // ticketed event with an outbound ("Check site") / else omit the row entirely.
-  const priceValue = t.free
-    ? "Free"
-    : t.price_band
-      ? t.price_band
-      : t.type === "event" && t.buy_url
-        ? "Check site"
-        : null;
-  if (priceValue) facts.push({ k: "Price", v: priceValue });
+  // R1 W5.5 (DET-011). One price rule, shared with the card. Never blank.
+  facts.push({ k: "Price", v: priceLabel(t) });
   // G1.3, restore the Setting row from the real `setting` enum (Gate 0 had
   // suppressed the old default-false `indoor` bit that couldn't say "both").
   if (t.setting) facts.push({ k: "Setting", v: SETTING_LABEL[t.setting] });
@@ -197,7 +192,7 @@ export default async function ThingPage({
           reads a finished event as an upcoming one. */}
       {t.status === "archived" ? <ArchivedBanner startsAt={t.starts_at} /> : null}
 
-      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={t.title}>
+      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={imageAlt(t)}>
         {/* G1.6, Verified stamp anchored to the image top-right. Shown ONLY for
             Tier-1 entries; nothing is shown otherwise (no "Listed"). The freshness
             dot pulses but stops under prefers-reduced-motion (static). */}
@@ -242,6 +237,12 @@ export default async function ThingPage({
           </div>
         ))}
       </dl>
+
+      {/* R1 W5.5 (DET-011). A tiny key, shown only when the price is a band, so
+          "$$" means something to someone seeing it for the first time. */}
+      {!t.price_note?.trim() && !t.free && t.price_band ? (
+        <p className="sbd-detail__pricekey">$ under 15 &middot; $$ 15 to 40 &middot; $$$ over 40</p>
+      ) : null}
 
       {/* G1.5, open-now computed client-side from stored hours; renders nothing
           when hours are unknown. */}

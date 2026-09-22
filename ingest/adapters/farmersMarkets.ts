@@ -18,11 +18,11 @@
 // Robots.txt: Allow: / (Wix default, confirmed 2026-06-30).
 //
 // Five in-scope markets:
-//   Saturday SB, Saturdays 8:30am–1pm, Santa Barbara & Cota, downtown
-//   Tuesday SB, Tuesdays  3pm–6:30pm, Santa Barbara & Cota, downtown
-//   Goleta, Sundays   10am–2pm, Camino Real Marketplace, Goleta
-//   Montecito, Fridays   8am–11:15am, Coast Village Rd, montecito
-//   Carpinteria, Thursdays 3pm–6:30pm, Linden Ave, carpinteria
+//   Saturday SB, Saturdays 8:30am to 1pm, Santa Barbara & Cota, downtown
+//   Tuesday SB, Tuesdays  3pm to 6:30pm, Santa Barbara & Cota, downtown
+//   Goleta, Sundays   10am to 2pm, Camino Real Marketplace, Goleta
+//   Montecito, Fridays   8am to 11:15am, Coast Village Rd, montecito
+//   Carpinteria, Thursdays 3pm to 6:30pm, Linden Ave, carpinteria
 
 import type { SourceAdapter } from './types';
 import type { RawCandidate } from '../../packages/shared/types';

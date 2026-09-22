@@ -237,7 +237,7 @@ export type ChapterTod = "morning" | "afternoon" | "golden" | "evening";
 
 /** Copy for one chapter band; the array index aligns with `guide_stops.chapter`. */
 export interface GuideChapter {
-  /** Band label, e.g. "Stops 1–3 · Morning". */
+  /** Band label, e.g. "Stops 1-3 · Morning". */
   k: string | null;
   /** Chapter name. */
   name: string | null;
@@ -287,6 +287,11 @@ export interface GuideSketch {
 /** Parsed shape of `guides.content` (jsonb). Empty `{}` → all-empty defaults. */
 export interface GuideContent {
   meta: GuideContentMeta;
+  /** R1 W5.9 (DSC-008). This guide's own one-line description of the route,
+   *  e.g. "Tracks to sand, in order." It was a hardcoded shared string, so
+   *  State Street claimed a walk it does not have. Null falls back to a neutral
+   *  line rather than borrowing another guide's geography. */
+  walk_line: string | null;
   chapters: GuideChapter[];
   asides: GuideAside[];
   take: GuideTake;
@@ -331,6 +336,7 @@ function asTod(v: unknown): ChapterTod | null {
 export function parseGuideContent(raw: unknown): GuideContent {
   const empty: GuideContent = {
     meta: { distance_mi: null, plan_hrs: [] },
+    walk_line: null,
     chapters: [],
     asides: [],
     take: { h: null, items: [], landing: null },
@@ -387,6 +393,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
   }
 
   return {
+    walk_line: asString(raw.walk_line),
     meta: {
       distance_mi: asNumber(metaRaw.distance_mi),
       plan_hrs: asNumberArray(metaRaw.plan_hrs),
@@ -405,7 +412,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
   };
 }
 
-// ─── Stop derivations (Call-1 rules, spec §3.2–3.3) ─────────────────────────
+// ─── Stop derivations (Call-1 rules, spec §3.2-3.3) ─────────────────────────
 // Minimal structural inputs so these stay pure and unit-testable without
 // pulling the full Guide/Thing DB-mapped types (which this phase doesn't widen).
 
@@ -479,4 +486,32 @@ export function directionsUrl(
     return `https://maps.google.com/?q=${thing.lat},${thing.lng}`;
   }
   return null;
+}
+
+/** R1 W5.9 (DSC-006). How long a "Right now" note stays true. */
+export const NOW_NOTE_MAX_AGE_DAYS = 45;
+
+/**
+ * Is this guide's "Right now" note still worth showing?
+ *
+ * The State Street guide was still saying "the long July evenings are the
+ * reward down here" in late September, 76 days after it was written. A stale
+ * seasonal note is worse than no note: it is a specific, checkable claim that
+ * happens to be wrong, and it undermines the rest of the guide with it. Past the
+ * window the block hides and the stat line's "Refreshed [month]" carries the
+ * freshness story instead.
+ */
+export function isNowNoteFresh(
+  nowNoteOn: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!nowNoteOn) return false;
+  // `now_note_on` is a DATE, so the age is counted in whole calendar days. Using
+  // the raw timestamps would make a note written 45 days ago read as 45.8 days
+  // old purely because of the time of day it is being viewed.
+  const written = Date.parse(`${nowNoteOn.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(written)) return false;
+  const today = Date.parse(`${now.toISOString().slice(0, 10)}T00:00:00Z`);
+  const ageDays = (today - written) / 86_400_000;
+  return ageDays <= NOW_NOTE_MAX_AGE_DAYS && ageDays >= -1;
 }

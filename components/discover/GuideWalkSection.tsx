@@ -22,6 +22,9 @@ export interface StopDisplay {
 }
 
 interface Props {
+  /** R1 W5.9 (DSC-008). This guide's own one-line description of the route,
+   *  e.g. "Tracks to sand, in order." Falls back to a neutral line. */
+  walkLine?: string | null;
   artId: string | null;
   stops: StopDisplay[];
   chapters: GuideChapter[];
@@ -114,7 +117,7 @@ function StopCard({
 
 // ─── Main component ──────────────────────────────────────────────────────
 
-export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: Props) {
+export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, walkLine }: Props) {
   const art = getGuideArt(artId);
   const plateRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Record<number, HTMLButtonElement | null>>({});
@@ -216,7 +219,10 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
       <div className="sbd-gd-walkhead">
         <h3 className="sbd-gd-walkhead__h3">The walk</h3>
         <p className="sbd-gd-walkhead__desc">
-          Tracks to sand, in order. Tap a chapter to open it, mark stops <b>✓ Been</b>, and {stopCount} marks press the stamp.
+          {/* R1 W5.9 (DSC-008). Per guide. "Tracks to sand" describes the Funk
+              Zone's walk and was being printed on State Street too, where it is
+              simply not true. */}
+          {walkLine ?? "In order."} Tap a chapter to open it, mark stops <b>✓ Been</b>, and {stopCount} marks press the stamp.
         </p>
       </div>
 

@@ -97,6 +97,12 @@ const RECAT_MEALS_APPLY = process.env.RECAT_MEALS_APPLY === '1';
 // R1 W4.4, the one-time area backfill (CP3).
 const AREAS_DRYRUN = process.env.AREAS_DRYRUN === '1';
 const AREAS_BACKFILL = process.env.AREAS_BACKFILL === '1';
+// R1 W5.1, title cleaning over rows that already landed.
+const TITLES_DRYRUN = process.env.TITLES_DRYRUN === '1';
+const TITLES_BACKFILL = process.env.TITLES_BACKFILL === '1';
+// R1 W5.2, series keys.
+const SERIES_DRYRUN = process.env.SERIES_DRYRUN === '1';
+const SERIES_BACKFILL = process.env.SERIES_BACKFILL === '1';
 // Data Arch Redesign 26 Phase 2, read-only pairwise audit of dedupe.ts's live
 // venue-aware matcher (evaluateMatch/dedupeVenueAware) vs the plain
 // deterministic baseline (dedupe()), run over the existing catalog. Writes
@@ -733,7 +739,7 @@ function printConfidenceHistogram(scored: ScoredThing[], label: string): void {
   buckets.forEach((n, i) => {
     const lo = (i / 10).toFixed(1);
     const hi = ((i + 1) / 10).toFixed(1);
-    console.log(`${lo}–${hi}          ${String(n).padStart(4)}   ${'#'.repeat(n)}`);
+    console.log(`${lo}-${hi}          ${String(n).padStart(4)}   ${'#'.repeat(n)}`);
   });
 }
 
@@ -1936,6 +1942,10 @@ async function main() {
   if (RECAT_MEALS_APPLY) return recatMealsOnce(false);
   if (AREAS_DRYRUN) return areasOnce(true);
   if (AREAS_BACKFILL) return areasOnce(false);
+  if (TITLES_DRYRUN) return titlesOnce(true);
+  if (TITLES_BACKFILL) return titlesOnce(false);
+  if (SERIES_DRYRUN) return seriesOnce(true);
+  if (SERIES_BACKFILL) return seriesOnce(false);
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -2397,6 +2407,20 @@ async function areasOnce(dryRun: boolean) {
   const { backfillAreas, formatBackfillReport } = await import('./areasBackfill');
   const sb = getDb();
   console.log(formatBackfillReport(await backfillAreas(sb, { dryRun })));
+}
+
+/** R1 W5.1. One-off CLI entry point (TITLES_DRYRUN=1 / TITLES_BACKFILL=1). */
+async function titlesOnce(dryRun: boolean) {
+  const { backfillTitles, formatTitleReport } = await import('./audits/title_clean_backfill');
+  const sb = getDb();
+  console.log(formatTitleReport(await backfillTitles(sb, { dryRun })));
+}
+
+/** R1 W5.2. One-off CLI entry point (SERIES_DRYRUN=1 / SERIES_BACKFILL=1). */
+async function seriesOnce(dryRun: boolean) {
+  const { backfillSeries, formatSeriesReport } = await import('./audits/series_backfill');
+  const sb = getDb();
+  console.log(formatSeriesReport(await backfillSeries(sb, { dryRun })));
 }
 
 /** POST /api/revalidate with the shared cron secret. Logs, never throws. */

@@ -246,7 +246,7 @@ export function whenString(tier: number, starts_at: string | null, scheds: Sched
   if (tier === 3) return "Evergreen · open daily";
   const s = scheds[0];
   if (!s) return "Recurring · time TBD";
-  const time = [hhmm(s.start_time), hhmm(s.end_time)].filter(Boolean).join("–") || "time TBD";
+  const time = [hhmm(s.start_time), hhmm(s.end_time)].filter(Boolean).join(" to ") || "time TBD";
   if (s.label) return s.label.includes("TBD") || s.start_time ? s.label : `${s.label} · ${time}`;
   const day = s.day_of_week != null ? DOW[s.day_of_week] : "";
   if (s.frequency === "monthly") return `1st ${day}/month · ${time}`.trim();

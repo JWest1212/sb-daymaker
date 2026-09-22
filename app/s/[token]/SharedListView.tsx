@@ -6,7 +6,7 @@ import { ListCard, Button } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { trackEvent } from "@/lib/analytics";
 import type { Thing } from "@/lib/things";
-import { cardBlurb, cardFacts, cardTone, cardVisual, alreadyHappenedLine } from "@/components/explore/derive";
+import { cardBlurb, cardFacts, cardTone, cardVisual, alreadyHappenedLine, imageAlt } from "@/components/explore/derive";
 
 export function SharedListView({ items }: { items: Thing[] }) {
   const { saveMany } = useSaves();
@@ -42,6 +42,7 @@ export function SharedListView({ items }: { items: Thing[] }) {
                 when={[alreadyHappenedLine(t), cardFacts(t).join(" · ")].filter(Boolean).join(" · ")}
                 href={`/thing/${t.id}`}
                 photo={t.photo_url ?? undefined}
+                photoAlt={imageAlt(t)}
                 visual={cardVisual(t)}
               />
             ))}

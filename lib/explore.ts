@@ -324,7 +324,7 @@ export function byDateAsc(items: Thing[]): Thing[] {
 }
 
 /** Format a date range for the rock tile "when" pill.
- *  Single-day or null ends_at → "Jul 4". Multi-day → "Jul 17–18". */
+ *  Single-day or null ends_at → "Jul 4". Multi-day → "Jul 17-18". */
 export function formatWhen(
   starts_at: string | null,
   ends_at: string | null
@@ -335,7 +335,7 @@ export function formatWhen(
   if (!ends_at) return startLabel;
   const end = new Date(ends_at);
   if (sbDay(start.getTime()) === sbDay(end.getTime())) return startLabel;
-  return `${startLabel}–${SB_SHORT_DATE.format(end)}`;
+  return `${startLabel}-${SB_SHORT_DATE.format(end)}`;
 }
 
 /** Group items by SB-local calendar day, days ascending, items in incoming order within each day. */
@@ -374,7 +374,7 @@ const UTC_LONG_MONTH = new Intl.DateTimeFormat("en-US", {
 });
 
 /** "5th" / "11th" / "22nd", the standard English ordinal exceptions are the
- *  11th–13th (never "1st"/"2nd"/"3rd"). */
+ *  11th to 13th (never "1st"/"2nd"/"3rd"). */
 export function ordinal(day: number): string {
   if (day % 10 === 1 && day % 100 !== 11) return `${day}st`;
   if (day % 10 === 2 && day % 100 !== 12) return `${day}nd`;
@@ -397,7 +397,7 @@ function formatWeekLabel(startMs: number, endMs: number): string {
   return `${startLabel} through ${endLabel}`;
 }
 
-/** Group items by SB-local calendar week (Sun–Sat), weeks ascending. Week bounds
+/** Group items by SB-local calendar week (Sun to Sat), weeks ascending. Week bounds
  *  are computed via UTC-anchored date math off the SB day key (same DST-safe
  *  technique as dayOfYear above) so a late-night browser timezone can't shift
  *  the boundary. Items without starts_at can't be dated to a week, they're

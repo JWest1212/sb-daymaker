@@ -86,6 +86,7 @@ export function PickCard({
   tone = "gold",
   href,
   photo,
+  photoAlt,
 }: {
   id: string;
   title: string;
@@ -103,6 +104,9 @@ export function PickCard({
   tone?: MediaTone;
   href?: string;
   photo?: string;
+  /** R1 W5.7. Describes the PHOTOGRAPH, which on a card is the only picture of
+   *  the thing being recommended and is therefore not decorative. */
+  photoAlt?: string;
 }) {
   const [broken, markBroken] = usePhotoFallback(photo);
   return (
@@ -115,7 +119,7 @@ export function PickCard({
       ) : null}
       <div className={`sbd-pick__media sbd-media--${tone}`}>
         {photo && !broken ? (
-          <img className="sbd-card__img" src={photo} alt="" loading="lazy" onError={markBroken} />
+          <img className="sbd-card__img" src={photo} alt={photoAlt ?? ""} loading="lazy" onError={markBroken} />
         ) : null}
         {occasionKey ? (
           <span className="sbd-pick__tag">
@@ -176,6 +180,7 @@ export function ListCard({
   tone = "sage",
   href,
   photo,
+  photoAlt,
   visual,
 }: {
   id: string;
@@ -186,6 +191,9 @@ export function ListCard({
   tone?: MediaTone; // kept for API compat; occasion color takes precedence in fallback
   href?: string;
   photo?: string;
+  /** R1 W5.7. Describes the PHOTOGRAPH. The generated motif and big-type
+   *  fallbacks below stay alt="" because they genuinely are decorative. */
+  photoAlt?: string;
   visual?: CardVisual | null;
 }) {
   const occ = occasionKey ? OCCASION_BY_KEY[occasionKey] : null;
@@ -212,7 +220,7 @@ export function ListCard({
           <img
             className="sbd-card__img"
             src={photo}
-            alt=""
+            alt={photoAlt ?? ""}
             loading="lazy"
             onError={markBroken}
           />

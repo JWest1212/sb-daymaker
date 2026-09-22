@@ -5,6 +5,7 @@ import {
   deriveStopSub,
   directionsUrl,
   type StopThingFields,
+  isNowNoteFresh,
 } from "./guides";
 
 // ─── parseGuideContent (empty / full / malformed) ───────────────────────────
@@ -12,6 +13,7 @@ import {
 describe("parseGuideContent", () => {
   it("empty {} → all-empty defaults (renders a plain v1 guide)", () => {
     expect(parseGuideContent({})).toEqual({
+      walk_line: null,
       meta: { distance_mi: null, plan_hrs: [] },
       chapters: [],
       asides: [],
@@ -28,7 +30,7 @@ describe("parseGuideContent", () => {
       meta: { distance_mi: 1.3, plan_hrs: [3, 5] },
       chapters: [
         {
-          k: "Stops 1–3 · Morning",
+          k: "Stops 1-3 · Morning",
           name: "Pastry, science, murals",
           sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
@@ -47,10 +49,11 @@ describe("parseGuideContent", () => {
       surprise_extra_key: "ignored",
     };
     expect(parseGuideContent(raw)).toEqual({
+      walk_line: null,
       meta: { distance_mi: 1.3, plan_hrs: [3, 5] },
       chapters: [
         {
-          k: "Stops 1–3 · Morning",
+          k: "Stops 1-3 · Morning",
           name: "Pastry, science, murals",
           sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
@@ -190,5 +193,30 @@ describe("shortGuideTitle", () => {
 
   it("no-op for a title with no trailing parenthetical", () => {
     expect(shortGuideTitle("The Funk Zone")).toBe("The Funk Zone");
+  });
+});
+
+describe("isNowNoteFresh (R1 W5.9, DSC-006)", () => {
+  const NOW = new Date("2026-09-22T12:00:00-07:00");
+  const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000).toISOString().slice(0, 10);
+
+  it("shows a note written this week", () => {
+    expect(isNowNoteFresh(daysAgo(3), NOW)).toBe(true);
+  });
+
+  it("hides the live case: a July note still being shown in late September", () => {
+    // "The long July evenings are the reward down here", written 2026-07-08.
+    expect(isNowNoteFresh("2026-07-08", NOW)).toBe(false);
+  });
+
+  it("treats the 45-day boundary as inclusive", () => {
+    expect(isNowNoteFresh(daysAgo(45), NOW)).toBe(true);
+    expect(isNowNoteFresh(daysAgo(46), NOW)).toBe(false);
+  });
+
+  it("hides a note with no date, rather than assuming it is current", () => {
+    expect(isNowNoteFresh(null, NOW)).toBe(false);
+    expect(isNowNoteFresh(undefined, NOW)).toBe(false);
+    expect(isNowNoteFresh("not-a-date", NOW)).toBe(false);
   });
 });

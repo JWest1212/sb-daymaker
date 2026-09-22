@@ -77,11 +77,11 @@ export function parseTimeToken(token: string): { h: number; m: number } | null {
 }
 
 /**
- * Parse the time range "9:00am–10:30am" → start time { h, m }.
+ * Parse the time range "9:00am to 10:30am" → start time { h, m }.
  * Returns null if the format doesn't match.
  */
 export function parseEventTime(range: string): { h: number; m: number } | null {
-  const start = range.split('–')[0].split('-')[0].trim();
+  const start = range.split(' to ')[0].split('-')[0].trim();
   return parseTimeToken(start);
 }
 
@@ -109,7 +109,7 @@ function parseCard(
   const year = Number(card.find('.lc-date-icon__item--year').first().text().trim());
   if (!month || !day || !year) return null;
 
-  // Time range "9:00am–10:30am"
+  // Time range "9:00am to 10:30am"
   const timeText = card.find('.lc-event-info-item--time').first().text().trim();
   const timeParsed = timeText ? parseEventTime(timeText) : null;
   const startISO = timeParsed ? sbISO(year, month, day, timeParsed.h, timeParsed.m) : undefined;

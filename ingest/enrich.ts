@@ -13,6 +13,7 @@
 //     UNCHANGED so the run still lands them with plain titles (never blocks).
 
 import Anthropic from '@anthropic-ai/sdk';
+import { isBlurbDefective, blurbRejectReason } from './blurbRules';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ActivityTag, Candidate, OccasionTag, PriceBand, Tod } from '../packages/shared/types';
 import { ACTIVITY_KEYS } from '../lib/activities';
@@ -59,11 +60,23 @@ is given, avoid time-of-day words entirely (you cannot know the time). Words tha
 daypart include morning, afternoon, evening, night, late-night, nightcap, sunset, and golden
 hour: only use one that matches the given daypart.
 
+Hard rules for the blurb (R1 W5.3). Output that breaks one is rejected before it lands:
+- Say what the thing IS and why to go. Never restate the title. "Big Richard." under the
+  title "Big Richard" tells a reader nothing.
+- At least 40 characters. If you cannot say what it is from what you were given, return
+  needs_review with a reason instead of padding.
+- Never name a weekday that contradicts the item's own date. A wrong day is worse than no
+  day, because the reader acts on it.
+- No street addresses. The address has its own field.
+- Never use: nestled, vibrant, hidden gem, something for everyone, "whether you're",
+  a feast for the senses, fun for the whole family, must-see, iconic.
+
 For each item return:
-- blurb: 1–2 sentences, ≤ ~24 words, the hook a local would text a friend. Concrete and
+- blurb: 1-2 sentences, ≤ ~24 words, the hook a local would text a friend. Concrete and
   specific, never a list of themes.
-- blurb_long: 2–4 sentences for the detail screen, same voice.
-- tags: 1–3 occasion tags chosen ONLY from the allowed list, each with a confidence 0–1.
+- blurb_long: 2-4 sentences for the detail screen, same voice. Required when the source
+  gave more than 200 characters of description; otherwise repeat the blurb.
+- tags: 1-3 occasion tags chosen ONLY from the allowed list, each with a confidence 0-1.
 - activities: zero or more activity tags chosen ONLY from the allowed list. An activity
   is a concrete "what you'd be doing" label (live music, a market, a hike), not a mood.
   Leave it empty rather than forcing a tag that doesn't clearly fit.
@@ -194,6 +207,17 @@ export function mergeEnrichment(cands: Candidate[], modelItems: ModelItem[]): Ca
     // G0.9 write-time sanitizer: no em dash reaches the DB from an AI draft.
     blurb = cleanText(blurb);
     blurb_long = cleanText(blurb_long);
+    // R1 W5.3. The prompt states the blurb rules; this enforces them. A blurb
+    // that repeats the title, names the wrong weekday, carries a street address
+    // or reaches for a banned phrase does not reach the front page: the row keeps
+    // whatever copy it already had and is logged for review instead. A merely
+    // SHORT blurb is not rejected: brevity is often the better writing.
+    const check = { blurb, title: c.title, starts_at: c.starts_at };
+    if (isBlurbDefective(check)) {
+      console.log(`  [enrich] blurb rejected for ${c.id} (${c.title.slice(0, 40)}): ${blurbRejectReason(check)}`);
+      blurb = c.blurb;
+      blurb_long = c.blurb_long;
+    }
     return {
       ...c, // starts_at, ends_at, address, price_band, etc. untouched
       blurb,

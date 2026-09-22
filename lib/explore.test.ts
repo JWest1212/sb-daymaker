@@ -15,6 +15,9 @@ function thing(over: Partial<Thing> = {}): Thing {
     hero_eligible: true,
     is_civic: false,
     source: null,
+    venue_name: null,
+    price_note: null,
+    series_key: null,
     title: over.id ?? "x",
     blurb: null,
     blurb_long: null,
@@ -334,10 +337,10 @@ describe("ordinal, week header date suffixes", () => {
 });
 
 describe("groupByWeek, Month lead sticky header grouping", () => {
-  it("buckets items into SB-local Sun–Sat weeks, ascending", () => {
+  it("buckets items into SB-local Sun to Sat weeks, ascending", () => {
     const items = [
-      thing({ id: "wk1", happening_tier: 1, type: "event", starts_at: "2026-07-03T19:00:00Z" }), // Fri Jul 3 → week of Jun 28–Jul 4
-      thing({ id: "wk2a", happening_tier: 1, type: "event", starts_at: "2026-07-05T19:00:00Z" }), // Sun Jul 5 → week of Jul 5–11
+      thing({ id: "wk1", happening_tier: 1, type: "event", starts_at: "2026-07-03T19:00:00Z" }), // Fri Jul 3 → week of Jun 28 to Jul 4
+      thing({ id: "wk2a", happening_tier: 1, type: "event", starts_at: "2026-07-05T19:00:00Z" }), // Sun Jul 5 → week of Jul 5-11
       thing({ id: "wk2b", happening_tier: 1, type: "event", starts_at: "2026-07-11T19:00:00Z" }), // Sat Jul 11 → same week as wk2a
     ];
     const weeks = groupByWeek(items);

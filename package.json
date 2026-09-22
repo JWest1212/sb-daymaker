@@ -34,6 +34,8 @@
     "recat-meals:apply": "RECAT_MEALS_APPLY=1 tsx ingest/run.ts",
     "areas:dryrun": "AREAS_DRYRUN=1 tsx ingest/run.ts",
     "areas:backfill": "AREAS_BACKFILL=1 tsx ingest/run.ts",
+    "titles:dryrun": "TITLES_DRYRUN=1 tsx ingest/run.ts",
+    "titles:backfill": "TITLES_BACKFILL=1 tsx ingest/run.ts",
     "extract:sample": "node --env-file=.env.local --import tsx ingest/extractSample.ts"
   },
   "dependencies": {

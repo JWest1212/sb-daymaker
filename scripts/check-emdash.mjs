@@ -15,6 +15,10 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, extname } from 'node:path';
 
 const EM = String.fromCharCode(0x2014);
+// R1 W5.9 (D9): en dashes are governed too. They become a hyphen in a numeric
+// range and the word "to" in prose, so a literal U+2013 in source is a defect
+// exactly like an em dash. Checked here so it cannot creep back in.
+const EN = String.fromCharCode(0x2013);
 const ROOTS = ['app', 'components', 'lib', 'ingest', 'packages', 'scripts'];
 const EXTS = new Set(['.ts', '.tsx', '.mts', '.mjs']);
 const SKIP_DIR = new Set(['node_modules', '.next', '.git', 'dist', 'build']);
@@ -34,11 +38,14 @@ const files = ROOTS.filter((r) => { try { return statSync(r).isDirectory(); } ca
   .flatMap((r) => walk(r, []));
 
 const hits = [];
+const enHits = [];
 for (const f of files) {
   const lines = readFileSync(f, 'utf8').split('\n');
   lines.forEach((line, i) => {
     let col = line.indexOf(EM);
     while (col !== -1) { hits.push(`${f}:${i + 1}:${col + 1}`); col = line.indexOf(EM, col + 1); }
+    let enCol = line.indexOf(EN);
+    while (enCol !== -1) { enHits.push(`${f}:${i + 1}:${enCol + 1}`); enCol = line.indexOf(EN, enCol + 1); }
   });
 }
 
@@ -49,4 +56,11 @@ if (hits.length) {
   if (hits.length > 50) console.error(`  ...and ${hits.length - 50} more`);
   process.exit(1);
 }
-console.log(`check-emdash: clean (${files.length} files, zero U+2014).`);
+if (enHits.length) {
+  console.error(`D9 violated: ${enHits.length} en dash(es) (U+2013) in source.`);
+  console.error('Fix: a hyphen in a numeric range ("5-7"), the word "to" in prose.');
+  for (const h of enHits.slice(0, 50)) console.error('  ' + h);
+  if (enHits.length > 50) console.error(`  ...and ${enHits.length - 50} more`);
+  process.exit(1);
+}
+console.log(`check-emdash: clean (${files.length} files, zero U+2014, zero U+2013).`);

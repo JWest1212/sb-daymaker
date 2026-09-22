@@ -66,6 +66,15 @@ export interface Thing {
   /** The source URL this row came from. R1 W3.1 reads it to tell a library's
    *  cooking class (programming) from a restaurant. */
   source: string | null;
+  /** R1 W5.1. The venue lifted out of a "Title | Venue" pattern. Rendered in the
+   *  card meta line, never in the title. */
+  venue_name: string | null;
+  /** R1 W5.5. Human price text, e.g. "$15 to $25" or "Free, RSVP". Preferred
+   *  over the coarse band when present. */
+  price_note: string | null;
+  /** R1 W5.2. Identity of a recurring series (normalized title + venue +
+   *  weekday), so occurrences can collapse to one card per series. */
+  series_key: string | null;
   lat: number | null;
   lng: number | null;
   price_band: string | null;
@@ -121,7 +130,7 @@ export interface Thing {
 
 // Base columns used by the feeds. local_note is added only for the detail
 // query (getThing), so the feeds keep working before phase7.sql runs.
-const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go, status,
+const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go, status, venue_name, price_note, series_key,
   happening_tier, editorial_weight, happening_category, neighborhood, nearby_zone, price_band, free,
   starts_at, ends_at, buy_url, time_of_day_fit, is_21_plus, indoor, photo_url, photo_source, venue_id,
   visual_kind, visual_key, visual_seed`;
@@ -185,6 +194,9 @@ function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string>
     hero_eligible: (row.hero_eligible as boolean) ?? true,
     is_civic: (row.is_civic as boolean) ?? false,
     source: (row.source as string) ?? null,
+    venue_name: cleanText((row.venue_name as string) ?? null),
+    price_note: cleanText((row.price_note as string) ?? null),
+    series_key: (row.series_key as string) ?? null,
     lat: (row.lat as number) ?? null,
     lng: (row.lng as number) ?? null,
     price_band: (row.price_band as string) ?? null,
