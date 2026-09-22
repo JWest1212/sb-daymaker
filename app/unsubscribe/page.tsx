@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
+import { PublicFrame } from "@/components/public/PublicFrame";
+import { CADENCE_LINE } from "@/lib/edition/cadence";
 
 export const metadata: Metadata = {
   title: "Unsubscribe · SB Daymaker",
@@ -24,9 +25,10 @@ export default async function UnsubscribePage({
   }
 
   return (
-    <main className="sbd-public">
-      <div className="sbd-public__inner">
-        <p className="sbd-public__eyebrow">Weekend digest</p>
+    // R1 W7.8 (A11Y-005): the shared frame, so this page has the same landmarks
+    // as every other. The cadence line is the one string (W8, EML-002).
+    <PublicFrame explainer="SB Daymaker, what's worth doing in Santa Barbara.">
+        <p className="sbd-public__eyebrow">Weekend digest · {CADENCE_LINE}</p>
         <h1 className="sbd-public__title">
           {ok ? "You're unsubscribed" : "Link not valid"}
         </h1>
@@ -35,10 +37,6 @@ export default async function UnsubscribePage({
             ? "You won't get the digest anymore. No hard feelings, you can resubscribe anytime."
             : "This unsubscribe link is invalid or has expired."}
         </p>
-        <Link href="/" className="sbd-public__link">
-          Open SB Daymaker →
-        </Link>
-      </div>
-    </main>
+    </PublicFrame>
   );
 }

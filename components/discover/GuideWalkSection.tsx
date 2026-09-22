@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useSaves } from "@/components/saves/SavesProvider";
 import type { GuideContent, GuideChapter } from "@/lib/guides";
 import { getGuideArt } from "@/lib/guide-art";
+import { rememberSaveTitles } from "@/lib/saveTitles";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -128,7 +129,10 @@ function StopCard({
                 className={`sbd-gd-heart${saved ? " sbd-gd-heart--saved" : ""}`}
                 aria-label={saved ? `Saved ${stop.label}` : `Save ${stop.label}`}
                 aria-pressed={saved}
-                onClick={() => toggle(stop.thing_id!)}
+                onClick={() => {
+                  if (!saved) rememberSaveTitles([{ id: stop.thing_id!, title: stop.label }]); // R1 W7.4
+                  toggle(stop.thing_id!);
+                }}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z" />

@@ -338,7 +338,23 @@ const BY_ID_CHUNK = 200;
  * Ids that do not resolve are simply absent from the returned map. The caller
  * renders those as "no longer listed"; it must never delete them.
  */
-export async function getThingsByIds(ids: string[]): Promise<Map<string, Thing>> {
+/**
+ * R1 W7.4. The database could not be asked, as opposed to "asked, and these ids
+ * are not there". The two must never be confused: Saved treats an id the
+ * database answered for and did not return as "No longer listed", so reporting
+ * a dropped connection as an empty answer would label every save as gone.
+ */
+export class ThingsUnreachableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ThingsUnreachableError";
+  }
+}
+
+export async function getThingsByIds(
+  ids: string[],
+  opts: { timeoutMs?: number } = {},
+): Promise<Map<string, Thing>> {
   const unique = [...new Set(ids.filter(Boolean))];
   const map = new Map<string, Thing>();
   if (unique.length === 0) return map;
@@ -348,17 +364,26 @@ export async function getThingsByIds(ids: string[]): Promise<Map<string, Thing>>
   const chunks: string[][] = [];
   for (let i = 0; i < unique.length; i += BY_ID_CHUNK) chunks.push(unique.slice(i, i + BY_ID_CHUNK));
 
-  const lookup = (select: string, chunk: string[]) =>
-    sb.from("things").select(select).in("id", chunk).in("status", [...PUBLIC_STATUSES]);
+  // R1 W7.4. An optional deadline. Supabase's client retries a failed request
+  // with backoff and never throws, so without one an offline visitor waits out
+  // every retry on a "Loading" line before learning anything.
+  const signal = opts.timeoutMs ? AbortSignal.timeout(opts.timeoutMs) : undefined;
+  const lookup = (select: string, chunk: string[]) => {
+    const q = sb.from("things").select(select).in("id", chunk).in("status", [...PUBLIC_STATUSES]);
+    return signal ? q.abortSignal(signal) : q;
+  };
 
   const [dogFriendlyVenueIds, ...results] = await Promise.all([
-    getDogFriendlyVenueIds(),
+    getDogFriendlyVenueIds(signal),
     ...chunks.map((chunk) => lookup(SELECT_WITH_ACTIVITIES, chunk)),
   ]);
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i].error ? await lookup(SELECT, chunks[i]) : results[i];
-    if (result.error || !result.data) continue;
+    // R1 W7.4. Both selects failed: the database was not reached (or refused
+    // the query outright). Say so; never report it as "these ids are gone".
+    if (result.error) throw new ThingsUnreachableError(result.error.message);
+    if (!result.data) continue;
     for (const row of result.data) {
       const thing = mapThing(row as unknown as Record<string, unknown>, dogFriendlyVenueIds);
       map.set(thing.id, thing);

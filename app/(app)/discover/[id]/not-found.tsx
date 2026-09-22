@@ -10,6 +10,7 @@ export default function GuideNotFound() {
         <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
       </div>
       <EmptyState
+        titleAs="h1"
         icon="🧭"
         title="Guide not found"
         message="This guide may have been unpublished. Head back to Discover SB."

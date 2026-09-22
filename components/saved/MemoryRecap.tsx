@@ -32,10 +32,12 @@ export function MemoryRecap({
     return (
       <section className="sbd-recap sbd-recap--empty">
         <div className="sbd-recap__kicker">Your Santa Barbara</div>
-        <h2 className="sbd-recap__title">Your map starts here.</h2>
+        {/* R1 W7.1 (SHR-004). No map, no memory: the product keeps saves on
+            this phone and nothing else. Say that. */}
+        <h2 className="sbd-recap__title">Your Santa Barbara, so far.</h2>
         <p className="sbd-recap__lead">
-          Mark a place you&rsquo;ve been and we&rsquo;ll quietly start remembering
-          the SB you&rsquo;re building, privately, on this device.
+          Mark a place you&rsquo;ve been and it shows up here. Everything you save and
+          mark stays on this phone.
         </p>
       </section>
     );

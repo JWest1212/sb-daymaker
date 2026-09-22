@@ -19,6 +19,7 @@ import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
 import { absoluteUrl, thingPath, guidePath, isUuid } from "@/lib/seo/site";
 import { redirectTargetFor } from "@/lib/links/redirects";
+import { isOver } from "@/components/explore/derive";
 
 export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
@@ -115,6 +116,10 @@ export default async function ThingPage({
   // readable URL and search engines fold the two into one page.
   if (t?.slug && isUuid(id)) permanentRedirect(thingPath(t));
 
+  // R1 W7.3. When this render happened, for "already happened". A server
+  // component, so there is no client render to disagree with it.
+  const renderedAt = Date.now();
+
   // G3.5, cross-link data: guides this thing stars in, and nearby same-zone things.
   const [guidesFeaturing, nearby] = t
     ? await Promise.all([
@@ -197,7 +202,10 @@ export default async function ThingPage({
 
       {/* R1 W2.2, said before anything else on the page, so the visitor never
           reads a finished event as an upcoming one. */}
-      {t.status === "archived" ? <ArchivedBanner startsAt={t.starts_at} /> : null}
+      {/* R1 W7.3. The same rule as every card: archived, or over. */}
+      {isOver(t, renderedAt) ? (
+        <ArchivedBanner startsAt={t.starts_at} />
+      ) : null}
 
       <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={imageAlt(t)}>
         {/* G1.6, Verified stamp anchored to the image top-right. Shown ONLY for

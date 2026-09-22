@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getSharedState } from "@/lib/shares";
+import { getSharedStateOnce as getSharedState } from "@/lib/sharesServer";
 import type { SharedPlanPayload } from "@/lib/plan/types";
 
 // Gate 4 · G4.7, the shared-plan "day card" OG image. A shared /p/[token] link

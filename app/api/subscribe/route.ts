@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { sendEmail } from "@/lib/email";
+import { renderTransactionalEmail } from "@/lib/email/transactional";
 
 export async function POST(req: NextRequest) {
   let email: unknown;
@@ -29,20 +30,50 @@ export async function POST(req: NextRequest) {
     unsubscribe_token: string;
   };
 
+  const origin = req.nextUrl.origin;
+
+  // R1 W7.6 (review fix). An address that is already confirmed gets a short
+  // "you're already on the list" note, and the response is IDENTICAL to a
+  // first-time signup. Before, the API answered {status:"already"} and sent
+  // nothing, so anyone could POST an address and learn whether it was on the
+  // list, and the page told a returning subscriber to check an inbox that
+  // would stay empty. Now the page's "check your inbox" is true either way.
   if (status === "confirmed") {
-    return NextResponse.json({ ok: true, status: "already" });
+    const note = renderTransactionalEmail({
+      preheader: "Nothing to do: you're already on the list.",
+      heading: "You're already on the list",
+      paragraphs: [
+        "Someone, probably you, just asked to subscribe this address. It's already confirmed, so there is nothing to do.",
+      ],
+      button: { label: "See the latest sample", url: `${origin}/digest/sample` },
+      footNote: "Want out instead? You can {unsubscribe} anytime.",
+      unsubscribeUrl: `${origin}/unsubscribe?token=${unsubscribe_token}`,
+      cadence: true,
+    });
+    await sendEmail({ to: email, subject: "You're already on the SB Daymaker list", html: note.html, text: note.text });
+    return NextResponse.json({ ok: true, status: "pending" });
   }
 
   // Send the double-opt-in confirmation (no-op if Resend isn't configured yet).
-  const origin = req.nextUrl.origin;
   const confirmUrl = `${origin}/confirm?token=${confirm_token}`;
   const unsubUrl = `${origin}/unsubscribe?token=${unsubscribe_token}`;
+  // R1 W7.7 (EML-001). The digest's template, not three bare paragraphs.
+  const mail = renderTransactionalEmail({
+    preheader: "One tap and the weekend lands in your inbox.",
+    heading: "Confirm your digest",
+    paragraphs: [
+      "Tap the button and you're in: one local's pick for the weekend, a few more worth your time, and one evergreen spot.",
+    ],
+    button: { label: "Confirm my subscription", url: confirmUrl },
+    footNote: "Didn't sign up? Ignore this email, or {unsubscribe}.",
+    unsubscribeUrl: unsubUrl,
+    cadence: true,
+  });
   await sendEmail({
     to: email,
     subject: "Confirm your SB Daymaker digest",
-    html: `<p>Tap to confirm your SB Daymaker weekend digest:</p>
-<p><a href="${confirmUrl}">Confirm my subscription</a></p>
-<p style="color:#888;font-size:12px">Didn't sign up? Ignore this email, or <a href="${unsubUrl}">unsubscribe</a>.</p>`,
+    html: mail.html,
+    text: mail.text,
   });
 
   return NextResponse.json({ ok: true, status: "pending" });

@@ -50,10 +50,13 @@ export async function getVenueNames(): Promise<Record<string, string>> {
  *  lib/things.ts joins this in at read time (same pattern as `indoor` ->
  *  `rainy_day`, Doc 22 §2.2): a thing at one of these venues is stamped
  *  `dog_friendly` live, no stored tag, always in sync with the venue flag. */
-export async function getDogFriendlyVenueIds(): Promise<Set<string>> {
+export async function getDogFriendlyVenueIds(signal?: AbortSignal): Promise<Set<string>> {
   const sb = getSupabase();
   if (!sb) return new Set();
-  const { data, error } = await sb.from("venues").select("id").eq("dog_friendly", true);
+  // R1 W7.4. `signal` lets a caller with a deadline (the offline-aware Saved
+  // lookup) stop waiting on this too, instead of sitting out its retries.
+  const q = sb.from("venues").select("id").eq("dog_friendly", true);
+  const { data, error } = await (signal ? q.abortSignal(signal) : q);
   if (error || !data) return new Set();
   return new Set(data.map((row) => row.id as string));
 }

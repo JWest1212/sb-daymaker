@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo/pageMeta";
 import { getPublishedThings, stripForBrowse } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
@@ -12,23 +13,13 @@ import { ExploreClient } from "@/components/explore/ExploreClient";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+// R1 W7.8: through the shared helper, so og:site_name is set like every other page.
+export const metadata: Metadata = pageMeta({
   title: "Things to Do in Santa Barbara This Weekend · SB Daymaker",
   description:
     "The weekend in Santa Barbara: events, live music, markets, and outings worth your time this weekend, refreshed daily by a local.",
-  alternates: { canonical: "/weekend" },
-  openGraph: {
-    title: "Things to Do in Santa Barbara This Weekend",
-    description: "Events, live music, markets, and outings worth your time this weekend in Santa Barbara.",
-    url: "/weekend",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Things to Do in Santa Barbara This Weekend",
-    description: "Events, live music, markets, and outings worth your time this weekend in Santa Barbara.",
-  },
-};
+  path: "/weekend",
+});
 
 export default async function WeekendPage() {
   const [things, weather, pinnedHeroId, venuePools] = await Promise.all([

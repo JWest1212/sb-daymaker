@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { useShareLink } from "@/components/saved/useShareLink";
 import { SBIcon } from "@/components/ui/SBIcon";
+import { rememberSaveTitles } from "@/lib/saveTitles";
 
 export function DetailActions({
   id,
@@ -40,6 +41,7 @@ export function DetailActions({
         aria-label={saved ? `Saved ${title}` : `Save ${title}`}
         aria-pressed={saved}
         onClick={() => {
+          if (!saved) rememberSaveTitles([{ id, title }]); // R1 W7.4
           toggle(id);
           setPop(true);
         }}

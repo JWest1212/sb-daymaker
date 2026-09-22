@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSaveRestore } from "@/lib/shares";
 import { sendEmail } from "@/lib/email";
+import { renderTransactionalEmail } from "@/lib/email/transactional";
 
 export const dynamic = "force-dynamic";
 
@@ -42,16 +43,19 @@ export async function POST(req: NextRequest) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin;
   const link = `${origin}/r/${token}`;
 
-  // Inline hex is required in email HTML (email clients can't read CSS vars);
-  // #16586A is the Pacific token, mirroring how /api/subscribe builds its email.
-  const html = `<p>Your saves, safe and sound. Open this link on any device to bring them back:</p>
-<p><a href="${link}" style="display:inline-block;padding:10px 18px;background:#16586A;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Restore my saved list</a></p>
-<p style="color:#888;font-size:12px">Or paste this link into any browser:<br>${link}</p>`;
-
+  // R1 W7.7 (EML-001). The digest's template, shared with the confirm email.
+  const mail = renderTransactionalEmail({
+    preheader: "Your saves, safe and sound.",
+    heading: "Your saved list",
+    paragraphs: ["Open this link on any device to bring your saves back."],
+    button: { label: "Restore my saved list", url: link },
+    footNote: "Didn't ask for this? Ignore this email; the link only restores a list, it never removes one.",
+  });
   const sent = await sendEmail({
     to: email,
     subject: "Your SB Daymaker saved list",
-    html,
+    html: mail.html,
+    text: mail.text,
   });
 
   // Never log the email or the token.

@@ -6,10 +6,17 @@
    scene inside the mark — NOT brand tokens. They mirror the hero's sky gradient.
    (Flag to Jim if promotion to sbdaymaker_tokens.css is wanted — spec §7 item C.) */
 
-.sbd-brandhdr {
+/* R1 W7.3 review fix: the scene stops live on the MARK too, so the mark renders
+   outside the sticky header (the recipient pages' PublicFrame), where it was a
+   blank tile because these were only defined on .sbd-brandhdr. */
+.sbd-brandhdr,
+.sbd-brandhdr__mark {
   --hdr-sky-hi: #bfe0e6;  /* upper sky */
   --hdr-sky-lo: #7cc0cf;  /* lower sky at the horizon */
   --hdr-suncore: #FFF3D0; /* sun core */
+}
+
+.sbd-brandhdr {
   position: sticky;
   top: 0;
   z-index: 40;

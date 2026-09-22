@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import BrandHeader from "@/components/BrandHeader";
 import { BottomNav } from "@/components/app/BottomNav";
+import { PageFooter } from "@/components/app/PageFooter";
 
 /**
  * R1 W6.7 (EDG-001). The branded not-found page.
@@ -49,6 +50,7 @@ export default function NotFound() {
           </div>
         </div>
       </main>
+      <PageFooter showTour={false} />
       <BottomNav />
     </div>
   );

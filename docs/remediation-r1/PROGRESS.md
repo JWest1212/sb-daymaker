@@ -2,8 +2,8 @@
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
 Current run: C (Waves 6, 7, 8)
-Current wave: 6 complete, committed
-Current task: Wave 7
+Current wave: 7 complete, committed
+Current task: Wave 8 (W8.4 dash gate and lib/strings.ts started early, uncommitted)
 
 ## Done (wave.task, commit)
 
@@ -47,6 +47,16 @@ Current task: Wave 7
 - W6.9 see the performance section below. Accessibility on `/` is 100.
 - W6.10 `lens_select` fires for all three lenses, not Occasion alone.
 - W6 commit: `feat(r1-w6): url state, six-pill when row, one card anatomy, series cards, phone layout, search, slugs, hydration and load fixes`
+- W7.1 the Saved tab badge counts Want to go only, and "N to go, M been" sits under the toggle. The "Did you make it?" card is labelled from the event's own Santa Barbara time ("This morning", "Last night", "On Saturday"); the section hint hides while the card asks, so the prompt appears once. The empty state has "Browse today" and "Read a guide" and the icon-set heart. The recap and the meta description stop promising a map or a memory.
+- W7.2 anything undated (evergreen places and recurring regulars) groups under "Places and regulars" with its next-occurrence meta.
+- W7.3 /s, /p and /r sit in one frame: the app's wordmark, "A friend's picks from SB Daymaker, what's worth doing in Santa Barbara.", and a persistent "Open SB Daymaker". Past items are marked on every surface by one rule (`isOver`: archived, or a dated event whose end has passed), which closed a week-long gap: a finished event stays published until the retire job archives it seven days later, so the audit's own shared link showed two last-Monday events unmarked.
+- W7.4 offline works. See the deviations: the service worker had never been registering. /saved serves its own cached copy and renders the list from the device, with titles remembered at save time; every other page falls back to /offline.
+- W7.5 the submit form marks required fields, names every gap inline, focuses the first one, disables during send, and its success copy sets timing. Title and description match the heading.
+- W7.6 subscribe validates inline in the site's styling; success keeps the address visible with "Not you? Try another."; a confirmed address gets a short "already on the list" email and the IDENTICAL response.
+- W7.7 confirm and restore emails use the digest's template (lib/email/transactional.ts) with a plain-text alternative. The cadence string lives in one place (lib/edition/cadence.ts).
+- W7.8 every one of the nine routes has its own og:title, og:image and description (lib/seo/pageMeta.ts, lib/seo/ogCard.tsx, a colocated opengraph-image per route). /digest/sample has a canonical. Guide not-found is titled. Saved and Discover have an h1. Every page has header, main, nav and one footer landmark.
+- W7 review: an adversarial review of the whole diff (6 reviewers, 2 skeptics per finding, 96 agents) confirmed 39 findings (about 20 distinct), refuted 4, split 2. All confirmed and split findings were fixed and re-verified in the browser. See "Wave 7 deviations".
+- W7 commit: `feat(r1-w7): saved counts and labels, recipient context, offline shell, form validation, branded emails, per-page metadata`
 - W4.1 `lib/areas.ts` is the single area vocabulary: 8 areas, one label each, `areaForThing()` resolving neighborhood then nearby_zone, never "other". `lib/doorZones.ts` is now a thin adapter over it; `lib/zones.ts` keeps only the 6-value `nearby_zone` mapping the database still stores.
 - W4.2 the Place door FILTERS (`filterByArea`), tile counts come from the module over the corrected pool, zero-count tiles render disabled rather than hidden, and "Show the closest matches" names what it relaxed ("Showing all areas").
 - W4.3 Plan's engine was converted to the 8 areas end to end (zone graph, walk clusters, adjacency, parking notes, cluster boost, hard filter, transitions). Saved's Near Me lists the same 8 plus "Anywhere in SB", the button reads "Funk Zone, 2 of 10", the chosen area becomes its own group so the sort is visible, and geolocation falls back after 6 seconds.
@@ -96,6 +106,17 @@ Current task: Wave 7
 - **W1.3 shared the row rule, not the column list.** The spec says `getStopThingMap()` should use one shared select constant with `getPublishedThings()`. Its stated purpose is that a guide must never offer a heart on something Saved cannot render, which is about which ROWS each read can return. Making the columns identical would have changed guide sub-lines: `getStopThingMap` selects `things.category`, a hand-curated field set on 109 rows, which is a different column from the pool's `happening_category`. The status rule is shared; the projection stays narrow.
 - **W1.1 test is a pure-function test plus a source guard, not a component render test.** This repo has no React component-test harness and no `@testing-library`, and adding one is outside R1. The decision is extracted into the pure `partitionSaves()` in lib/savedView.ts and tested there (the spec's exact three-ids-two-returned case). `components/saved/noAutoDelete.test.ts` additionally pins the regression itself: no `remove()` call may appear inside any effect in SavedClient.
 - **Extra fix in `SavesProvider`.** Hydration swallowed a `JSON.parse` failure and then the persist effect wrote `{}` straight back over the stored value, destroying the visitor's list on a single bad read. That is a save-deletion path, which is exactly what Wave 1 exists to close, so it is fixed here: an unreadable value is preserved, copied to `sbd.saves.v1.unreadable`, and never overwritten until the visitor actually saves something. Verified in a browser for both truncated JSON and a wrong-shaped value.
+
+### Wave 7 deviations and findings
+
+- **The offline worker had never been installing.** It registered on the window `load` event from inside an effect, and on most visits `load` has already fired by then, so the listener waited for an event that never came. Measured: zero registrations five seconds after loading the homepage. That, not the worker's routing, is the real cause of TP-C3-03 and TP-C3-04. It now registers immediately when the page has finished loading.
+- **A dropped connection used to read as "these saves no longer exist".** Supabase's client never throws on a network failure; it resolves with an error, and `getThingsByIds` turned that into an empty answer, so on a flaky connection /saved would have labelled every save "No longer listed". Nothing was ever deleted (W1.1 holds), but the words were wrong. It now throws `ThingsUnreachableError`, and the page says "You're offline" or "We couldn't reach SB Daymaker just now" and retries: on reconnect, on returning to the tab, and on a 10 s to 2 min backoff.
+- **Subscribe no longer reveals who is subscribed, even to the API.** The page already showed one message, but the API answered `status: "already"` and sent nothing, so anyone could POST an address and learn whether it was on the list. A confirmed address now gets a short "you're already on the list" note and the same response as a first-time signup. The `subscribe_submit` analytics event therefore always reports "pending"; the old "already" count is gone by design.
+- **robots.txt: /p/ added for search crawlers, link-preview bots let in.** META-003 asked for /p/ in the disallow list, but X, Slack, LinkedIn and the other unfurlers honour robots.txt, so a blanket disallow meant a shared plan or list showed no preview card at all, defeating META-001 on the pages people actually share. Search crawlers are still kept out of /s/, /p/ and /r/, which also carry noindex; the unfurlers get their own rule.
+- **Explore's footer is now the shared footer.** Explore's old footer sat inside `<main>`, so it was not a footer landmark, and /weekend (the same component) showed the new shared footer's links twice. The signup block stays with the feed as a section; the trust line, Suggest and How it works are in the one footer every page renders.
+- **Dead listing and guide URLs render client-side.** They answer a correct 404, but in this Next version a thrown `notFound()` escapes server rendering, so the page body is drawn in the browser. With JavaScript it is right (title, copy, landmarks, h1); with JavaScript off it is blank. The alternatives are a 200 (soft 404, keeps dead listings indexable) or a database check in the proxy on every listing view. Kept the 404; reversing it is a two-line change.
+- **The dash check now fails the build.** It existed but only `npm run lint` ran it. `next.config.ts` runs it in the production-build phase, so `next build` fails on a U+2014 or U+2013 however it is started (proved with a planted dash). This is W8.4 work done early. CSS is not scanned yet: app/components.css carries 108 pre-R1 em dashes in comments, which W8.4 purges before extending the check.
+- **Gmail rendering (acceptance line 8) is Jim's to eyeball.** The template renders correctly in a browser at 390 and 700px (evidence/w7-email-confirm-*.png); the Gmail connector is not authorized in this session.
 
 ### Wave 6 deviations and findings
 

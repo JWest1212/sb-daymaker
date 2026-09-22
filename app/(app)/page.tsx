@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo/pageMeta";
 import { getPublishedThings, stripForBrowse } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
@@ -11,12 +12,14 @@ export const dynamic = "force-dynamic";
 
 // Elevation v1 · Gate 2 · G2.3, the homepage gets its own hand-written title +
 // description (not the sitewide default).
-export const metadata: Metadata = {
+// R1 W7.8 (META-001): its own og:title, not the layout's bare "SB Daymaker".
+export const metadata: Metadata = pageMeta({
   title: "SB Daymaker · What's Worth Doing in Santa Barbara Today",
+  ogTitle: "What's worth doing in Santa Barbara today",
   description:
     "What's worth doing in Santa Barbara today: events, live music, happy hours, and local favorites, refreshed daily. Find it, save it, share it.",
-  alternates: { canonical: "/" },
-};
+  path: "/",
+});
 
 /**
  * R1 W6.1. Filter and horizon state lives in the URL, and the SERVER reads it,

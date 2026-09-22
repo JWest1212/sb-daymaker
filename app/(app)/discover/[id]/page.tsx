@@ -41,7 +41,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const result = await getGuideBySlugOrId(id);
-  if (!result) return { title: "Guide · SB Daymaker" };
+  // R1 W7.8 (DET-013). Says what happened, like the listing's "Not found".
+  if (!result) return { title: "Guide not found · SB Daymaker", robots: { index: false, follow: true } };
   const g = result.guide;
   const title = `${g.title} · Discover SB · SB Daymaker`;
   const description = truncate(

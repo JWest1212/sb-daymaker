@@ -291,24 +291,14 @@ export function ExploreClient({
           venuePools={venuePools}
         />
 
-        <footer className="sbd-foot">
+        {/* R1 W7.8 (A11Y-005, review fix). The signup stays with the feed; the
+            trust line, Suggest and How it works moved to the shell's PageFooter,
+            which every page now renders. This was a <footer> inside <main>, so
+            Explore exposed no footer landmark at all, and /weekend (the same
+            component) showed the shared footer's links twice. */}
+        <section className="sbd-foot" aria-label="The weekend digest">
           <EmailSignup />
-          <p className="sbd-foot__trust">
-            No accounts, no login wall. Saves live on your device.
-          </p>
-          <Link href="/submit" className="sbd-foot__submit">
-            ＋ Submit an event or business
-          </Link>
-          <button
-            type="button"
-            className="sbd-tour-replay sbd-tour-replay--footer"
-            aria-haspopup="dialog"
-            onClick={openTour}
-          >
-            <SBIcon name="reset" size={14} />
-            How SB Daymaker works
-          </button>
-        </footer>
+        </section>
       </div>
 
       <DiscoverySheet

@@ -6,10 +6,13 @@ export async function sendEmail({
   to,
   subject,
   html,
+  text,
 }: {
   to: string;
   subject: string;
   html: string;
+  /** R1 W7.7. Plain-text alternative, for clients that ask for one. */
+  text?: string;
 }): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
@@ -21,7 +24,7 @@ export async function sendEmail({
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify({ from, to, subject, html, ...(text ? { text } : {}) }),
     });
     return res.ok;
   } catch {

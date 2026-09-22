@@ -81,3 +81,23 @@ export function isFresh(
       : new Date(row.starts_at).getTime() + ASSUMED_EVENT_HOURS * HOUR_MS;
   return effectiveEnd >= cutoff;
 }
+
+/**
+ * R1 W7.3 (SHR-002). Whether a dated event is OVER, at `nowMs`.
+ *
+ * Its end if it has one, otherwise its start plus the assumed length. Distinct
+ * from `isFresh`, which keeps a finished event in the pool for a grace day, and
+ * from archiving, which waits a week. "Already happened" should be true the
+ * moment it is, not seven days later when the retire job gets to it.
+ */
+export function hasEnded(
+  row: { starts_at: string | null; ends_at: string | null },
+  nowMs: number,
+): boolean {
+  if (row.starts_at == null) return false;
+  const end =
+    row.ends_at != null
+      ? new Date(row.ends_at).getTime()
+      : new Date(row.starts_at).getTime() + ASSUMED_EVENT_HOURS * HOUR_MS;
+  return end < nowMs;
+}

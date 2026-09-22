@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { thingPath } from "@/lib/seo/site";
-import Link from "next/link";
 import { ListCard, Button } from "@/components/ui";
+import { PublicFrame } from "@/components/public/PublicFrame";
+import { rememberSaveTitles } from "@/lib/saveTitles";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { trackEvent } from "@/lib/analytics";
 import type { Thing } from "@/lib/things";
 import { cardBlurb, cardFacts, cardTone, cardVisual, alreadyHappenedLine, imageAlt } from "@/components/explore/derive";
 
-export function SharedListView({ items }: { items: Thing[] }) {
+export function SharedListView({ items, nowMs }: { items: Thing[]; nowMs: number }) {
   const { saveMany } = useSaves();
   const [saved, setSaved] = useState(false);
 
@@ -19,9 +20,10 @@ export function SharedListView({ items }: { items: Thing[] }) {
     trackEvent("share_open", { kind: "list", count: items.length });
   }, [items.length]);
 
+  // R1 W7.3 (SHR-002). The frame carries the wordmark, the explainer and the
+  // persistent way in; hearts start empty because nothing here is saved yet.
   return (
-    <main className="sbd-public">
-      <div className="sbd-public__inner">
+    <PublicFrame>
         <p className="sbd-public__eyebrow">Shared with you</p>
         <h1 className="sbd-public__title">A few Santa Barbara picks</h1>
         <p className="sbd-public__desc">
@@ -40,7 +42,7 @@ export function SharedListView({ items }: { items: Thing[] }) {
                 occasionKey={t.tags[0]}
                 title={t.title}
                 blurb={cardBlurb(t)}
-                when={[alreadyHappenedLine(t), cardFacts(t).join(" · ")].filter(Boolean).join(" · ")}
+                when={[alreadyHappenedLine(t, nowMs), cardFacts(t).join(" · ")].filter(Boolean).join(" · ")}
                 href={thingPath(t)}
                 photo={t.photo_url ?? undefined}
                 photoAlt={imageAlt(t)}
@@ -61,6 +63,7 @@ export function SharedListView({ items }: { items: Thing[] }) {
                 variant="cta"
                 block
                 onClick={() => {
+                  rememberSaveTitles(items.map((t) => ({ id: t.id, title: t.title }))); // R1 W7.4
                   saveMany(items.map((t) => t.id));
                   setSaved(true);
                 }}
@@ -68,12 +71,8 @@ export function SharedListView({ items }: { items: Thing[] }) {
                 Save your own copy
               </Button>
             )}
-            <Link href="/" className="sbd-public__link">
-              Open SB Daymaker →
-            </Link>
           </div>
         ) : null}
-      </div>
-    </main>
+    </PublicFrame>
   );
 }

@@ -18,6 +18,7 @@ export default function ThingNotFound() {
         <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
       </div>
       <EmptyState
+        titleAs="h1"
         icon="🔍"
         title="Not found"
         message="This place or event may have been removed. Head back to Explore."

@@ -10,9 +10,12 @@ export type IconName =
   | "sun"
   | "reset"
   | "chevron"
-  | "search";
+  | "search"
+  | "check";
 
 const PATHS: Record<IconName, React.ReactNode> = {
+  // R1 W7.5. The icon-set check, for the submit form's success state.
+  check: <polyline points="4 12.5 9.5 18 20 6.5" />,
   heart: (
     <path d="M12 21s-7-4.5-9.5-8.5C.5 8.5 3 5 6.5 5 9 5 12 8 12 8s3-3 5.5-3C21 5 23.5 8.5 21.5 12.5 19 16.5 12 21 12 21Z" />
   ),

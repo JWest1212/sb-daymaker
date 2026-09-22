@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Button } from "@/components/ui";
 import { useSaves, type SaveState } from "@/components/saves/SavesProvider";
 
@@ -18,9 +17,9 @@ export function RestoreView({
   const [done, setDone] = useState(false);
   const count = Object.keys(saves).length;
 
+  // R1 W7.3. The page frame (wordmark, explainer, footer link) is the parent's.
   return (
-    <main className="sbd-public">
-      <div className="sbd-public__inner">
+    <>
         <p className="sbd-public__eyebrow">Restore</p>
         <h1 className="sbd-public__title">Bring your saves back</h1>
         <p className="sbd-public__desc">
@@ -48,11 +47,7 @@ export function RestoreView({
               Restore {count} to this device
             </Button>
           )}
-          <Link href="/saved" className="sbd-public__link">
-            Go to Saved →
-          </Link>
         </div>
-      </div>
-    </main>
+    </>
   );
 }

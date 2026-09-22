@@ -89,6 +89,11 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
         <div className="sbd-shplan__hero">
           <p className="sbd-shplan__eyebrow">Shared with you</p>
           <h1 className="sbd-shplan__title">{payload.title}</h1>
+          {/* R1 W7.3 (SHR-002). One line saying what SB Daymaker is, for a
+              recipient who has never seen it. */}
+          <p className="sbd-shplan__explainer">
+            A friend&rsquo;s day plan from SB Daymaker, what&rsquo;s worth doing in Santa Barbara.
+          </p>
           <p className="sbd-shplan__meta">
             {dateLabel} · {stopCount} {stopCount === 1 ? "stop" : "stops"}
           </p>
@@ -181,8 +186,9 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
         <div style={{ height: "120px" }} />
       </main>
 
-      {/* Sticky footer */}
-      <div className="sbd-shplan__foot">
+      {/* Sticky footer. R1 W7.3 (SHR-002): a footer landmark with a nav, and
+          "Open SB Daymaker" always on the page, not only in the header mark. */}
+      <footer className="sbd-shplan__foot">
         {saved ? (
           <p className="sbd-shplan__saved">✓ Saved to your Days, find it in Saved › Days.</p>
         ) : (
@@ -194,10 +200,11 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
             ❤️ Save this plan
           </button>
         )}
-        <Link href="/plan" className="sbd-shplan__footlink">
-          Make your own day in SB Daymaker →
-        </Link>
-      </div>
+        <nav className="sbd-shplan__footnav" aria-label="SB Daymaker">
+          <Link href="/" className="sbd-shplan__footlink">Open SB Daymaker →</Link>
+          <Link href="/plan" className="sbd-shplan__footlink">Make your own day →</Link>
+        </nav>
+      </footer>
     </div>
   );
 }

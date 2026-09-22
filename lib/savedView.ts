@@ -92,3 +92,52 @@ export function partitionSaves(
   );
   return { found, missing };
 }
+
+const SB_TZ = "America/Los_Angeles";
+const SB_PARTS = new Intl.DateTimeFormat("en-US", {
+  timeZone: SB_TZ, year: "numeric", month: "numeric", day: "numeric", hour: "numeric", hour12: false, weekday: "long",
+});
+const SB_MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, month: "long", day: "numeric" });
+
+function sbParts(ms: number): { dayKey: string; hour: number; weekday: string } {
+  const parts = SB_PARTS.formatToParts(new Date(ms));
+  const get = (t: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === t)?.value ?? "";
+  // "24" can come back for midnight in some ICU builds; treat it as 0.
+  const hour = Number(get("hour")) % 24;
+  return { dayKey: `${get("year")}-${get("month")}-${get("day")}`, hour, weekday: get("weekday") };
+}
+
+/** Whole Santa Barbara calendar days between two instants (0 = same day). */
+function sbDaysBetween(pastMs: number, nowMs: number): number {
+  // Compare SB-local dates by anchoring both to SB noon; DST cannot move either
+  // across a day boundary from noon.
+  const toSbNoon = (ms: number) => {
+    const { dayKey } = sbParts(ms);
+    const [y, m, d] = dayKey.split("-").map(Number);
+    return Date.UTC(y, m - 1, d, 12);
+  };
+  return Math.round((toSbNoon(nowMs) - toSbNoon(pastMs)) / 86_400_000);
+}
+
+/**
+ * R1 W7.1 (SAV-003). The "Did you make it?" card's heading, from the EVENT's
+ * own time, in Santa Barbara's clock.
+ *
+ * The audit read "Last night" over an event that ran at 11 AM that same
+ * morning. The old label only asked how long ago; this one asks when the thing
+ * actually was: "This morning", "This afternoon", "This evening" on the day,
+ * "Last night" or "Yesterday" the day after, the weekday for the rest of the
+ * week, and the date beyond that.
+ */
+export function pastEventLabel(pastMs: number, nowMs: number): string {
+  const days = sbDaysBetween(pastMs, nowMs);
+  const { hour, weekday } = sbParts(pastMs);
+  if (days <= 0) {
+    if (hour < 12) return "This morning";
+    if (hour < 17) return "This afternoon";
+    return "This evening";
+  }
+  if (days === 1) return hour >= 17 ? "Last night" : "Yesterday";
+  if (days < 7) return `On ${weekday}`;
+  return `On ${SB_MONTH_DAY.format(new Date(pastMs))}`;
+}

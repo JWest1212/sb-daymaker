@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getThingsByIds, type Thing } from "@/lib/things";
 import { nearMeSort, areaMatchCount } from "@/lib/explore";
-import { filterByState, splitPast, beenList, partitionSaves } from "@/lib/savedView";
+import { filterByState, splitPast, beenList, partitionSaves, pastEventLabel } from "@/lib/savedView";
 import { groupSaved } from "@/lib/savedGroups";
 import { AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import { useSaves, type SaveState } from "@/components/saves/SavesProvider";
@@ -20,20 +20,11 @@ import { ShareBar } from "./ShareBar";
 import { RestorePanel } from "./RestorePanel";
 import { MemoryRecap } from "./MemoryRecap";
 import { useShareLink } from "./useShareLink";
+import { readSaveTitles, rememberSaveTitles } from "@/lib/saveTitles";
 
 const WORDS = ["One","Two","Three","Four","Five","Six","Seven","Eight","Nine"];
 function spellCount(n: number): string {
   return n >= 1 && n <= 9 ? WORDS[n - 1] : String(n);
-}
-
-function relativeDayLabel(pastMs: number, nowMs: number): string {
-  const diffDays = (nowMs - pastMs) / (1000 * 60 * 60 * 24);
-  const d = new Date(pastMs);
-  const dow = d.getDay(); // 0=Sun, 6=Sat
-  if (diffDays < 1.5) return "Last night";
-  if (dow === 0 || dow === 6) return "This past weekend";
-  if (diffDays < 7) return "Earlier this week";
-  return "Recently";
 }
 
 function readDismissed(): Set<string> {
@@ -96,23 +87,73 @@ export function SavedClient() {
   // it, so a pending or failed fetch never reads as "gone".
   const [answered, setAnswered] = useState<Set<string>>(() => new Set());
   const inFlight = useRef<Set<string>>(new Set());
+  // R1 W7.4. True once a lookup has failed to reach the database at all. The
+  // ids stay pending (never "gone"); the page says it is offline and shows what
+  // it can: the titles it remembered.
+  // "offline": the browser says so. "down": online, but the database did not
+  // answer. Different sentences, because only one of them is the visitor's.
+  const [unreachable, setUnreachable] = useState<false | "offline" | "down">(false);
+  const [titleCache] = useState<Record<string, string>>(readSaveTitles);
+  // Bumped to ask again for whatever is still pending: when the connection
+  // comes back, when the tab is shown again, and on a backoff timer while the
+  // database is out of reach (a visitor who never went offline gets no
+  // `online` event, so the timer is what brings a "down" list back).
+  const [retryTick, setRetryTick] = useState(0);
+  const retryDelay = useRef(10_000);
+  useEffect(() => {
+    const again = () => setRetryTick((t) => t + 1);
+    const onVisible = () => { if (document.visibilityState === "visible") again(); };
+    window.addEventListener("online", again);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("online", again);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
+  useEffect(() => {
+    if (unreachable !== "down") {
+      retryDelay.current = 10_000;
+      return;
+    }
+    const t = setTimeout(() => setRetryTick((n) => n + 1), retryDelay.current);
+    retryDelay.current = Math.min(retryDelay.current * 2, 120_000);
+    return () => clearTimeout(t);
+    // retryTick: re-arm after each attempt that is still "down".
+  }, [unreachable, retryTick]);
+  // Orders the answers: a failure older than the latest success must not
+  // flip the page back to "unreachable".
+  const requestSeq = useRef(0);
+  const lastOkSeq = useRef(0);
 
   useEffect(() => {
     if (!hydrated) return;
     const pending = ids.filter((id) => !answered.has(id) && !inFlight.current.has(id));
     if (pending.length === 0) return;
-    let cancelled = false;
+    const seq = ++requestSeq.current;
     for (const id of pending) inFlight.current.add(id);
-    getThingsByIds(pending)
+    // R1 W7.4. When the browser already knows it is offline, do not sit out the
+    // client's retries on a "Loading" line: go straight to the offline view.
+    const request =
+      typeof navigator !== "undefined" && navigator.onLine === false
+        ? Promise.reject(new Error("offline"))
+        : getThingsByIds(pending, { timeoutMs: 10_000 });
+    // No "cancelled" guard on purpose (review fix). `lookup` and `answered` are
+    // append-only and an answer is correct whenever it arrives, so a settled
+    // answer is always applied. Throwing it away when a reconnect or a Remove
+    // re-ran this effect mid-flight left the page stuck on "Loading": the
+    // re-run found every id still in flight and asked for nothing.
+    request
       .then((found) => {
-        if (cancelled) return;
+        lastOkSeq.current = Math.max(lastOkSeq.current, seq);
         if (found.size > 0) {
+          rememberSaveTitles([...found.values()].map((t) => ({ id: t.id, title: t.title })));
           setLookup((prev) => {
             const next = new Map(prev);
             for (const [id, thing] of found) next.set(id, thing);
             return next;
           });
         }
+        setUnreachable(false);
         setAnswered((prev) => {
           const next = new Set(prev);
           for (const id of pending) next.add(id);
@@ -122,17 +163,25 @@ export function SavedClient() {
       .catch(() => {
         // A transient failure must not read as "deleted". Leaving these ids out
         // of `answered` keeps them in the loading state and lets a later render
-        // retry them.
+        // retry them. R1 W7.4: it does say so, and shows the remembered titles.
+        if (seq < lastOkSeq.current) return; // a newer request already succeeded
+        setUnreachable(typeof navigator !== "undefined" && navigator.onLine === false ? "offline" : "down");
       })
       .finally(() => {
         for (const id of pending) inFlight.current.delete(id);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [hydrated, ids, answered]);
+    // retryTick: a reconnect, a return to the tab, or the backoff timer.
+  }, [hydrated, ids, answered, retryTick]);
 
   const resolving = hydrated && ids.some((id) => !answered.has(id));
+  // R1 W7.4 (TP-C3-03). Pending ids the database could not be asked about,
+  // shown title-only from the cache while offline.
+  const offlineIds = useMemo(
+    () => (unreachable ? ids.filter((id) => !answered.has(id) && (saves[id] ?? "want") === stateFilter) : []),
+    [unreachable, ids, answered, saves, stateFilter],
+  );
+  // The banner only while something is actually waiting on the database.
+  const showUnreachable = unreachable && ids.some((id) => !answered.has(id));
 
   // Resolved rows and unresolvable ids, from the pure selector in lib/savedView.
   // Missing ids are shown, never deleted; the visitor decides whether to let one go.
@@ -269,23 +318,32 @@ export function SavedClient() {
   }, [listCount, stateFilter, weekendCount]);
 
   // --- Empty state (0 total saves) ---
+  // R1 W7.1 (SAV-005). Not a dead end: the icon-set heart instead of an
+  // off-palette emoji, and two ways forward into the site.
   if (counts.total === 0) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
+        <h1 className="sbd-saved__h1 sbd-visually-hidden">Saved</h1>
         <EmptyState
-          icon="❤️"
+          icon={<SBIcon name="heart" size={28} strokeWidth={1.75} />}
           title="Your saved list"
           message="Nothing saved yet. Tap the heart on anything you love and it'll live right here, on this device, no account needed."
           action={
-            <button
-              type="button"
-              className="sbd-tour-replay sbd-tour-replay--saved"
-              aria-haspopup="dialog"
-              onClick={openTour}
-            >
-              <SBIcon name="reset" size={14} />
-              New here? See how it works
-            </button>
+            <div className="sbd-empty__actions">
+              <div className="sbd-empty__ways">
+                <Link href="/" className="sbd-empty__way">Browse today</Link>
+                <Link href="/discover" className="sbd-empty__way">Read a guide</Link>
+              </div>
+              <button
+                type="button"
+                className="sbd-tour-replay sbd-tour-replay--saved"
+                aria-haspopup="dialog"
+                onClick={openTour}
+              >
+                <SBIcon name="reset" size={14} />
+                New here? See how it works
+              </button>
+            </div>
           }
         />
       </div>
@@ -294,6 +352,10 @@ export function SavedClient() {
 
   return (
     <div className="sbd-saved">
+      {/* R1 W7.8 (A11Y-002). The page's title in the heading outline. It had
+          no h1 at all; a screen reader arrived on a page whose headings began
+          at h3. */}
+      <h1 className="sbd-saved__h1">Saved</h1>
       {/* T2: Want / Been toggle + A1 Near Me (only at ≥4 in-view) */}
       <div className="sbd-saved__controls">
         <SavedToggle
@@ -302,6 +364,11 @@ export function SavedClient() {
           beenCount={counts.been}
           onChange={(v) => setStateFilter(v)}
         />
+        {/* R1 W7.1 (SHR-003, TP-A5-02). The one line that reconciles the tab
+            badge (Want to go only) with what is inside. */}
+        <p className="sbd-saved__tally" aria-live="polite">
+          {counts.want} to go, {counts.been} been
+        </p>
         {listCount >= 4 ? (
           <div className="sbd-saved__tools">
             <button
@@ -335,7 +402,9 @@ export function SavedClient() {
       {/* C2: Proactive "Did you make it?" prompt */}
       {c2Item && !selectMode ? (
         <div className="sbd-c2">
-          <p className="sbd-c2__eyebrow">{relativeDayLabel(new Date(c2Item.starts_at!).getTime(), nowMs)}</p>
+          {/* R1 W7.1 (SAV-003). Named from the event's own time: an 11 AM event
+              read at 2 PM is "This morning", not "Last night". */}
+          <p className="sbd-c2__eyebrow">{pastEventLabel(new Date(c2Item.starts_at!).getTime(), nowMs)}</p>
           <div className="sbd-c2__content">
             {c2Item.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -344,7 +413,7 @@ export function SavedClient() {
             <p className="sbd-c2__question">Did you make it to {c2Item.title}?</p>
           </div>
           <p className="sbd-c2__sub">
-            {"Mark what you did. It's how SB Daymaker learns your Santa Barbara."}
+            {"Mark what you did. It stays on this phone, with the rest of your list."}
           </p>
           <div className="sbd-c2__actions">
             <button
@@ -372,11 +441,38 @@ export function SavedClient() {
         <MemoryRecap beenCount={counts.been} beenItems={beenItems} />
       ) : null}
 
+      {/* R1 W7.4 (TP-C3-03). Offline, the list still renders: the rows the
+          page has, and a title for every save it remembers. */}
+      {showUnreachable ? (
+        <p className="sbd-saved__offline" role="status">
+          {unreachable === "offline"
+            ? "You’re offline, showing your saved list."
+            : "We couldn’t reach SB Daymaker just now, showing your saved list."}
+        </p>
+      ) : null}
+      {offlineIds.length > 0 ? (
+        <section className="sbd-saved__group">
+          <div className="sbd-saved__list">
+            {offlineIds.map((id) => (
+              <MissingSavedCard
+                key={id}
+                title={titleCache[id] ?? null}
+                offline={unreachable || "offline"}
+                onRemove={() => remove(id)}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {viewItems.length === 0 ? (
         resolving && things.length === 0 ? (
-          <p className="sbd-saved__resolving" aria-live="polite">Loading your list...</p>
+          showUnreachable ? null : <p className="sbd-saved__resolving" aria-live="polite">Loading your list...</p>
         ) : stateFilter === "been" ? null : missingIds.length > 0 ? null : (
-          <EmptyState icon="❤️" message="Nothing in your want-to-go list right now." />
+          <EmptyState
+            icon={<SBIcon name="heart" size={28} strokeWidth={1.75} />}
+            message="Nothing in your want-to-go list right now."
+          />
         )
       ) : (
         groups.map((g) => (
@@ -400,6 +496,7 @@ export function SavedClient() {
                   onSetState={(s) => handleSetState(t.id, s)}
                   onRemove={() => remove(t.id)}
                   onShareOne={() => makeLinkAndShare([t.id], "single")}
+                  nowMs={nowMs}
                 />
               ))}
             </div>
@@ -439,7 +536,10 @@ export function SavedClient() {
             <span className="sbd-group-hdr__chip">{pastItems.length}</span>
             <span className="sbd-group-hdr__rule" role="presentation" />
           </div>
-          <p className="sbd-saved__pasthint">Did you make it? Mark the ones you did.</p>
+          {/* R1 W7.1 (SAV-003). The card above already asks; do not ask twice. */}
+          {!c2Item ? (
+            <p className="sbd-saved__pasthint">Did you make it? Mark the ones you did.</p>
+          ) : null}
           <div className="sbd-saved__list">
             {pastItems.map((t, i) => (
               <SavedCard
@@ -453,6 +553,7 @@ export function SavedClient() {
                 onSetState={(s) => handleSetState(t.id, s)}
                 onRemove={() => remove(t.id)}
                 onShareOne={() => makeLinkAndShare([t.id], "single")}
+                nowMs={nowMs}
               />
             ))}
           </div>

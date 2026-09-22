@@ -104,8 +104,13 @@ export function BottomNav() {
           >
             <span className="sbd-nav__icon" aria-hidden="true">
               {ICONS[tab.key]}
-              {tab.href === "/saved" && counts.total > 0 ? (
-                <span className="sbd-nav__badge">{counts.total}</span>
+              {/* R1 W7.1 (SHR-003, TP-A5-02). The badge counts Want to go only.
+                  It used to count every save, so flipping one to Been dropped
+                  the toggle to 5 while the tab still said 6, with nothing on
+                  screen to explain it. Been shows inside Saved, and the tally
+                  line under the toggle says both. */}
+              {tab.href === "/saved" && counts.want > 0 ? (
+                <span className="sbd-nav__badge">{counts.want}</span>
               ) : null}
             </span>
             <span className="sbd-nav__label">{tab.label}</span>

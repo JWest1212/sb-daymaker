@@ -1,5 +1,6 @@
 "use client";
 
+import { rememberSaveTitles } from "@/lib/saveTitles";
 import { useState } from "react";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { useShareLink } from "@/components/saved/useShareLink";
@@ -30,6 +31,8 @@ export function CardActions({
         aria-label={saved ? `Saved ${title}` : `Save ${title}`}
         aria-pressed={saved}
         onClick={() => {
+          // R1 W7.4: name it now, so an offline Saved list can too.
+          if (!saved) rememberSaveTitles([{ id, title }]);
           toggle(id);
           setPop(true);
         }}

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  hasEnded,
   freshnessOrFilter,
   freshnessCutoff,
   startFallbackCutoff,
@@ -80,5 +81,24 @@ describe("the PostgREST predicate builder (R1 W1.2)", () => {
   it("moves with the clock rather than pinning a build-time date", () => {
     const later = new Date(NOW.getTime() + 6 * HOUR);
     expect(freshnessOrFilter(later)).not.toBe(freshnessOrFilter(NOW));
+  });
+});
+
+describe("hasEnded (R1 W7.3, SHR-002)", () => {
+  const NOW = new Date("2026-09-22T14:27:00-07:00").getTime();
+  it("a 10 AM event with no end is over by 2:27 PM (start plus four hours)", () => {
+    expect(hasEnded({ starts_at: "2026-09-22T10:00:00-07:00", ends_at: null }, NOW)).toBe(true);
+  });
+  it("a noon event with no end is still on at 2:27 PM", () => {
+    expect(hasEnded({ starts_at: "2026-09-22T12:00:00-07:00", ends_at: null }, NOW)).toBe(false);
+  });
+  it("an explicit end wins", () => {
+    expect(hasEnded({ starts_at: "2026-09-22T09:00:00-07:00", ends_at: "2026-09-22T17:00:00-07:00" }, NOW)).toBe(false);
+  });
+  it("the audit's case: last Monday's event, still published, is over", () => {
+    expect(hasEnded({ starts_at: "2026-09-21T11:00:00-07:00", ends_at: null }, NOW)).toBe(true);
+  });
+  it("an undated place never 'ends'", () => {
+    expect(hasEnded({ starts_at: null, ends_at: null }, NOW)).toBe(false);
   });
 });

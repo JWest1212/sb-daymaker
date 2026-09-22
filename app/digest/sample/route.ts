@@ -121,7 +121,12 @@ export async function GET() {
   const html = renderEditionEmailHtml(edition)
     .replace(
       /<title>[^<]*<\/title>/i,
-      `<title>Sample edition &middot; SB Daymaker</title><meta name="description" content="${edition.preheader}">`,
+      // R1 W7.8 (CON-002). Canonical too, and og values of its own.
+      `<title>Sample edition &middot; SB Daymaker</title><meta name="description" content="${edition.preheader}">` +
+        `<link rel="canonical" href="${absoluteUrl("/digest/sample")}">` +
+        `<meta property="og:title" content="A sample SB Daymaker weekend edition">` +
+        `<meta property="og:description" content="${edition.preheader}">` +
+        `<meta property="og:site_name" content="SB Daymaker">`,
     );
   return new NextResponse(html, {
     headers: { "content-type": "text/html; charset=utf-8" },

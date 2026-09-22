@@ -15,18 +15,28 @@
 export function MissingSavedCard({
   title,
   onRemove,
+  offline = false,
 }: {
   title: string | null;
   onRemove: () => void;
+  /** R1 W7.4. The database could not be reached, so nothing is known about
+   *  this row beyond its remembered title. Not "gone": just not fetched.
+   *  "offline" when the browser says so; "down" when it is online and the
+   *  database did not answer, which is not the visitor's connection. */
+  offline?: false | "offline" | "down";
 }) {
   const label = title ?? "This saved item";
   return (
-    <article className="sbd-card sbd-savedcard sbd-savedcard--missing">
+    <article className={`sbd-card sbd-savedcard sbd-savedcard--missing${offline ? " sbd-savedcard--offline" : ""}`}>
       <div className="sbd-savedcard__top">
         <div className="sbd-savedcard__body">
           <h3 className="sbd-savedcard__title">{label}</h3>
           <div className="sbd-savedcard__meta">
-            No longer listed. It may have been taken down, or it already happened.
+            {offline === "offline"
+              ? "Details will load when you're back online."
+              : offline === "down"
+                ? "Details will load as soon as SB Daymaker answers."
+                : "No longer listed. It may have been taken down, or it already happened."}
           </div>
         </div>
       </div>

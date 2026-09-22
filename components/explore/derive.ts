@@ -5,6 +5,7 @@ import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
 import { eventCardWhen, eventDateWithYear } from "@/lib/format/eventTime";
 import { areaShortForThing } from "@/lib/areas";
+import { hasEnded } from "@/lib/poolFilter";
 import { isTicketingUrl } from "@/lib/format/outboundLink";
 import { nextOccurrenceForThing, formatNextDate } from "@/lib/recurring/nextOccurrence";
 
@@ -231,8 +232,20 @@ export function heroCta(t: Thing): string {
  *  shared by the Saved card, the shared-list recipient page and the restore
  *  recipient page, so a past item is marked identically wherever it turns up.
  *  Null when the thing is not archived (or has no date to name). */
-export function alreadyHappenedLine(t: Thing): string | null {
-  if (t.status !== "archived") return null;
+/** R1 W7.3. The one "is this in the past?" rule: archived, or a dated event
+ *  that is over. The cards, the detail banner and the restore page all use it. */
+export function isOver(t: Thing, nowMs: number): boolean {
+  return t.status === "archived" || (t.type === "event" && hasEnded(t, nowMs));
+}
+
+export function alreadyHappenedLine(t: Thing, nowMs?: number): string | null {
+  // R1 W7.3 (SHR-002). Archived, OR a dated event that is over. Status alone
+  // left a week-long gap: a finished event stays "published" until the retire
+  // job archives it seven days later, and the audit's shared link showed two
+  // last-Monday events with no sign they had happened. `nowMs` comes from the
+  // caller (the server, or the page's mount snapshot) so server and client agree.
+  const over = nowMs != null ? isOver(t, nowMs) : t.status === "archived";
+  if (!over) return null;
   return t.starts_at ? `Already happened, ${eventDateWithYear(t.starts_at)}` : "Already happened";
 }
 

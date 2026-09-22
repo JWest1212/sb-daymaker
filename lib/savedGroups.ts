@@ -15,6 +15,14 @@ const ORDER: { type: ThingType; label: string; dot: string }[] = [
   { type: "place", label: "Places", dot: "var(--forest)" },
 ];
 
+/** R1 W7.2. Anything with no start time: evergreen places and recurring
+ *  regulars alike. A weekly swim or a standing happy hour is not "an event you
+ *  might miss", it is somewhere you can go; it belongs with the places. */
+export const REGULARS_LABEL = "Places and regulars";
+export function isRegular(t: Thing): boolean {
+  return !t.starts_at;
+}
+
 /**
  * Group saved things by type, in a sensible reading order; drop empty groups.
  *
@@ -26,13 +34,22 @@ const ORDER: { type: ThingType; label: string; dot: string }[] = [
  * visible answer, and it says which area it is answering about.
  */
 export function groupSaved(things: Thing[], area?: { key: AreaKey; label: string } | null): SavedGroup[] {
-  const byType = (pool: Thing[]) =>
-    ORDER.map((o) => ({
-      key: o.type,
+  // R1 W7.2. Dated things keep their type groups; everything undated, whatever
+  // its type, gathers under "Places and regulars" at the end.
+  const byType = (pool: Thing[]) => {
+    const dated = pool.filter((t) => !isRegular(t));
+    const regulars = pool.filter(isRegular);
+    const groups: SavedGroup[] = ORDER.map((o) => ({
+      key: o.type as string,
       label: o.label,
       dot: o.dot,
-      items: pool.filter((t) => t.type === o.type),
+      items: dated.filter((t) => t.type === o.type),
     })).filter((g) => g.items.length > 0);
+    if (regulars.length > 0) {
+      groups.push({ key: "regulars", label: REGULARS_LABEL, dot: "var(--forest)", items: regulars });
+    }
+    return groups;
+  };
 
   if (!area) return byType(things);
 

@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { getPublishedGuides } from "@/lib/guides";
 import { GuideCard } from "@/components/discover/GuideCard";
 import { EmptyState } from "@/components/ui";
+import { pageMeta } from "@/lib/seo/pageMeta";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Discover SB · Neighborhood & Theme Guides · SB Daymaker",
   description:
     "Local guides to Santa Barbara's neighborhoods and themes: the Funk Zone, State Street, and more, with the live happenings scoped to each.",
-  alternates: { canonical: "/discover" },
-};
+  path: "/discover",
+});
 export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
 export default async function DiscoverPage() {
@@ -19,6 +20,7 @@ export default async function DiscoverPage() {
   if (guides.length === 0) {
     return (
       <div style={{ paddingTop: "var(--space-6)" }}>
+        <h1 className="sbd-visually-hidden">Discover SB</h1>
         <EmptyState
           icon="🧭"
           title="Discover SB"
@@ -30,6 +32,9 @@ export default async function DiscoverPage() {
 
   return (
     <div style={{ paddingTop: "var(--space-4)" }}>
+      {/* R1 W7.8 (A11Y-002, same finding class as Saved). The page's own title
+          in the heading outline; the sections below were h2s under nothing. */}
+      <h1 className="sbd-saved__h1">Discover SB</h1>
       {hoods.length > 0 ? (
         <section>
           <div className="sbd-disc__head">

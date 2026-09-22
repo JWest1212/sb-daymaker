@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SubmitForm } from "@/components/submit/SubmitForm";
+import { pageMeta } from "@/lib/seo/pageMeta";
 
-export const metadata: Metadata = { title: "Submit · SB Daymaker" };
+// R1 W7.5 (FRM-002) / W7.8 (META-001). Titled after the heading on the page,
+// with a description of its own and og values that match.
+export const metadata: Metadata = pageMeta({
+  title: "Suggest an event or business · SB Daymaker",
+  description:
+    "Know a Santa Barbara happening, show, or spot worth sharing? Tell SB Daymaker. A local reads every submission within a few days.",
+  path: "/submit",
+});
 
 export default function SubmitPage() {
   return (

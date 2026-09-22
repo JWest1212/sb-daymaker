@@ -4819,7 +4819,62 @@
 .sbd-public {
   min-height: 100dvh;
   background: var(--bg);
-  padding: var(--space-8) var(--space-5) var(--space-12);
+  padding: 0 var(--space-5) var(--space-12);
+  display: flex;
+  flex-direction: column;
+}
+/* R1 W7.3 (SHR-002). The recipient frame: the app's own wordmark, one line of
+   what this is, and a footer link that is always there. */
+.sbd-public__hd {
+  margin: 0 calc(-1 * var(--space-5)) var(--space-6);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-4)) var(--space-5) 0;
+  background: var(--paper);
+}
+.sbd-public__hd .sbd-brandhdr__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  min-height: var(--tap-min);
+}
+.sbd-public__hd .sbd-brandhdr__horizon {
+  margin: var(--space-3) calc(-1 * var(--space-5)) 0;
+}
+.sbd-public__explainer {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-2);
+}
+.sbd-public__main {
+  flex: 1;
+  width: 100%;
+}
+.sbd-public__ft {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+.sbd-public__ft nav {
+  display: flex;
+  justify-content: center;
+}
+.sbd-public__wayin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--pacific);
+  color: var(--paper);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.sbd-public__wayin:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
 }
 .sbd-public__inner {
   max-width: 480px;
@@ -7737,7 +7792,7 @@ textarea.sbd-field__input {
 }
 
 /* ==========================================================================
-   R1 W6.7 (EDG-001) — NOT FOUND
+   R1 W6.7 (EDG-001): NOT FOUND
    A bad URL used to land on Next's bare default page: no header, no nav, no way
    back. This is the same column, the same type, the same tokens as every other
    surface, so a 404 still looks like the site it happened on.
@@ -7802,4 +7857,196 @@ textarea.sbd-field__input {
 .sbd-notfound__alt:focus-visible {
   outline: 3px solid var(--pacific);
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+   R1 W7.1: SAVED, the tally line and the empty-state ways forward
+   ========================================================================== */
+/* SHR-003 / TP-A5-02. "3 to go, 1 been": the badge counts the first number. */
+.sbd-saved__tally {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+/* SAV-005. Two links into the site from an empty list. 44px targets. */
+.sbd-empty__ways {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+.sbd-empty__way {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--pacific);
+  color: var(--paper);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.sbd-empty__way:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+/* The icon-set heart sits in the palette; the emoji did not. */
+.sbd-empty__icon svg {
+  color: var(--terracotta);
+}
+
+/* R1 W7.3 (SHR-002). Shared plan: the explainer under the title, the footer way in. */
+.sbd-shplan__explainer {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink-2);
+}
+.sbd-shplan__footnav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-5);
+}
+
+/* ==========================================================================
+   R1 W7.5 / W7.6: FORMS, required marks, inline errors, honest success
+   ========================================================================== */
+.sbd-form__req {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--ink-2);
+}
+.sbd-field__req {
+  /* --terra-text, not --terracotta: small text on plaster needs the darker
+     stop to clear 4.5:1 (review fix; the token file reserves --terracotta for
+     large headings and UI). */
+  color: var(--terra-text);
+  font-weight: var(--weight-bold);
+}
+.sbd-field.has-error .sbd-field__input,
+.sbd-signup__input.has-error {
+  border-color: var(--sev-blocker);
+}
+.sbd-field .sbd-field__error {
+  display: block;
+  margin-top: var(--space-1);
+}
+.sbd-form__done-icon {
+  display: flex;
+  justify-content: center;
+  color: var(--forest);
+}
+.sbd-signup__ok .sbd-signup__okline {
+  margin: 0;
+}
+.sbd-signup__sent {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular, 400);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.sbd-signup__retry {
+  min-height: var(--tap-min);
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: var(--weight-semi);
+  color: var(--pacific);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sbd-signup__retry:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   R1 W7.4 / W7.8: footer landmark on every page, Saved's h1, offline line
+   ========================================================================== */
+/* A11Y-005. The shell's footer, clear of the fixed bottom nav. */
+.sbd-pagefoot {
+  padding: var(--space-6) var(--space-5) calc(50px + var(--space-8) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.sbd-pagefoot__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+/* The shell's main already pads for the nav; with a footer below it, that
+   padding belongs to the footer instead. */
+.sbd-shell__main:has(+ .sbd-pagefoot) {
+  padding-bottom: var(--space-6);
+}
+/* A11Y-002. Saved's title, in the outline and on screen. */
+.sbd-saved__h1 {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+.sbd-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* TP-C3-03. Said once, at the top of the list, when the database is out of reach. */
+.sbd-saved__offline {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--plaster-2);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+/* R1 W7.8. The empty-state title may now be an h1; keep it looking the same.
+   The heading element must not lose the div's own spacing (review fix). */
+h1.sbd-empty__title,
+h2.sbd-empty__title {
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+/* ==========================================================================
+   R1 W7 review fixes
+   ========================================================================== */
+/* 44px targets for every footer link (the audit measured this Submit link at
+   26px as A11Y-004; the shared footer had copied it onto every page). */
+.sbd-pagefoot__link,
+.sbd-pagefoot__nav a,
+.sbd-shplan__footlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+}
+/* On a built plan, the fixed go-bar (Clear, Redo, Share) sits above the nav.
+   The footer clears both, so its links are never under a pill. */
+.sbd-plan-gobar ~ .sbd-pagefoot {
+  padding-bottom: calc(50px + 88px + var(--space-6) + env(safe-area-inset-bottom, 0px));
+}
+/* The icon-set heart is a block SVG; center it like the emoji it replaced. */
+.sbd-empty__icon {
+  display: flex;
+  justify-content: center;
+}
+/* Explore's signup section keeps the old footer spacing. */
+section.sbd-foot {
+  margin-bottom: var(--space-2);
 }
