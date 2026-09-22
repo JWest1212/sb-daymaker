@@ -52,3 +52,6 @@ export const DAYPART = { morning: "Morning", afternoon: "Afternoon", evening: "E
 /** The one cadence string (lives beside the email renderer, re-exported here). */
 export { CADENCE_LINE };
 export const NEWSLETTER_HEADING = "Santa Barbara, twice a week";
+/** The newsletter's one name (EML-002: it was "weekend digest", "Weekend
+ *  digest" and "SB Daymaker digest"). Sentence case in running text. */
+export const NEWSLETTER = "Newsletter";

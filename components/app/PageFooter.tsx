@@ -1,9 +1,11 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTour } from "@/components/tour/useTour";
-import { SBIcon } from "@/components/ui";
+import { HOW_IT_WORKS, SUGGEST } from "@/lib/strings";
 
 /**
  * R1 W7.8 (A11Y-005). The same landmark set on every page.
@@ -23,20 +25,17 @@ export function PageFooter({ showTour = true }: { showTour?: boolean }) {
       <nav className="sbd-pagefoot__nav" aria-label="More">
         {pathname !== "/submit" ? (
           <Link href="/submit" className="sbd-foot__submit sbd-pagefoot__link">
-            ＋ Submit an event or business
+            <SBIcon name="plus" size={14} /> {SUGGEST}
           </Link>
         ) : null}
-        {/* Only where a tour exists to open: the Plan shell deliberately has
-            no TourProvider (it must not auto-open over a half-built day). */}
         {showTour ? (
         <button
           type="button"
-          className="sbd-tour-replay sbd-tour-replay--footer"
+          className="sbd-howitworks sbd-howitworks--footer"
           aria-haspopup="dialog"
           onClick={openTour}
         >
-          <SBIcon name="reset" size={14} />
-          How SB Daymaker works
+          {HOW_IT_WORKS}
         </button>
         ) : null}
       </nav>

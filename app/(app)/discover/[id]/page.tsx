@@ -1,3 +1,4 @@
+import { SBIcon } from "@/components/ui/SBIcon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -24,7 +25,10 @@ import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
 import { guidePath, isUuid } from "@/lib/seo/site";
 import { redirectTargetFor } from "@/lib/links/redirects";
 
-export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
+export const revalidate = 300;
+
+/** R1 W8.2. Marking guide stops is not built; nothing may promise it until it is. */
+const STOP_MARKING_LIVE = false; // R1 W1.6, ISR safety net behind /api/revalidate
 
 function truncate(s: string, n: number): string {
   const clean = s.trim();
@@ -155,7 +159,7 @@ export default async function GuidePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
         />
         <div className="sbd-backrow">
-          <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+          <Link href="/discover" className="sbd-backrow__btn"><SBIcon name="chevron" rotate="left" size={14} /> Discover SB</Link>
         </div>
         <div className="sbd-guide">
           <div className={`sbd-guide-hero sbd-guidecard--${isTheme ? "theme" : "hood"}`}>
@@ -191,7 +195,7 @@ export default async function GuidePage({
 
           <section className="sbd-guide__section">
             <div className="sbd-disc__head">
-              <div className="sbd-disc__eyebrow">📅 {happeningsEyebrow}</div>
+              <div className="sbd-disc__eyebrow">{happeningsEyebrow}</div>
               <h2 className="sbd-disc__title">What&rsquo;s on right now</h2>
             </div>
             {happenings.length > 0 ? (
@@ -229,7 +233,7 @@ export default async function GuidePage({
 
       {/* back row */}
       <div className="sbd-backrow">
-        <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+        <Link href="/discover" className="sbd-backrow__btn"><SBIcon name="chevron" rotate="left" size={14} /> Discover SB</Link>
       </div>
 
       {/* guide identity header */}
@@ -305,14 +309,16 @@ export default async function GuidePage({
                 {happenings[0]?.title ?? "Happenings"}
                 {happenings.length > 1 ? ` · +${happenings.length - 1} more` : ""}
               </span>
-              <span className="sbd-gd-haptoggle__chev" aria-hidden="true">▾</span>
+              <span className="sbd-gd-haptoggle__chev" aria-hidden="true"><SBIcon name="chevron" rotate="down" size={14} /></span>
             </button>
           )}
         </div>
       )}
 
-      {/* passport slab, zero state (static in Phase 2) */}
-      {guide.stamp_code && (
+      {/* R1 W8.2 (XC-004). The passport slab is hidden: it promised that marking
+          stops would "press the stamp", and marking was never built (every Been
+          button was disabled). Flip STOP_MARKING_LIVE when it is. */}
+      {STOP_MARKING_LIVE && guide.stamp_code && (
         <div className="sbd-gd-passport" aria-label={`Your ${shortTitle} passport`}>
           <div className="sbd-gd-passport__left">
             <div className="sbd-gd-passport__row">

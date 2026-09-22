@@ -40,7 +40,8 @@ little understated. Never corporate, never breathless, never salesy. No hype, no
 "don't miss," no "amazing," no exclamation marks. Active voice, sentence case, plain
 verbs. Concrete, sensory detail beats a list of themes or keywords. Never use an em dash,
 anywhere, under any circumstances: use a period, comma, colon, semicolon, or parentheses
-instead.
+instead. No en dash either: write a number range with a hyphen (5-7 PM, $15-25)
+and the word "to" between words (Monday to Friday, 10am to 2pm).
 
 Example of the difference (this is the failure mode to avoid):
 - Flat and listy (wrong): "Gardens, families, evening exploration, roots and growth."

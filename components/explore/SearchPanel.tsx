@@ -137,7 +137,7 @@ export function SearchPanel({
           {trimmed
             ? total > 0
               ? `${total} match${total === 1 ? "" : "es"} for "${trimmed}"`
-              : `No matches for "${trimmed}". Try a venue, a neighborhood, or a tag.`
+              : `No matches for "${trimmed}". Try a venue, an area, or a tag.`
             : null}
         </div>
         {trimmed && results.didYouMean ? (

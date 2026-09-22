@@ -9,6 +9,6 @@ export default function Image() {
   return ogCard({
     eyebrow: "Build a day",
     title: "Your Santa Barbara day",
-    line: "Clustered stops, real hours, meals, and a link to share.",
+    line: "Clustered stops, meals, and a link to share.",
   });
 }

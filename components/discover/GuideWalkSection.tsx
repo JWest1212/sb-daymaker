@@ -1,5 +1,7 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import { useCallback, useRef, useState } from "react";
 import { Badge } from "@/components/ui";
 import Link from "next/link";
@@ -106,22 +108,15 @@ function StopCard({
                     className="sbd-gd-dir"
                     aria-label={`Directions to ${stop.label}`}
                   >
-                    ⌖ DIRECTIONS
+                    <SBIcon name="pin" size={12} /> DIRECTIONS
                   </a>
                 )}
               </div>
             )}
           </div>
           <div className="sbd-gd-stopctrls">
-            {/* ✓ Been button, disabled/static in Phase 2 */}
-            <button
-              type="button"
-              className="sbd-gd-beenbtn"
-              disabled
-              aria-label={`Mark ${stop.label} as been`}
-            >
-              ✓ Been
-            </button>
+            {/* R1 W8.2 (XC-004). The disabled "Been" button is gone: marking stops
+                was never built, so it promised a passport nobody could fill. */}
             {/* heart save, only for thing-backed stops */}
             {stop.thing_id && (
               <button
@@ -243,7 +238,6 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, wa
         )}
         <div className="sbd-gd-sketchcap">
           <span>TAP A NUMBER TO JUMP</span>
-          <span>MARKED STOPS TURN SAGE</span>
         </div>
       </div>
 
@@ -254,7 +248,7 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, wa
           {/* R1 W5.9 (DSC-008). Per guide. "Tracks to sand" describes the Funk
               Zone's walk and was being printed on State Street too, where it is
               simply not true. */}
-          {walkLine ?? "In order."} Tap a chapter to open it, mark stops <b>✓ Been</b>, and {stopCount} marks press the stamp.
+          {walkLine ?? "In order."} Tap a chapter to open it.
         </p>
       </div>
 
@@ -291,8 +285,7 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, wa
                 <div className="sbd-gd-chband__nm">{ch.name}</div>
                 <div className="sbd-gd-chband__sum">{ch.sum}</div>
               </div>
-              <span className="sbd-gd-chband__been">✓ 0/{chStops.length}</span>
-              <span className="sbd-gd-chband__chev" aria-hidden="true">{isOpen ? "▴" : "▾"}</span>
+              <span className="sbd-gd-chband__chev" aria-hidden="true"><SBIcon name="chevron" rotate={isOpen ? "up" : "down"} size={14} /></span>
             </button>
 
             {/* G2.6 (stronger): stop cards are ALWAYS in the DOM (so crawlers +
@@ -320,14 +313,14 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, wa
         );
       })}
 
-      {/* ⌖ Sketch pill ------------------------------------------------- */}
+      {/* <SBIcon name="pin" size={13} /> Sketch pill ------------------------------------------------- */}
       <button
         type="button"
         className="sbd-gd-pill"
         onClick={scrollToPlate}
         aria-label="Scroll to sketch map"
       >
-        ⌖ Sketch
+        <SBIcon name="pin" size={13} /> Sketch
       </button>
     </>
   );

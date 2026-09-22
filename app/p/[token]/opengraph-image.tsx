@@ -69,7 +69,7 @@ export default async function Image({ params }: { params: Promise<{ token: strin
               </div>
             </div>
             <div style={{ fontSize: 26, color: "#F6F1E7", opacity: 0.85, display: "flex" }}>
-              {stopCount} {stopCount === 1 ? "stop" : "stops"}, open when it says
+              {stopCount} {stopCount === 1 ? "stop" : "stops"}, planned with SB Daymaker
             </div>
           </div>
         </div>

@@ -5,7 +5,8 @@ import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
 import { getVenuePhotoPools } from "@/lib/venues";
 import { ExploreClient } from "@/components/explore/ExploreClient";
-import { parseHorizon, parseArea, parseOccasion, parseActivity } from "@/lib/exploreParams";
+import { parseHorizon, parseArea, parseOccasion, parseActivity, exploreQuery } from "@/lib/exploreParams";
+import { redirect } from "next/navigation";
 
 // Read fresh each request (DB-backed). All ranking/filtering is deterministic.
 export const dynamic = "force-dynamic";
@@ -40,6 +41,17 @@ export default async function ExplorePage({
     const v = sp[k];
     return typeof v === "string" ? v : Array.isArray(v) ? v[0] : undefined;
   };
+  // R1 W8.1. ?place= and ?vibe= were the pre-W6.1 names (and header search kept
+  // emitting them until W8). Links already out in the world move to the one set
+  // of names, so a shared or bookmarked view still opens filtered.
+  if (one("place") || one("vibe")) {
+    redirect(`/${exploreQuery({
+      horizon: parseHorizon(one("when")),
+      area: parseArea(one("area") ?? one("place")),
+      occasion: parseOccasion(one("occasion") ?? one("vibe")),
+      activity: parseActivity(one("activity")),
+    })}`);
+  }
   const [things, weather, pinnedHeroId, venuePools] = await Promise.all([
     getPublishedThings(),
     getWeather(),

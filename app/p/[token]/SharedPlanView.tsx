@@ -1,8 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect } from "react";
 import Link from "next/link";
-import { useItineraries } from "@/lib/plan/itineraries";
 import { shortStamp } from "@/lib/plan/dates";
 import { BLOCK_LABEL } from "@/lib/plan/labels";
 import { trackEvent } from "@/lib/analytics";
@@ -25,44 +24,11 @@ function formatClockTime(iso: string): string {
 }
 
 export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
-  const { save } = useItineraries();
-  const [saved, setSaved] = useState(false);
-
   // Event 4: a shared plan was opened (fires on mount; count is stable here).
   useEffect(() => {
     trackEvent("share_open", { kind: "plan", count: payload.stops.length });
   }, [payload.stops.length]);
 
-  function handleSave() {
-    if (saved) return;
-    // Derive unique periods from stops in order.
-    const seenBlocks = new Set<Block>();
-    const periods: Block[] = [];
-    for (const s of payload.stops) {
-      if (!seenBlocks.has(s.block)) {
-        seenBlocks.add(s.block);
-        periods.push(s.block);
-      }
-    }
-    save({
-      title: payload.title,
-      answers: {
-        dateISO: payload.dateISO,
-        periods: periods.length ? periods : ["morning"],
-        who: "friends",
-        vibes: [],
-        zone: null,
-      },
-      stops: payload.stops.map((s) => ({
-        id: Math.random().toString(36).slice(2, 9),
-        block: s.block,
-        thingId: s.thingId,
-        fromSaved: false,
-        fromDraft: false,
-      })),
-    });
-    setSaved(true);
-  }
 
   const stopCount = payload.stops.length;
   const dateLabel = shortStamp(payload.dateISO);
@@ -189,17 +155,10 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
       {/* Sticky footer. R1 W7.3 (SHR-002): a footer landmark with a nav, and
           "Open SB Daymaker" always on the page, not only in the header mark. */}
       <footer className="sbd-shplan__foot">
-        {saved ? (
-          <p className="sbd-shplan__saved">✓ Saved to your Days, find it in Saved › Days.</p>
-        ) : (
-          <button
-            type="button"
-            className="sbd-btn sbd-btn--primary sbd-shplan__savebtn"
-            onClick={handleSave}
-          >
-            ❤️ Save this plan
-          </button>
-        )}
+        {/* R1 W8.2 (XC-004). "Save this plan" saved to a "Saved › Days" tab
+            that does not exist: no screen lists saved plans (MyPlansDrawer is
+            not mounted anywhere). Hidden until there is somewhere to find it;
+            recorded as an open item. */}
         <nav className="sbd-shplan__footnav" aria-label="SB Daymaker">
           <Link href="/" className="sbd-shplan__footlink">Open SB Daymaker →</Link>
           <Link href="/plan" className="sbd-shplan__footlink">Make your own day →</Link>

@@ -1,16 +1,12 @@
 "use client";
 
 import type { Thing } from "@/lib/things";
-import { ZONES, ZONE_LABEL, type Zone } from "@/lib/zones";
+import { AREAS, AREA_BY_KEY, areaForThing, type AreaKey } from "@/lib/areas";
 
-/** Resolve a thing's SB area from its zone, falling back to its neighborhood. */
-function resolveZone(t: Thing): Zone | null {
-  if (t.nearby_zone) return t.nearby_zone;
-  if (t.neighborhood) {
-    const key = t.neighborhood.replace(/_zone$/, "") as Zone;
-    if (ZONES.some((z) => z.zone === key)) return key;
-  }
-  return null;
+// R1 W8.1. The recap counts the SAME eight areas as every other surface
+// (lib/areas.ts), not the six legacy nearby_zone values.
+function resolveZone(t: Thing): AreaKey | null {
+  return areaForThing(t);
 }
 
 /**
@@ -44,9 +40,9 @@ export function MemoryRecap({
   }
 
   const hoods = [
-    ...new Set(beenItems.map(resolveZone).filter((z): z is Zone => Boolean(z))),
+    ...new Set(beenItems.map(resolveZone).filter((z): z is AreaKey => Boolean(z))),
   ];
-  const total = ZONES.length; // the canonical SB areas
+  const total = AREAS.length; // the eight areas
   const pct = Math.min(100, Math.round((hoods.length / total) * 100));
   const recent = beenItems.slice(-2).reverse();
 
@@ -69,7 +65,7 @@ export function MemoryRecap({
           <div className="sbd-recap__hoods">
             {hoods.slice(0, 5).map((z) => (
               <span key={z} className="sbd-recap__chip">
-                {ZONE_LABEL[z]}
+                {AREA_BY_KEY[z].short}
               </span>
             ))}
           </div>
@@ -77,7 +73,7 @@ export function MemoryRecap({
             <i style={{ width: `${pct}%` }} />
           </div>
           <div className="sbd-recap__barl">
-            {hoods.length} of {total} neighborhoods explored
+            {hoods.length} of {total} areas explored
           </div>
         </>
       ) : null}
@@ -92,7 +88,7 @@ export function MemoryRecap({
                 <span className="sbd-recap__dot" aria-hidden="true" />
                 <div>
                   <div className="sbd-recap__tln">{t.title}</div>
-                  {z ? <div className="sbd-recap__tld">{ZONE_LABEL[z]}</div> : null}
+                  {z ? <div className="sbd-recap__tld">{AREA_BY_KEY[z].short}</div> : null}
                 </div>
               </div>
             );

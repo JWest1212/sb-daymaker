@@ -4,7 +4,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
-import { areaLabelForThing } from "@/lib/areas";
+import { areaLabelForThing, areaShortForThing } from "@/lib/areas";
+import { AREA_FIELD, nearbyIn } from "@/lib/strings";
 import { priceLabel, imageAlt } from "@/components/explore/derive";
 import { Tag } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
@@ -164,7 +165,7 @@ export default async function ThingPage({
   // G1.3 facts, address FIRST, neighborhood directly beneath it.
   const facts: { k: string; v: string }[] = [];
   if (t.address?.trim()) facts.push({ k: "Address", v: t.address.trim() });
-  if (neighborhoodLabel) facts.push({ k: "Neighborhood", v: neighborhoodLabel });
+  if (neighborhoodLabel) facts.push({ k: AREA_FIELD, v: neighborhoodLabel }); // R1 W8.1
   if (t.type === "event" && t.starts_at)
     facts.push({ k: "When", v: eventDetailWhenWithYear(t.starts_at) });
   // G0.7, never a bare separator in the price slot. Free / a real band / a
@@ -181,7 +182,9 @@ export default async function ThingPage({
 
   // G1.6, the verification stamp: Tier 1 shows a dated "Verified" stamp (from
   // verified_at, else last_confirmed); Tier 2 shows a quieter "Listed".
-  const stamp = verifiedLabel(t.verified_at ?? t.last_confirmed);
+  // R1 W8.2 (XC-004). "Verified" means a person checked it: verified_at only.
+  // last_confirmed is the scraper seeing the listing again, which is not that.
+  const stamp = verifiedLabel(t.verified_at);
 
   // G1.8, render Local's Secret only when it's a genuine secret (not the entry's
   // own marketing said another way).
@@ -232,7 +235,7 @@ export default async function ThingPage({
             const o = OCCASION_BY_KEY[k];
             return o ? (
               <Tag key={k} color="neutral">
-                {o.icon} {o.label}
+                {o.label}
               </Tag>
             ) : null;
           })}
@@ -274,7 +277,7 @@ export default async function ThingPage({
 
       {showSecret ? (
         <aside className="sbd-detail__secret">
-          <div className="sbd-detail__secret-k">🤫 Local&rsquo;s secret</div>
+          <div className="sbd-detail__secret-k">Local&rsquo;s secret</div>
           <p>{t.local_note}</p>
         </aside>
       ) : null}
@@ -310,7 +313,7 @@ export default async function ThingPage({
       {/* G3.5, Nearby / pairs-with: 2-3 same-zone things, Tier-1 first. */}
       {nearby.length > 0 && t.nearby_zone ? (
         <section className="sbd-detail__nearby">
-          <h2 className="sbd-detail__nearby-h">Nearby in {neighborhoodLabel}</h2>
+          <h2 className="sbd-detail__nearby-h">{nearbyIn(areaShortForThing(t) ?? neighborhoodLabel ?? "")}</h2>
           <ul className="sbd-detail__nearby-list">
             {nearby.map((n) => (
               <li key={n.id}>

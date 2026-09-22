@@ -23,7 +23,6 @@ import { AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import { ACTIVITY_BY_KEY, type ActivityKey } from "@/lib/activities";
 import type { Dimension } from "@/lib/tiles";
 import { trackEvent } from "@/lib/analytics";
-import { useTour } from "@/components/tour/useTour";
 import { SBIcon } from "@/components/ui/SBIcon";
 import { Hero } from "./Hero";
 import { DiscoveryControls } from "./DiscoveryControls";
@@ -74,7 +73,6 @@ export function ExploreClient({
   initialOccasion?: OccasionKey | null;
   initialActivity?: ActivityKey | null;
 }) {
-  const { openTour } = useTour();
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
   // Home Rework spec §11.4, the order dimensions were (most recently) set, so
   // "Show the closest matches" knows which filter to drop first.
@@ -296,7 +294,7 @@ export function ExploreClient({
             which every page now renders. This was a <footer> inside <main>, so
             Explore exposed no footer landmark at all, and /weekend (the same
             component) showed the shared footer's links twice. */}
-        <section className="sbd-foot" aria-label="The weekend digest">
+        <section className="sbd-foot" aria-label="Newsletter">
           <EmailSignup />
         </section>
       </div>

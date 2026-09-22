@@ -27,3 +27,28 @@ describe('stripEmDash (G0.9 / A0.9c)', () => {
     expect(cleanText('x' + EM + 'y')).toBe('x, y');
   });
 });
+
+// R1 W8.4 (D9). En dashes, referenced by code point like the em dash above.
+const EN = String.fromCharCode(0x2013);
+describe('en dashes (D9)', () => {
+  it('a digit range keeps a hyphen', () => {
+    expect(stripEmDash('5' + EN + '7 PM')).toBe('5-7 PM');
+    expect(stripEmDash('Season 2026' + EN + '27')).toBe('Season 2026-27');
+  });
+  it('a range between named days or months reads "to"', () => {
+    expect(stripEmDash('Monday ' + EN + ' Friday')).toBe('Monday to Friday');
+    expect(stripEmDash('Open Sept' + EN + 'Oct')).toBe('Open Sept to Oct');
+  });
+  it('the live separator case becomes a comma, not "to"', () => {
+    const title = '\u201cThe Lost Weekend\u201d ' + EN + ' The Photography of May Pang';
+    expect(stripEmDash(title)).toBe('\u201cThe Lost Weekend\u201d, The Photography of May Pang');
+  });
+  it('a clock range reads "to", and the live mixed case works', () => {
+    expect(stripEmDash('10am' + EN + '2pm')).toBe('10am to 2pm');
+    expect(stripEmDash('Open Tue' + EN + 'Sun 11' + EN + '5 (closed Mondays).')).toBe('Open Tue to Sun 11-5 (closed Mondays).');
+  });
+  it('cleanText rewrites en dashes and hasEmDash sees them', () => {
+    expect(cleanText('a ' + EN + ' b')).toBe('a, b');
+    expect(hasEmDash('a' + EN + 'b')).toBe(true);
+  });
+});

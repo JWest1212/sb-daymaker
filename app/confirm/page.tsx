@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getSupabase } from "@/lib/supabase";
 import { PublicFrame } from "@/components/public/PublicFrame";
-import { CADENCE_LINE } from "@/lib/edition/cadence";
+import { CADENCE_LINE, NEWSLETTER } from "@/lib/strings";
 
 export const metadata: Metadata = {
   title: "Confirm subscription · SB Daymaker",
@@ -28,7 +28,7 @@ export default async function ConfirmPage({
     // R1 W7.8 (A11Y-005): the shared frame, so this page has the same landmarks
     // as every other. The cadence line is the one string (W8, EML-002).
     <PublicFrame explainer="SB Daymaker, what's worth doing in Santa Barbara.">
-        <p className="sbd-public__eyebrow">Weekend digest · {CADENCE_LINE}</p>
+        <p className="sbd-public__eyebrow">{NEWSLETTER} · {CADENCE_LINE}</p>
         <h1 className="sbd-public__title">
           {ok ? "You're in." : "Link not valid"}
         </h1>

@@ -1,6 +1,9 @@
 "use client";
 
+import { RESET } from "@/lib/strings";
+
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { WelcomeStrip } from "@/components/tour/WelcomeStrip";
 import { thingPath } from "@/lib/seo/site";
 import Link from "next/link";
 import { ListCard, PickCard, EmptyState, SBIcon } from "@/components/ui";
@@ -192,6 +195,9 @@ function LeadSection({
         dek={deriveLeadDek(horizon, tier1.length)}
         sticky={horizon === "today"}
       />
+      {/* R1 W8.3 (D8). First visit only: directly above the pick, over the real
+          page, never blocking it. */}
+      <WelcomeStrip />
       {pick || pickIsStatic ? (
         <TodayPick
           pick={pick}
@@ -337,7 +343,7 @@ export function CascadeFeed({
           message={
             hasActiveFilters
               ? "Nothing matches all of those. Try loosening one."
-              : "Nothing matches that combination. Try a wider time or a different vibe."
+              : "Nothing matches that combination. Try a wider time or a different occasion."
           }
           action={
             hasActiveFilters ? (
@@ -357,7 +363,7 @@ export function CascadeFeed({
                     className="sbd-empty__reset sbd-empty__reset--ghost"
                     onClick={onClearFilters}
                   >
-                    Clear filters
+                    {RESET}
                   </button>
                 ) : null}
               </div>

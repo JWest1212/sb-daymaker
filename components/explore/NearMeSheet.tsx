@@ -1,5 +1,7 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
 import { AREAS, ANYWHERE_LABEL, nearestArea, type AreaKey } from "@/lib/areas";
@@ -41,7 +43,7 @@ export function NearMeSheet({
       open={open}
       onClose={onClose}
       kicker="Near Me"
-      title="Sort by what's closest"
+      title="Which area are you in?"
     >
       <button
         type="button"
@@ -49,7 +51,7 @@ export function NearMeSheet({
         onClick={useMyLocation}
         disabled={status === "locating"}
       >
-        📍 {status === "locating" ? "Finding you…" : "Use my location"}
+        <SBIcon name="pin" size={16} /> {status === "locating" ? "Finding you…" : "Use my location"}
       </button>
 
       {status === "denied" ? (

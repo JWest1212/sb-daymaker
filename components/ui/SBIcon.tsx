@@ -11,7 +11,10 @@ export type IconName =
   | "reset"
   | "chevron"
   | "search"
-  | "check";
+  | "check"
+  | "compass"
+  | "close"
+  | "plus";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   // R1 W7.5. The icon-set check, for the submit form's success state.
@@ -45,6 +48,16 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   reset: <path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v4h4" />,
   chevron: <path d="M9 6l6 6-6 6" />,
+  // R1 W8.4 (DET-012). The Discover tab's own compass, so the page's empty
+  // states and not-found page carry the same mark as the tab.
+  compass: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M15 9 L11 11 L9 15 L13 13 Z" />
+    </>
+  ),
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   search: (
     <>
       <circle cx="11" cy="11" r="7" />
@@ -60,7 +73,10 @@ export function SBIcon({
   className,
   fill,
   stroke,
+  rotate,
 }: {
+  /** R1 W8.4. Point a chevron: "left" for back links, "down"/"up" for toggles. */
+  rotate?: "left" | "down" | "up";
   name: IconName;
   size?: number;
   strokeWidth?: number;
@@ -79,7 +95,8 @@ export function SBIcon({
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className={className}
+      className={className ? `sbd-icon ${className}` : "sbd-icon"}
+      style={rotate ? { transform: `rotate(${rotate === "left" ? 180 : rotate === "down" ? 90 : -90}deg)` } : undefined}
     >
       {PATHS[name]}
     </svg>

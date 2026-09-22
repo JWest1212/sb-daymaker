@@ -5,7 +5,10 @@
 // purge script, this file) references the character only via fromCharCode, so the
 // gate needs NO allowlist and has NO exceptions: zero U+2014 literals, period.
 //
-// Scope: .ts/.tsx/.mts/.mjs under app, components, lib, ingest, packages, scripts.
+// Scope: .ts/.tsx/.mts/.mjs/.js/.css under app, components, lib, ingest,
+// packages, scripts, and public (the service worker ships from there).
+// R1 W8.4: .css, .js and public/ added. CSS comments are source too, and
+// public/sw.js is code a visitor's browser runs.
 // (.md planning docs and .sql are not shipped to the site and are out of scope;
 // DB content is guarded separately by the write-time and render-time layers.)
 //
@@ -19,8 +22,8 @@ const EM = String.fromCharCode(0x2014);
 // range and the word "to" in prose, so a literal U+2013 in source is a defect
 // exactly like an em dash. Checked here so it cannot creep back in.
 const EN = String.fromCharCode(0x2013);
-const ROOTS = ['app', 'components', 'lib', 'ingest', 'packages', 'scripts'];
-const EXTS = new Set(['.ts', '.tsx', '.mts', '.mjs']);
+const ROOTS = ['app', 'components', 'lib', 'ingest', 'packages', 'scripts', 'public'];
+const EXTS = new Set(['.ts', '.tsx', '.mts', '.mjs', '.js', '.css', '.webmanifest']);
 const SKIP_DIR = new Set(['node_modules', '.next', '.git', 'dist', 'build']);
 
 function walk(dir, out) {

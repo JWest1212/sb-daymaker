@@ -30,7 +30,7 @@ export function PublicFrame({
       <a href="#main" className="sbd-skip">Skip to content</a>
       <header className="sbd-public__hd">
         <div className="sbd-public__inner">
-          <Link href="/" className="sbd-brandhdr__logo" aria-label="SB Daymaker, Explore">
+          <Link href="/" className="sbd-brandhdr__logo" aria-label="Santa Barbara Daymaker, Explore">
             <span className="sbd-brandhdr__mark" aria-hidden="true">
               <span className="sbd-brandhdr__glint" />
               <span className="sbd-brandhdr__sun" />

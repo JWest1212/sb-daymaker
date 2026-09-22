@@ -141,11 +141,11 @@ describe("searchThings, tags (G3.2 re-synced vocabularies)", () => {
     expect(t).toMatchObject({ kind: "tag", door: "Occasion", filter: { dimension: "vibe", key: "date_night" } });
   });
   it("matches a place label with the Place door + place filter", () => {
-    const t = findTag("funk", "Funk Zone", "Place");
-    expect(t).toMatchObject({ kind: "tag", door: "Place", filter: { dimension: "place", key: "funk_zone" } });
+    const t = findTag("funk", "Funk Zone", "Area");
+    expect(t).toMatchObject({ kind: "tag", door: "Area", filter: { dimension: "place", key: "funk_zone" } });
   });
   it("matches an activity label with the Activity door + activity filter", () => {
-    const t = findTag("live music", "Live music", "Activity");
+    const t = findTag("live music", "Live Music", "Activity");
     expect(t).toMatchObject({ kind: "tag", door: "Activity", filter: { dimension: "activity", key: "live-music" } });
   });
 
@@ -162,10 +162,10 @@ describe("searchThings, tags (G3.2 re-synced vocabularies)", () => {
     // never drift from Explore, Plan, Saved and the digest on what an area is
     // called. That drift is exactly what the audit found (TP-A2-01/02).
     expect(AREAS).toHaveLength(8);
-    for (const a of AREAS) expect(findTag(a.label.toLowerCase(), a.label, "Place"), a.key).toBeTruthy();
+    for (const a of AREAS) expect(findTag(a.label.toLowerCase(), a.label, "Area"), a.key).toBeTruthy();
   });
   it("Activity vocabulary is the 10 activities", () => {
-    const ACT_10 = ["Live music", "Arts & galleries", "Food & drink", "Outdoors", "Markets", "Family & kids", "Film & talks", "Wellness & fitness", "Nightlife", "Community & Festivals"];
+    const ACT_10 = ["Live Music", "Arts & Culture", "Food & Drink", "Outdoors", "Markets", "Family & Kids", "Film & Talks", "Wellness & Fitness", "Nightlife", "Community & Festivals"];
     for (const label of ACT_10) expect(findTag(label.toLowerCase(), label, "Activity")).toBeTruthy();
   });
 

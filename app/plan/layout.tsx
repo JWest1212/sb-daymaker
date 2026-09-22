@@ -13,7 +13,7 @@ export default function PlanLayout({ children }: { children: ReactNode }) {
       </a>
       {children}
       {/* R1 W7.8 (A11Y-005). The same footer landmark as every other page. */}
-      <PageFooter showTour={false} />
+      <PageFooter />
       <BottomNav />
     </div>
   );

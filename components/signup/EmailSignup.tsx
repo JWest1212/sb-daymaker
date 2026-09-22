@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { CADENCE_LINE } from "@/lib/edition/cadence";
+import { CADENCE_LINE, NEWSLETTER_HEADING } from "@/lib/strings";
 
 type Status = "idle" | "busy" | "done" | "already" | "error";
 
@@ -66,10 +66,10 @@ export function EmailSignup() {
 
   return (
     <section className="sbd-signup">
-      <h2 className="sbd-signup__title">The weekend, in your inbox</h2>
+      <h2 className="sbd-signup__title">{NEWSLETTER_HEADING}</h2>
       <p className="sbd-signup__desc">
-        One local&rsquo;s pick for the weekend, a few more worth your time, and one
-        evergreen spot. {CADENCE_LINE}. No wall, unsubscribe anytime.
+        A local&rsquo;s pick, a few more worth your time, and one evergreen spot.
+        {" "}{CADENCE_LINE}. No wall, unsubscribe anytime.
       </p>
       <p className="sbd-signup__proof">
         <a className="sbd-signup__sample" href="/digest/sample">See a sample issue →</a>

@@ -171,12 +171,12 @@ export function heroEyebrow(t: Thing, grayDay: boolean): string {
   // weather cannot spoil. Calling an outdoor pick a "Gray day move" is worse
   // than saying nothing: it recommends the one thing the weather rules out.
   if (grayDay && worksIndoors(t)) return "Gray day move";
-  if (t.type === "place") return "Place to be";
-  if (t.free) return "Free · Today";
+  if (t.type === "place") return "Local favorite"; // R1 W8.1: "Place" retired from UI copy
+  if (t.free) return "Free"; // was "Free · Today" on every horizon, Month included
   const cat = t.happening_category ?? "";
-  if (MUSIC_CATS.has(cat)) return "Catch a show";
-  if (ARTS_CATS.has(cat)) return "Arts & culture";
-  if (t.type === "happyhour") return "Happy hour";
+  if (MUSIC_CATS.has(cat)) return "Catch a Show";
+  if (ARTS_CATS.has(cat)) return "Arts & Culture"; // R1 W8.1 (XC-006), one label
+  if (t.type === "happyhour") return "Happy Hour";
   return "Today’s pick";
 }
 

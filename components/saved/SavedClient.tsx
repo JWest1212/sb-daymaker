@@ -21,6 +21,7 @@ import { RestorePanel } from "./RestorePanel";
 import { MemoryRecap } from "./MemoryRecap";
 import { useShareLink } from "./useShareLink";
 import { readSaveTitles, rememberSaveTitles } from "@/lib/saveTitles";
+import { HOW_IT_WORKS, STAYS_ON_PHONE, onYourList } from "@/lib/strings";
 
 const WORDS = ["One","Two","Three","Four","Five","Six","Seven","Eight","Nine"];
 function spellCount(n: number): string {
@@ -309,12 +310,11 @@ export function SavedClient() {
         sub: "Your Santa Barbara so far",
       };
     }
-    const noun = listCount === 1 ? "spot" : "spots";
     const sub =
       weekendCount > 0
-        ? `${spellCount(weekendCount)} happening this weekend · kept on your phone, no account`
-        : "Kept on your phone, no account";
-    return { main: `${n} ${noun} on your list`, sub };
+        ? `${spellCount(weekendCount)} happening this weekend · stays on this phone, no account`
+        : "Stays on this phone, no account";
+    return { main: onYourList(listCount), sub }; // R1 W8.1, one summary string
   }, [listCount, stateFilter, weekendCount]);
 
   // --- Empty state (0 total saves) ---
@@ -326,8 +326,8 @@ export function SavedClient() {
         <h1 className="sbd-saved__h1 sbd-visually-hidden">Saved</h1>
         <EmptyState
           icon={<SBIcon name="heart" size={28} strokeWidth={1.75} />}
-          title="Your saved list"
-          message="Nothing saved yet. Tap the heart on anything you love and it'll live right here, on this device, no account needed."
+          title="Nothing saved yet"
+          message="Tap the heart on anything you love and it'll live right here, on this device, no account needed."
           action={
             <div className="sbd-empty__actions">
               <div className="sbd-empty__ways">
@@ -336,12 +336,11 @@ export function SavedClient() {
               </div>
               <button
                 type="button"
-                className="sbd-tour-replay sbd-tour-replay--saved"
+                className="sbd-howitworks sbd-howitworks--saved"
                 aria-haspopup="dialog"
                 onClick={openTour}
               >
-                <SBIcon name="reset" size={14} />
-                New here? See how it works
+                New here? {HOW_IT_WORKS}
               </button>
             </div>
           }
@@ -376,7 +375,7 @@ export function SavedClient() {
               className={`sbd-ctrl__near${zone ? " is-active" : ""}`}
               onClick={() => setNearOpen(true)}
             >
-              <span aria-hidden="true">📍</span>
+              <SBIcon name="pin" size={14} />
               <span>
                 {zone
                   ? `${AREA_BY_KEY[zone].short}, ${areaMatchCount(viewItems, zone)} of ${viewItems.length}`
@@ -424,7 +423,7 @@ export function SavedClient() {
                 dismissC2(c2Item.id);
               }}
             >
-              ✓ Yes, I went
+              <SBIcon name="check" size={14} /> Yes, I went
             </button>
             <button
               type="button"
@@ -564,12 +563,12 @@ export function SavedClient() {
       {!selectMode ? (
         <div className="sbd-saved__bottom">
           <Link href="/plan" className="sbd-build-cta" aria-label="Build a day from your saved">
-            <div className="sbd-build-cta__icon" aria-hidden="true">☀️</div>
+            <div className="sbd-build-cta__icon" aria-hidden="true"><SBIcon name="sun" size={22} strokeWidth={1.8} /></div>
             <div className="sbd-build-cta__body">
               <span className="sbd-build-cta__title">Build a day</span>
               <span className="sbd-build-cta__sub">Your saved spots, shaped into a plan.</span>
             </div>
-            <span className="sbd-build-cta__arrow" aria-hidden="true">→</span>
+            <span className="sbd-build-cta__arrow" aria-hidden="true"><SBIcon name="chevron" size={20} strokeWidth={2.2} /></span>
           </Link>
 
           <button
@@ -580,7 +579,7 @@ export function SavedClient() {
               setSelected(new Set());
             }}
           >
-            <span className="sbd-share-list-btn__chip" aria-hidden="true">↗</span>
+            <span className="sbd-share-list-btn__chip" aria-hidden="true"><SBIcon name="share" size={14} /></span>
             Share my list
           </button>
 
@@ -617,9 +616,9 @@ export function SavedClient() {
       {/* C3: Been acknowledgment toast */}
       {beenAck !== null ? (
         <div className="sbd-toast sbd-toast--been" role="status" aria-live="polite">
-          <span className="sbd-toast__check" aria-hidden="true">✓</span>{" "}
+          <span className="sbd-toast__check" aria-hidden="true"><SBIcon name="check" size={14} /></span>{" "}
           Nice, that&apos;s {beenAck} SB {beenAck === 1 ? "spot" : "spots"} you&apos;ve made it to.
-          <span className="sbd-toast__sub">Quietly building your Santa Barbara.</span>
+          <span className="sbd-toast__sub">{STAYS_ON_PHONE}</span>
         </div>
       ) : null}
     </div>

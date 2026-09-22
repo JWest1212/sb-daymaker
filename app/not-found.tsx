@@ -42,7 +42,7 @@ export default function NotFound() {
               Back to Explore
             </Link>
             <Link href="/saved" className="sbd-notfound__alt">
-              Your saved list
+              Saved
             </Link>
             <Link href="/discover" className="sbd-notfound__alt">
               Discover SB
@@ -50,7 +50,7 @@ export default function NotFound() {
           </div>
         </div>
       </main>
-      <PageFooter showTour={false} />
+      <PageFooter />
       <BottomNav />
     </div>
   );

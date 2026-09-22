@@ -33,7 +33,8 @@ export interface Guide {
   stamp_code: string | null;
   /** Editorial freshness date (ISO "YYYY-MM-DD"). Drives "REFRESHED JUL 2026". */
   refreshed_on: string | null;
-  /** "Right now" block body text. Null = block is hidden. Edited in cockpit. */
+  /** "Right now" block body text. Null = block is hidden. Edited in the
+   *  Supabase table editor (no cockpit screen edits guides). */
   now_note: string | null;
   /** ISO date when now_note was last updated. Drives "updated Jun 28". */
   now_note_on: string | null;
@@ -49,7 +50,10 @@ function mapGuide(row: Record<string, unknown>): Guide {
   return {
     id: row.id as string,
     // G0.9 render guard (last line of defense against a stray em dash).
-    title: cleanText(row.title as string),
+    // R1 W8.5 (DSC-009). One public name per guide, everywhere: the index card,
+    // <title>, og, breadcrumbs, share text and "Featured in" links all read
+    // this. "State Street (First-timer)" is the row; "State Street" is the name.
+    title: shortGuideTitle(cleanText(row.title as string)),
     kicker: cleanText((row.kicker as string) ?? null),
     intro: cleanText((row.intro as string) ?? null),
     kind: row.kind as GuideKind,
@@ -58,7 +62,7 @@ function mapGuide(row: Record<string, unknown>): Guide {
     cover_url: (row.cover_url as string) ?? null,
     stamp_code: (row.stamp_code as string) ?? null,
     refreshed_on: (row.refreshed_on as string) ?? null,
-    now_note: (row.now_note as string) ?? null,
+    now_note: cleanText((row.now_note as string) ?? null),
     now_note_on: (row.now_note_on as string) ?? null,
     content: row.content ?? {},
     slug: (row.slug as string) ?? null,
@@ -73,7 +77,7 @@ function mapStop(row: Record<string, unknown>): GuideStop {
     note: cleanText((row.note as string) ?? null),
     thing_id: (row.thing_id as string) ?? null,
     chapter: typeof row.chapter === "number" ? row.chapter : 1,
-    sub: (row.sub as string) ?? null,
+    sub: cleanText((row.sub as string) ?? null),
     maps_query: (row.maps_query as string) ?? null,
   };
 }
@@ -187,13 +191,13 @@ export async function getGuidesFeaturingThing(
     .in("id", guideIds as string[]);
   return ((guides ?? []) as { id: string; title: string; slug: string | null }[]).map((g) => ({
     id: g.id,
-    title: cleanText(g.title),
+    title: shortGuideTitle(cleanText(g.title)), // R1 W8.5, the one public name
     slug: g.slug,
   }));
 }
 
-/** Strip a trailing parenthetical qualifier from a guide title for the
- *  short-label surfaces (sticky bar `who`, passport `lbl`), e.g.
+/** A guide's one public name (R1 W8.5: applied in mapGuide, so every surface
+ *  uses it). Strips a trailing parenthetical qualifier, e.g.
  *  "State Street (First-timer)" -> "State Street". A no-op for titles with
  *  no trailing parenthetical (e.g. "The Funk Zone"). Spec: Guide2 §1/§8.5. */
 export function shortGuideTitle(title: string): string {
@@ -299,6 +303,48 @@ export interface GuideContent {
   postcard_captions: GuidePostcardCaptions;
   secret_tease: string | null;
   sketch: GuideSketch;
+  /** R1 W8.5 (DSC-005). The next guide, named on the Discover index. Lives in
+   *  this jsonb column so no schema change was needed; any published guide may
+   *  carry it (the soonest wins). Null hides the notice. */
+  upcoming: GuideUpcoming | null;
+}
+
+export interface GuideUpcoming {
+  /** The next guide's name, e.g. "The Mesa". */
+  title: string;
+  /** When it is due, "YYYY-MM". */
+  month: string;
+}
+
+function asUpcoming(v: unknown): GuideUpcoming | null {
+  if (!isRecord(v)) return null;
+  const title = typeof v.title === "string" ? v.title.trim() : "";
+  const month = typeof v.month === "string" ? v.month.trim() : "";
+  if (!title || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+  return { title: cleanText(title), month };
+}
+
+const MONTH_NAME = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "UTC" });
+
+/**
+ * R1 W8.5 (DSC-005). The notice for the Discover index, or null to show none.
+ * Replaces the vague "More guides are on their way". Hidden when nothing is
+ * set, when the month has passed, or when that guide is already published.
+ */
+export function nextUpcomingGuide(
+  guides: { title: string; content: unknown }[],
+  now: Date = new Date(),
+): { title: string; monthLabel: string } | null {
+  const thisMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const published = new Set(guides.map((g) => g.title.toLowerCase()));
+  const candidates = guides
+    .map((g) => parseGuideContent(g.content).upcoming)
+    .filter((u): u is GuideUpcoming => !!u && u.month >= thisMonth && !published.has(u.title.toLowerCase()))
+    .sort((a, b) => a.month.localeCompare(b.month));
+  const next = candidates[0];
+  if (!next) return null;
+  const [y, m] = next.month.split("-").map(Number);
+  return { title: next.title, monthLabel: MONTH_NAME.format(new Date(Date.UTC(y, m - 1, 15))) };
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -307,6 +353,12 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 function asString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
+}
+
+/** R1 W8.4 (D9). Prose from guides.content, through the dash normalizer. The
+ *  row-level fields were cleaned; the jsonb prose never was. */
+function asText(v: unknown): string | null {
+  return typeof v === "string" ? cleanText(v) : null;
 }
 
 function asNumber(v: unknown): number | null {
@@ -344,6 +396,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
     postcard_captions: {},
     secret_tease: null,
     sketch: { kind: "sketch", asset: null, no: null },
+    upcoming: null,
   };
   if (!isRecord(raw)) return empty;
 
@@ -353,9 +406,9 @@ export function parseGuideContent(raw: unknown): GuideContent {
 
   const chapters: GuideChapter[] = Array.isArray(raw.chapters)
     ? raw.chapters.filter(isRecord).map((c) => ({
-        k: asString(c.k),
-        name: asString(c.name),
-        sum: asString(c.sum),
+        k: asText(c.k),
+        name: asText(c.name),
+        sum: asText(c.sum),
         tod: asTod(c.tod),
       }))
     : [];
@@ -363,19 +416,19 @@ export function parseGuideContent(raw: unknown): GuideContent {
   const asides: GuideAside[] = Array.isArray(raw.asides)
     ? raw.asides.filter(isRecord).map((a) => ({
         after_chapter: asNumber(a.after_chapter),
-        text: asString(a.text),
+        text: asText(a.text),
       }))
     : [];
 
   const take: GuideTake = {
-    h: asString(takeRaw.h),
+    h: asText(takeRaw.h),
     items: Array.isArray(takeRaw.items)
       ? takeRaw.items.filter(isRecord).map((i) => ({
-          b: asString(i.b),
-          rest: asString(i.rest),
+          b: asText(i.b),
+          rest: asText(i.rest),
         }))
       : [],
-    landing: asString(takeRaw.landing),
+    landing: asText(takeRaw.landing),
   };
 
   const know_before: GuideKnowBefore[] = Array.isArray(raw.know_before)
@@ -393,7 +446,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
   }
 
   return {
-    walk_line: asString(raw.walk_line),
+    walk_line: asText(raw.walk_line),
     meta: {
       distance_mi: asNumber(metaRaw.distance_mi),
       plan_hrs: asNumberArray(metaRaw.plan_hrs),
@@ -403,7 +456,8 @@ export function parseGuideContent(raw: unknown): GuideContent {
     take,
     know_before,
     postcard_captions,
-    secret_tease: asString(raw.secret_tease),
+    secret_tease: asText(raw.secret_tease),
+    upcoming: asUpcoming(raw.upcoming),
     sketch: {
       kind: sketchRaw.kind === "emblem" ? "emblem" : "sketch",
       asset: asString(sketchRaw.asset),

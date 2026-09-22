@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  nextUpcomingGuide,
   shortGuideTitle,
   parseGuideContent,
   deriveStopSub,
@@ -22,6 +23,7 @@ describe("parseGuideContent", () => {
       postcard_captions: {},
       secret_tease: null,
       sketch: { kind: "sketch", asset: null, no: null },
+      upcoming: null,
     });
   });
 
@@ -69,6 +71,7 @@ describe("parseGuideContent", () => {
       postcard_captions: { b1_3: "Off and walking.", b9: "Every stop." },
       secret_tease: "One detail is wrong on purpose.",
       sketch: { kind: "sketch", asset: "funk-zone", no: 1 },
+      upcoming: null,
     });
   });
 
@@ -218,5 +221,28 @@ describe("isNowNoteFresh (R1 W5.9, DSC-006)", () => {
     expect(isNowNoteFresh(null, NOW)).toBe(false);
     expect(isNowNoteFresh(undefined, NOW)).toBe(false);
     expect(isNowNoteFresh("not-a-date", NOW)).toBe(false);
+  });
+});
+
+describe("nextUpcomingGuide (R1 W8.5, DSC-005)", () => {
+  const NOW = new Date("2026-09-22T12:00:00Z");
+  const g = (title: string, upcoming?: unknown) => ({ title, content: upcoming ? { upcoming } : {} });
+  it("names the next guide and its month", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone", { title: "The Mesa", month: "2026-10" })], NOW))
+      .toEqual({ title: "The Mesa", monthLabel: "October" });
+  });
+  it("shows nothing when nothing is set", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone"), g("State Street")], NOW)).toBeNull();
+  });
+  it("hides a past month and a guide that is already out", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone", { title: "The Mesa", month: "2026-08" })], NOW)).toBeNull();
+    expect(nextUpcomingGuide([g("The Mesa"), g("The Funk Zone", { title: "The Mesa", month: "2026-11" })], NOW)).toBeNull();
+  });
+  it("ignores a malformed entry and picks the soonest valid one", () => {
+    expect(nextUpcomingGuide([
+      g("A", { title: "Later", month: "2026-12" }),
+      g("B", { title: "", month: "2026-10" }),
+      g("C", { title: "Sooner", month: "2026-11" }),
+    ], NOW)).toEqual({ title: "Sooner", monthLabel: "November" });
   });
 });

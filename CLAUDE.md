@@ -4,7 +4,7 @@
 
 The **authoritative project contract** for this repo is:
 
-> **`Core Project Files/CLAUDE.md`** — v9 canon. Read it in full before doing anything.
+> **`Core Project Files/CLAUDE.md`**, v11 canon. Read it in full before doing anything. The R1 record (decision ledger D1 to D14, PROGRESS) is `docs/remediation-r1/`.
 > When it conflicts with your training instincts, it wins.
 
 Also keep open while building:

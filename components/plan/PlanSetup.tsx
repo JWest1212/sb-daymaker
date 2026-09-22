@@ -306,9 +306,9 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             <p className="sbd-wizintro__eyebrow">The concierge day</p>
             <h1 className="sbd-wizintro__title">Tell us the shape, we&rsquo;ll draft the day.</h1>
             <p className="sbd-wizintro__sub">
-              Seven quick questions and you get a Santa Barbara day that actually works:
-              open when it says, clustered so you&rsquo;re not driving in circles, parked
-              where a local parks, fed at mealtimes.
+              Seven quick questions and you get a Santa Barbara day that holds together:
+              clustered so you&rsquo;re not driving in circles, with a parking tip and your
+              meals built in. Open when we schedule it, as far as we know.
             </p>
             <button
               type="button"
@@ -328,7 +328,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             </div>
           </div>
           <ul className="sbd-wizintro__diff" aria-label="What makes it different">
-            <li>Every stop is open when we schedule it</li>
+            <li>Open when we schedule it, as far as we know; check before you go</li>
             <li>Clustered so you&rsquo;re not driving in circles</li>
             <li>Parking and lunch built in, shareable in one link</li>
           </ul>
@@ -486,7 +486,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
   // ---- Transport ----------------------------------------------------------
   if (step === "transport") {
     return (
-      <StepShell step={step} onBack={back} kicker="Step 5 of 7" question="Getting around?" sub="Walking keeps it to one neighborhood; a car unlocks the coast.">
+      <StepShell step={step} onBack={back} kicker="Step 5 of 7" question="Getting around?" sub="Walking keeps it to one area; a car unlocks the coast.">
         <OptList
           ariaLabel="Getting around?"
           pending={pending}

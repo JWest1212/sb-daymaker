@@ -22,7 +22,7 @@ export default function SubmitPage() {
       <h1 className="sbd-detail__title">Suggest an event or business</h1>
       <p className="sbd-detail__body">
         Know a happening, show, or spot worth sharing? Add it here, the best
-        submissions get featured in the weekend digest.
+        submissions get featured in the newsletter.
       </p>
       {/* Gate 5 · G5.4, expectation-setting: what happens next + how picks are made. */}
       <ul className="sbd-submit-expect" aria-label="What happens after you submit">

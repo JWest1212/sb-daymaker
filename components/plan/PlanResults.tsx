@@ -1,5 +1,7 @@
 "use client";
 
+import { RESET } from "@/lib/strings";
+
 import { useEffect, useMemo, useState } from "react";
 import { areaForThing } from "@/lib/areas";
 import { ItinerarySpine } from "./ItinerarySpine";
@@ -269,7 +271,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           </button>
           <div>
             <div className="sbd-header__name">Your draft, editable</div>
-            <div className="sbd-header__tag">Open when it says, clustered, parked, fed</div>
+            <div className="sbd-header__tag">Clustered, with meals. Check hours before you go</div>
           </div>
         </div>
       </header>
@@ -315,7 +317,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           onClick={handleClear}
           disabled={!hasStops}
         >
-          {clearConfirm ? "Tap again" : "Clear"}
+          {clearConfirm ? "Tap again" : RESET}
         </button>
         <button
           type="button"

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function OfflinePage() {
   // R1 W7.4. Same frame as the recipient pages: wordmark, landmarks, way in.
   return (
-    <PublicFrame explainer="SB Daymaker, what's worth doing in Santa Barbara." wayIn={{ href: "/saved", label: "Open your saved list" }}>
+    <PublicFrame explainer="SB Daymaker, what's worth doing in Santa Barbara." wayIn={{ href: "/saved", label: "Open Saved" }}>
         <p className="sbd-public__eyebrow">No connection</p>
         <h1 className="sbd-public__title">You&rsquo;re offline</h1>
         <p className="sbd-public__desc">

@@ -1,11 +1,11 @@
 /* ==========================================================================
-   SB Daymaker — component layer (Phase 2)
+   SB Daymaker: component layer (Phase 2)
    Reusable UI building blocks, styled ONLY from the design tokens
-   (sbdaymaker_tokens.css). No hardcoded colors/spacing — CLAUDE.md §8.2.
+   (sbdaymaker_tokens.css). No hardcoded colors/spacing: CLAUDE.md §8.2.
    Look is matched to 02b_SBDaymaker_Wireframe.html.
    ========================================================================== */
 
-/* ---- Shared focus ring (Pacific) — WCAG 2.2 AA, CLAUDE.md §6 ------------- */
+/* ---- Shared focus ring (Pacific): WCAG 2.2 AA, CLAUDE.md §6 ------------- */
 .sbd-btn:focus-visible,
 .sbd-chip:focus-visible,
 .sbd-seg__btn:focus-visible,
@@ -60,22 +60,28 @@
   width: 100%;
 }
 
-/* Primary — Pacific fill, pill */
+/* Primary: Pacific fill, pill */
 .sbd-btn--primary {
   background: var(--pacific);
   color: var(--paper);
 }
-/* Secondary — outline */
+/* Secondary: outline */
 .sbd-btn--secondary {
   background: transparent;
   color: var(--pacific);
   border: 1.5px solid var(--pacific);
 }
-/* CTA — Terracotta (large text only), slightly squarer like the wireframe bigbuy */
+/* CTA: Terracotta (large text only), slightly squarer like the wireframe bigbuy */
 .sbd-btn--cta {
   background: var(--terracotta);
   color: var(--paper);
   border-radius: var(--radius-md);
+  /* R1 W8.6. The token rule for this button is "large text only": Paper on
+     Terracotta is 4.45:1, under the 4.5:1 floor for normal text but well over
+     the 3:1 floor for large bold text (18.66px bold and up). The label now IS
+     large, so the button meets the rule the token file already stated. */
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
 }
 
 /* ---- TAGS / CHIPS -------------------------------------------------------- */
@@ -114,7 +120,7 @@
   background: var(--plaster-2);
   color: var(--ink-2);
 }
-/* Micro label (uppercase) — used on list cards */
+/* Micro label (uppercase): used on list cards */
 .sbd-tag--micro {
   font-size: var(--text-xs);
   text-transform: uppercase;
@@ -191,7 +197,7 @@
   border-radius: var(--radius-pill);
   line-height: 1.7;
 }
-/* Inactive chip tints — each half keeps its identity color when not active */
+/* Inactive chip tints: each half keeps its identity color when not active */
 .sbd-saved-toggle__btn--want .sbd-saved-toggle__chip {
   background: rgba(22, 88, 106, 0.14);
   color: var(--pacific);
@@ -200,19 +206,19 @@
   background: rgba(126, 139, 107, 0.18);
   color: var(--sage-text);
 }
-/* Active — want → pacific */
+/* Active: want → pacific */
 .sbd-saved-toggle__btn--want.is-active {
   background: var(--pacific);
   color: var(--paper);
   box-shadow: 0 2px 8px -2px rgba(22, 88, 106, 0.45);
 }
-/* Active — been → #2F6248 (darkened forest, white text ≈6:1 AA) */
+/* Active: been → #2F6248 (darkened forest, white text ≈6:1 AA) */
 .sbd-saved-toggle__btn--been.is-active {
   background: #2F6248;
   color: var(--paper);
   box-shadow: 0 2px 8px -2px rgba(47, 98, 72, 0.45);
 }
-/* Active chip — white translucent override */
+/* Active chip: white translucent override */
 .sbd-saved-toggle__btn.is-active .sbd-saved-toggle__chip {
   background: rgba(255, 255, 255, 0.22);
   color: var(--paper);
@@ -300,7 +306,7 @@
   top: var(--space-3);
   left: var(--space-3);
 }
-/* PickCard: heart + share cluster, top-right — positioned on article so tooltips aren't clipped */
+/* PickCard: heart + share cluster, top-right: positioned on article so tooltips aren't clipped */
 .sbd-pick__acts {
   position: absolute;
   top: var(--space-2);
@@ -336,7 +342,7 @@
   outline: 2px solid var(--paper);
   outline-offset: 2px;
 }
-/* Positioning wrapper for PlacePill — visual styles live in .sbd-placepill */
+/* Positioning wrapper for PlacePill: visual styles live in .sbd-placepill */
 .sbd-pick__place {
   position: absolute;
   bottom: var(--space-3);
@@ -380,7 +386,7 @@
   font-weight: var(--weight-semi);
   color: var(--text-link);
 }
-/* Home Rework spec §12 — R1 "Today's pick" additions: eyebrow, meta line, ribbon */
+/* Home Rework spec §12: R1 "Today's pick" additions: eyebrow, meta line, ribbon */
 .sbd-pick__eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -396,7 +402,7 @@
   color: var(--text-link);
   margin-bottom: var(--space-2);
 }
-/* Phase 6 contrast audit: --paper on plain --terracotta measures 4.46:1 — just
+/* Phase 6 contrast audit: --paper on plain --terracotta measures 4.46:1: just
    under the 4.5:1 normal-text minimum. An 8% black mix (imperceptible hue
    shift) brings it to 5.1:1. The star was --gold on terracotta at a failing
    2.17:1; lightening gold enough to pass would wash it out past recognition,
@@ -425,13 +431,13 @@
   color: var(--paper);
   font-size: 11px;
 }
-/* W1.3b Layer 2 — the static parachute card has no media band (no DB row, no
+/* W1.3b Layer 2: the static parachute card has no media band (no DB row, no
    photo), so its body needs its own top padding to clear the ribbon. */
 .sbd-pick__body--static {
   padding-top: calc(var(--space-5) + 22px);
 }
 
-/* LIST card — left-rail layout: 108px image flush left (full card height),
+/* LIST card: left-rail layout: 108px image flush left (full card height),
    text column (title → blurb → meta row) stacked to the right.
    Vibe pill sits on the photo top-left over a scrim.
    No-photo fallback: occasion-color gradient + centered icon + pill.
@@ -502,7 +508,7 @@
   flex-direction: column;
   min-height: 150px;
 }
-/* Title is FIRST in the column — no pill/kicker above it */
+/* Title is FIRST in the column: no pill/kicker above it */
 .sbd-listcard__title {
   font-family: var(--font-display);
   font-size: 18px;
@@ -566,7 +572,7 @@
    gradient (the pre-existing --nophoto fallback, now the last-resort catch).
 
    --motif-stroke/--motif-stroke-soft and the --tint-* backgrounds are NOT
-   semantic tokens (sbdaymaker_tokens.css) — they're baked-in illustration
+   semantic tokens (sbdaymaker_tokens.css): they're baked-in illustration
    colors specific to this ported art asset, same exemption already
    established for the hero skyline SVG ("scene colors are baked into the
    asset by design," components/explore/Hero.tsx). */
@@ -600,7 +606,7 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* Tint backgrounds — one per ported motif, applied to .sbd-listcard__rail
+/* Tint backgrounds: one per ported motif, applied to .sbd-listcard__rail
    alongside the motif/bigtype SVG (same hex values as the mockup's .t-*
    classes; renamed to match this codebase's motif keys). */
 .sbd-tint-stage { background: #f4e1d5; }
@@ -764,7 +770,7 @@
 .sbd-tour__dot:focus-visible,
 .sbd-tour__skip:focus-visible,
 .sbd-tour__back:focus-visible,
-.sbd-tour-replay:focus-visible {
+.sbd-howitworks:focus-visible {
   outline: 2px solid var(--pacific);
   outline-offset: 2px;
 }
@@ -807,7 +813,7 @@
 /* Panel 1 illustration frame (SVG ships its own tokenized fills) */
 .sbd-tour__art-frame { margin: 14px 0 2px; }
 
-/* illustration frames (panels 2 + 3) — right-sized to read as a genuine
+/* illustration frames (panels 2 + 3): right-sized to read as a genuine
    miniature of a real feed card (compare .sbd-listcard: 108px rail, 18px
    title, 44px heart) rather than dominate the panel on a real phone. */
 .sbd-tour__art {
@@ -821,7 +827,7 @@
 .sbd-tour__art--save { background: var(--plaster-2); }
 .sbd-tour__art--been { background: linear-gradient(160deg, var(--pacific-dark), var(--pacific)); }
 
-/* Panel 2 — mini save card */
+/* Panel 2: mini save card */
 .sbd-tour__save-card {
   width: 82%;
   background: var(--surface);
@@ -863,7 +869,7 @@
   animation: sbdHeartPop var(--dur-pulse) var(--ease-spring) infinite;
 }
 
-/* Panel 3 — want-to-been flow */
+/* Panel 3: want-to-been flow */
 .sbd-tour__flow {
   display: flex;
   align-items: center;
@@ -914,7 +920,7 @@
 }
 
 /* replay entry links (footer + empty-saved) */
-.sbd-tour-replay {
+.sbd-howitworks {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -1367,7 +1373,7 @@
 }
 
 /* ==========================================================================
-   APP SHELL — three-tab frame (Phase 3)
+   APP SHELL: three-tab frame (Phase 3)
    ========================================================================== */
 
 /* Centered mobile-first column */
@@ -1428,11 +1434,11 @@
   margin-top: 2px;
 }
 
-/* Bottom navigation (S1-B / S2-B / S3) — Pacific teal bar, custom line icons,
+/* Bottom navigation (S1-B / S2-B / S3): Pacific teal bar, custom line icons,
    gold active tab with a top pip. The teal is the divider (no top border).
    Height/placement calibrated to match the standard iOS/Yelp-style tab bar
    (~49-50px content height, icon+label block vertically centered rather than
-   pinned to the top — was previously a taller, top-hugged 56px bar). */
+   pinned to the top: was previously a taller, top-hugged 56px bar). */
 .sbd-nav {
   position: fixed;
   bottom: 0;
@@ -1529,7 +1535,7 @@
 }
 
 /* ==========================================================================
-   PLAN (v9.1) — surface header + My-plans button
+   PLAN (v9.1): surface header + My-plans button
    ========================================================================== */
 .sbd-plan-header {
   justify-content: space-between;
@@ -1570,7 +1576,7 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
   cursor: pointer;
-  /* Never wrap or shrink — the brand/left side yields space to this button */
+  /* Never wrap or shrink: the brand/left side yields space to this button */
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -1625,7 +1631,7 @@
   outline-offset: 2px;
 }
 
-/* Build a day from your saved — shortcut link at top of Saved */
+/* Build a day from your saved: shortcut link at top of Saved */
 .sbd-build-day-entry {
   display: flex;
   align-items: center;
@@ -1667,7 +1673,7 @@
   padding-bottom: calc(50px + 86px + env(safe-area-inset-bottom));
 }
 
-/* Make My Day — flagship express card. The copy sits over a left dark scrim so
+/* Make My Day: flagship express card. The copy sits over a left dark scrim so
    white text clears AA on the bright terracotta→gold gradient (mockup is a
    prototype; the app enforces the §6 contrast floor). */
 .sbd-makeday {
@@ -1771,7 +1777,7 @@
 
 /* Section eyebrow label (When / Where / Time of day / Who / Vibe). Uses the
    AA-safe --sage-text variant for this small label (the mockup's --sage fails
-   4.5:1 at this size — §6 floor wins). */
+   4.5:1 at this size: §6 floor wins). */
 .sbd-miniq {
   margin: var(--space-5) 0 var(--space-2);
   font-size: var(--text-xs);
@@ -1780,7 +1786,7 @@
   text-transform: uppercase;
   color: var(--sage-text);
 }
-/* Where — selector row that opens the neighborhood picker sheet. */
+/* Where: selector row that opens the neighborhood picker sheet. */
 .sbd-selrow {
   display: flex;
   align-items: center;
@@ -1910,7 +1916,7 @@
   line-height: 1;
 }
 
-/* Saved hook — gold-tinted, only shown when there are want-to-go saves. */
+/* Saved hook: gold-tinted, only shown when there are want-to-go saves. */
 .sbd-savedhook {
   display: flex;
   align-items: center;
@@ -1948,7 +1954,7 @@
   color: var(--gold-text);
 }
 
-/* Fine-tune — centered expander holding the soft signals (Who + Vibe). */
+/* Fine-tune: centered expander holding the soft signals (Who + Vibe). */
 .sbd-finetune {
   margin-top: var(--space-4);
   text-align: center;
@@ -1990,7 +1996,7 @@
   text-align: left;
 }
 
-/* Where picker sheet — zone options. */
+/* Where picker sheet: zone options. */
 .sbd-zonelist {
   list-style: none;
   margin: 0;
@@ -2025,7 +2031,7 @@
   font-weight: var(--weight-bold);
 }
 
-/* Sticky go-bar — fixed just above the 50px bottom nav, centered to the shell. */
+/* Sticky go-bar: fixed just above the 50px bottom nav, centered to the shell. */
 .sbd-plan-gobar {
   position: fixed;
   left: 50%;
@@ -2542,7 +2548,7 @@
   font-weight: var(--weight-bold);
 }
 
-/* Interim results list (Phase 3 only — replaced by the spine in Phase 4). */
+/* Interim results list (Phase 3 only: replaced by the spine in Phase 4). */
 .sbd-plan-interim {
   list-style: none;
   margin: var(--space-3) 0 0;
@@ -2582,7 +2588,7 @@
 }
 
 /* ==========================================================================
-   PLAN RESULTS (Phase 4) — subline, day-shape selector, spine, stop cards
+   PLAN RESULTS (Phase 4): subline, day-shape selector, spine, stop cards
    ========================================================================== */
 
 /* Mono subline: "SAT · JUN 27 · MORNING → EVENING" */
@@ -2678,7 +2684,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .sbd-spine__rail {
-    /* Static rail — no animation was planned, but guard for future */
+    /* Static rail: no animation was planned, but guard for future */
     background: var(--tod-morning);
   }
 }
@@ -2777,7 +2783,7 @@
   background: var(--gold);
   color: var(--ink);
 }
-/* Acts column — ⓘ + heart on top, Swap below; z-index above sbd-stretch::after */
+/* Acts column: ⓘ + heart on top, Swap below; z-index above sbd-stretch::after */
 .sbd-scard__acts {
   display: flex;
   flex-direction: column;
@@ -2793,7 +2799,7 @@
   align-items: center;
   gap: 4px;
 }
-/* ⓘ info circle — visual affordance only (tabIndex=-1, aria-hidden).
+/* ⓘ info circle: visual affordance only (tabIndex=-1, aria-hidden).
    Padding + negative margin expands touch target to ≥44px without layout shift. */
 .sbd-scard__info {
   width: 25px;
@@ -2947,28 +2953,28 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-/* ♥ From your saved — warm gold tint */
+/* ♥ From your saved: warm gold tint */
 .sbd-picker-section--saved {
   background: color-mix(in oklab, var(--gold) 18%, var(--bg));
 }
 .sbd-picker-section--saved .sbd-picker-section__label {
   color: color-mix(in oklab, var(--gold) 50%, var(--ink));
 }
-/* 🎫 Happening at this time — teal tint */
+/* 🎫 Happening at this time: teal tint */
 .sbd-picker-section--tier1 {
   background: color-mix(in oklab, var(--pacific) 8%, var(--bg));
 }
 .sbd-picker-section--tier1 .sbd-picker-section__label {
   color: var(--pacific);
 }
-/* 🔄 On the regular — sage tint */
+/* 🔄 On the regular: sage tint */
 .sbd-picker-section--tier2 {
   background: color-mix(in oklab, var(--sage) 20%, var(--bg));
 }
 .sbd-picker-section--tier2 .sbd-picker-section__label {
   color: var(--sage-text);
 }
-/* ⭐ Always worth it — terracotta tint */
+/* ⭐ Always worth it: terracotta tint */
 .sbd-picker-section--tier3 {
   background: color-mix(in oklab, var(--terracotta) 7%, var(--bg));
 }
@@ -3048,7 +3054,7 @@
 }
 
 /* ==========================================================================
-   EXPLORE (Phase 4) — hero, control row, cascade feed, One Perfect SB Day
+   EXPLORE (Phase 4): hero, control row, cascade feed, One Perfect SB Day
    Hero sky gradients are derived from palette tokens via color-mix (no
    invented hexes) to approximate the wireframe's golden-hour look.
    ========================================================================== */
@@ -3065,7 +3071,7 @@
   margin: 0 calc(-1 * var(--space-5));
   /* Elongated so the value-prop band sits up top and the full SB skyline gets its
      own clear band beneath it (both visible at once). 352px floor reserves the
-     value-prop copy (Home Rework spec §10/§13) against the skyline band — carried
+     value-prop copy (Home Rework spec §10/§13) against the skyline band: carried
      over from the old pick card's same floor ("One Front Page" spec §3.2). */
   padding: var(--space-3) var(--space-5) 0;
   min-height: 352px;
@@ -3117,7 +3123,7 @@
 /* ---- SB skyline silhouette (H2) ---------------------------------------- */
 /* Warm horizon glow rising behind the silhouette: lifts the dark skyline off
    every sky (esp. the dark evening/night skies) and reads as the sunset glow.
-   Color is token-derived (the same pale gold as the sun core) — no new hex. */
+   Color is token-derived (the same pale gold as the sun core): no new hex. */
 .sbd-hero__glow {
   position: absolute;
   left: 0;
@@ -3147,7 +3153,7 @@
   width: 100%;
   /* Natural aspect height (viewBox 380×244 → ~0.642×width); pinned to bottom so
      the hero's overflow:hidden crops only the transparent upper sky. No fixed
-     height — the drawn art survives the crop at both widths (spec §3.1–3.2). */
+     height: the drawn art survives the crop at both widths (spec §3.1-3.2). */
   height: auto;
   aspect-ratio: 380 / 244;
   display: block;
@@ -3155,7 +3161,7 @@
   pointer-events: none;
 }
 /* The skyline keeps its baked golden-hour palette in every daypart by design
-   (scene art, not UI tokens — spec §3.4); only the CSS sky gradient changes. */
+   (scene art, not UI tokens: spec §3.4); only the CSS sky gradient changes. */
 .sbd-hero__fog {
   position: absolute;
   left: 0;
@@ -3190,7 +3196,7 @@
   z-index: 2; /* in front of the skyline: the corridor is open water at the right */
   animation: sunEntry 0.8s ease-out, sunPulse 3s ease-in-out 1s infinite;
 }
-/* Sun corridor — constrained to the open-water gap so no building or card
+/* Sun corridor: constrained to the open-water gap so no building or card
    geometry occludes it at either width (spec §3.3). */
 .sbd-hero--morning .sbd-hero__sun { left: 70%; top: 58%; }
 .sbd-hero--afternoon .sbd-hero__sun { left: 78%; top: 59%; }
@@ -3228,7 +3234,7 @@
   opacity: 0.92;
 }
 
-/* Condition chips (spec §2.3): translucent pills over the sky — weather + a
+/* Condition chips (spec §2.3): translucent pills over the sky: weather + a
    sunset / golden-hour countdown. Informational, not interactive. Row budgeted
    at ~26px incl. its top margin; layout leaves room for a later third chip. */
 .sbd-hero__cond {
@@ -3250,14 +3256,14 @@
   white-space: nowrap;
 }
 
-/* Value-prop band (Home Rework spec §10/§13) — replaces the old hero pick card.
+/* Value-prop band (Home Rework spec §10/§13): replaces the old hero pick card.
    Sits inside .sbd-hero__sky (z-index 3), so it inherits the same stacking above
    the sun/skyline. The sky gradient's darkest stop always lands at 0% (top),
    which is exactly where this sits in every variant/gray-day.
    Phase 6 contrast audit (computed against each variant's 0% stop, text-shadow
    doesn't count toward the WCAG number so this is foreground-vs-background only):
    --paper headline/subline: 7.6:1 (morning/afternoon, the worst case) up to
-   16:1 (night) — clears AA everywhere with room to spare. */
+   16:1 (night): clears AA everywhere with room to spare. */
 .sbd-hero__vp {
   margin-top: var(--space-3);
   max-width: 100%;
@@ -3285,7 +3291,7 @@
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
 }
 
-/* ---- Discovery controls (Home Rework spec §8/§11) — doors + chips + horizon,
+/* ---- Discovery controls (Home Rework spec §8/§11): doors + chips + horizon,
    pinned directly beneath the header. Reuses the header-height token every
    sticky section header already relies on (Phase 0 finding: no new CSS var
    needed). Sits between the header (z-index 40) and sticky section headers
@@ -3300,10 +3306,9 @@
   border-bottom: 1px solid var(--border);
 }
 
-/* Doors — three equal-width photographic pills. Each door's background layers a
+/* Doors: three equal-width photographic pills. Each door's background layers a
    dimension-tinted scrim OVER a photo in one background-image (comma-separated
-   layers): if the photo 404s (true for all three until real photography lands —
-   spec §6.3), the gradient alone still renders, no onError/JS needed. */
+   layers): if the photo 404s (true for all three until real photography lands: spec §6.3), the gradient alone still renders, no onError/JS needed. */
 :root {
   --sbd-door-scrim-place: linear-gradient(
     180deg,
@@ -3344,9 +3349,9 @@
   padding: var(--space-2) var(--space-3);
   cursor: pointer;
 }
-/* Label legibility scrim (Doc 23 delta, Option B3 — 94% peak). Sits above the
+/* Label legibility scrim (Doc 23 delta, Option B3-94% peak). Sits above the
    photo, below the label, full-width across the bottom of the card. This is
-   the single legibility mechanism for the label now — see .sbd-door__label. */
+   the single legibility mechanism for the label now: see .sbd-door__label. */
 .sbd-door__scrim {
   position: absolute;
   left: 0;
@@ -3362,7 +3367,7 @@
   pointer-events: none;
   z-index: 0;
 }
-/* Phase 6 contrast audit — background-image ALONE isn't enough: the scrim
+/* Phase 6 contrast audit: background-image ALONE isn't enough: the scrim
    gradient's stops are colors mixed with *transparent* (designed to tint a
    photo), so with no photo loaded (true for all doors/tiles until real
    photography lands, §6.3) there was nothing solid behind them and the door
@@ -3370,7 +3375,7 @@
    "token-colored tile." These background-color bases fix that AND double as
    the contrast fix: --purple/--terracotta measured 4.0:1/4.5:1 for --paper
    text (both are documented "large/UI only" tokens, i.e. not meant for this
-   size of text) — darkened 15% here brings both to 4.8:1+. --pacific-dark
+   size of text): darkened 15% here brings both to 4.8:1+. --pacific-dark
    was already fine (11.4:1) and is used as-is. */
 .sbd-door--place,
 .sbd-tile--place {
@@ -3398,7 +3403,7 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   line-height: 1.05;
 }
-/* Chip bar — collapsed active-filter chips, one per active dimension */
+/* Chip bar: collapsed active-filter chips, one per active dimension */
 .sbd-chipbar {
   display: flex;
   align-items: center;
@@ -3471,7 +3476,7 @@
   outline-offset: 2px;
 }
 
-/* Horizon segment — rehomed from the retired ControlRow, spanning full width */
+/* Horizon segment: rehomed from the retired ControlRow, spanning full width */
 .sbd-horizon {
   margin-top: var(--space-2);
 }
@@ -3578,7 +3583,7 @@
 .sbd-pick + .sbd-feed-section__list {
   margin-top: var(--space-4);
 }
-/* Home Rework spec §14 — visually-hidden aria-live region (feed result count) */
+/* Home Rework spec §14: visually-hidden aria-live region (feed result count) */
 .sbd-sr-only {
   position: absolute;
   width: 1px;
@@ -3591,7 +3596,7 @@
   border: 0;
 }
 
-/* Section header — shared by static lead and collapsible tiers */
+/* Section header: shared by static lead and collapsible tiers */
 .sbd-sh {
   display: flex;
   align-items: center;
@@ -3661,7 +3666,7 @@
   }
 }
 
-/* ---- SectionHeader — replaces .sbd-sh emoji headers -------------------- */
+/* ---- SectionHeader: replaces .sbd-sh emoji headers -------------------- */
 .sbd-sh2 {
   position: sticky;
   top: 60px;
@@ -3743,7 +3748,7 @@
   }
 }
 
-/* Build your day CTA — between lead section and collapsed sections */
+/* Build your day CTA: between lead section and collapsed sections */
 .sbd-build-cta {
   display: flex;
   align-items: center;
@@ -3875,7 +3880,7 @@
 .sbd-rock:active {
   transform: scale(0.99);
 }
-/* Fallback gradient when no photo — terracotta→pacific-dark (no gold; A6) */
+/* Fallback gradient when no photo: terracotta→pacific-dark (no gold; A6) */
 .sbd-rock--nophoto {
   background-image: linear-gradient(135deg, var(--terracotta), var(--pacific-dark));
 }
@@ -3885,7 +3890,7 @@
   background: linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.64));
   pointer-events: none;
 }
-/* Heart + share cluster — top-right, above the stretch link */
+/* Heart + share cluster: top-right, above the stretch link */
 .sbd-rock__acts {
   position: absolute;
   top: var(--space-3);
@@ -3895,7 +3900,7 @@
   align-items: center;
   gap: 4px;
 }
-/* Share button on rock tile — matches the dark-overlay style of PickCard's share */
+/* Share button on rock tile: matches the dark-overlay style of PickCard's share */
 .sbd-rock__share {
   width: var(--tap-min);
   height: var(--tap-min);
@@ -3917,7 +3922,7 @@
   outline: 2px solid var(--paper);
   outline-offset: 2px;
 }
-/* Content area — sits above the gradient overlay */
+/* Content area: sits above the gradient overlay */
 .sbd-rock__c {
   position: relative;
   padding: var(--space-3) var(--space-4) var(--space-4);
@@ -3990,7 +3995,7 @@
  * Groups Tier-1 week events by SB-local calendar day. Same pattern as
  * Month's .sbd-weekhead: each day's cards live inside their own
  * .sbd-daygroup, so the sticky header's stuck range is bounded by that
- * group — the next day's header takes over the same spot as the user
+ * group: the next day's header takes over the same spot as the user
  * scrolls past, with no JS scroll tracking.
  */
 .sbd-daygroup-list {
@@ -4034,7 +4039,7 @@
 
 /* ---- Month lead: sticky "Week of ..." group headers --------------------
  * Each week's cards live inside their own .sbd-weekgroup, so the sticky
- * header's stuck range is bounded by that group — as the user scrolls past
+ * header's stuck range is bounded by that group: as the user scrolls past
  * one week, the next week's header (same top/z-index as SectionHeader's
  * lead mode) takes over the same spot, giving a native, JS-free "which week
  * am I looking at" cue without any scroll listeners.
@@ -4189,7 +4194,7 @@
   outline: 3px solid var(--pacific);
   outline-offset: 2px;
 }
-/* Home Rework spec §11.4 — stacked-filter empty state's two recovery actions */
+/* Home Rework spec §11.4: stacked-filter empty state's two recovery actions */
 .sbd-empty__actions {
   display: flex;
   flex-direction: column;
@@ -4229,7 +4234,7 @@
 .sbd-saved__group {
   margin-top: var(--space-5);
 }
-/* Past saved events — a distinct lower section, set off with a rule above it. */
+/* Past saved events: a distinct lower section, set off with a rule above it. */
 .sbd-saved__past {
   margin-top: var(--space-8);
   padding-top: var(--space-5);
@@ -4241,7 +4246,7 @@
   margin: 0 0 var(--space-3);
 }
 
-/* B3 — editorial status line beneath Want/Been toggle */
+/* B3: editorial status line beneath Want/Been toggle */
 .sbd-saved__status {
   margin: var(--space-4) 0 0;
 }
@@ -4259,7 +4264,7 @@
   margin: 3px 0 0;
 }
 
-/* C2 — proactive "Did you make it?" prompt */
+/* C2: proactive "Did you make it?" prompt */
 .sbd-c2 {
   margin: var(--space-5) 0 0;
   border: 1.5px solid var(--gold);
@@ -4334,14 +4339,14 @@
   outline-offset: 2px;
 }
 
-/* B1 — bottom section: Build a day + Share my list + RestorePanel */
+/* B1: bottom section: Build a day + Share my list + RestorePanel */
 .sbd-saved__bottom {
   margin-top: var(--space-8);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
-/* S2: Share my list — solid pacific gradient, icon chip, clearly #2 to Build a day */
+/* S2: Share my list: solid pacific gradient, icon chip, clearly #2 to Build a day */
 .sbd-share-list-btn {
   display: flex;
   align-items: center;
@@ -4582,7 +4587,7 @@
   color: var(--text-link);
   margin-top: 2px;
 }
-/* C1: three equal-weight, quiet controls — transparent fill, no dominant pill */
+/* C1: three equal-weight, quiet controls: transparent fill, no dominant pill */
 .sbd-savedcard__actions {
   display: flex;
   justify-content: flex-end;
@@ -4611,11 +4616,11 @@
 .sbd-savedcard__act:hover {
   background: var(--plaster);
 }
-/* Been flip — sage color, no border */
+/* Been flip: sage color, no border */
 .sbd-savedcard__act--been {
   color: var(--sage-text);
 }
-/* Been state — same quiet style, slightly deeper sage to signal active */
+/* Been state: same quiet style, slightly deeper sage to signal active */
 .sbd-savedcard__act--been.is-been {
   color: var(--sage-text);
   background: rgba(126, 139, 107, 0.12);
@@ -4709,7 +4714,7 @@
   cursor: not-allowed;
 }
 
-/* BK1: Restore panel — solid card with pacific left-edge accent */
+/* BK1: Restore panel: solid card with pacific left-edge accent */
 .sbd-restore {
   padding: var(--space-5);
   background: var(--paper);
@@ -4789,7 +4794,7 @@
   max-width: 90vw;
   text-align: center;
 }
-/* C3: been acknowledgment — forest accent, multi-line */
+/* C3: been acknowledgment: forest accent, multi-line */
 .sbd-toast--been {
   background: var(--forest);
   border-radius: var(--radius-lg);
@@ -4926,7 +4931,7 @@
 }
 
 /* ==========================================================================
-   DISCOVER SB (Phase 6) — guide list + guide detail
+   DISCOVER SB (Phase 6): guide list + guide detail
    ========================================================================== */
 
 .sbd-disc__head {
@@ -5060,7 +5065,7 @@
 }
 
 /* Back-row: slim contextual row beneath the brand header on detail / sub-pages.
-   Not sticky — only the brand header sticks. Migrates sbd-backlink into a row. */
+   Not sticky: only the brand header sticks. Migrates sbd-backlink into a row. */
 .sbd-backrow {
   border-top: 1px solid var(--line);
   padding: 10px 0;
@@ -5155,9 +5160,9 @@
 }
 
 /* ==========================================================================
-   LIVING POSTCARD — rich guide detail (Phase 2)
+   LIVING POSTCARD: rich guide detail (Phase 2)
    All classes prefixed .sbd-gd- to avoid collision with the plain guide.
-   Zero new hex values — all colors from v9 tokens.
+   Zero new hex values: all colors from v9 tokens.
    ========================================================================== */
 
 /* guide identity header (above sketch) */
@@ -5924,7 +5929,7 @@
 }
 
 /* ==========================================================================
-   PHASE 7 — detail page, submit form, signup, footer, card links
+   PHASE 7: detail page, submit form, signup, footer, card links
    ========================================================================== */
 
 /* Stretched-link cards (title link covers the whole card; heart sits above) */
@@ -5988,7 +5993,7 @@
 .sbd-leadday__it-acts [data-tooltip] {
   position: relative;
 }
-/* PickCard + rock tile buttons sit at top-right — tooltip points downward into body */
+/* PickCard + rock tile buttons sit at top-right: tooltip points downward into body */
 .sbd-pick__acts [data-tooltip]::after,
 .sbd-rock__acts [data-tooltip]::after {
   content: attr(data-tooltip);
@@ -6009,7 +6014,7 @@
   transition: opacity 0.12s ease;
   z-index: 20;
 }
-/* ListCard + day row buttons sit at the right — tooltip points upward */
+/* ListCard + day row buttons sit at the right: tooltip points upward */
 .sbd-listcard__acts [data-tooltip]::after,
 .sbd-leadday__it-acts [data-tooltip]::after {
   content: attr(data-tooltip);
@@ -6056,7 +6061,7 @@
   position: relative;
   overflow: hidden;
 }
-/* Card Imagery Build Spec Phase 1 §4.3 — non-owned photo credit, detail page only
+/* Card Imagery Build Spec Phase 1 §4.3: non-owned photo credit, detail page only
    (never the 108px card rail). --text-muted = --ink-2, the AA-safe (9:1) secondary
    text token per the house accessibility rule (CLAUDE.md §5). */
 .sbd-detail__attribution {
@@ -6690,7 +6695,7 @@ textarea.sbd-field__input {
 }
 
 /* ==========================================================================
-   COCKPIT (Phase 8) — admin review queue
+   COCKPIT (Phase 8): admin review queue
    ========================================================================== */
 .sbd-cockpit__bar {
   display: flex;
@@ -6788,7 +6793,7 @@ textarea.sbd-field__input {
 }
 
 /* ==========================================================================
-   SHARED PLAN VIEW /p/[token] (Phase 8) — view-only public plan
+   SHARED PLAN VIEW /p/[token] (Phase 8): view-only public plan
    ========================================================================== */
 
 /* Page wrapper: column flex so the sticky footer stays at the bottom */
@@ -7074,7 +7079,7 @@ textarea.sbd-field__input {
   }
 }
 /* ==========================================================================
-   PHASE 1 PRIMITIVES — SBIcon, CardActions, Pill, DateEyebrow, PlacePill
+   PHASE 1 PRIMITIVES: SBIcon, CardActions, Pill, DateEyebrow, PlacePill
    Plus shared CSS utilities: column rule, reveal stagger.
    ========================================================================== */
 
@@ -7405,7 +7410,7 @@ textarea.sbd-field__input {
   transform: none;
 }
 
-/* ---- REDUCED MOTION — stop loops, keep instant feedback (WCAG 2.2 AA) ---- */
+/* ---- REDUCED MOTION: stop loops, keep instant feedback (WCAG 2.2 AA) ---- */
 @media (prefers-reduced-motion: reduce) {
   .sbd-scrim,
   .sbd-sheet {
@@ -7441,7 +7446,7 @@ textarea.sbd-field__input {
    Tokens only, no new values.
    --------------------------------------------------------------------------- */
 
-/* W1.1 — a saved id the database no longer returns. Deliberately quiet: it is
+/* W1.1: a saved id the database no longer returns. Deliberately quiet: it is
    information, not an error, and the visitor decides whether to remove it. */
 .sbd-savedcard--missing {
   border-style: dashed;
@@ -7462,21 +7467,21 @@ textarea.sbd-field__input {
   border-top: 1px solid var(--line);
 }
 
-/* W1.1 — an archived (already happened) row still renders as a normal card. */
+/* W1.1: an archived (already happened) row still renders as a normal card. */
 .sbd-savedcard__past {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin-top: 2px;
 }
 
-/* W1.1 — the brief window while the by-id lookup is in flight. */
+/* W1.1: the brief window while the by-id lookup is in flight. */
 .sbd-saved__resolving {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin: var(--space-5) 0;
 }
 
-/* W1.4 — the 1-to-4-saves backup form: one line, the field, Send. */
+/* W1.4: the 1-to-4-saves backup form: one line, the field, Send. */
 .sbd-restore--compact {
   border-left-width: 2px;
   padding: var(--space-4);
@@ -7486,7 +7491,7 @@ textarea.sbd-field__input {
   margin-bottom: var(--space-3);
 }
 
-/* W1.5 — the share sheet. Shown whenever the native share sheet does not take
+/* W1.5: the share sheet. Shown whenever the native share sheet does not take
    the link, so the visitor always has something they can copy. */
 .sbd-sharelink__note {
   font-size: var(--text-sm);
@@ -7544,7 +7549,7 @@ textarea.sbd-field__input {
   min-height: 1.2em;
 }
 
-/* R1 W2.2 — "this already happened" banner on an archived detail page. Quiet and
+/* R1 W2.2: "this already happened" banner on an archived detail page. Quiet and
    factual, not an error: the page is working as intended, it is just in the past. */
 .sbd-archived {
   margin: 0 0 var(--space-4);
@@ -7568,7 +7573,7 @@ textarea.sbd-field__input {
   outline-offset: 2px;
 }
 
-/* R1 W3.5 — the shared Badge. The separation that matters is the space inside
+/* R1 W3.5: the shared Badge. The separation that matters is the space inside
    the component (a text node), not this margin: a margin fixes the look, not the
    accessible name. These rules only make it look right once it reads right. */
 .sbd-badge {
@@ -7590,7 +7595,7 @@ textarea.sbd-field__input {
    the small badge label stays Ink-2 on a plaster ground. */
 .sbd-badge--saved { background: var(--plaster-2); color: var(--ink-2); }
 
-/* R1 W3.2 — an active part of day the engine could not fill. Stated in the slot
+/* R1 W3.2: an active part of day the engine could not fill. Stated in the slot
    so the shape of the day still reads, instead of the section disappearing. */
 .sbd-section__unfilled {
   margin: 0 0 var(--space-3);
@@ -7599,7 +7604,7 @@ textarea.sbd-field__input {
   color: var(--text-muted);
 }
 
-/* R1 W4.2 — an area with nothing in the current horizon. Shown, not hidden, so
+/* R1 W4.2: an area with nothing in the current horizon. Shown, not hidden, so
    the 8-area vocabulary stays stable as the visitor changes horizon. */
 .sbd-tile.is-empty {
   opacity: .45;
@@ -7607,14 +7612,14 @@ textarea.sbd-field__input {
   filter: grayscale(1);
 }
 
-/* R1 W4.2 — names the filter that "Show the closest matches" relaxed. */
+/* R1 W4.2: names the filter that "Show the closest matches" relaxed. */
 .sbd-relaxed {
   margin: 0 0 var(--space-3);
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
-/* R1 W5.5 — the price-band key, so "$$" means something the first time. */
+/* R1 W5.5: the price-band key, so "$$" means something the first time. */
 .sbd-detail__pricekey {
   margin: calc(var(--space-2) * -1) 0 var(--space-4);
   font-family: var(--font-mono);
@@ -7622,7 +7627,7 @@ textarea.sbd-field__input {
   color: var(--text-muted);
 }
 
-/* R1 W6.4 (D6) — a collapsed series card says how many dates it stands for. */
+/* R1 W6.4 (D6): a collapsed series card says how many dates it stands for. */
 .sbd-listcard__dates {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -8049,4 +8054,80 @@ h2.sbd-empty__title {
 /* Explore's signup section keeps the old footer spacing. */
 section.sbd-foot {
   margin-bottom: var(--space-2);
+}
+
+/* ==========================================================================
+   R1 W8.3: the first-visit welcome strip (replaces the blocking modal)
+   ========================================================================== */
+.sbd-welcome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+}
+.sbd-welcome__text {
+  flex: 1;
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--ink);
+}
+.sbd-welcome__how {
+  min-height: var(--tap-min);
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: var(--weight-bold);
+  color: var(--pacific);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sbd-welcome__close {
+  flex: 0 0 auto;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sbd-welcome__how:focus-visible,
+.sbd-welcome__close:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+}
+/* MAP-003. The tour's card is an illustration; say so. */
+.sbd-tour__example {
+  margin: 0 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* R1 W8.4 (DET-012). Icons sit in a line of text like the glyphs they replace.
+   The CSS reset makes every svg display:block, which would push "Mark been" onto
+   its own line under its check. Inside a flex container they are flex items
+   either way, so this changes nothing there. */
+.sbd-icon {
+  display: inline-block;
+  vertical-align: -0.15em;
+  flex-shrink: 0;
+}
+
+/* R1 W8.6. A long outbound label ("Event details at calendar.library.
+   santabarbaraca.gov") ran past its button at 320px. It wraps instead. */
+.sbd-btn--block {
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.25;
 }

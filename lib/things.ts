@@ -221,7 +221,7 @@ function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string>
     indoor,
     photo_url: (row.photo_url as string) ?? null,
     photo_source: (row.photo_source as string) ?? null,
-    photo_attribution: (row.photo_attribution as string) ?? null,
+    photo_attribution: cleanText((row.photo_attribution as string) ?? null),
     visual_kind: (row.visual_kind as Thing["visual_kind"]) ?? null,
     visual_key: (row.visual_key as string) ?? null,
     visual_seed: (row.visual_seed as number) ?? null,

@@ -1,3 +1,4 @@
+import { SBIcon } from "@/components/ui/SBIcon";
 import Link from "next/link";
 import type { Guide } from "@/lib/guides";
 import { guidePath } from "@/lib/seo/site";
@@ -16,7 +17,7 @@ export function GuideCard({ guide }: { guide: Guide }) {
       <span className="sbd-guidecard__overlay" aria-hidden="true" />
       <span className="sbd-guidecard__c">
         {isTheme ? (
-          <span className="sbd-guidecard__badge">✦ For you</span>
+          <span className="sbd-guidecard__badge"><SBIcon name="sparkle" size={12} /> Theme</span>
         ) : null}
         {guide.kicker ? (
           <span className="sbd-guidecard__kicker">{guide.kicker}</span>

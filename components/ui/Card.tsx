@@ -250,7 +250,7 @@ export function ListCard({
         {/* Centered icon for the last-resort gradient fallback only */}
         {showGradient && (
           <span className="sbd-listcard__fallmark" aria-hidden="true">
-            {occ ? occ.icon : <SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
+            {<SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
           </span>
         )}
         {/* Dark top gradient, pill legibility on any photo, motif, or gradient bg */}

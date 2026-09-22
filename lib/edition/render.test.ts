@@ -161,3 +161,14 @@ describe("renderEditionPlainText", () => {
     expect(text).toContain("Unsubscribe: https://www.sbdaymaker.com/unsubscribe?token=abc");
   });
 });
+
+// R1 W8 acceptance 2: the edition says the one cadence string, word for word.
+import { CADENCE_LINE } from "./cadence";
+describe("cadence line (R1 W8.1, EML-002)", () => {
+  it("appears verbatim in the edition footer", async () => {
+    const src = (await import("node:fs")).readFileSync(new URL("./render.ts", import.meta.url), "utf8");
+    expect(src).toContain("${CADENCE_LINE}. No more than that.");
+    expect(src).not.toContain("Two a week");
+    expect(CADENCE_LINE).toBe("Twice a week, Thursday and Sunday");
+  });
+});

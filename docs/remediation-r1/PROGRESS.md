@@ -1,9 +1,9 @@
 # R1 Progress (Claude Code keeps this current)
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
-Current run: C (Waves 6, 7, 8)
-Current wave: 7 complete, committed
-Current task: Wave 8 (W8.4 dash gate and lib/strings.ts started early, uncommitted)
+Current run: C complete (Waves 6, 7, 8)
+Current wave: 8 complete, committed; CP5 approved 2026-09-22
+Current task: none. R1 complete, pending push (Blocked)
 
 ## Done (wave.task, commit)
 
@@ -57,6 +57,14 @@ Current task: Wave 8 (W8.4 dash gate and lib/strings.ts started early, uncommitt
 - W7.8 every one of the nine routes has its own og:title, og:image and description (lib/seo/pageMeta.ts, lib/seo/ogCard.tsx, a colocated opengraph-image per route). /digest/sample has a canonical. Guide not-found is titled. Saved and Discover have an h1. Every page has header, main, nav and one footer landmark.
 - W7 review: an adversarial review of the whole diff (6 reviewers, 2 skeptics per finding, 96 agents) confirmed 39 findings (about 20 distinct), refuted 4, split 2. All confirmed and split findings were fixed and re-verified in the browser. See "Wave 7 deviations".
 - W7 commit: `feat(r1-w7): saved counts and labels, recipient context, offline shell, form validation, branded emails, per-page metadata`
+- W8.1 one name per concept from `lib/strings.ts`: doors Area / Occasion / Activity with the spec's sheet titles; detail "Area" and "Nearby in [short area]"; Reset in the empty state and Plan; "Saved" as the page title; "N on your list"; How it works everywhere; Suggest an event or business; newsletter heading "Santa Barbara, twice a week" and one name, "Newsletter"; Title Case category labels with one arts label, "Arts & Culture". Header search now pushes the params Explore reads (it pushed ?place= and ?vibe=, dead since W6.1).
+- W8.2 promises audit: the spec's six phrases are gone; "Verified" means `verified_at` only; the guide passport, disabled Been buttons and "MARKED STOPS TURN SAGE" are hidden (marking was never built); the shared plan's "Save this plan" is hidden (no screen lists saved plans); "Quietly building your Santa Barbara", "real hours", "open when it says" and "Sort by what's closest" replaced. Voice and process claims are listed for Jim in FINAL.md rather than rewritten.
+- W8.3 the auto-opening modal is replaced by a dismissible strip above the pick; `sbd.tour.v1` is written on close; TourProvider moved to the root layout so every footer offers How it works; the tour labels its card "Example card". Found and fixed: the itineraries gate counted the key's presence, which the plans store writes on every load, so an unclosed strip would have vanished on visit 2. D10: no visit-count code exists.
+- W8.4 emoji in tags, Saved, Discover and not-found pages became the icon set (compass, close, plus added; a `rotate` prop for chevrons); the occasion emoji field is gone and the dead `LensSheet` deleted. Dashes: 141 CSS comment dashes purged, the check extended to .css, .js and public/; the normalizer handles en dashes (range to a hyphen, day, month or clock range to "to", separator to a comma), cleaning the 148 live en dashes at render and at write; guide jsonb prose, stop subs, "Right now" notes and photo credits now pass through it; the enrich and cockpit prompts forbid en dashes too.
+- W8.5 one public name per guide (`shortGuideTitle` in `mapGuide`: "State Street" on the card, title, og, breadcrumbs and share); eyebrow "Guides"; the index names the next guide and month from an optional `content.upcoming` (no schema change), or shows no notice. "For you" badge became "Theme". The digest masthead is an h1.
+- W8.6 WHEN pills carry no counts (already true); the outbound button's long label wraps at 320; the outbound CTA is large text (the token rule); the logo's accessible name contains its visible text. Accessibility 100 on /, /saved, /plan and a listing.
+- W8.7 CLAUDE.md v10 to v11 and eight Doc 14 entries written; root CLAUDE.md pointer updated. CP5 approved 2026-09-22.
+- W8 commit: `feat(r1-w8): vocabulary module, promises audit, first-visit strip, icons and dash policy, canon v11`
 - W4.1 `lib/areas.ts` is the single area vocabulary: 8 areas, one label each, `areaForThing()` resolving neighborhood then nearby_zone, never "other". `lib/doorZones.ts` is now a thin adapter over it; `lib/zones.ts` keeps only the 6-value `nearby_zone` mapping the database still stores.
 - W4.2 the Place door FILTERS (`filterByArea`), tile counts come from the module over the corrected pool, zero-count tiles render disabled rather than hidden, and "Show the closest matches" names what it relaxed ("Showing all areas").
 - W4.3 Plan's engine was converted to the 8 areas end to end (zone graph, walk clusters, adjacency, parking notes, cluster boost, hard filter, transitions). Saved's Near Me lists the same 8 plus "Anywhere in SB", the button reads "Funk Zone, 2 of 10", the chosen area becomes its own group so the sort is visible, and geolocation falls back after 6 seconds.
@@ -79,7 +87,7 @@ Current task: Wave 8 (W8.4 dash gate and lib/strings.ts started early, uncommitt
 - CP1 archive dry-run: approved 2026-09-21
 - CP2 hero_eligible pass: approved 2026-09-22
 - CP3 area backfill: approved 2026-09-22
-- CP4 card rebuild: pending
+- CP4 card rebuild: approved 2026-09-22
 - CP5 canon diff: pending
 
 ## Blocked (task, reason, what would unblock it)
@@ -106,6 +114,14 @@ Current task: Wave 8 (W8.4 dash gate and lib/strings.ts started early, uncommitt
 - **W1.3 shared the row rule, not the column list.** The spec says `getStopThingMap()` should use one shared select constant with `getPublishedThings()`. Its stated purpose is that a guide must never offer a heart on something Saved cannot render, which is about which ROWS each read can return. Making the columns identical would have changed guide sub-lines: `getStopThingMap` selects `things.category`, a hand-curated field set on 109 rows, which is a different column from the pool's `happening_category`. The status rule is shared; the projection stays narrow.
 - **W1.1 test is a pure-function test plus a source guard, not a component render test.** This repo has no React component-test harness and no `@testing-library`, and adding one is outside R1. The decision is extracted into the pure `partitionSaves()` in lib/savedView.ts and tested there (the spec's exact three-ids-two-returned case). `components/saved/noAutoDelete.test.ts` additionally pins the regression itself: no `remove()` call may appear inside any effect in SavedClient.
 - **Extra fix in `SavesProvider`.** Hydration swallowed a `JSON.parse` failure and then the persist effect wrote `{}` straight back over the stored value, destroying the visitor's list on a single bad read. That is a save-deletion path, which is exactly what Wave 1 exists to close, so it is fixed here: an unreadable value is preserved, copied to `sbd.saves.v1.unreadable`, and never overwritten until the visitor actually saves something. Verified in a browser for both truncated JSON and a wrong-shaped value.
+
+### Wave 8 deviations and decisions
+
+- **En dashes that separate become a comma, not "to".** D9 says "to" in prose, but the live title "The Lost Weekend [en dash] The Photography of May Pang" would read "The Lost Weekend to The Photography...". "to" is kept for real ranges (days, months, clock times); digit ranges keep a hyphen.
+- **`guides.upcoming` lives in the guides' existing `content` jsonb**, because the index allows no DDL beyond the one block. The cockpit has no guide editor, so "Jim can edit it in the cockpit" is not built; it is edited in the Supabase table editor (recorded in canon §10).
+- **The tour teaches on a labeled example**, the spec's stated fallback, rather than the real pick; the SVG card cannot take arbitrary pick data without a redesign of panel 1.
+- **"Places and regulars" keeps the word "Places"**: W7.2 names that label verbatim, and it is the thing-type sense, not the retired where-concept.
+- **Canon decisions made at CP5 for Jim to confirm**: the R1 ledger now outranks older docs; the Gate 4 Concierge Day is the Plan spec; the v10 note is replaced by the v11 note (its history is in Doc 14); Doc 14 headings use " · " instead of an em dash; old canon sentences keep their em dashes (only new text is dash-free); START_HERE.md and 00_Project_Context.md banners are not updated; `Core Project Files/sbdaymaker_tokens.css` is not synced to the app copy (they already differed before R1).
 
 ### Wave 7 deviations and findings
 

@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
   // would stay empty. Now the page's "check your inbox" is true either way.
   if (status === "confirmed") {
     const note = renderTransactionalEmail({
-      preheader: "Nothing to do: you're already on the list.",
-      heading: "You're already on the list",
+      preheader: "Nothing to do: you're already subscribed.",
+      heading: "You're already subscribed",
       paragraphs: [
         "Someone, probably you, just asked to subscribe this address. It's already confirmed, so there is nothing to do.",
       ],
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       unsubscribeUrl: `${origin}/unsubscribe?token=${unsubscribe_token}`,
       cadence: true,
     });
-    await sendEmail({ to: email, subject: "You're already on the SB Daymaker list", html: note.html, text: note.text });
+    await sendEmail({ to: email, subject: "You're already subscribed to SB Daymaker", html: note.html, text: note.text });
     return NextResponse.json({ ok: true, status: "pending" });
   }
 
@@ -59,10 +59,10 @@ export async function POST(req: NextRequest) {
   const unsubUrl = `${origin}/unsubscribe?token=${unsubscribe_token}`;
   // R1 W7.7 (EML-001). The digest's template, not three bare paragraphs.
   const mail = renderTransactionalEmail({
-    preheader: "One tap and the weekend lands in your inbox.",
-    heading: "Confirm your digest",
+    preheader: "One tap and Santa Barbara lands in your inbox.",
+    heading: "Confirm your subscription",
     paragraphs: [
-      "Tap the button and you're in: one local's pick for the weekend, a few more worth your time, and one evergreen spot.",
+      "Tap the button and you're in: a local's pick, a few more worth your time, and one evergreen spot.",
     ],
     button: { label: "Confirm my subscription", url: confirmUrl },
     footNote: "Didn't sign up? Ignore this email, or {unsubscribe}.",

@@ -1,5 +1,7 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 /**
  * R1 Wave 1 (W1.1). A saved id the database no longer returns.
  *
@@ -47,7 +49,7 @@ export function MissingSavedCard({
           onClick={onRemove}
           aria-label={`Remove ${label}`}
         >
-          ✕ Remove
+          <SBIcon name="close" size={14} /> Remove
         </button>
       </div>
     </article>

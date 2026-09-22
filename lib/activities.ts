@@ -27,14 +27,14 @@ export interface Activity {
 }
 
 export const ACTIVITIES: Activity[] = [
-  { key: "live-music", label: "Live music", description: "Bands, DJs, and open mics.", tile: "/tiles/activity/live-music.jpg" },
-  { key: "arts-galleries", label: "Arts & galleries", description: "Openings, exhibits, and studio visits.", tile: "/tiles/activity/arts-galleries.jpg" },
-  { key: "food-drink", label: "Food & drink", description: "Restaurants, tastings, and pop-ups.", tile: "/tiles/activity/food-drink.jpg" },
+  { key: "live-music", label: "Live Music", description: "Bands, DJs, and open mics.", tile: "/tiles/activity/live-music.jpg" },
+  { key: "arts-galleries", label: "Arts & Culture", description: "Openings, exhibits, and studio visits.", tile: "/tiles/activity/arts-galleries.jpg" },
+  { key: "food-drink", label: "Food & Drink", description: "Restaurants, tastings, and pop-ups.", tile: "/tiles/activity/food-drink.jpg" },
   { key: "outdoors", label: "Outdoors", description: "Hikes, beaches, and open air.", tile: "/tiles/activity/outdoors.jpg" },
   { key: "markets", label: "Markets", description: "Farmers markets and maker fairs.", tile: "/tiles/activity/markets.jpg" },
-  { key: "family-kids", label: "Family & kids", description: "All-ages, kid-friendly programming.", tile: "/tiles/activity/family-kids.jpg" },
-  { key: "film-talks", label: "Film & talks", description: "Screenings, lectures, and author talks.", tile: "/tiles/activity/film-talks.jpg" },
-  { key: "wellness-fitness", label: "Wellness & fitness", description: "Yoga, studios, and active recovery.", tile: "/tiles/activity/wellness-fitness.jpg" },
+  { key: "family-kids", label: "Family & Kids", description: "All-ages, kid-friendly programming.", tile: "/tiles/activity/family-kids.jpg" },
+  { key: "film-talks", label: "Film & Talks", description: "Screenings, lectures, and author talks.", tile: "/tiles/activity/film-talks.jpg" },
+  { key: "wellness-fitness", label: "Wellness & Fitness", description: "Yoga, studios, and active recovery.", tile: "/tiles/activity/wellness-fitness.jpg" },
   { key: "nightlife", label: "Nightlife", description: "Bars, late sets, and after-dark spots.", tile: "/tiles/activity/nightlife.jpg" },
   { key: "community-festivals", label: "Community & Festivals", description: "Fairs, festivals, and community gatherings.", tile: "/tiles/activity/community-festivals.jpg" },
 ];

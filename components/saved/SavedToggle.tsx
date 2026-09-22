@@ -1,5 +1,9 @@
 "use client";
 
+import { BEEN, WANT_TO_GO } from "@/lib/strings";
+
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import type { SaveState } from "@/components/saves/SavesProvider";
 
 /**
@@ -27,8 +31,8 @@ export function SavedToggle({
         className={`sbd-saved-toggle__btn sbd-saved-toggle__btn--want${value === "want" ? " is-active" : ""}`}
         onClick={() => onChange("want")}
       >
-        <span className="sbd-saved-toggle__icon" aria-hidden="true">♥</span>
-        <span className="sbd-saved-toggle__label">Want to go</span>
+        <span className="sbd-saved-toggle__icon" aria-hidden="true"><SBIcon name="heart" size={12} fill="currentColor" /></span>
+        <span className="sbd-saved-toggle__label">{WANT_TO_GO}</span>
         {wantCount > 0 ? (
           <span className="sbd-saved-toggle__chip">{wantCount}</span>
         ) : null}
@@ -40,8 +44,8 @@ export function SavedToggle({
         className={`sbd-saved-toggle__btn sbd-saved-toggle__btn--been${value === "been" ? " is-active" : ""}`}
         onClick={() => onChange("been")}
       >
-        <span className="sbd-saved-toggle__icon" aria-hidden="true">✓</span>
-        <span className="sbd-saved-toggle__label">Been</span>
+        <span className="sbd-saved-toggle__icon" aria-hidden="true"><SBIcon name="check" size={12} strokeWidth={2.4} /></span>
+        <span className="sbd-saved-toggle__label">{BEEN}</span>
         {beenCount > 0 ? (
           <span className="sbd-saved-toggle__chip">{beenCount}</span>
         ) : null}

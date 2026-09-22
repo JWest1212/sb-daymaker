@@ -79,12 +79,12 @@ describe("heroEyebrow (R1 W2.5)", () => {
     // Recommending an outdoor thing as the wet-weather answer is worse than
     // saying nothing.
     const outdoor = thing({ type: "event", setting: "outdoor", happening_category: "live_music" });
-    expect(heroEyebrow(outdoor, isGrayDay(weather("Rain", "heavy rain")))).toBe("Catch a show");
+    expect(heroEyebrow(outdoor, isGrayDay(weather("Rain", "heavy rain")))).toBe("Catch a Show");
   });
 
   it("falls through to the content branches when it is not gray", () => {
-    expect(heroEyebrow(thing({ type: "place", setting: "indoor" }), false)).toBe("Place to be");
-    expect(heroEyebrow(indoorEvent({ free: true }), false)).toBe("Free · Today");
-    expect(heroEyebrow(indoorEvent(), false)).toBe("Catch a show");
+    expect(heroEyebrow(thing({ type: "place", setting: "indoor" }), false)).toBe("Local favorite");
+    expect(heroEyebrow(indoorEvent({ free: true }), false)).toBe("Free");
+    expect(heroEyebrow(indoorEvent(), false)).toBe("Catch a Show");
   });
 });

@@ -23,7 +23,7 @@ export type SearchHitKind = "event" | "venue" | "tag";
 
 /** The door a tag row belongs to, shown as a qualifier so overlapping labels
  *  (Nightlife is both an Occasion and an Activity) are distinguishable (G3.2 #4). */
-export type TagDoor = "Place" | "Occasion" | "Activity";
+export type TagDoor = "Area" | "Occasion" | "Activity"; // R1 W8.1: "Place" retired
 
 export interface SearchHit {
   kind: SearchHitKind;
@@ -215,7 +215,7 @@ const TAG_VOCAB: { door: TagDoor; id: string; label: string; filter: NonNullable
     filter: { dimension: "vibe" as const, key: o.key },
   })),
   ...DOOR_ZONES.map((z) => ({
-    door: "Place" as const,
+    door: "Area" as const,
     id: `place-${z.key}`,
     label: z.label,
     filter: { dimension: "place" as const, key: z.key },

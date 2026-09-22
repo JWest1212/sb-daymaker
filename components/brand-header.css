@@ -1,10 +1,10 @@
 /* components/brand-header.css
-   Global brand header — "Golden Hour" design (§4 of the build spec).
+   Global brand header: "Golden Hour" design (§4 of the build spec).
    Brand tokens come from sbdaymaker_tokens.css (--plaster, --ink, --pacific,
    --pacific-dark, --terracotta, --gold, --font-display).
    The four --hdr-* values below are DECORATIVE illustration stops for the sky/sea
-   scene inside the mark — NOT brand tokens. They mirror the hero's sky gradient.
-   (Flag to Jim if promotion to sbdaymaker_tokens.css is wanted — spec §7 item C.) */
+   scene inside the mark: NOT brand tokens. They mirror the hero's sky gradient.
+   (Flag to Jim if promotion to sbdaymaker_tokens.css is wanted: spec §7 item C.) */
 
 /* R1 W7.3 review fix: the scene stops live on the MARK too, so the mark renders
    outside the sticky header (the recipient pages' PublicFrame), where it was a
@@ -118,7 +118,7 @@
   line-height: 1;
 }
 
-/* "maker" in terracotta — large text (22px/700) clears AA at 3:1 on --plaster.
+/* "maker" in terracotta: large text (22px/700) clears AA at 3:1 on --plaster.
    Spec used --tile which is not a token; --terracotta is the equivalent. */
 .sbd-brandhdr__wordmark b {
   color: var(--terracotta);

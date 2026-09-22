@@ -361,7 +361,7 @@
 .sbd-cockpit .pendpill { font-family: var(--font-mono); font-size: var(--text-dense-2); letter-spacing: .06em; background: var(--tint-gold-18); color: var(--gold-text); border-radius: var(--radius-pill); padding: 3px 8px; }
 
 
-/* R1 W2.7 — what the R1 pipeline did, visible in the Live catalog.
+/* R1 W2.7: what the R1 pipeline did, visible in the Live catalog.
    Civic: excluded from the public feed, pick, search and Plan (D3/D14).
    Archived: retired by the archive step, still reachable by saved/shared links. */
 .sbd-cockpit .civicpill { font-family: var(--font-mono); font-size: var(--text-dense-2); letter-spacing: .06em; background: var(--tint-ink-08); color: var(--ink-2); border-radius: var(--radius-pill); padding: 3px 8px; }

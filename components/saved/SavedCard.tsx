@@ -1,5 +1,9 @@
 "use client";
 
+import { WANT_TO_GO } from "@/lib/strings";
+
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import Link from "next/link";
 import { thingPath } from "@/lib/seo/site";
 import type { Thing } from "@/lib/things";
@@ -58,7 +62,7 @@ export function SavedCard({
       {selectMode ? (
         <div className="sbd-savedcard__top">
           <span className="sbd-savedcard__check" aria-hidden="true">
-            {selected ? "✓" : ""}
+            {selected ? <SBIcon name="check" size={14} strokeWidth={2.4} /> : null}
           </span>
           <div
             className={`sbd-savedcard__thumb sbd-media--${cardTone(index)}`}
@@ -114,7 +118,7 @@ export function SavedCard({
               onSetState(state === "been" ? "want" : "been");
             }}
           >
-            {state === "been" ? "↩ Want to go" : "✓ Mark been"}
+            {state === "been" ? <><SBIcon name="heart" size={14} /> {WANT_TO_GO}</> : <><SBIcon name="check" size={14} /> Mark been</>}
           </button>
           <button
             type="button"
@@ -123,7 +127,7 @@ export function SavedCard({
             aria-label={`Share ${thing.title}`}
             data-tooltip="Share"
           >
-            ↗
+            <SBIcon name="share" size={16} />
           </button>
           <button
             type="button"
@@ -132,7 +136,7 @@ export function SavedCard({
             aria-label={`Remove ${thing.title}`}
             data-tooltip="Remove"
           >
-            ✕
+            <SBIcon name="close" size={16} />
           </button>
         </div>
       ) : null}

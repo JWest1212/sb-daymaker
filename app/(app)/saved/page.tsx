@@ -3,7 +3,7 @@ import { SavedClient } from "@/components/saved/SavedClient";
 import { pageMeta } from "@/lib/seo/pageMeta";
 
 export const metadata: Metadata = pageMeta({
-  title: "Your Saved List · SB Daymaker",
+  title: "Saved · SB Daymaker", // R1 W8.1, the page's one name
   // R1 W7.1 (SHR-004). Names what exists. There is no sort control.
   description: "Save what you want to do, mark what you did, share a list, or build a day from it.",
   path: "/saved",

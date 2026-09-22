@@ -107,9 +107,8 @@ export function StateStreetSketch({ className }: { className?: string }) {
         <path d="M284.5 131 l0 -2.4 M284.5 131 l1.8 .7" />
         <path d="M281 147 q3.5 -5 7 0" />
       </g>
-      <text x="271" y="114" fontFamily="var(--font-display)" fontSize="11.5" fontWeight="700" fill="var(--gold-text)">
-        ✵
-      </text>
+      {/* secret mark, R1 W8.4: the icon set's sparkle as a path */}
+      <path transform="translate(270.5,103.5) scale(0.48)" d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3Z" fill="var(--gold-text)" />
 
       {/* landmark: La Arcada arch + fountain */}
       <g stroke="var(--ink)" strokeWidth="1.1" fill="none">

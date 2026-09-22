@@ -1,6 +1,7 @@
 "use client";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { BEEN, FIND_THIS_AGAIN, HOW_IT_WORKS, STAYS_ON_PHONE, WANT_TO_GO } from "@/lib/strings";
 
 const STEP_TITLES = ["Santa Barbara, daily.", "Tap the heart.", "Then mark what you did."];
 const LAST_STEP = STEP_TITLES.length - 1;
@@ -11,7 +12,7 @@ function FeedCardIllustration() {
       viewBox="0 0 300 172"
       width="100%"
       role="img"
-      aria-label="A feed card, annotated. The title shows what is happening and where. The meta shows when it is scheduled. The description is a local's take on what is happening."
+      aria-label="An example feed card, annotated. The title shows what is happening and where. The meta shows when it is scheduled. The description is a local's take on what is happening."
     >
       <defs>
         <linearGradient id="sbdTourArtsG" x1="0" y1="0" x2="1" y2="1">
@@ -140,7 +141,7 @@ export function WelcomeTour({
   const isLast = step === LAST_STEP;
 
   return (
-    <BottomSheet open={open} onClose={onDismiss} ariaLabel="Welcome to SB Daymaker">
+    <BottomSheet open={open} onClose={onDismiss} ariaLabel={HOW_IT_WORKS}>
       <div className="sbd-tour" role="group" aria-roledescription="carousel">
         <div className="sbd-tour__top">
           <div className="sbd-tour__dots">
@@ -155,7 +156,7 @@ export function WelcomeTour({
               />
             ))}
           </div>
-          <button type="button" className="sbd-tour__skip" aria-label="Skip the intro" onClick={onDismiss}>
+          <button type="button" className="sbd-tour__skip" aria-label="Close" onClick={onDismiss}>
             Skip
           </button>
         </div>
@@ -170,6 +171,9 @@ export function WelcomeTour({
           <p className="sbd-tour__body">
             {"Open it like you check the weather. Here's what one pick looks like:"}
           </p>
+          {/* R1 W8.3 (MAP-003). Said plainly: this card is an illustration, not
+              a real listing, so nobody goes looking for it. */}
+          <p className="sbd-tour__example">Example card</p>
           <div className="sbd-tour__art-frame">
             <FeedCardIllustration />
           </div>
@@ -198,16 +202,15 @@ export function WelcomeTour({
         <div className={`sbd-tour__panel${step === 2 ? " is-active" : ""}`}>
           <div className="sbd-tour__art sbd-tour__art--been">
             <div className="sbd-tour__flow">
-              <span className="sbd-tour__chip">♥ Want</span>
+              <span className="sbd-tour__chip">♥ {WANT_TO_GO}</span>
               <span className="sbd-tour__flow-arrow" aria-hidden="true">→</span>
-              <span className="sbd-tour__chip sbd-tour__chip--been">✓ Been</span>
+              <span className="sbd-tour__chip sbd-tour__chip--been">✓ {BEEN}</span>
             </div>
           </div>
-          <div className="sbd-tour__kick">Remember</div>
+          <div className="sbd-tour__kick">Mark</div>
           <h3 className="sbd-tour__title sbd-tour__title--remember">Then mark what you did.</h3>
           <p className="sbd-tour__body">
-            Come back and check off the places you made it to. Over time, SB Daymaker{" "}
-            <b>learns your Santa Barbara</b>.
+            Come back and check off the places you made it to. {STAYS_ON_PHONE}
           </p>
         </div>
 
@@ -230,7 +233,7 @@ export function WelcomeTour({
             </button>
           )}
         </div>
-        {isLast ? <p className="sbd-tour__note">You can replay this anytime from the footer.</p> : null}
+        {isLast ? <p className="sbd-tour__note">{FIND_THIS_AGAIN}</p> : null}
       </div>
     </BottomSheet>
   );

@@ -1,3 +1,4 @@
+import { SBIcon } from "@/components/ui/SBIcon";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui";
 
@@ -15,13 +16,13 @@ export default function ThingNotFound() {
   return (
     <div style={{ paddingTop: "var(--space-6)" }}>
       <div className="sbd-backrow">
-        <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
+        <Link href="/" className="sbd-backrow__btn"><SBIcon name="chevron" rotate="left" size={14} /> Explore</Link>
       </div>
       <EmptyState
         titleAs="h1"
-        icon="🔍"
+        icon={<SBIcon name="search" size={28} strokeWidth={1.75} />}
         title="Not found"
-        message="This place or event may have been removed. Head back to Explore."
+        message="This listing may have been removed. Head back to Explore."
       />
     </div>
   );
