@@ -39,7 +39,20 @@ Current task: awaiting "start Run B"
 
 ## Blocked (task, reason, what would unblock it)
 
-Nothing blocked.
+- **Pushing `remediation-r1` to GitHub, and therefore any Vercel preview deployment.**
+  Reason: iCloud has evicted 7,528 of the 9,591 loose objects in `.git/objects`, and it
+  will not fetch them back. Any read of one blocks forever in a synchronous `pread`
+  (the same failure that stopped the test suite running at kickoff, confirmed again
+  here: `brctl download .git/objects` returns success and materializes nothing, and a
+  direct read of a sample object hangs until killed). `git push` has to read the
+  historical objects to build a pack, so it hangs at zero CPU. Credentials are fine
+  (osxkeychain has a valid GitHub token), so this is not an auth problem.
+  Both R1 commits are intact locally; the objects Claude wrote are materialized.
+  What would unblock it: getting iCloud Drive syncing again for this folder (check
+  System Settings > Apple Account > iCloud for a paused sync, a storage-full warning,
+  or a sign-in prompt), or moving the repo out of `~/Documents` to a non-synced path,
+  which is the durable fix and would also retire the `.nosync` workarounds.
+  Until then, review happens on the local preview server instead of a Vercel preview.
 
 ## Deviations from the spec, and why
 
