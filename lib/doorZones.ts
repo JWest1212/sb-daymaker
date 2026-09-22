@@ -1,84 +1,51 @@
 // lib/doorZones.ts
 //
-// Doc 18 §7.1, the 8 Place-door zones, a read-time code mapping over the
-// existing 11-value `neighborhood` enum. No DDL, no stored column. Distinct
-// from lib/zones.ts's 6-value `nearby_zone` (the Near Me sort's coarse anchors);
-// this is the newer Place-door grouping the Neighborhood Sweep (Doc 19) reports
-// against and its triage chips write through.
+// R1 Wave 4 (W4.1). This file is now a THIN ADAPTER over lib/areas.ts, which is
+// the single definition of the 8 public areas.
+//
+// It used to be one of two competing area systems (the other being the 6-value
+// `nearby_zone` vocabulary in lib/zones.ts), each with its own labels. The names
+// below are kept because the cockpit's Neighborhood Sweep, the search index and
+// the Explore door all import them; keeping the names and moving the DATA is a
+// smaller, safer change than renaming across five admin surfaces mid-wave.
+//
+// New code should import from lib/areas.ts directly. Nothing here defines an
+// area, a label or a mapping of its own any more.
 
 import type { Neighborhood } from "../packages/shared/types";
-import type { Thing } from "./things";
+import {
+  AREAS,
+  AREA_BY_KEY,
+  AREA_CANONICAL_NEIGHBORHOOD,
+  areaForNeighborhood,
+  type Area,
+  type AreaKey,
+} from "./areas";
 
-export type DoorZoneKey =
-  | "downtown_state"
-  | "funk_zone"
-  | "waterfront_harbor"
-  | "mesa"
-  | "mission_riviera"
-  | "uptown_upper_state"
-  | "goleta_isla_vista"
-  | "montecito_carpinteria";
+/** @deprecated Use `AreaKey` from lib/areas.ts. */
+export type DoorZoneKey = AreaKey;
+/** @deprecated Use `Area` from lib/areas.ts. */
+export type DoorZone = Area;
 
-export interface DoorZone {
-  key: DoorZoneKey;
-  label: string;
-  neighborhoods: Neighborhood[];
+/** @deprecated Use `AREAS` from lib/areas.ts. */
+export const DOOR_ZONES: Area[] = AREAS;
+
+/** @deprecated Use `AREA_BY_KEY` from lib/areas.ts. */
+export const DOOR_ZONE_BY_KEY: Record<AreaKey, Area> = AREA_BY_KEY;
+
+/** @deprecated Use `areaForNeighborhood` from lib/areas.ts. */
+export function doorZoneForNeighborhood(neighborhood: string | null | undefined): AreaKey | null {
+  return areaForNeighborhood(neighborhood);
 }
 
-export const DOOR_ZONES: DoorZone[] = [
-  { key: "downtown_state",        label: "Downtown & State Street",              neighborhoods: ["downtown"] },
-  { key: "funk_zone",             label: "Funk Zone",                            neighborhoods: ["funk_zone"] },
-  { key: "waterfront_harbor",     label: "Waterfront & Harbor",                  neighborhoods: ["waterfront"] },
-  { key: "mesa",                  label: "The Mesa",                             neighborhoods: ["mesa"] },
-  { key: "mission_riviera",       label: "Mission & Riviera",                    neighborhoods: ["mission_canyon", "riviera"] },
-  { key: "uptown_upper_state",    label: "Uptown & Upper State",                 neighborhoods: ["upper_state"] },
-  { key: "goleta_isla_vista",     label: "Goleta & Isla Vista",                  neighborhoods: ["goleta"] },
-  { key: "montecito_carpinteria", label: "Montecito · Summerland · Carpinteria", neighborhoods: ["montecito", "carpinteria"] },
-];
+/** @deprecated Use `AREA_CANONICAL_NEIGHBORHOOD` from lib/areas.ts. */
+export const DOOR_ZONE_CANONICAL_NEIGHBORHOOD: Partial<Record<AreaKey, Neighborhood>> =
+  AREA_CANONICAL_NEIGHBORHOOD;
 
-const NEIGHBORHOOD_TO_DOOR_ZONE: Partial<Record<Neighborhood, DoorZoneKey>> = Object.fromEntries(
-  DOOR_ZONES.flatMap((z) => z.neighborhoods.map((n) => [n, z.key] as const)),
-);
-
-/** Door zone for a neighborhood, or null for other/null/unmapped (no door
- *  until the sweep resolves it). */
-export function doorZoneForNeighborhood(neighborhood: string | null | undefined): DoorZoneKey | null {
-  if (!neighborhood || neighborhood === "other") return null;
-  return NEIGHBORHOOD_TO_DOOR_ZONE[neighborhood as Neighborhood] ?? null;
-}
-
-export const DOOR_ZONE_BY_KEY: Record<DoorZoneKey, DoorZone> = Object.fromEntries(
-  DOOR_ZONES.map((z) => [z.key, z]),
-) as Record<DoorZoneKey, DoorZone>;
-
-// §4.3, when triage assigns via a zone chip (not a specific dictionary venue),
-// the two collapsed zones write this canonical neighborhood. Finer distinction
-// (riviera vs mission_canyon, carpinteria vs montecito) is preserved for known
-// dictionary venues; only the hand-triaged residue loses granularity.
-export const DOOR_ZONE_CANONICAL_NEIGHBORHOOD: Partial<Record<DoorZoneKey, Neighborhood>> = {
-  mission_riviera: "mission_canyon",
-  montecito_carpinteria: "montecito",
-};
-
-/** The neighborhood a triage zone-chip tap writes: the §4.3 canonical override
- *  for the two collapsed zones, else the door zone's single neighborhood. */
-export function canonicalNeighborhoodForZone(key: DoorZoneKey): Neighborhood {
-  return DOOR_ZONE_CANONICAL_NEIGHBORHOOD[key] ?? DOOR_ZONE_BY_KEY[key].neighborhoods[0];
-}
-
-/** Doc 22 §2.1, the Place door's own stable sort, bubbling things in the
- *  chosen door zone to the top. Place is a sort, not a filter (a mis-mapped
- *  thing never disappears, just doesn't bubble). Deliberately separate from
- *  nearMeSort() in lib/explore.ts (protected, untouched), that one drives the
- *  genuine geolocation Near Me sort on Saved and stays on nearby_zone. */
-export function sortByDoorZone(things: Thing[], zone: DoorZoneKey | null): Thing[] {
-  if (!zone) return things;
-  return things
-    .map((t, i) => [t, i] as const)
-    .sort((a, b) => {
-      const na = doorZoneForNeighborhood(a[0].neighborhood) === zone ? 0 : 1;
-      const nb = doorZoneForNeighborhood(b[0].neighborhood) === zone ? 0 : 1;
-      return na - nb || a[1] - b[1];
-    })
-    .map((x) => x[0]);
+/** The `neighborhood` value to store when triage assigns a whole area rather
+ *  than a specific dictionary venue. Finer distinctions (riviera vs
+ *  mission_canyon, carpinteria vs montecito) survive for known venues; only the
+ *  hand-triaged residue collapses to the canonical value. */
+export function canonicalNeighborhoodForZone(key: AreaKey): Neighborhood {
+  return AREA_CANONICAL_NEIGHBORHOOD[key];
 }

@@ -94,6 +94,9 @@ const HERO_ELIGIBLE_APPLY = process.env.HERO_ELIGIBLE_APPLY === '1';
 // R1 W3.1, move community food services out of the food category.
 const RECAT_MEALS_DRYRUN = process.env.RECAT_MEALS_DRYRUN === '1';
 const RECAT_MEALS_APPLY = process.env.RECAT_MEALS_APPLY === '1';
+// R1 W4.4, the one-time area backfill (CP3).
+const AREAS_DRYRUN = process.env.AREAS_DRYRUN === '1';
+const AREAS_BACKFILL = process.env.AREAS_BACKFILL === '1';
 // Data Arch Redesign 26 Phase 2, read-only pairwise audit of dedupe.ts's live
 // venue-aware matcher (evaluateMatch/dedupeVenueAware) vs the plain
 // deterministic baseline (dedupe()), run over the existing catalog. Writes
@@ -1931,6 +1934,8 @@ async function main() {
   if (HERO_ELIGIBLE_APPLY) return heroEligibleOnce(false);
   if (RECAT_MEALS_DRYRUN) return recatMealsOnce(true);
   if (RECAT_MEALS_APPLY) return recatMealsOnce(false);
+  if (AREAS_DRYRUN) return areasOnce(true);
+  if (AREAS_BACKFILL) return areasOnce(false);
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -2385,6 +2390,13 @@ async function recatMealsOnce(dryRun: boolean) {
   const { recategorizeMeals, formatRecatReport } = await import('./audits/meal_recategorize');
   const sb = getDb();
   console.log(formatRecatReport(await recategorizeMeals(sb, { dryRun })));
+}
+
+/** R1 W4.4. One-off CLI entry point (AREAS_DRYRUN=1 / AREAS_BACKFILL=1). */
+async function areasOnce(dryRun: boolean) {
+  const { backfillAreas, formatBackfillReport } = await import('./areasBackfill');
+  const sb = getDb();
+  console.log(formatBackfillReport(await backfillAreas(sb, { dryRun })));
 }
 
 /** POST /api/revalidate with the shared cron secret. Logs, never throws. */

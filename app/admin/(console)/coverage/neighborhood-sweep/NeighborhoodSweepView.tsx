@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import type { SweepSummary, DictionaryEntry, SweepTriageItem } from "@/lib/neighborhoodSweep";
-import { DOOR_ZONES, DOOR_ZONE_BY_KEY, type DoorZoneKey } from "@/lib/doorZones";
+import { AREAS, AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 
 const METHOD_LABEL: Record<string, string> = {
   place_id: "Venue dictionary (place ID)",
@@ -15,19 +15,15 @@ const METHOD_LABEL: Record<string, string> = {
   unresolved: "Unresolved",
 };
 
-const CHIP_LABEL: Record<DoorZoneKey | "other", string> = {
-  downtown_state: "Downtown",
-  funk_zone: "Funk Zone",
-  waterfront_harbor: "Waterfront",
-  mesa: "The Mesa",
-  mission_riviera: "Mission/Riviera",
-  uptown_upper_state: "Uptown",
-  goleta_isla_vista: "Goleta/IV",
-  montecito_carpinteria: "Montecito+",
+// R1 W4.1. Chip labels come from the one area module, so the cockpit and the
+// public site cannot drift apart on what an area is called. "other" is a
+// cockpit-only bucket for rows with no area; it never reaches a public surface.
+const CHIP_LABEL: Record<AreaKey | "other", string> = {
+  ...(Object.fromEntries(AREAS.map((a) => [a.key, a.short])) as Record<AreaKey, string>),
   other: "Regional / Online",
 };
 
-const CHIP_ORDER: (DoorZoneKey | "other")[] = [...DOOR_ZONES.map((z) => z.key), "other"];
+const CHIP_ORDER: (AreaKey | "other")[] = [...AREAS.map((z) => z.key), "other"];
 
 function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -41,7 +37,7 @@ function TriageRow({
   item: SweepTriageItem;
   pending: boolean;
   assignedTo: string | null;
-  onAssign: (zoneKey: DoorZoneKey | "other") => void;
+  onAssign: (zoneKey: AreaKey | "other") => void;
 }) {
   return (
     <div className="sweep-titem">
@@ -55,7 +51,7 @@ function TriageRow({
         <div className="sweep-suggest">
           <span className="conf">{item.confidence.toFixed(2)}</span>
           suggested from {METHOD_LABEL[item.method]?.toLowerCase() ?? item.method}:
-          <span className="zpill">{DOOR_ZONE_BY_KEY[item.suggestedZone].label}</span>
+          <span className="zpill">{AREA_BY_KEY[item.suggestedZone].label}</span>
         </div>
       ) : (
         <div className="sweep-nosuggest">No signal found, no venue match, no source hint, no coordinates, no street match.</div>
@@ -131,7 +127,7 @@ export function NeighborhoodSweepView({
     }
   }, [runSweep, showToast]);
 
-  const assignTriage = useCallback(async (item: SweepTriageItem, zoneKey: DoorZoneKey | "other") => {
+  const assignTriage = useCallback(async (item: SweepTriageItem, zoneKey: AreaKey | "other") => {
     setPendingId(item.id);
     const res = await fetch("/api/admin/coverage/neighborhood-sweep/triage", {
       method: "POST",
@@ -316,7 +312,7 @@ export function NeighborhoodSweepView({
             />
             <select aria-label="Zone" value={venueZone} onChange={(e) => setVenueZone(e.target.value)}>
               <option value="">Pick a zone</option>
-              {DOOR_ZONES.map((z) => <option key={z.key} value={z.key}>{z.label}</option>)}
+              {AREAS.map((z) => <option key={z.key} value={z.key}>{z.label}</option>)}
             </select>
             <button className="btn btn-edit" onClick={addVenue} disabled={addingVenue || !venueName.trim() || !venueZone}>
               {addingVenue ? "Adding…" : "Add"}

@@ -7479,3 +7479,18 @@ textarea.sbd-field__input {
   line-height: var(--leading-body);
   color: var(--text-muted);
 }
+
+/* R1 W4.2 — an area with nothing in the current horizon. Shown, not hidden, so
+   the 8-area vocabulary stays stable as the visitor changes horizon. */
+.sbd-tile.is-empty {
+  opacity: .45;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+/* R1 W4.2 — names the filter that "Show the closest matches" relaxed. */
+.sbd-relaxed {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}

@@ -6,12 +6,12 @@
 // Pure, deterministic, no AI. No em dash (Golden Rule).
 
 import type { Thing } from "@/lib/things";
+import { areaForThing, type AreaKey } from "@/lib/areas";
 import type { Block, Meal, PlanNote, ResolvedParams, Stop } from "./types";
 import { hardFilter, withinBudgetBand } from "./hardFilter";
 import { rankCandidates } from "./rankCandidates";
 import { anchorZoneFor } from "./cluster";
 import { noteKeys } from "./notes";
-import type { Zone } from "@/lib/zones";
 
 const FOOD_CATEGORIES = new Set(["food_drink_spot", "food_drink_event"]);
 
@@ -135,7 +135,7 @@ export function insertMeals(input: InsertMealsInput): InsertMealsResult {
   const placedThings = activityStops
     .map((s) => thingById.get(s.thingId))
     .filter((t): t is Thing => Boolean(t));
-  const anchorZone: Zone | null = anchorZoneFor(params, placedThings);
+  const anchorZone: AreaKey | null = anchorZoneFor(params, placedThings);
 
   for (const meal of params.meals) {
     const block = mealBlock(meal, params.periods);

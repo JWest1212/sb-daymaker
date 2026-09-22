@@ -1,4 +1,5 @@
 import type { Thing } from "./things";
+import { areaForThing, type AreaKey } from "./areas";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
 import type { ActivityKey } from "./activities";
@@ -269,16 +270,27 @@ export function filterByActivity(things: Thing[], activity: ActivityKey | null):
 }
 
 /** Stable sort that bubbles items in the chosen zone to the top. */
-export function nearMeSort(things: Thing[], zone: Zone | null): Thing[] {
-  if (!zone) return things;
+export function nearMeSort(things: Thing[], area: AreaKey | null): Thing[] {
+  if (!area) return things;
+  // R1 W4.3: resolved through the one area module, so Saved and Explore agree
+  // about which area a thing is in. Still a SORT, not a filter: on a saved list
+  // the visitor wants their whole list, ordered by what is closest.
   return things
     .map((t, i) => [t, i] as const)
     .sort((a, b) => {
-      const na = a[0].nearby_zone === zone ? 0 : 1;
-      const nb = b[0].nearby_zone === zone ? 0 : 1;
+      const na = areaForThing(a[0]) === area ? 0 : 1;
+      const nb = areaForThing(b[0]) === area ? 0 : 1;
       return na - nb || a[1] - b[1];
     })
     .map((x) => x[0]);
+}
+
+/** R1 W4.3. How many of `things` are in `area`, for the Near Me button's
+ *  "Funk Zone, 3 of 7". Saying how many matched is the difference between a
+ *  sort that looks broken on a short list and one that explains itself. */
+export function areaMatchCount(things: Thing[], area: AreaKey | null): number {
+  if (!area) return things.length;
+  return things.filter((t) => areaForThing(t) === area).length;
 }
 
 export const TIER_META: Record<number, { key: string; title: string }> = {
@@ -437,4 +449,22 @@ export function pickPerfectDay(things: Thing[]): string[] {
     ids.push(p.id);
   }
   return ids.slice(0, 5);
+}
+
+/**
+ * R1 Wave 4 (W4.2). Filter the feed to one area.
+ *
+ * This replaces `sortByDoorZone`, which only BUBBLED matches to the top and kept
+ * everything else. The control was labelled "Filter by place" and produced a
+ * removable chip in the same row as Vibe and Activity, both of which really do
+ * filter, so choosing "Funk Zone" and then scrolling past Goleta made the site
+ * look broken or dishonest (TP-A2-03, TP-A2-04).
+ *
+ * A row whose area is unknown is EXCLUDED, not passed through. The visitor asked
+ * for one area; a row nobody can place is not an answer to that question. The
+ * W4.4 backfill is what makes this affordable, by resolving most of the unknowns.
+ */
+export function filterByArea(things: Thing[], area: AreaKey | null): Thing[] {
+  if (!area) return things;
+  return things.filter((t) => areaForThing(t) === area);
 }

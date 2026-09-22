@@ -213,6 +213,7 @@ export function CascadeFeed({
   onClearFilters,
   hasActiveFilters = false,
   onShowClosestMatches,
+  relaxedNote = null,
   venuePools,
 }: {
   items: Thing[];
@@ -231,6 +232,9 @@ export function CascadeFeed({
    *  empty result gets the stacked-filter empty state (two recovery actions)
    *  instead of the generic one. */
   hasActiveFilters?: boolean;
+  /** R1 W4.2 (EXP-015). What "Show the closest matches" just relaxed, e.g.
+   *  "Showing all areas". Null when nothing has been relaxed. */
+  relaxedNote?: string | null;
   /** Drops the most-recently-added filter (repeatedly, if needed) until something
    *  shows, or all filters are gone. Required when `hasActiveFilters` is true. */
   onShowClosestMatches?: () => void;
@@ -355,6 +359,11 @@ export function CascadeFeed({
       <div className="sbd-sr-only" aria-live="polite">
         {totalCount} {totalCount === 1 ? "thing" : "things"} found
       </div>
+      {/* R1 W4.2. Name the filter that was relaxed, so the feed changing after
+          "Show the closest matches" is explained rather than just happening. */}
+      {relaxedNote ? (
+        <p className="sbd-relaxed" role="status">{relaxedNote}</p>
+      ) : null}
       {hasLead && (
         <LeadSection
           tier1={tier1}

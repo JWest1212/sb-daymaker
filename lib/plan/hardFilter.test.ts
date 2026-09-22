@@ -86,25 +86,25 @@ describe("hardFilter · party rules", () => {
 });
 
 describe("hardFilter · transport reachability", () => {
-  const base = { id: "far", nearby_zone: "goleta" as const };
+  const base = { id: "far", neighborhood: "goleta" as const };
   it("drops an out-of-cluster stop on a walking plan", () => {
     const t = thing(base);
     // anchor downtown, walking -> goleta is not walkable.
-    expect(violationReason(t, ctx({ zone: "downtown", transport: "walk" }))).toBe("walk_out_of_cluster");
+    expect(violationReason(t, ctx({ zone: "downtown_state", transport: "walk" }))).toBe("walk_out_of_cluster");
   });
   it("keeps an in-cluster stop on a walking plan", () => {
-    const t = thing({ id: "near", nearby_zone: "funk" });
-    expect(violationReason(t, ctx({ zone: "downtown", transport: "walk" }))).toBeNull();
+    const t = thing({ id: "near", neighborhood: "funk_zone" });
+    expect(violationReason(t, ctx({ zone: "downtown_state", transport: "walk" }))).toBeNull();
   });
   it("car unlocks a distant zone", () => {
     const t = thing(base);
-    expect(violationReason(t, ctx({ zone: "downtown", transport: "car" }))).toBeNull();
+    expect(violationReason(t, ctx({ zone: "downtown_state", transport: "car" }))).toBeNull();
   });
   it("bike reaches an adjacent zone but not a far one", () => {
-    const adj = thing({ id: "mesa", nearby_zone: "mesa" });
-    const far = thing({ id: "goleta", nearby_zone: "goleta" });
-    expect(violationReason(adj, ctx({ zone: "waterfront", transport: "bike" }))).toBeNull();
-    expect(violationReason(far, ctx({ zone: "waterfront", transport: "bike" }))).toBe("bike_out_of_range");
+    const adj = thing({ id: "mesa", neighborhood: "mesa" });
+    const far = thing({ id: "goleta", neighborhood: "goleta" });
+    expect(violationReason(adj, ctx({ zone: "waterfront_harbor", transport: "bike" }))).toBeNull();
+    expect(violationReason(far, ctx({ zone: "waterfront_harbor", transport: "bike" }))).toBe("bike_out_of_range");
   });
 });
 
@@ -141,11 +141,11 @@ describe("hardFilter · quality tier", () => {
 describe("hardFilter · composition", () => {
   it("returns only the candidates that violate nothing", () => {
     const pool = [
-      thing({ id: "ok", nearby_zone: "funk" }),
+      thing({ id: "ok", neighborhood: "funk_zone" }),
       thing({ id: "bar", is_21_plus: true }),
       thing({ id: "t3", quality_tier: 3 }),
     ];
-    const kept = hardFilter(pool, ctx({ who: "family", zone: "funk", transport: "car" }));
+    const kept = hardFilter(pool, ctx({ who: "family", zone: "funk_zone", transport: "car" }));
     expect(kept.map((t) => t.id)).toEqual(["ok"]);
   });
 });

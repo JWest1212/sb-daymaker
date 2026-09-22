@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { Thing } from "./things";
 import { filterByState, splitPast, beenList, partitionSaves, type SavesMap } from "./savedView";
+import { groupSaved } from "./savedGroups";
 
 // Minimal Thing factory, only the fields these selectors read matter.
 function thing(id: string, over: Partial<Thing> = {}): Thing {
@@ -159,5 +160,42 @@ describe("partitionSaves (R1 W1.1, saves are never deleted)", () => {
 
   it("returns empty lists for an empty save set", () => {
     expect(partitionSaves([], new Map(), new Set())).toEqual({ found: [], missing: [] });
+  });
+});
+
+describe("groupSaved with a chosen area (R1 W4.3)", () => {
+  const funk = thing("f1", { type: "place", neighborhood: "funk_zone" });
+  const funk2 = thing("f2", { type: "event", neighborhood: "funk_zone" });
+  const town = thing("d1", { type: "event", neighborhood: "downtown" });
+  const unknown = thing("u1", { type: "place", neighborhood: null });
+
+  it("groups by type when no area is chosen", () => {
+    const g = groupSaved([funk, funk2, town, unknown]);
+    expect(g.map((x) => x.label)).toEqual(["Events", "Places"]);
+  });
+
+  it("puts the chosen area in its own group at the top", () => {
+    // Without this, Near Me bubbles the matches and then type-grouping scatters
+    // them again, so tapping it appears to do nothing (TP-A2-05).
+    const g = groupSaved([funk, funk2, town, unknown], { key: "funk_zone", label: "Funk Zone" });
+    expect(g[0].label).toBe("In Funk Zone");
+    expect(g[0].items.map((t) => t.id).sort()).toEqual(["f1", "f2"]);
+  });
+
+  it("keeps everything else grouped by type below it", () => {
+    const g = groupSaved([funk, funk2, town, unknown], { key: "funk_zone", label: "Funk Zone" });
+    expect(g.slice(1).map((x) => x.label)).toEqual(["Events", "Places"]);
+    expect(g.slice(1).flatMap((x) => x.items.map((t) => t.id)).sort()).toEqual(["d1", "u1"]);
+  });
+
+  it("omits the area group when nothing matches, rather than showing it empty", () => {
+    const g = groupSaved([town], { key: "funk_zone", label: "Funk Zone" });
+    expect(g.some((x) => x.label.startsWith("In "))).toBe(false);
+  });
+
+  it("never loses a saved thing between the groups", () => {
+    const all = [funk, funk2, town, unknown];
+    const g = groupSaved(all, { key: "funk_zone", label: "Funk Zone" });
+    expect(g.flatMap((x) => x.items).length).toBe(all.length);
   });
 });

@@ -18,7 +18,7 @@ import type {
   Budget,
   Meal,
 } from "@/lib/plan/types";
-import type { Zone } from "@/lib/zones";
+import { AREAS, ANYWHERE_LABEL, type AreaKey } from "@/lib/areas";
 
 // Gate 4 · The Concierge Day setup is a guided interview (one question per
 // screen, auto-advancing single-selects), not a filter form. It collects the
@@ -64,14 +64,34 @@ const KID_BANDS: { value: KidBand; glyph: string; label: string; desc: string }[
   { value: "tweens", glyph: "🛹", label: "Tweens and up (10+)", desc: "They can hang with the grown-up stuff" },
 ];
 
-const ZONE_OPTS: { value: Zone | null; glyph: string; label: string; desc: string }[] = [
-  { value: null, glyph: "🧭", label: "Anywhere", desc: "Surprise me, all of Santa Barbara" },
-  { value: "downtown", glyph: "🏛️", label: "Downtown / State St", desc: "The old town, walkable core" },
-  { value: "funk", glyph: "🍇", label: "Funk Zone", desc: "Wine, murals, harbor-adjacent" },
-  { value: "waterfront", glyph: "🌊", label: "The Waterfront", desc: "Beach, pier, the harbor" },
-  { value: "mesa", glyph: "🌅", label: "The Mesa", desc: "Cliffs, quiet, local" },
-  { value: "montecito", glyph: "🌳", label: "Montecito", desc: "Coast Village, upscale calm" },
-  { value: "goleta", glyph: "🏖️", label: "Goleta", desc: "West of town, more room" },
+// R1 W4.3. The area step lists the 8 public areas, built from lib/areas.ts so
+// Plan, Explore, Saved and the digest cannot drift on what an area is called.
+// Glyphs and the one-line descriptions stay here: they are Plan's voice, not
+// part of the shared vocabulary.
+const AREA_GLYPH: Record<AreaKey, string> = {
+  downtown_state: "\u{1F3DB}\u{FE0F}",
+  funk_zone: "\u{1F347}",
+  waterfront_harbor: "\u{1F30A}",
+  mesa: "\u{1F305}",
+  mission_riviera: "\u{26EA}",
+  upper_state: "\u{1F6E3}\u{FE0F}",
+  goleta_isla_vista: "\u{1F3D6}\u{FE0F}",
+  montecito_carpinteria: "\u{1F333}",
+};
+const AREA_DESC: Record<AreaKey, string> = {
+  downtown_state: "The old town, walkable core",
+  funk_zone: "Wine, murals, harbor-adjacent",
+  waterfront_harbor: "Beach, pier, the harbor",
+  mesa: "Cliffs, quiet, local",
+  mission_riviera: "The Mission, gardens, the view",
+  upper_state: "North of the core, room to park",
+  goleta_isla_vista: "West of town, more room",
+  montecito_carpinteria: "Coast Village, upscale calm",
+};
+
+const ZONE_OPTS: { value: AreaKey | null; glyph: string; label: string; desc: string }[] = [
+  { value: null, glyph: "\u{1F9ED}", label: ANYWHERE_LABEL, desc: "Surprise me, all of Santa Barbara" },
+  ...AREAS.map((a) => ({ value: a.key, glyph: AREA_GLYPH[a.key], label: a.label, desc: AREA_DESC[a.key] })),
 ];
 
 const TRANSPORTS: { value: Transport; glyph: string; label: string; desc: string }[] = [
@@ -197,7 +217,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
   const [periods, setPeriods] = useState<Block[]>([]);
   const [who, setWho] = useState<Who | null>(null);
   const [kidBand, setKidBand] = useState<KidBand | null>(null);
-  const [zone, setZone] = useState<Zone | null>(null);
+  const [zone, setZone] = useState<AreaKey | null>(null);
   const [transport, setTransport] = useState<Transport>("car");
   const [budget, setBudget] = useState<Budget | null>(null);
   const [pending, setPending] = useState<string | null>(null);

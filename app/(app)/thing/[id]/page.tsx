@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
-import { ZONE_LABEL } from "@/lib/zones";
+import { areaLabelForThing } from "@/lib/areas";
 import { Tag, EmptyState } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
 import { FlagButton } from "@/components/detail/FlagButton";
@@ -11,8 +11,7 @@ import { OpenNow } from "@/components/detail/OpenNow";
 import { BackButton } from "@/components/detail/BackButton";
 import { ArchivedBanner } from "@/components/detail/ArchivedBanner";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
-import { prettify } from "@/components/explore/derive";
-import { eventDetailWhen, eventDetailWhenWithYear } from "@/lib/format/eventTime";
+import { eventDetailWhenWithYear } from "@/lib/format/eventTime";
 import { resolveOutbound } from "@/lib/links/outbound";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
@@ -58,9 +57,10 @@ export function verifiedLabel(iso: string | null, now: Date = new Date()): strin
 /** The human-readable neighborhood/zone for titles + JSON-LD, "Santa Barbara"
  *  as the safe fallback (never the placeholder "other"). */
 function whereLabel(t: Thing): string {
-  if (t.neighborhood && t.neighborhood !== "other") return prettify(t.neighborhood);
-  if (t.nearby_zone) return ZONE_LABEL[t.nearby_zone];
-  return "Santa Barbara";
+  // R1 W4.1: one label, from the one module. The city name is still the fallback
+  // HERE, because a page title needs some place name; on the page body itself an
+  // unknown area renders as nothing (see neighborhoodLabel below).
+  return areaLabelForThing(t) ?? "Santa Barbara";
 }
 
 function truncate(s: string, n: number): string {
@@ -133,12 +133,10 @@ export default async function ThingPage({
   // G1.3, the human-readable neighborhood/zone, granular first (Riviera, Funk
   // Zone), coarse zone as a fallback. Never render the literal placeholder
   // "other" (G0.7): if the area is genuinely unknown, omit the row.
-  const neighborhoodLabel =
-    t.neighborhood && t.neighborhood !== "other"
-      ? prettify(t.neighborhood)
-      : t.nearby_zone
-        ? ZONE_LABEL[t.nearby_zone]
-        : null;
+  // R1 W4.1 (DET-009). One label from lib/areas.ts, identical to the Explore
+  // door, the Plan area step, Saved's Near Me and the digest. Unknown renders as
+  // nothing: never "other", never the city name standing in for an answer.
+  const neighborhoodLabel = areaLabelForThing(t);
 
   // G1.3, the Directions destination: a real address, else stored coordinates.
   const directionsDest = t.address?.trim()
@@ -296,7 +294,7 @@ export default async function ThingPage({
       {/* G3.5, Nearby / pairs-with: 2-3 same-zone things, Tier-1 first. */}
       {nearby.length > 0 && t.nearby_zone ? (
         <section className="sbd-detail__nearby">
-          <h2 className="sbd-detail__nearby-h">Nearby in {ZONE_LABEL[t.nearby_zone]}</h2>
+          <h2 className="sbd-detail__nearby-h">Nearby in {neighborhoodLabel}</h2>
           <ul className="sbd-detail__nearby-list">
             {nearby.map((n) => (
               <li key={n.id}>

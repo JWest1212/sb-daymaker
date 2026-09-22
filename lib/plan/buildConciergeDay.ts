@@ -5,6 +5,7 @@
 // plus honest notes. Extends the Plan engine; it does not replace it. No em dash.
 
 import type { Thing } from "@/lib/things";
+import { areaForThing, AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import type { PlanAnswers, PlanNote, Stop, ResolvedParams, Block } from "./types";
 import { resolveParams } from "./params";
 import { hardFilter, withinBudgetBand } from "./hardFilter";
@@ -13,9 +14,7 @@ import { clusterBoost, anchorZoneFor } from "./cluster";
 import { insertMeals } from "./meals";
 import { validatePlan } from "./validate";
 import { reduceNotes, emptyBlockText, noteKeys } from "./notes";
-import { ZONE_LABEL } from "@/lib/zones";
 import type { SbNow } from "@/lib/format/openNow";
-import type { Zone } from "@/lib/zones";
 
 function genId(): string {
   return Math.random().toString(36).slice(2, 9);
@@ -34,7 +33,7 @@ const DEFAULT_PRIOR: Record<Block, string[]> = {
  *  in-budget preference, so the day stays tight and on-budget. */
 function chooseBest(
   ranked: RankedThing[],
-  anchorZone: Zone | null,
+  anchorZone: AreaKey | null,
   params: ResolvedParams,
 ): RankedThing | undefined {
   if (ranked.length === 0) return undefined;
@@ -128,7 +127,7 @@ export function buildConciergeDay(
   });
 
   // R1 W3.3. When the visitor named an area, at most ONE area-less stop may ride
-  // along. 38% of rows have no nearby_zone, so without a cap a "Funk Zone" day
+  // along. 38% of rows have no nearby_zone, so without a cap a "Funk AreaKey" day
   // could fill entirely with things whose area nobody knows, which honors the
   // request in name only. Known-area matches already outrank them in the ranker;
   // this bounds what is left.
@@ -140,7 +139,7 @@ export function buildConciergeDay(
     const kept: Stop[] = [];
     for (const st of stops) {
       const t = byId.get(st.thingId);
-      if (t && !t.nearby_zone) {
+      if (t && !areaForThing(t)) {
         unknownSeen++;
         if (unknownSeen > MAX_UNKNOWN_AREA_STOPS) { droppedForUnknownArea++; continue; }
       }
@@ -157,13 +156,15 @@ export function buildConciergeDay(
     const byId = new Map(pool.map((t) => [t.id, t]));
     const outside = stops.some((st) => {
       const t = byId.get(st.thingId);
-      return t != null && t.nearby_zone != null && t.nearby_zone !== params.zone;
+      if (!t) return false;
+      const a = areaForThing(t);
+      return a != null && a !== params.zone;
     });
     if (outside) {
       notes.push({
         kind: "widened",
         key: noteKeys.widened,
-        text: `We widened beyond ${ZONE_LABEL[params.zone]} to fill the day.`,
+        text: `We widened beyond ${AREA_BY_KEY[params.zone].label} to fill the day.`,
       });
     }
   }

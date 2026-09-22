@@ -3,11 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getThingsByIds, type Thing } from "@/lib/things";
-import { nearMeSort } from "@/lib/explore";
+import { nearMeSort, areaMatchCount } from "@/lib/explore";
 import { filterByState, splitPast, beenList, partitionSaves } from "@/lib/savedView";
 import { groupSaved } from "@/lib/savedGroups";
-import type { Zone } from "@/lib/zones";
-import { ZONE_LABEL } from "@/lib/zones";
+import { AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import { useSaves, type SaveState } from "@/components/saves/SavesProvider";
 import { useTour } from "@/components/tour/useTour";
 import { EmptyState, SBIcon } from "@/components/ui";
@@ -56,7 +55,7 @@ export function SavedClient() {
   const { share: shareLink, sheet: shareSheet } = useShareLink();
 
   const [stateFilter, setStateFilter] = useState<SaveState>("want");
-  const [zone, setZone] = useState<Zone | null>(null);
+  const [zone, setZone] = useState<AreaKey | null>(null);
   const [nearOpen, setNearOpen] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -163,7 +162,12 @@ export function SavedClient() {
     () => (doSplitPast ? splitPast(viewItems, nowMs) : { current: viewItems, past: [] as Thing[] }),
     [viewItems, doSplitPast, nowMs],
   );
-  const groups = useMemo(() => groupSaved(mainItems), [mainItems]);
+  // R1 W4.3: the chosen area becomes its own top group, so Near Me visibly does
+  // something on a list that is otherwise grouped by type.
+  const groups = useMemo(
+    () => groupSaved(mainItems, zone ? { key: zone, label: AREA_BY_KEY[zone].label } : null),
+    [mainItems, zone],
+  );
 
   const beenItems = useMemo(() => beenList(things, saves), [things, saves]);
 
@@ -306,7 +310,11 @@ export function SavedClient() {
               onClick={() => setNearOpen(true)}
             >
               <span aria-hidden="true">📍</span>
-              <span>{zone ? ZONE_LABEL[zone] : "Near Me"}</span>
+              <span>
+                {zone
+                  ? `${AREA_BY_KEY[zone].short}, ${areaMatchCount(viewItems, zone)} of ${viewItems.length}`
+                  : "Near Me"}
+              </span>
             </button>
           </div>
         ) : null}

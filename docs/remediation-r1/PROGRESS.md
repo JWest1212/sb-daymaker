@@ -2,8 +2,8 @@
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
 Current run: B
-Current wave: 3 complete, starting 4
-Current task: W4.1
+Current wave: 4 complete, starting 5
+Current task: W5.1
 
 ## Done (wave.task, commit)
 
@@ -37,11 +37,18 @@ Current task: W4.1
 - W3.6 "Seven quick questions"; "Night" is "Evening" everywhere; a stop shows "From your saves" OR "Suggested", never both.
 - W3.7 `plan_built` carries `stops` and `notes` counts, integers only.
 - W3 commit: `fix(r1-w3): plan honors meals and area, honest notes, badge component, horizon to 31 days`
+- W4.1 `lib/areas.ts` is the single area vocabulary: 8 areas, one label each, `areaForThing()` resolving neighborhood then nearby_zone, never "other". `lib/doorZones.ts` is now a thin adapter over it; `lib/zones.ts` keeps only the 6-value `nearby_zone` mapping the database still stores.
+- W4.2 the Place door FILTERS (`filterByArea`), tile counts come from the module over the corrected pool, zero-count tiles render disabled rather than hidden, and "Show the closest matches" names what it relaxed ("Showing all areas").
+- W4.3 Plan's engine was converted to the 8 areas end to end (zone graph, walk clusters, adjacency, parking notes, cluster boost, hard filter, transitions). Saved's Near Me lists the same 8 plus "Anywhere in SB", the button reads "Funk Zone, 2 of 10", the chosen area becomes its own group so the sort is visible, and geolocation falls back after 6 seconds.
+- W4.4 CP3 approved. 634 of 919 area-less rows resolved (274 seeded venue, 130 single-venue source, 127 venue dictionary, 103 postcode). Published rows with no area fell from ~500 to 26; only 8 public, live rows remain unplaced, all carrying the literal city placeholder address.
+- W4.5 detail pages use the module label on their own Neighborhood line and in the nearby heading; the Natural History Museum and Puesta del Sol resolve to Mission and Riviera; Oak Park resolves to Upper State.
+- W4.6 no Near Me on Explore (D11); the stale comment saying otherwise is gone.
+- W4 commit: `feat(r1-w4): single area module, place door filters, area backfill, near me and plan consume it`
 
 ## Checkpoints
 - CP1 archive dry-run: approved 2026-09-21
 - CP2 hero_eligible pass: approved 2026-09-22
-- CP3 area backfill: pending
+- CP3 area backfill: approved 2026-09-22
 - CP4 card rebuild: pending
 - CP5 canon diff: pending
 
@@ -69,6 +76,14 @@ Current task: W4.1
 - **W1.3 shared the row rule, not the column list.** The spec says `getStopThingMap()` should use one shared select constant with `getPublishedThings()`. Its stated purpose is that a guide must never offer a heart on something Saved cannot render, which is about which ROWS each read can return. Making the columns identical would have changed guide sub-lines: `getStopThingMap` selects `things.category`, a hand-curated field set on 109 rows, which is a different column from the pool's `happening_category`. The status rule is shared; the projection stays narrow.
 - **W1.1 test is a pure-function test plus a source guard, not a component render test.** This repo has no React component-test harness and no `@testing-library`, and adding one is outside R1. The decision is extracted into the pure `partitionSaves()` in lib/savedView.ts and tested there (the spec's exact three-ids-two-returned case). `components/saved/noAutoDelete.test.ts` additionally pins the regression itself: no `remove()` call may appear inside any effect in SavedClient.
 - **Extra fix in `SavesProvider`.** Hydration swallowed a `JSON.parse` failure and then the persist effect wrote `{}` straight back over the stored value, destroying the visitor's list on a single bad read. That is a save-deletion path, which is exactly what Wave 1 exists to close, so it is fixed here: an unreadable value is preserved, copied to `sbd.saves.v1.unreadable`, and never overwritten until the visitor actually saves something. Verified in a browser for both truncated JSON and a wrong-shaped value.
+
+### Wave 4 deviations
+
+- **No paid geocoding step.** W4.4 allows a Google Places geocode from the address as rule 3. Measured against the real data it would buy almost nothing: rows with a usable address nearly always have coordinates already, and the ones that do not carry the city-wide placeholder "Santa Barbara, Santa Barbara, CA", which geocodes to the middle of town and would invent an area rather than find one. Two cheaper, honest rules were added instead, both from the actual data: the source's own venue for single-venue sources (a brewery's calendar only publishes events at that brewery), and unambiguous postcodes (93103 is the Eastside, 93117 is Goleta; 93101 is deliberately absent because it covers Downtown, the Funk Zone and the Waterfront alike).
+- **285 rows remain unresolved, against the spec's "under 100".** 259 are archived, 10 are civic (never in the feed), 8 are published but already over. Eight are public and live, all with the placeholder address. Reported at CP3 and approved.
+- **The seeded venue table takes precedence over the automatic resolver.** W4.4 lists it as rule 1, and it has to outrank the bounding boxes: those were putting the Sunday Arts and Crafts Show on Cabrillo Boulevard in the Funk Zone rather than on the Waterfront. The street table also now matches spelled-out street types ("Cabrillo Boulevard" as well as "Cabrillo Blvd"), which was the underlying cause.
+- **Near Me needed a grouping change, not just a sort.** Saved groups by type, so bubbling area matches to the front of the array scattered them straight back through Events and Places and the visitor saw nothing move. The chosen area now becomes its own group at the top ("In Funk Zone"), which is a visible answer that also says what it is answering.
+- **Two venue assignments are judgement calls**, flagged `review: true` in `ingest/data/venues.json`: Oak Park (between Upper State and The Mesa; W4.5 asked for one to be chosen) and Arroyo Burro Open Space.
 
 ### Wave 2 deviations
 

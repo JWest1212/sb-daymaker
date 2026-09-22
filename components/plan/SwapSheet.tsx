@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { areaForThing } from "@/lib/areas";
 import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
@@ -38,7 +39,7 @@ export function SwapSheet({
 
   function renderRow(thing: Thing, fromSaved: boolean) {
     const isSelected = thing.id === (pendingId ?? currentStopId);
-    const zone = thing.nearby_zone ? planZoneLabel(thing.nearby_zone) : null;
+    const zone = areaForThing(thing) ? planZoneLabel(areaForThing(thing)) : null;
     const meta = [zone ? `📍 ${zone}` : null, thing.reason_to_go]
       .filter(Boolean)
       .join(" · ");

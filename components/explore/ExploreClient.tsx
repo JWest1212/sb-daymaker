@@ -15,9 +15,10 @@ import {
   sbDay,
   withinHorizon,
   type Horizon,
+  filterByArea,
 } from "@/lib/explore";
 import { OCCASION_BY_KEY, type OccasionKey } from "@/lib/occasions";
-import { DOOR_ZONE_BY_KEY, sortByDoorZone, type DoorZoneKey } from "@/lib/doorZones";
+import { AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import { ACTIVITY_BY_KEY, type ActivityKey } from "@/lib/activities";
 import type { Dimension } from "@/lib/tiles";
 import { trackEvent } from "@/lib/analytics";
@@ -29,6 +30,14 @@ import { DiscoverySheet } from "./DiscoverySheet";
 import type { ActiveChip } from "./DiscoveryChips";
 import { CascadeFeed } from "./CascadeFeed";
 import { EmailSignup } from "@/components/signup/EmailSignup";
+
+/** R1 W4.2 (EXP-015). What "Show the closest matches" says it relaxed, so the
+ *  feed changing under the visitor is explained rather than just happening. */
+const RELAXED_LABEL: Record<Dimension, string> = {
+  place: "Showing all areas",
+  vibe: "Showing all occasions",
+  activity: "Showing all activities",
+};
 
 export function ExploreClient({
   things,
@@ -58,12 +67,13 @@ export function ExploreClient({
 }) {
   const { openTour } = useTour();
   const [vibe, setVibe] = useState<OccasionKey | null>(null);
-  const [place, setPlace] = useState<DoorZoneKey | null>(null);
+  const [place, setPlace] = useState<AreaKey | null>(null);
   const [activity, setActivity] = useState<ActivityKey | null>(null);
   const [horizon, setHorizon] = useState<Horizon>(initialHorizon);
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
   // Home Rework spec §11.4, the order dimensions were (most recently) set, so
   // "Show the closest matches" knows which filter to drop first.
+  const [relaxedNote, setRelaxedNote] = useState<string | null>(null);
   const [filterOrder, setFilterOrder] = useState<Dimension[]>([]);
 
   // Sets or clears one dimension's filter (key === null clears it) and keeps
@@ -71,7 +81,7 @@ export function ExploreClient({
   // change: doors/sheet taps, chip removal, and the header-search tag bridge.
   const applyFilter = (dimension: Dimension, key: string | null) => {
     if (dimension === "vibe") setVibe(key as OccasionKey | null);
-    else if (dimension === "place") setPlace(key as DoorZoneKey | null);
+    else if (dimension === "place") setPlace(key as AreaKey | null);
     else setActivity(key as ActivityKey | null);
     setFilterOrder((prev) => {
       const rest = prev.filter((d) => d !== dimension);
@@ -94,7 +104,7 @@ export function ExploreClient({
     const activityParam = searchParams.get("activity");
     if (!vibeParam && !placeParam && !activityParam) return;
     if (vibeParam && vibeParam in OCCASION_BY_KEY) applyFilter("vibe", vibeParam);
-    if (placeParam && placeParam in DOOR_ZONE_BY_KEY) applyFilter("place", placeParam);
+    if (placeParam && placeParam in AREA_BY_KEY) applyFilter("place", placeParam);
     if (activityParam && activityParam in ACTIVITY_BY_KEY) applyFilter("activity", activityParam);
     router.replace("/", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,11 +116,16 @@ export function ExploreClient({
   );
 
   // Home Rework spec §4, stacked three-dimension filtering: Vibe -> Activity ->
-  // cascade -> Place (nearMeSort stays outermost, preserving current behavior).
+  // cascade -> Place. R1 W4.6 (D11): there is no Near Me on Explore. The Place
+  // door covers it, and Near Me stays a Saved-only sort.
   const ordered = useMemo(() => {
     const lensed = filterByLens(inHorizon, vibe);
     const activityFiltered = filterByActivity(lensed, activity);
-    return sortByDoorZone(cascade(activityFiltered), place);
+    // R1 W4.2. Place is a real filter now. It used to be sortByDoorZone, which
+    // bubbled matches to the top and kept everything else, while calling itself
+    // "Filter by place" and producing a removable chip next to two dimensions
+    // that really do filter (TP-A2-03, TP-A2-04).
+    return cascade(filterByArea(activityFiltered, place));
   }, [inHorizon, vibe, activity, place]);
 
   const hasActiveFilters = vibe !== null || place !== null || activity !== null;
@@ -163,12 +178,13 @@ export function ExploreClient({
   // Canonical door order (Place, Vibe, Activity), independent of filterOrder
   // (which tracks recency for the closest-matches recovery, not display order).
   const chips: ActiveChip[] = [
-    ...(place ? [{ dimension: "place" as const, label: DOOR_ZONE_BY_KEY[place].label }] : []),
+    ...(place ? [{ dimension: "place" as const, label: AREA_BY_KEY[place].label }] : []),
     ...(vibe ? [{ dimension: "vibe" as const, label: OCCASION_BY_KEY[vibe].label }] : []),
     ...(activity ? [{ dimension: "activity" as const, label: ACTIVITY_BY_KEY[activity].label }] : []),
   ];
 
   const clearAllFilters = () => {
+    setRelaxedNote(null);
     setVibe(null);
     setPlace(null);
     setActivity(null);
@@ -184,18 +200,28 @@ export function ExploreClient({
     let p = place;
     let a = activity;
     const order = [...filterOrder];
+    // R1 W4.2 (EXP-015). Remember which dimensions were relaxed, so the result
+    // can say what it did instead of the feed silently changing under the
+    // visitor after they tapped a button.
+    const relaxed: Dimension[] = [];
     while (order.length > 0) {
       const dim = order.pop()!;
+      relaxed.push(dim);
       if (dim === "vibe") v = null;
       else if (dim === "place") p = null;
       else a = null;
-      const candidate = sortByDoorZone(cascade(filterByActivity(filterByLens(inHorizon, v), a)), p);
+      const candidate = cascade(filterByArea(filterByActivity(filterByLens(inHorizon, v), a), p));
       if (candidate.length > 0) break;
     }
     setVibe(v);
     setPlace(p);
     setActivity(a);
     setFilterOrder(order);
+    setRelaxedNote(
+      relaxed.length > 0
+        ? relaxed.map((d) => RELAXED_LABEL[d]).join(", ")
+        : null,
+    );
   };
 
   const selectedForOpenSheet =
@@ -205,6 +231,7 @@ export function ExploreClient({
   // sheet closes, rather than the sheet vanishing instantly on tap.
   const handleTileSelect = (key: string) => {
     if (!sheetOpen) return;
+    setRelaxedNote(null);
     const dimension = sheetOpen;
     applyFilter(dimension, key);
     if (dimension === "vibe" && key) trackEvent("lens_select", { tag: key });
@@ -235,6 +262,7 @@ export function ExploreClient({
           onClearFilters={clearAllFilters}
           hasActiveFilters={hasActiveFilters}
           onShowClosestMatches={handleShowClosestMatches}
+          relaxedNote={relaxedNote}
           venuePools={venuePools}
         />
 

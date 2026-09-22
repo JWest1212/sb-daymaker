@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { areaForThing } from "@/lib/areas";
 import { ItinerarySpine } from "./ItinerarySpine";
 import { AddStopSheet } from "./AddStopSheet";
 import { shortStamp } from "@/lib/plan/dates";
@@ -204,7 +205,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
       stops: stops.flatMap((s) => {
         const t = thingMap.get(s.thingId);
         if (!t) return [];
-        const area = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
+        // R1 W4.1: unknown shows nothing, never the city name as a stand-in.
+        const area = areaForThing(t) ? planZoneLabel(areaForThing(t)) : null;
         const tr = transitionByStop.get(s.id);
         return [{
           block: s.block,

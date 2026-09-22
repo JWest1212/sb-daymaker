@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { AREAS } from "./areas";
 import type { Thing } from "./things";
 import { searchThings, normalizeQuery } from "./search";
 
@@ -149,9 +150,12 @@ describe("searchThings, tags (G3.2 re-synced vocabularies)", () => {
       expect(tags(stale.toLowerCase()).some((t) => t.door === "Occasion" && t.label === stale)).toBe(false);
     }
   });
-  it("Place vocabulary is the 8 door zones", () => {
-    const PLACE_8 = ["Downtown & State Street", "Funk Zone", "Waterfront & Harbor", "The Mesa", "Mission & Riviera", "Uptown & Upper State", "Goleta & Isla Vista", "Montecito · Summerland · Carpinteria"];
-    for (const label of PLACE_8) expect(findTag(label.toLowerCase(), label, "Place")).toBeTruthy();
+  it("Place vocabulary is the 8 areas, using the module's labels verbatim", () => {
+    // R1 W4.1. Read from lib/areas.ts rather than restated here, so search can
+    // never drift from Explore, Plan, Saved and the digest on what an area is
+    // called. That drift is exactly what the audit found (TP-A2-01/02).
+    expect(AREAS).toHaveLength(8);
+    for (const a of AREAS) expect(findTag(a.label.toLowerCase(), a.label, "Place"), a.key).toBeTruthy();
   });
   it("Activity vocabulary is the 10 activities", () => {
     const ACT_10 = ["Live music", "Arts & galleries", "Food & drink", "Outdoors", "Markets", "Family & kids", "Film & talks", "Wellness & fitness", "Nightlife", "Community & Festivals"];

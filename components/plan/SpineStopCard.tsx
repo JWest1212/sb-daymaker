@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { areaForThing } from "@/lib/areas";
 import { Badge } from "@/components/ui";
 import { SaveHeart } from "@/components/ui/SaveHeart";
 import { useSaves } from "@/components/saves/SavesProvider";
@@ -29,7 +30,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
   const { isSaved, toggle } = useSaves();
   const saved = isSaved(thing.id);
 
-  const zone = thing.nearby_zone ? planZoneLabel(thing.nearby_zone) : null;
+  const zone = areaForThing(thing) ? planZoneLabel(areaForThing(thing)) : null;
   const meta = [zone ? `📍 ${zone}` : null, thing.reason_to_go]
     .filter(Boolean)
     .join(" · ");

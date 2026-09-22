@@ -3,7 +3,7 @@
 // Itineraries live in localStorage (no accounts); no AI at tap time.
 
 import type { OccasionKey } from "@/lib/occasions";
-import type { Zone } from "@/lib/zones";
+import type { AreaKey } from "@/lib/areas";
 
 // UI blocks, three time-of-day periods shown to the user.
 // DB `tod` enum has 4 values; Night maps to evening + late via BLOCK_TO_TOD.
@@ -85,7 +85,7 @@ export interface Transition {
   minutes: number;
   /** e.g. "4 min walk" or "8 min drive". */
   label: string;
-  /** Zone-level parking truth, appended once at the first drive/inter-cluster
+  /** AreaKey-level parking truth, appended once at the first drive/inter-cluster
    *  hop (null when there is nothing worth saying). */
   parkingNote: string | null;
 }
@@ -120,7 +120,9 @@ export interface PlanAnswers {
   periods: Block[];    // selected Time-of-Day → spine sections
   who: Who;
   vibes: VibeKey[];
-  zone: Zone | null;   // null = "Anywhere"; also the plan's anchor/cluster origin
+  /** R1 W4.3: one of the 8 public areas, or null for "Anywhere in SB". Also
+   *  the plan's anchor/cluster origin. */
+  zone: AreaKey | null;
   // ---- Gate 4 (all optional; the engine defaults when absent) --------------
   kidBand?: KidBand | null;  // Family only
   transport?: Transport;     // default "car" (least restrictive on reachability)
@@ -138,7 +140,7 @@ export interface ResolvedParams {
   who: Who;
   kidBand: KidBand | null;
   vibes: VibeKey[];
-  zone: Zone | null;
+  zone: AreaKey | null;
   transport: Transport;
   budget: Budget | null;
   meals: Meal[];
@@ -158,7 +160,9 @@ export interface SharedPlanPayload {
     blockLabel: string;        // section label, e.g. "Afternoon"
     startsAt?: string | null;  // ISO datetime, only if thing.starts_at is set
     title: string;
-    area: string;
+    /** R1 W4.1: null when the area is genuinely unknown. A shared plan shows
+     *  nothing there rather than the city name as a stand-in. */
+    area: string | null;
     blurb: string;
     category: string;
     thingId: string;

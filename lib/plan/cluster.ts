@@ -4,7 +4,7 @@
 // with an explicit drive between them. Pure, no I/O, no AI.
 
 import type { Thing } from "@/lib/things";
-import type { Zone } from "@/lib/zones";
+import { areaForThing, type AreaKey } from "@/lib/areas";
 import type { ResolvedParams } from "./types";
 import { clusterOf, sameWalkCluster, adjacentZones, distanceKm } from "./zoneGraph";
 
@@ -13,11 +13,13 @@ import { clusterOf, sameWalkCluster, adjacentZones, distanceKm } from "./zoneGra
  *  hard cross-zone ban (car days can still make one deliberate hop). */
 export function clusterBoost(
   t: Thing,
-  originZone: Zone | null,
+  originZone: AreaKey | null,
   params: ResolvedParams,
 ): number {
-  if (!originZone || !t.nearby_zone) return 0;
-  const z = t.nearby_zone as Zone;
+  // R1 W4.3: resolved through the one area module, so a row that only has a
+  // `neighborhood` still clusters correctly.
+  const z = areaForThing(t);
+  if (!originZone || !z) return 0;
   if (z === originZone) return 3;
   if (sameWalkCluster(originZone, z)) return 2;
   if (adjacentZones(originZone).includes(z)) {
@@ -33,13 +35,15 @@ export function clusterBoost(
 export function anchorZoneFor(
   params: ResolvedParams,
   placed: Thing[],
-): Zone | null {
+): AreaKey | null {
   if (params.zone) return params.zone;
-  const counts = new Map<Zone, number>();
+  const counts = new Map<AreaKey, number>();
+  // R1 W4.3: the anchor is an AREA, resolved through the one module, so the
+  // engine clusters in the same vocabulary the visitor chose from.
   for (const t of placed) {
-    if (t.nearby_zone) counts.set(t.nearby_zone as Zone, (counts.get(t.nearby_zone as Zone) ?? 0) + 1);
+    if (areaForThing(t)) { const a = areaForThing(t)!; counts.set(a, (counts.get(a) ?? 0) + 1); }
   }
-  let best: Zone | null = null;
+  let best: AreaKey | null = null;
   let bestN = 0;
   for (const [z, n] of counts) {
     if (n > bestN) {
@@ -54,8 +58,8 @@ export function anchorZoneFor(
  *  cluster footprint (walk = one walk-cluster; car/bike = at most two clusters)?
  *  Used by validation to flag zone zig-zag. */
 export function withinClusterFootprint(
-  placedZones: Zone[],
-  next: Zone | null,
+  placedZones: AreaKey[],
+  next: AreaKey | null,
   params: ResolvedParams,
 ): boolean {
   if (!next) return true;
@@ -68,7 +72,7 @@ export function withinClusterFootprint(
 
 /** The straight-line spread (km) of a set of stop coordinates/zones, for a coarse
  *  "is this day physically coherent" read in validation. */
-export function daySpreadKm(points: { lat: number | null; lng: number | null; zone: Zone | null }[]): number {
+export function daySpreadKm(points: { lat: number | null; lng: number | null; zone: AreaKey | null }[]): number {
   let max = 0;
   for (let i = 0; i < points.length; i++) {
     for (let j = i + 1; j < points.length; j++) {

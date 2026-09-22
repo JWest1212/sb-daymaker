@@ -38,20 +38,29 @@ export function DiscoverySheet({
   return (
     <BottomSheet open={open} onClose={onClose} title={meta?.sheetTitle}>
       <div className="sbd-tilegrid">
-        {tiles.map((tile) => (
-          <button
-            key={tile.key}
-            type="button"
-            className={`sbd-tile sbd-tile--${dimension}${selected === tile.key ? " is-active" : ""}`}
-            style={dimension ? { backgroundImage: `var(--sbd-door-scrim-${dimension}), url(${tile.image})` } : undefined}
-            onClick={() => onSelect(tile.key)}
-          >
-            <span className="sbd-tile__label">{tile.label}</span>
-            <span className="sbd-tile__count">
-              {tile.count} {HORIZON_NOUN[horizon]}
-            </span>
-          </button>
-        ))}
+        {tiles.map((tile) => {
+          // R1 W4.2. A zero-count tile is DISABLED and still shown, with its
+          // count. Hiding it would make the vocabulary shift under the visitor
+          // between horizons; showing it greyed says "this area exists, there is
+          // nothing in it right now", which is the truth.
+          const empty = tile.count === 0 && selected !== tile.key;
+          return (
+            <button
+              key={tile.key}
+              type="button"
+              disabled={empty}
+              aria-disabled={empty || undefined}
+              className={`sbd-tile sbd-tile--${dimension}${selected === tile.key ? " is-active" : ""}${empty ? " is-empty" : ""}`}
+              style={dimension ? { backgroundImage: `var(--sbd-door-scrim-${dimension}), url(${tile.image})` } : undefined}
+              onClick={() => onSelect(tile.key)}
+            >
+              <span className="sbd-tile__label">{tile.label}</span>
+              <span className="sbd-tile__count">
+                {tile.count} {HORIZON_NOUN[horizon]}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </BottomSheet>
   );

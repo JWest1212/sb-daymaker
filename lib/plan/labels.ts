@@ -1,11 +1,11 @@
 import type { Block } from "./types";
-import type { Zone } from "@/lib/zones";
-import { ZONE_LABEL } from "@/lib/zones";
+import { AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 
-/** Human-readable zone label for the plan surface. Handles null (Anywhere → "SB"). */
-export function planZoneLabel(zone: Zone | null): string {
+/** R1 W4.1/W4.3. The area's own short label, from the one module. Null means
+ *  "no area chosen", which reads as the whole city, not as an unknown. */
+export function planZoneLabel(zone: AreaKey | null): string {
   if (!zone) return "SB";
-  return ZONE_LABEL[zone] ?? zone;
+  return AREA_BY_KEY[zone]?.short ?? zone;
 }
 
 const BLOCK_SHORT_MAP: Record<Block, string> = {
