@@ -118,14 +118,23 @@ export function ExploreClient({
   // Home Rework spec §4/§12, the sponsor-blind ranker: a valid founder pin for
   // today wins (only when it's actually in the current view), else pickAutoHero's
   // today-boosted-Tier-1-then-ordered[0] rule. Moved here from the old Hero.
+  // R1 W2.4 (EXP-017). The pick is computed from the HORIZON slice, before Place,
+  // Occasion and Activity are applied, so narrowing the feed can never blank the
+  // day's pick. Filtering is about what the visitor is browsing; the pick is the
+  // day's recommendation and does not belong to a filter combination. When the
+  // filtered feed comes back empty that is said in the feed area (§11.4), not by
+  // deleting the pick.
+  const pickPool = useMemo(() => cascade(inHorizon), [inHorizon]);
   const rankedPick = useMemo(() => {
-    if (ordered.length === 0) return null;
+    if (pickPool.length === 0) return null;
     if (pinnedHeroId) {
-      const pinned = ordered.find((t) => t.id === pinnedHeroId);
+      // A founder pin still has to be in the horizon, but it is explicitly
+      // permitted curation and is not eligibility-checked.
+      const pinned = pickPool.find((t) => t.id === pinnedHeroId);
       if (pinned) return pinned;
     }
-    return pickAutoHero(ordered, sbDay(nowMs));
-  }, [ordered, pinnedHeroId, nowMs]);
+    return pickAutoHero(pickPool, sbDay(nowMs), nowMs);
+  }, [pickPool, pinnedHeroId, nowMs]);
 
   // W1.3b (constraint C5, carried over from the old Hero): never blank when
   // there are NO active filters, Layer 1 is a deterministic evergreen from the
@@ -133,14 +142,20 @@ export function ExploreClient({
   // filters ARE active and empty, that's §11.4's job (Show closest matches /
   // Clear filters) instead, an unrelated evergreen pick would only confuse a
   // deliberately-filtered empty result, so the fallback is skipped in that case.
+  // R1 W2.4. The parachute now runs whether or not filters are active, because
+  // the pick no longer depends on the filters: a filtered view that shows no
+  // results still shows the day's pick above it.
   const fallbackPick = useMemo(() => {
-    if (rankedPick || hasActiveFilters) return null;
+    if (rankedPick) return null;
     return pickEvergreenFallback(things, sbDay(nowMs));
-  }, [rankedPick, hasActiveFilters, things, nowMs]);
+  }, [rankedPick, things, nowMs]);
 
   const pick = rankedPick ?? fallbackPick;
   const pickIsFallback = !rankedPick && pick != null;
-  const pickIsStatic = !rankedPick && pick == null && !hasActiveFilters;
+  // R1 W2.4 (EXP-017). The static card is the last link in the chain and is shown
+  // whenever nothing else resolved, filters or no filters, so the pick is never
+  // blank under any filter combination.
+  const pickIsStatic = !rankedPick && pick == null;
 
   // Feed excludes only the ranked pick (fallbacks aren't in `ordered`).
   const feed = useMemo(() => ordered.filter((t) => t.id !== rankedPick?.id), [ordered, rankedPick]);

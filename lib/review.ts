@@ -109,6 +109,11 @@ export interface CatalogRow {
   nearby_zone: string | null;
   price_band: string | null;
   hero_eligible: boolean;
+  /** R1 W2.7. Caught by the civic rule (ingest/civic.ts). Shown as a chip so a
+   *  real community event caught by a broad word can be spotted and flipped. */
+  is_civic: boolean;
+  /** R1 W2.7. When the pipeline retired this row, if it did. */
+  archived_at: string | null;
   editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   photo_url: string | null;
   photo_source: string | null;

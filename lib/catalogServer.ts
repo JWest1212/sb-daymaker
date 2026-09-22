@@ -31,6 +31,13 @@ export interface CatalogFilters {
   zone?: string;   // nearby_zone
   q?: string;      // title search
   page?: number;
+  /** R1 W2.7. Which lifecycle state to list. "published" is the live catalog as
+   *  before; "archived" shows what the pipeline retired, so the archive run is
+   *  inspectable rather than something that silently happened. */
+  status?: "published" | "archived";
+  /** R1 W2.7. "civic" shows only rows the civic rule caught, "leisure" only rows
+   *  it did not. Undefined shows both. */
+  civic?: "civic" | "leisure";
 }
 
 export interface CatalogResult {
@@ -43,7 +50,7 @@ export interface CatalogResult {
 const PAGE_SIZE = 50;
 const SELECT =
   `id, title, blurb, blurb_long, neighborhood, is_21_plus, happening_tier, nearby_zone, price_band,
-   hero_eligible, editorial_weight, photo_url, photo_source, photo_attribution, photo_options,
+   hero_eligible, is_civic, archived_at, editorial_weight, photo_url, photo_source, photo_attribution, photo_options,
    place_id, lat, lng, venue_id,
    starts_at, thing_tags ( tag ),
    recurring_schedules ( day_of_week, start_time, end_time, frequency, label )`;
@@ -64,7 +71,9 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
 
   // Fetch the full matching set (admin scale, ~hundreds) so the chronological
   // day-bucketed ordering is global, then paginate in-process.
-  let q = sb.from("things").select(SELECT).eq("status", "published");
+  let q = sb.from("things").select(SELECT).eq("status", f.status ?? "published");
+  if (f.civic === "civic") q = q.eq("is_civic", true);
+  if (f.civic === "leisure") q = q.eq("is_civic", false);
   if (f.tier) q = q.eq("happening_tier", f.tier);
   if (f.zone) q = q.eq("nearby_zone", f.zone);
   if (f.q) q = q.ilike("title", `%${f.q}%`);
@@ -109,6 +118,8 @@ export async function loadCatalog(f: CatalogFilters = {}): Promise<CatalogResult
     nearby_zone: (t.nearby_zone as string) ?? null,
     price_band: (t.price_band as string) ?? null,
     hero_eligible: (t.hero_eligible as boolean) ?? false,
+    is_civic: (t.is_civic as boolean) ?? false,
+    archived_at: (t.archived_at as string) ?? null,
     editorial_weight: (t.editorial_weight as number) ?? 0,
     photo_url: (t.photo_url as string) ?? null,
     photo_source: (t.photo_source as string) ?? "placeholder",

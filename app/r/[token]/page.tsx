@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getSharedState } from "@/lib/shares";
+import { getThingsByIds } from "@/lib/things";
 import type { SaveState } from "@/components/saves/SavesProvider";
 import { RestoreView } from "./RestoreView";
 
@@ -35,5 +36,10 @@ export default async function RestorePage({
   }
 
   const saves = (shared.payload.saves ?? {}) as Record<string, SaveState>;
-  return <RestoreView saves={saves} />;
+  // R1 W2.2 (SHR-002, past part). This page lists no items, only a count, so the
+  // honest way to mark past ones is to say how many there are before the visitor
+  // restores. The items themselves get the full "already happened" line on /saved.
+  const resolved = await getThingsByIds(Object.keys(saves));
+  const pastCount = [...resolved.values()].filter((t) => t.status === "archived").length;
+  return <RestoreView saves={saves} pastCount={pastCount} />;
 }

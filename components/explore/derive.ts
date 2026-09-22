@@ -3,16 +3,50 @@ import type { Weather } from "@/lib/weather";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import type { TagColor } from "@/components/ui/Chip";
 import type { CardVisual } from "@/components/ui/Card";
-import { eventCardWhen } from "@/lib/format/eventTime";
+import { eventCardWhen, eventDateWithYear } from "@/lib/format/eventTime";
 import { isTicketingUrl } from "@/lib/format/outboundLink";
 import { nextOccurrenceForThing, formatNextDate } from "@/lib/recurring/nextOccurrence";
 
 /** Shared by Hero (sky variant) and the R1 "Today's pick" card's contextual
  *  eyebrow (heroEyebrow below), moved here so both can import one definition. */
+/** Conditions that are gray whatever else is true. */
+const GRAY_CONDITIONS = ["rain", "drizzle", "thunderstorm", "snow", "fog", "mist", "haze", "smoke", "squall"];
+/** Cloud cover heavy enough to call the day gray (OpenWeather 51%+). */
+const GRAY_CLOUDS = ["overcast", "broken"];
+/** Cloud cover that is just a nice day with clouds in it (OpenWeather 11-50%). */
+const BRIGHT_CLOUDS = ["few", "scattered", "partly"];
+
+/**
+ * R1 W2.5 (TP-C8-03). Is it actually a gray day?
+ *
+ * This used to return true for ANY condition containing "cloud", so a partly
+ * cloudy 74-degree afternoon counted as gray, and because "Gray day move" is the
+ * first branch of heroEyebrow it pre-empted every other label. Every pick on
+ * every cloudy day was a "Gray day move", which on a 74-degree day disagrees
+ * with the weather chip sitting right next to it.
+ *
+ * Rain, fog and their relatives are gray. Cloud cover is gray only when it is
+ * heavy (overcast or broken). Few, scattered and partly cloudy are not, and when
+ * the description says nothing useful the answer is "not gray", because
+ * overclaiming is the failure this fixes.
+ */
 export function isGrayDay(weather: Weather | null): boolean {
   if (!weather || weather.isClear) return false;
-  const c = weather.condition.toLowerCase();
-  return c.includes("cloud") || c.includes("rain") || c.includes("fog");
+  const cond = (weather.condition ?? "").toLowerCase();
+  const desc = (weather.description ?? "").toLowerCase();
+  if (GRAY_CONDITIONS.some((c) => cond.includes(c) || desc.includes(c))) return true;
+  if (cond.includes("cloud") || desc.includes("cloud")) {
+    if (BRIGHT_CLOUDS.some((d) => desc.includes(d))) return false;
+    return GRAY_CLOUDS.some((d) => desc.includes(d));
+  }
+  return false;
+}
+
+/** R1 W2.5. Somewhere the weather cannot spoil. "both" counts: a place that
+ *  works indoors is a fine answer to a wet afternoon. */
+export function worksIndoors(t: Thing): boolean {
+  if (t.setting) return t.setting === "indoor" || t.setting === "both";
+  return t.indoor;
 }
 
 const TONES = ["gold", "sage", "pacific"] as const;
@@ -119,7 +153,10 @@ const ARTS_CATS = new Set(["arts_theater", "recurring_arts"]);
  * buckets, and the `happyhour` thing `type` (there is no happy-hour category).
  */
 export function heroEyebrow(t: Thing, grayDay: boolean): string {
-  if (grayDay) return "Gray day move";
+  // R1 W2.5. Only a genuinely gray day, and only when the pick is somewhere the
+  // weather cannot spoil. Calling an outdoor pick a "Gray day move" is worse
+  // than saying nothing: it recommends the one thing the weather rules out.
+  if (grayDay && worksIndoors(t)) return "Gray day move";
   if (t.type === "place") return "Place to be";
   if (t.free) return "Free · Today";
   const cat = t.happening_category ?? "";
@@ -175,4 +212,13 @@ export function heroTime(t: Thing): string {
 export function heroCta(t: Thing): string {
   // Shared ticketing-host definition (G5.7), so cards and the detail row agree.
   return isTicketingUrl(t.buy_url) ? "Get tickets ↗" : "See details ↗";
+}
+
+/** R1 W2.2 (SHR-002, past part). One wording for "this already happened",
+ *  shared by the Saved card, the shared-list recipient page and the restore
+ *  recipient page, so a past item is marked identically wherever it turns up.
+ *  Null when the thing is not archived (or has no date to name). */
+export function alreadyHappenedLine(t: Thing): string | null {
+  if (t.status !== "archived") return null;
+  return t.starts_at ? `Already happened, ${eventDateWithYear(t.starts_at)}` : "Already happened";
 }

@@ -99,23 +99,83 @@ export function cascade(things: Thing[]): Thing[] {
  *  with `editorial_weight > 0`, pick the highest weight; ties break to the soonest
  *  starts_at. If none qualify, fall back to `ordered[0]` (the pre-W2.1 behavior).
  *  `ordered` must already be cascade()-sorted. */
-export function pickAutoHero(ordered: Thing[], sbTodayKey: string): Thing | null {
-  const boostedToday = ordered.filter(
-    (t) =>
-      t.happening_tier === 1 &&
-      t.editorial_weight > 0 &&
-      t.starts_at != null &&
-      sbDay(new Date(t.starts_at).getTime()) === sbTodayKey,
-  );
-  if (boostedToday.length > 0) {
-    return boostedToday.reduce((best, t) => {
-      if (t.editorial_weight !== best.editorial_weight)
-        return t.editorial_weight > best.editorial_weight ? t : best;
-      // tie on weight → soonest starts_at wins
-      return (t.starts_at ?? "") < (best.starts_at ?? "") ? t : best;
-    });
+/** R1 W2.4. How far past its start a dated event can still be the day's pick.
+ *  A show that began two hours ago is not a recommendation for tonight. */
+export const PICK_GRACE_MINUTES = 30;
+
+/** R1 W2.4. The placeholder the geocoder writes when it knows only the city. */
+const PLACEHOLDER_ADDRESS = "Santa Barbara, Santa Barbara, CA";
+
+/**
+ * R1 W2.4. Is this row fit to be the day's pick right now?
+ *
+ * `hero_eligible` carries the slow-moving editorial judgement (set by the
+ * nightly pass in ingest/heroEligibility.ts). The rest is the time-sensitive
+ * part, which only the request knows: has it already started, and can a visitor
+ * find it. Civic rows never reach here because the pool excludes them, but the
+ * check is repeated rather than assumed, because this is the front page.
+ */
+export function isPickable(t: Thing, nowMs: number): boolean {
+  if (!t.hero_eligible) return false;
+  if (t.is_civic) return false;
+  const address = t.address?.trim() ?? "";
+  if (!address || address === PLACEHOLDER_ADDRESS) return false;
+  if (t.starts_at != null) {
+    const startMs = new Date(t.starts_at).getTime();
+    if (Number.isNaN(startMs)) return false;
+    if (startMs < nowMs - PICK_GRACE_MINUTES * 60_000) return false;
   }
-  return ordered[0] ?? null;
+  return true;
+}
+
+/**
+ * The day's pick, sponsor-blind.
+ *
+ * R1 W2.4. The old version ended `return ordered[0] ?? null`, a bare fallback
+ * that checked no category, no eligibility, no address and no start time. That
+ * one line is why a municipal design-review hearing was the site's editorial
+ * recommendation for the day (TP-A8-06, TP-A8-07). The fallback chain is now
+ * explicit, and every link in it is eligibility-checked:
+ *
+ *   1. an eligible, boosted, not-yet-started Tier 1 happening today
+ *   2. any other eligible Tier 1 happening today
+ *   3. an eligible Tier 2 (recurring) occurring today
+ *   4. the caller's evergreen rotation, then the static card
+ *
+ * Returning null is a real answer, and the caller's parachute
+ * (pickEvergreenFallback, then the static Courthouse card) handles it. That is
+ * better than putting something unfit on the front page.
+ */
+export function pickAutoHero(ordered: Thing[], sbTodayKey: string, nowMs: number = Date.now()): Thing | null {
+  const pickable = ordered.filter((t) => isPickable(t, nowMs));
+  const today = (t: Thing) =>
+    t.starts_at != null && sbDay(new Date(t.starts_at).getTime()) === sbTodayKey;
+
+  const tier1Today = pickable.filter((t) => t.happening_tier === 1 && today(t));
+
+  // 1. Founder-boosted, soonest first on a tie. Editorial curation is allowed
+  //    (editorial_weight); sponsor status is never read (schema §A7).
+  const boosted = tier1Today.filter((t) => t.editorial_weight > 0);
+  if (boosted.length > 0) return bestOf(boosted);
+
+  // 2. Any eligible dated thing happening today.
+  if (tier1Today.length > 0) return bestOf(tier1Today);
+
+  // 3. An eligible recurring session occurring today.
+  const tier2Today = pickable.filter((t) => t.happening_tier === 2 && today(t));
+  if (tier2Today.length > 0) return bestOf(tier2Today);
+
+  return null;
+}
+
+/** Highest editorial weight, then soonest start. */
+function bestOf(rows: Thing[]): Thing {
+  return rows.reduce((best, t) => {
+    if (t.editorial_weight !== best.editorial_weight) {
+      return t.editorial_weight > best.editorial_weight ? t : best;
+    }
+    return (t.starts_at ?? "") < (best.starts_at ?? "") ? t : best;
+  });
 }
 
 /** The Fri/Sat/Sun SB date keys of the current (or upcoming) weekend. If today is

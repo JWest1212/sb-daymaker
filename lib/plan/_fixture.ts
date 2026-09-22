@@ -8,6 +8,8 @@ export function thing(over: Partial<Thing> = {}): Thing {
     id: over.id ?? "x",
     type: over.type ?? "place",
     status: "published",
+    hero_eligible: true,
+    is_civic: false,
     title: over.title ?? over.id ?? "x",
     blurb: null,
     blurb_long: null,

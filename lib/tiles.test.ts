@@ -7,6 +7,8 @@ function thing(over: Partial<Thing> = {}): Thing {
     id: over.id ?? "x",
     type: "event",
     status: "published",
+    hero_eligible: true,
+    is_civic: false,
     title: over.id ?? "x",
     blurb: null,
     blurb_long: null,

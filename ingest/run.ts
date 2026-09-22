@@ -34,6 +34,9 @@ import { assignVisual } from '../lib/visualAssignment';
 import { haversineMeters } from '../lib/geo';
 import { sbDay } from '../lib/explore';
 import { sourceKeyOf } from './dedupe';
+import { retirePastEvents, formatRetireReport } from './retire';
+import { backfillCivic, formatCivicReport } from './civicBackfill';
+import { applyHeroEligibility, formatEligibilityReport } from './heroEligibility';
 import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
 import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR, type PublishBand } from './publishGate';
 import { computeEventKey, canonicalVenue, type VenueDictEntry as EventKeyVenueDictEntry } from './eventKey';
@@ -77,6 +80,17 @@ const EVENT_KEY_DRYRUN = process.env.EVENT_KEY_DRYRUN === '1';
 // whole existing catalog (the column now exists). Still doesn't change dedupe
 // behavior, see EVENT_KEY_DRYRUN comment above.
 const EVENT_KEY_BACKFILL = process.env.EVENT_KEY_BACKFILL === '1';
+// R1 W2.1, the archive-past step. RETIRE_DRYRUN reports without writing (CP1);
+// RETIRE_APPLY runs it once by hand. The nightly run calls it automatically.
+const RETIRE_DRYRUN = process.env.RETIRE_DRYRUN === '1';
+const RETIRE_APPLY = process.env.RETIRE_APPLY === '1';
+// R1 W2.3, the one-time is_civic backfill over rows that landed before the
+// adapters started flagging it.
+const CIVIC_DRYRUN = process.env.CIVIC_DRYRUN === '1';
+const CIVIC_BACKFILL = process.env.CIVIC_BACKFILL === '1';
+// R1 W2.4, the hero_eligible data pass (CP2).
+const HERO_ELIGIBLE_DRYRUN = process.env.HERO_ELIGIBLE_DRYRUN === '1';
+const HERO_ELIGIBLE_APPLY = process.env.HERO_ELIGIBLE_APPLY === '1';
 // Data Arch Redesign 26 Phase 2, read-only pairwise audit of dedupe.ts's live
 // venue-aware matcher (evaluateMatch/dedupeVenueAware) vs the plain
 // deterministic baseline (dedupe()), run over the existing catalog. Writes
@@ -1906,6 +1920,12 @@ async function main() {
   if (DEDUPE_VENUE_SHADOW) return dedupeVenueShadowReport();
   if (DEDUPE_ADJUDICATE_SHADOW) return dedupeAdjudicateShadowReport();
   if (EVENT_SOURCES_BACKFILL) return eventSourcesBackfill();
+  if (RETIRE_DRYRUN) return retireOnce(true);
+  if (RETIRE_APPLY) return retireOnce(false);
+  if (CIVIC_DRYRUN) return civicOnce(true);
+  if (CIVIC_BACKFILL) return civicOnce(false);
+  if (HERO_ELIGIBLE_DRYRUN) return heroEligibleOnce(true);
+  if (HERO_ELIGIBLE_APPLY) return heroEligibleOnce(false);
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -2302,6 +2322,16 @@ async function main() {
       console.log(`  venue-data           skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    // R1 W2.1, retire events that finished more than a week ago, so the published
+    // catalog stops growing without bound. Isolated: a failure here must not sink
+    // a run that has already landed good content.
+    try {
+      const retired = await retirePastEvents(sb);
+      console.log(`  archive-past         archived ${retired.archived} of ${retired.matched} matched · skipped ${retired.skippedPendingEdit.length} with a pending edit`);
+    } catch (err) {
+      console.log(`  archive-past         skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     await sendDigest(sb, {
       landed,
       gateDropped: totalGateDropped,
@@ -2321,6 +2351,28 @@ async function main() {
     // revalidate windows are the safety net underneath it.
     await revalidatePublicSurfaces();
   }
+}
+
+/** R1 W2.1. One-off CLI entry point (RETIRE_DRYRUN=1 / RETIRE_APPLY=1) for the
+ *  archive-past step, the same function the nightly run calls below. */
+async function retireOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await retirePastEvents(sb, { dryRun });
+  console.log(formatRetireReport(report));
+}
+
+/** R1 W2.3. One-off CLI entry point (CIVIC_DRYRUN=1 / CIVIC_BACKFILL=1). */
+async function civicOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await backfillCivic(sb, { dryRun });
+  console.log(formatCivicReport(report));
+}
+
+/** R1 W2.4. One-off CLI entry point (HERO_ELIGIBLE_DRYRUN=1 / HERO_ELIGIBLE_APPLY=1). */
+async function heroEligibleOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await applyHeroEligibility(sb, { dryRun });
+  console.log(formatEligibilityReport(report));
 }
 
 /** POST /api/revalidate with the shared cron secret. Logs, never throws. */

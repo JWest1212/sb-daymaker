@@ -9,9 +9,10 @@ import { DetailActions } from "@/components/detail/DetailActions";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { OpenNow } from "@/components/detail/OpenNow";
 import { BackButton } from "@/components/detail/BackButton";
+import { ArchivedBanner } from "@/components/detail/ArchivedBanner";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
 import { prettify } from "@/components/explore/derive";
-import { eventDetailWhen } from "@/lib/format/eventTime";
+import { eventDetailWhen, eventDetailWhenWithYear } from "@/lib/format/eventTime";
 import { resolveOutbound } from "@/lib/links/outbound";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
@@ -38,11 +39,19 @@ const STAMP_FMT = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-/** "Verified · Jul 2026" from an ISO/date string, or null if undated. */
-function verifiedLabel(iso: string | null): string | null {
+/** R1 W2.2 (DET-014). "Verified · Jul 2026", but ONLY while the check is still
+ *  worth something. A stamp older than 90 days is not reassurance, it is a claim
+ *  the site cannot stand behind, so it is hidden rather than shown stale. */
+export const VERIFIED_MAX_AGE_DAYS = 90;
+
+export function verifiedLabel(iso: string | null, now: Date = new Date()): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
+  const ageDays = (now.getTime() - d.getTime()) / 86_400_000;
+  if (ageDays > VERIFIED_MAX_AGE_DAYS) return null;
+  // A stamp dated in the future is not credible either.
+  if (ageDays < -1) return null;
   return `Verified · ${STAMP_FMT.format(d)}`;
 }
 
@@ -83,6 +92,9 @@ export async function generateMetadata({
     alternates: { canonical },
     openGraph: { title, description, url: canonical, type: t.type === "event" ? "article" : "website" },
     twitter: { card: "summary_large_image", title, description },
+    // R1 W2.2. An archived page stays reachable so saved and shared links never
+    // 404, but it is not something search should be sending new people to.
+    ...(t.status === "archived" ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -98,7 +110,8 @@ export default async function ThingPage({
   const [guidesFeaturing, nearby] = t
     ? await Promise.all([
         getGuidesFeaturingThing(t.id),
-        t.nearby_zone ? getNearbyThings(t.nearby_zone, t.id, 3) : Promise.resolve([]),
+        // R1 W2.6, five distinct titles, deduped by series inside getNearbyThings.
+        t.nearby_zone ? getNearbyThings(t.nearby_zone, t.id, 5) : Promise.resolve([]),
       ])
     : [[], []];
 
@@ -142,7 +155,7 @@ export default async function ThingPage({
   if (t.address?.trim()) facts.push({ k: "Address", v: t.address.trim() });
   if (neighborhoodLabel) facts.push({ k: "Neighborhood", v: neighborhoodLabel });
   if (t.type === "event" && t.starts_at)
-    facts.push({ k: "When", v: eventDetailWhen(t.starts_at) });
+    facts.push({ k: "When", v: eventDetailWhenWithYear(t.starts_at) });
   // G0.7, never a bare separator in the price slot. Free / a real band / a
   // ticketed event with an outbound ("Check site") / else omit the row entirely.
   const priceValue = t.free
@@ -181,6 +194,10 @@ export default async function ThingPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <BackButton />
+
+      {/* R1 W2.2, said before anything else on the page, so the visitor never
+          reads a finished event as an upcoming one. */}
+      {t.status === "archived" ? <ArchivedBanner startsAt={t.starts_at} /> : null}
 
       <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={t.title}>
         {/* G1.6, Verified stamp anchored to the image top-right. Shown ONLY for

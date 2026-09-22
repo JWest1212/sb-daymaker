@@ -2,8 +2,8 @@
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
 Current run: A
-Current wave: 1 complete, starting 2
-Current task: W2.1
+Current wave: Run A complete (Waves 1 and 2)
+Current task: awaiting "start Run B"
 
 ## Done (wave.task, commit)
 
@@ -21,10 +21,18 @@ Current task: W2.1
 - W1.6 `POST /api/revalidate` (CRON_SECRET bearer) added and called at the end of a successful ingest run; `/plan` added to `revalidatePublic()`; ISR lowered 600 -> 300 on /saved, /plan, /discover, /discover/[id], /thing/[id].
 - W1 extra: hardened `SavesProvider` against a corrupt-storage wipe (see "Deviations").
 - W1 commit: `fix(r1-w1): saves resolve by id, pool excludes finished events, share link visible, revalidate after ingest`
+- W2.1 archive step (`ingest/retire.ts`), called nightly from `ingest/run.ts`, plus `npm run retire:dryrun` / `retire:apply`. CP1 approved; 1,017 rows archived, then 4 more on the next day's run. Published 1,529 -> 508. Re-ingest safety confirmed (land upserts with ignoreDuplicates, publish gate only touches needs_review), so no change was needed there.
+- W2.2 archived detail pages stay reachable with an "already happened on [date]" banner, noindex, a working save heart, the year on out-of-month dates (DET-001), and the 90-day cap on the Verified stamp (DET-014). The shared-list page now resolves ids directly instead of filtering the browse pool, so an archived item is marked rather than silently dropped; the restore page names how many already happened.
+- W2.3 civic flag: `ingest/civic.ts` (rules as editable data), set at land time for new rows, backfilled over existing ones (136 rows). The pool, and therefore search and Plan, exclude civic. See "Deviations".
+- W2.4 CP2 approved. `hero_eligible` pass applied: 49 of 512 rows lost eligibility, 463 remain. `pickAutoHero` now requires eligibility, a real address and a start that has not passed by more than 30 minutes; the bare `ordered[0]` fallback is gone; the pick is computed before Place/Occasion/Activity so no filter combination can blank it.
+- W2.5 "Gray day move" now needs genuinely gray weather (rain, fog, overcast or broken cloud, never few/scattered/partly) AND an indoor-capable pick.
+- W2.6 the nearby list dedupes by normalized title, excludes civic and finished events, and caps at 5.
+- W2.7 the Live catalog gained an Archived filter, a civic filter, and Civic/Archived chips per row. Read-only; no new write route.
+- W2 commit: `feat(r1-w2): archive finished events, civic flag, real pick eligibility, eyebrow and nearby fixes`
 
 ## Checkpoints
-- CP1 archive dry-run: pending
-- CP2 hero_eligible pass: pending
+- CP1 archive dry-run: approved 2026-09-21
+- CP2 hero_eligible pass: approved 2026-09-22
 - CP3 area backfill: pending
 - CP4 card rebuild: pending
 - CP5 canon diff: pending
@@ -40,6 +48,15 @@ Nothing blocked.
 - **W1.3 shared the row rule, not the column list.** The spec says `getStopThingMap()` should use one shared select constant with `getPublishedThings()`. Its stated purpose is that a guide must never offer a heart on something Saved cannot render, which is about which ROWS each read can return. Making the columns identical would have changed guide sub-lines: `getStopThingMap` selects `things.category`, a hand-curated field set on 109 rows, which is a different column from the pool's `happening_category`. The status rule is shared; the projection stays narrow.
 - **W1.1 test is a pure-function test plus a source guard, not a component render test.** This repo has no React component-test harness and no `@testing-library`, and adding one is outside R1. The decision is extracted into the pure `partitionSaves()` in lib/savedView.ts and tested there (the spec's exact three-ids-two-returned case). `components/saved/noAutoDelete.test.ts` additionally pins the regression itself: no `remove()` call may appear inside any effect in SavedClient.
 - **Extra fix in `SavesProvider`.** Hydration swallowed a `JSON.parse` failure and then the persist effect wrote `{}` straight back over the stored value, destroying the visitor's list on a single bad read. That is a save-deletion path, which is exactly what Wave 1 exists to close, so it is fixed here: an unreadable value is preserved, copied to `sbd.saves.v1.unreadable`, and never overwritten until the visitor actually saves something. Verified in a browser for both truncated JSON and a wrong-shaped value.
+
+### Wave 2 deviations
+
+- **The city calendar is title-tested, not blanket-flagged as civic.** W2.3 says to set `is_civic` on every `calendar.santabarbaraca.gov` row at the adapter. Checked against the real data, that calendar is mixed: blanket-flagging it would have hidden Friday Night Swing at Carrillo Recreation Center, the Santa Barbara Arts and Crafts Show on Cabrillo Boulevard, Chess Club, Scrabble Club, Knitting and Crochet Club, Memory Cafe, Volunteer Gardening, Neighborhood Cleanup and all of Creek Week, 23 of the 40 published rows from that source and about 5 percent of the live catalog. D3's subject is "civic MEETINGS", and the title rules separate meetings from programming cleanly: checked against all 40, every municipal meeting is caught and every real activity is kept. `CIVIC_SOURCES` still exists and is documented, so moving the host back into it is a one-line override.
+- **"board" and "advisory board" are not civic on their own.** Bare "board" would have hidden Board Game Night, Paddle Board Yoga and Charcuterie Board Workshop; "advisory board" would have hidden the library's Teen Advisory Board. Both are caught only in municipal shapes ("Board of", "Design Board", "Board Meeting"). Genuine advisory bodies all carry "committee" or "council" and are caught by those.
+- **Two rules added beyond the spec's list**, both from real rows the first pass missed: "Arts Advisory Meeting" (an advisory body's meeting with no board/committee/council word) and "Delayed Opening Hours" (a closure notice).
+- **`hero_eligible` lands at 463 of 512, a smaller cut than acceptance line 7 anticipated.** The earlier steps did most of the work: archiving removed 1,017 dead rows and the civic flag keeps 22 more out of the pool entirely, so eligibility is now a second line of defence rather than the main filter. Reported at CP2 and approved.
+- **19 rows lose eligibility purely for a placeholder address**, several of them good events at real venues (a show at SOhO, a Natural History Museum open house, Creek Week walks). The rule is right for the front page, and Wave 4's area backfill fixes the underlying data and hands them back. They remain in the feed throughout; only the pick is affected.
+- **The fallback pick's sentence changed.** "Nothing matches that exactly today" now appears only when the visitor's filters return nothing. When the pick is a fallback because nothing dated qualifies, it says "Nothing dated today", which is what is actually true; blaming the filters was wrong once the pick stopped depending on them.
 
 ## TP-A3-03 investigation (W1.6 asked for a cause, not a fix)
 

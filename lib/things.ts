@@ -56,6 +56,13 @@ export interface Thing {
   nearby_zone: Zone | null;
   /** Elevation v1 · Gate 1 · G1.3, the street address (schema field, now surfaced). */
   address: string | null;
+  /** R1 W2.4. Fit to be the day's pick. Distinct from "fit to list": a row can be
+   *  perfectly good in the feed and still a poor front-page recommendation.
+   *  Defaults to true when absent so the degraded fallback select cannot make
+   *  every row ineligible and blank the pick. */
+  hero_eligible: boolean;
+  /** R1 W2.3. A municipal meeting. Never in the public pool; see D3/D14. */
+  is_civic: boolean;
   lat: number | null;
   lng: number | null;
   price_band: string | null;
@@ -119,7 +126,7 @@ const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go, status,
 // fallback select) so a DB that somehow lacks them still renders a degraded feed
 // rather than 400ing both the primary and the fallback. Same "prefer the richer
 // select, fall back if it 400s" posture the activities/local_note columns use.
-const G1_COLS = `quality_tier, hours, verified_at, verified_by, last_confirmed, setting, address, lat, lng, practical_note, slug, updated_at`;
+const G1_COLS = `quality_tier, hours, verified_at, verified_by, last_confirmed, setting, address, lat, lng, practical_note, slug, updated_at, hero_eligible, is_civic`;
 // G1.9, `confidence` now comes back with each tag so the read path can order the
 // card/detail chips by it (the card shows the single highest-confidence tag).
 const RELATIONS = `thing_tags ( tag, confidence ),
@@ -172,6 +179,8 @@ function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string>
     neighborhood: (row.neighborhood as string) ?? null,
     nearby_zone: (row.nearby_zone as Zone) ?? null,
     address: (row.address as string) ?? null,
+    hero_eligible: (row.hero_eligible as boolean) ?? true,
+    is_civic: (row.is_civic as boolean) ?? false,
     lat: (row.lat as number) ?? null,
     lng: (row.lng as number) ?? null,
     price_band: (row.price_band as string) ?? null,
@@ -253,6 +262,11 @@ export async function getPublishedThings(now: Date = new Date()): Promise<Thing[
       .from("things")
       .select(select, { count: "exact" })
       .eq("status", "published")
+      // R1 W2.3 (D3/D14). Civic meetings keep ingesting for a possible future
+      // civic surface, but they never reach a leisure feed. Excluded here, at
+      // the single chokepoint, so Explore, Saved, Discover, Plan, share and
+      // search all inherit it rather than each remembering to filter.
+      .eq("is_civic", false)
       .or(freshness)
       .order("happening_tier", { ascending: true })
       .range(from, from + POOL_PAGE_SIZE - 1);
@@ -375,31 +389,77 @@ export async function getThingBySlugOrId(param: string): Promise<Thing | null> {
   return fetchThing("slug", param);
 }
 
+/** How many rows to scan before deduping. The list shows at most 5, but a zone
+ *  full of one weekly series needs headroom to find 5 DISTINCT titles. */
+const NEARBY_SCAN_LIMIT = 200;
+
+/** Collapse a title to its comparable form: case, punctuation and whitespace
+ *  removed, so "Recreation Swim | Oak Park Wading Pool" and "Recreation Swim |
+ *  Oak Park Wading Pool " are one thing. */
+export function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[\u2018\u2019']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * R1 W2.6. One row per normalized title, keeping the first (the caller has
+ * already ordered soonest-first), so a recurring series contributes one entry
+ * instead of filling the list.
+ *
+ * The audit's case: /thing/recreation-swim-oak-park-wading-pool listed
+ * "Recreation Swim | Oak Park Wading Pool" three times, the same title as the
+ * page the visitor was standing on (TP-A7-06).
+ */
+export function dedupeByTitle(things: Thing[]): Thing[] {
+  const seen = new Set<string>();
+  const out: Thing[] = [];
+  for (const t of things) {
+    const key = normalizeTitle(t.title);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+  }
+  return out;
+}
+
 /** Elevation v1 · Gate 3 · G3.5, up to `limit` published things in the same
  *  nearby_zone (excluding the thing itself), Tier-1 (dated) first, for the detail
  *  page's "Nearby" pairing. Deterministic (no AI). Excludes quality_tier=3. */
 export async function getNearbyThings(
   zone: Zone,
   excludeId: string,
-  limit = 3,
+  limit = 5,
+  now: Date = new Date(),
 ): Promise<Thing[]> {
   const sb = getSupabase();
   if (!sb) return [];
-  const [primary, dogFriendlyVenueIds] = await Promise.all([
+  const query = (select: string) =>
     sb
       .from("things")
-      .select(SELECT_WITH_ACTIVITIES)
+      .select(select)
+      .eq("status", "published")
+      // R1 W2.3, a municipal meeting is not a suggestion for what else to do.
+      .eq("is_civic", false)
       .eq("nearby_zone", zone)
       .neq("id", excludeId)
-      .order("happening_tier", { ascending: true }),
+      // R1 W2.6, the nearby list is a "what else is near here" list, so a
+      // finished event has no business in it. Same freshness rule as the pool.
+      .or(freshnessOrFilter(now))
+      .order("happening_tier", { ascending: true })
+      .order("starts_at", { ascending: true, nullsFirst: false })
+      .limit(NEARBY_SCAN_LIMIT);
+  const [primary, dogFriendlyVenueIds] = await Promise.all([
+    query(SELECT_WITH_ACTIVITIES),
     getDogFriendlyVenueIds(),
   ]);
-  const result = primary.error
-    ? await sb.from("things").select(SELECT).eq("nearby_zone", zone).neq("id", excludeId).order("happening_tier", { ascending: true })
-    : primary;
+  const result = primary.error ? await query(SELECT) : primary;
   if (result.error || !result.data) return [];
-  return result.data
-    .map((r) => mapThing(r as Record<string, unknown>, dogFriendlyVenueIds))
-    .filter((t) => t.quality_tier !== 3)
-    .slice(0, limit);
+  return dedupeByTitle(
+    result.data
+      .map((r) => mapThing(r as unknown as Record<string, unknown>, dogFriendlyVenueIds))
+      .filter((t) => t.quality_tier !== 3),
+  ).slice(0, limit);
 }

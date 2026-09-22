@@ -61,3 +61,19 @@ export function eventDateWithYear(iso: string): string {
   const val = (type: Intl.DateTimeFormatPartTypes) => md.find((p) => p.type === type)?.value ?? "";
   return `${only(WEEKDAY_LONG, iso)}, ${val("month")} ${val("day")}, ${val("year")}`;
 }
+
+/** R1 W2.2 (DET-001). The detail page's "When" line, with the year added
+ *  whenever the date is not in the current calendar month. A bare "Saturday,
+ *  Jun 27" on a page for something that happened last year reads as upcoming;
+ *  the year is what makes a past date unambiguous. Same string as
+ *  eventDetailWhen() for anything in the current month, so the common case is
+ *  unchanged. */
+export function eventDetailWhenWithYear(iso: string, now: Date = new Date()): string {
+  const ym = (d: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit" }).format(d);
+  const when = new Date(iso);
+  if (ym(when) === ym(now)) return eventDetailWhen(iso);
+  const parts = MONTH_DAY_YEAR.formatToParts(when);
+  const val = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${only(WEEKDAY_LONG, iso)}, ${only(MONTH_DAY, iso)}, ${val("year")}, ${eventClock(iso)}`;
+}

@@ -46,12 +46,17 @@ function TodayPick({
   pick,
   isFallback,
   isStatic,
+  filteredEmpty,
   horizon,
   weather,
 }: {
   pick: Thing | null;
   isFallback: boolean;
   isStatic: boolean;
+  /** R1 W2.4 (EXP-017). True when the visitor's filter combination returns
+   *  nothing. The pick itself is filter-independent, so this only changes what
+   *  the card SAYS, never whether it appears. */
+  filteredEmpty: boolean;
   horizon: Horizon;
   weather: Weather | null;
 }) {
@@ -80,9 +85,15 @@ function TodayPick({
   if (!pick) return null;
 
   const meta = [cardPlace(pick), heroTime(pick)].filter(Boolean).join(" · ");
-  const contextEyebrow = isFallback
+  // R1 W2.4. Two different situations that used to share one sentence. A
+  // fallback pick means nothing DATED qualified today, which has nothing to do
+  // with the visitor's filters; blaming the filters for it was simply wrong once
+  // the pick stopped depending on them.
+  const contextEyebrow = filteredEmpty
     ? "Nothing matches that exactly today, but this is always worth it."
-    : heroEyebrow(pick, isGrayDay(weather));
+    : isFallback
+      ? "Nothing dated today, but this is always worth it."
+      : heroEyebrow(pick, isGrayDay(weather));
 
   return (
     <PickCard
@@ -145,6 +156,7 @@ function LeadSection({
   pick,
   pickIsFallback,
   pickIsStatic,
+  filteredEmpty,
   weather,
 }: {
   tier1: Thing[];
@@ -154,6 +166,7 @@ function LeadSection({
   pick: Thing | null;
   pickIsFallback: boolean;
   pickIsStatic: boolean;
+  filteredEmpty: boolean;
   weather: Weather | null;
 }) {
   return (
@@ -169,6 +182,7 @@ function LeadSection({
           pick={pick}
           isFallback={pickIsFallback}
           isStatic={pickIsStatic}
+          filteredEmpty={filteredEmpty}
           horizon={horizon}
           weather={weather}
         />
@@ -329,6 +343,11 @@ export function CascadeFeed({
     );
   }
 
+  // R1 W2.4 (EXP-017). The feed is empty because of the visitor's filters, as
+  // distinct from "nothing is on today". The pick renders either way; this only
+  // decides which sentence is honest.
+  const filteredEmpty = hasActiveFilters && tier1.length + tier2.length + tier3.length === 0;
+
   const totalCount = tier1.length + tier2.length + tier3.length + (pick ? 1 : 0);
 
   return (
@@ -345,6 +364,7 @@ export function CascadeFeed({
           pick={pick}
           pickIsFallback={pickIsFallback}
           pickIsStatic={pickIsStatic}
+          filteredEmpty={filteredEmpty}
           weather={weather}
         />
       )}

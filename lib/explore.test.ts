@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import type { Thing, RecurringSchedule, HappyHourWindow } from "./things";
-import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero, groupByWeek, ordinal, filterByActivity } from "./explore";
+import { withinHorizon, sbDayOfWeek, pickEvergreenFallback, cascade, pickAutoHero, groupByWeek, ordinal, filterByActivity, sbDay } from "./explore";
 
 // SB weekday reference instants (SB = America/Los_Angeles):
 const THU = new Date("2026-07-02T19:00:00Z").getTime(); // Thu noon SB
@@ -12,6 +12,8 @@ function thing(over: Partial<Thing> = {}): Thing {
     id: over.id ?? "x",
     type: "place",
     status: "published",
+    hero_eligible: true,
+    is_civic: false,
     title: over.id ?? "x",
     blurb: null,
     blurb_long: null,
@@ -250,15 +252,26 @@ describe("trust rule, pickAutoHero blind to sponsor status (G5.7)", () => {
 
 describe("pickAutoHero, W2.1a shared hero picker", () => {
   const TODAY = "2026-07-03";
+  // R1 W2.4: a pick must now be findable, so these fixtures carry a real
+  // address. `nowMs` is pinned to the morning of TODAY so same-day evening
+  // events have not yet started.
+  const NOW = new Date("2026-07-03T15:00:00Z").getTime(); // 8am SB
   const todayEvent = (id: string, weight: number, hhmm: string) =>
-    thing({ id, happening_tier: 1, type: "event", editorial_weight: weight, starts_at: `2026-07-03T${hhmm}:00Z` });
+    thing({
+      id,
+      happening_tier: 1,
+      type: "event",
+      editorial_weight: weight,
+      starts_at: `2026-07-03T${hhmm}:00Z`,
+      address: "1112 State St, Santa Barbara, CA",
+    });
 
   it("prefers today's highest positive-weight Tier-1 item", () => {
     const ordered = cascade([
       todayEvent("plain", 0, "18:00"),
       todayEvent("boost", 3, "20:00"),
     ]);
-    expect(pickAutoHero(ordered, TODAY)?.id).toBe("boost");
+    expect(pickAutoHero(ordered, TODAY, NOW)?.id).toBe("boost");
   });
 
   it("breaks weight ties toward the soonest start", () => {
@@ -266,28 +279,32 @@ describe("pickAutoHero, W2.1a shared hero picker", () => {
       todayEvent("late", 2, "21:00"),
       todayEvent("early", 2, "17:00"),
     ]);
-    expect(pickAutoHero(ordered, TODAY)?.id).toBe("early");
+    expect(pickAutoHero(ordered, TODAY, NOW)?.id).toBe("early");
   });
 
   it("ignores positive weight that isn't happening today", () => {
     const ordered = cascade([
-      thing({ id: "tmrw", happening_tier: 1, type: "event", editorial_weight: 5, starts_at: "2026-07-04T20:00:00Z" }),
-      thing({ id: "todayPlain", happening_tier: 1, type: "event", editorial_weight: 0, starts_at: "2026-07-03T18:00:00Z" }),
+      thing({ id: "tmrw", happening_tier: 1, type: "event", editorial_weight: 5, starts_at: "2026-07-04T20:00:00Z", address: "1112 State St, Santa Barbara, CA" }),
+      todayEvent("todayPlain", 0, "18:00"),
     ]);
-    // no positive-weight item TODAY → falls back to ordered[0] (soonest today).
-    expect(pickAutoHero(ordered, TODAY)?.id).toBe("todayPlain");
+    // No boosted item today, so it falls to the next branch: any eligible dated
+    // thing happening today.
+    expect(pickAutoHero(ordered, TODAY, NOW)?.id).toBe("todayPlain");
   });
 
-  it("falls back to ordered[0] when no Tier-1 item today is boosted", () => {
+  it("no longer falls back to the first row of the ranked view", () => {
+    // R1 W2.4. The old `return ordered[0]` had no eligibility check of any kind,
+    // which is how a municipal hearing became the front-page recommendation.
+    // An evergreen Tier-3 row is not a stand-in for today's pick; the caller's
+    // evergreen rotation handles that case deliberately.
     const ordered = cascade([
-      thing({ id: "t3", happening_tier: 3, editorial_weight: 4 }),
-      todayEvent("t1", 0, "18:00"),
+      thing({ id: "t3", happening_tier: 3, editorial_weight: 4, address: "1112 State St, Santa Barbara, CA" }),
     ]);
-    expect(pickAutoHero(ordered, TODAY)?.id).toBe("t1");
+    expect(pickAutoHero(ordered, TODAY, NOW)).toBeNull();
   });
 
   it("returns null on an empty pool", () => {
-    expect(pickAutoHero([], TODAY)).toBeNull();
+    expect(pickAutoHero([], TODAY, NOW)).toBeNull();
   });
 });
 
@@ -361,5 +378,73 @@ describe("filterByActivity", () => {
       thing({ id: "c", activities: [] }),
     ];
     expect(filterByActivity(things, "outdoors").map((t) => t.id)).toEqual(["a"]);
+  });
+});
+
+describe("pickAutoHero eligibility (R1 W2.4)", () => {
+  const NOW = new Date("2026-09-21T14:00:00-07:00").getTime();
+  const TODAY_KEY = sbDay(NOW);
+  const at = (hoursFromNow: number) => new Date(NOW + hoursFromNow * 3600e3).toISOString();
+  const good = (over: Partial<Thing> = {}): Thing =>
+    thing({
+      id: "good",
+      happening_tier: 1,
+      starts_at: at(3),
+      address: "1112 State St, Santa Barbara, CA",
+      hero_eligible: true,
+      is_civic: false,
+      ...over,
+    });
+
+  it("never picks a civic row", () => {
+    // TP-A8-08: the live pick was "Single Family Design Board - Consent".
+    const civic = good({ id: "civic", is_civic: true });
+    expect(pickAutoHero([civic], TODAY_KEY, NOW)).toBeNull();
+  });
+
+  it("never picks a row marked ineligible", () => {
+    expect(pickAutoHero([good({ id: "x", hero_eligible: false })], TODAY_KEY, NOW)).toBeNull();
+  });
+
+  it("never picks something that started two hours ago", () => {
+    expect(pickAutoHero([good({ id: "past", starts_at: at(-2) })], TODAY_KEY, NOW)).toBeNull();
+  });
+
+  it("still picks something that started inside the grace window", () => {
+    const justStarted = good({ id: "just", starts_at: at(-0.25) });
+    expect(pickAutoHero([justStarted], TODAY_KEY, NOW)?.id).toBe("just");
+  });
+
+  it("never picks a row with no address, or the city placeholder", () => {
+    expect(pickAutoHero([good({ id: "a", address: null })], TODAY_KEY, NOW)).toBeNull();
+    expect(pickAutoHero([good({ id: "b", address: "Santa Barbara, Santa Barbara, CA" })], TODAY_KEY, NOW)).toBeNull();
+  });
+
+  it("has no bare first-row fallback: an unfit pool yields null, not the first row", () => {
+    // This is the line that put a design-review hearing on the front page.
+    const unfit = [
+      good({ id: "civic", is_civic: true }),
+      good({ id: "past", starts_at: at(-5) }),
+      good({ id: "noaddr", address: null }),
+    ];
+    expect(pickAutoHero(unfit, TODAY_KEY, NOW)).toBeNull();
+  });
+
+  it("prefers a boosted row, then the soonest", () => {
+    const rows = [
+      good({ id: "plain", starts_at: at(2) }),
+      good({ id: "boosted", starts_at: at(6), editorial_weight: 3 }),
+    ];
+    expect(pickAutoHero(rows, TODAY_KEY, NOW)?.id).toBe("boosted");
+  });
+
+  it("falls through to an eligible recurring session when nothing dated qualifies", () => {
+    const recurring = good({ id: "t2", happening_tier: 2, starts_at: at(4) });
+    const deadTier1 = good({ id: "dead", starts_at: at(-9) });
+    expect(pickAutoHero([deadTier1, recurring], TODAY_KEY, NOW)?.id).toBe("t2");
+  });
+
+  it("does not pick a dated thing that is not today", () => {
+    expect(pickAutoHero([good({ id: "tmrw", starts_at: at(30) })], TODAY_KEY, NOW)).toBeNull();
   });
 });

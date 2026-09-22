@@ -21,6 +21,11 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
   const [tier, setTier] = useState<Tier>("all");
   const [vibe, setVibe] = useState("");
   const [zone, setZone] = useState("");
+  // R1 W2.7, read-only visibility into what the R1 pipeline did: which rows it
+  // archived, and which it flagged civic. No new write route; the existing edit
+  // path is unchanged.
+  const [status, setStatus] = useState<"published" | "archived">("published");
+  const [civic, setCivic] = useState<"" | "civic" | "leisure">("");
   const [q, setQ] = useState("");
   const [qDebounced, setQDebounced] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,6 +82,8 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     if (vibe) sp.set("vibe", vibe);
     if (zone) sp.set("zone", zone);
     if (qDebounced) sp.set("q", qDebounced);
+    if (status !== "published") sp.set("status", status);
+    if (civic) sp.set("civic", civic);
     sp.set("page", String(p));
     try {
       const r = await fetch(`/api/admin/catalog?${sp}`);
@@ -91,10 +98,10 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
     } finally {
       setLoading(false);
     }
-  }, [tier, vibe, zone, qDebounced]);
+  }, [tier, vibe, zone, qDebounced, status, civic]);
 
   // Refetch from page 1 whenever a filter changes.
-  useEffect(() => { fetchPage(1); }, [tier, vibe, zone, qDebounced, fetchPage]);
+  useEffect(() => { fetchPage(1); }, [tier, vibe, zone, qDebounced, status, civic, fetchPage]);
 
   const toggleHero = useCallback(async (r: CatalogRow) => {
     const next = !isHero(r);
@@ -378,6 +385,25 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
           <option value="">All zones</option>
           {ZONES.map((z) => <option key={z.zone} value={z.zone}>{z.label}</option>)}
         </select>
+        <select
+          className="fsel"
+          value={status}
+          onChange={(e) => setStatus(e.target.value as "published" | "archived")}
+          aria-label="Filter by lifecycle state"
+        >
+          <option value="published">Live</option>
+          <option value="archived">Archived (already happened)</option>
+        </select>
+        <select
+          className="fsel"
+          value={civic}
+          onChange={(e) => setCivic(e.target.value as "" | "civic" | "leisure")}
+          aria-label="Filter by civic flag"
+        >
+          <option value="">Civic and leisure</option>
+          <option value="civic">Civic only</option>
+          <option value="leisure">Leisure only</option>
+        </select>
         <div className="search"><span aria-hidden="true">⌕</span>
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search titles…" aria-label="Search live things" />
         </div>
@@ -458,6 +484,11 @@ export function CatalogView({ initial }: { initial: CatalogResult }) {
               <span className="ttl">{r.title}</span>
               <span className={`tier t${r.happening_tier}`}>{TIER_WORD[r.happening_tier]}</span>
               {r.pending_edit ? <span className="pendpill">Pending edit in Queue</span> : null}
+              {/* R1 W2.7. A civic row never reaches the public feed, pick, search
+                  or Plan. The chip is here so a real community event caught by a
+                  broad word is visible and can be corrected. */}
+              {r.is_civic ? <span className="civicpill" title="Civic: hidden from the public feed, pick, search and Plan">Civic</span> : null}
+              {r.archived_at ? <span className="archpill" title={`Archived ${r.archived_at.slice(0, 10)}`}>Archived</span> : null}
             </div>
             <div className="lmeta">
               <span className="mono">{r.when}</span>
