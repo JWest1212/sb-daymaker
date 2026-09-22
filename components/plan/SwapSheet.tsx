@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { thingPath } from "@/lib/seo/site";
 import { areaForThing } from "@/lib/areas";
 import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
@@ -85,7 +86,7 @@ export function SwapSheet({
           </div>
         </button>
         <Link
-          href={`/thing/${thing.id}`}
+          href={thingPath(thing)}
           className="sbd-swapopt__info"
           aria-label={`Details for ${thing.title}`}
           onClick={(e) => e.stopPropagation()}

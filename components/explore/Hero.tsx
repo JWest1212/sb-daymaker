@@ -49,11 +49,17 @@ export function Hero({
           sky, scene colors are baked into the asset by design (spec §3.4). The
           hero's overflow:hidden crops the transparent upper sky at both widths.
           Home Rework spec §1 guardrail: this asset is untouched, byte-for-byte. */}
+      {/* R1 W6.9 (TP-B-05). This is the page's LCP element, so it asks for the
+          connection first. Without the hint the browser discovers it at the same
+          priority as the card photographs below the fold and queues it behind
+          them on a slow connection. */}
       <img
         className="sbd-hero__range"
         src="/hero/sb-skyline.svg"
         alt=""
         aria-hidden="true"
+        fetchPriority="high"
+        decoding="sync"
       />
 
       <div className="sbd-hero__sky">

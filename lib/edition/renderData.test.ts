@@ -4,6 +4,7 @@ import { blurbSourceFor, type ThingRow } from "./renderData";
 function thing(over: Partial<ThingRow> = {}): ThingRow {
   return {
     title: "Sunset jazz on the Mesa",
+    slug: "sunset-jazz-on-the-mesa",
     blurb: "The quartet plays the bluff until the sun gives up.",
     blurb_long: "Grab a spot on the grass an hour early. The quartet plays the bluff until the sun gives up, and the crowd always sticks around after.",
     local_note: null,

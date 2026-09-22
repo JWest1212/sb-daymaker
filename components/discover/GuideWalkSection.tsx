@@ -30,17 +30,45 @@ interface Props {
   chapters: GuideChapter[];
   asides: GuideContent["asides"];
   stopCount: number;
+  /** R1 W6.8 (TP-B-01). The server's clock, so the "Now" badge is the same on
+   *  both sides of hydration and is always Santa Barbara's time of day. */
+  nowMs: number;
 }
 
 // ─── Time-of-day helper ──────────────────────────────────────────────────
 
-function nowTodBand(): "morning" | "afternoon" | "golden" | "evening" {
-  const h = new Date().getHours();
+type TodBand = "morning" | "afternoon" | "golden" | "evening";
+
+/**
+ * R1 W6.8 (TP-B-01). The cause of the guide pages' hydration error.
+ *
+ * This used to be called during render. Two things were wrong with that. The
+ * server renders this component too, and the server's clock is UTC, so the
+ * "Now" badge landed on a different chapter there than in the visitor's browser
+ * and React threw #418 on every guide load. And `getHours()` reads whatever
+ * timezone the machine is in, so the band was never Santa Barbara's anyway,
+ * neither on the server nor for a visitor reading from another state.
+ *
+ * Now: the SB hour, from a `nowMs` the SERVER passes down. Same input on both
+ * sides, so both produce the same badge, and the band is Santa Barbara's
+ * wherever the reader is. This is the same convention HorizonSegment uses for
+ * its date labels, and for the same reason.
+ */
+const SB_HOUR = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+  hour: "numeric",
+  hour12: false,
+});
+
+function sbTodBand(now: Date = new Date()): TodBand {
+  const h = Number(SB_HOUR.format(now));
   if (h < 11) return "morning";
   if (h < 17) return "afternoon";
   if (h < 20) return "golden";
   return "evening";
 }
+
+
 
 // ─── Stop card ────────────────────────────────────────────────────────────
 
@@ -117,11 +145,11 @@ function StopCard({
 
 // ─── Main component ──────────────────────────────────────────────────────
 
-export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, walkLine }: Props) {
+export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, walkLine, nowMs }: Props) {
   const art = getGuideArt(artId);
   const plateRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Record<number, HTMLButtonElement | null>>({});
-  const todBand = nowTodBand();
+  const todBand = sbTodBand(new Date(nowMs)); // R1 W6.8: server-supplied clock
 
   // open chapters (1-based chapter numbers)
   const [openChapters, setOpenChapters] = useState<Set<number>>(new Set());

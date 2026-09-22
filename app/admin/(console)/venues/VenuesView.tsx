@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { thingPath } from "@/lib/seo/site";
 import type { VenuesData, VenueRow, MatchProposal, NoMatchThing } from "@/lib/venuesServer";
 import type { StrongMatch, WeakMatch, NoMatch, PlaceCandidate } from "@/app/api/admin/venues/lookup-place-ids/route";
 import type { AttachedThing } from "@/app/api/admin/venues/[id]/things/route";

@@ -2298,7 +2298,7 @@ async function main() {
     try {
       const { ensureSlugs } = await import('./slugs/backfill');
       const s = await ensureSlugs(sb);
-      console.log(`  slugs                things +${s.things} · guides +${s.guides} · redirects ${s.redirects}`);
+      console.log(`  slugs                things +${s.things} · guides +${s.guides} · redirects ${s.redirects} · shortened ${s.shortened}`);
     } catch (err) {
       console.log(`  slugs                skipped: ${err instanceof Error ? err.message : String(err)}`);
     }

@@ -166,6 +166,10 @@ export interface SharedPlanPayload {
     blurb: string;
     category: string;
     thingId: string;
+    /** R1 W6.7 (MAP-001). The thing's slug at share time, so the Details link on
+     *  a shared plan is a readable URL. Optional: plans shared before this still
+     *  carry only the id, and that id now 308s to the slug anyway. */
+    slug?: string | null;
     photo_url?: string | null;
     /** Gate 4 · G4.5, the meal chip label ("lunch"/"dinner"/"breakfast"). */
     meal?: Meal | null;

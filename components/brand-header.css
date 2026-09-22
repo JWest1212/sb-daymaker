@@ -94,7 +94,8 @@
 .sbd-brandhdr__eyebrow {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 11px;
+  /* R1 W6.5 (TP-C1-07): 12px is the text floor. Was 11px. */
+  font-size: var(--text-xs);
   letter-spacing: 3.4px;
   text-transform: uppercase;
   color: var(--pacific);
@@ -131,5 +132,19 @@
   }
   .sbd-brandhdr__sun {
     animation: sbdBrandhdrSun 3.4s ease-in-out infinite;
+  }
+}
+
+
+/* R1 W6.5 (TP-C6-01). At 200% zoom (a 195px effective viewport) the header row
+   pushed 33px past the edge, putting the search button off-screen with no way
+   to reach it but horizontal panning. The row wraps at very narrow widths. */
+@media (max-width: 300px) {
+  .sbd-brandhdr__row {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

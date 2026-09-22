@@ -723,21 +723,35 @@
   justify-content: space-between;
   margin-bottom: var(--space-1);
 }
-.sbd-tour__dots { display: flex; gap: var(--space-2); }
+/* R1 W6.9. The dot's own box is now the tap target.
+   It used to be a 7px button with a 44px invisible ::before over it. The hit
+   area was real, but only a human clicking could discover that: an audit reads
+   the element's box and reported a 7x7 target, and so would any tool a reviewer
+   ran. The button is now 24px square (the WCAG 2.2 floor) with the visual dot
+   drawn inside it, and ::before still widens the comfortable area to 44px.
+   Nothing about how it looks changes. */
+.sbd-tour__dots { display: flex; gap: 2px; }
 .sbd-tour__dot {
   position: relative;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.sbd-tour__dot::after {
+  content: "";
   width: 7px;
   height: 7px;
   border-radius: var(--radius-pill);
   background: var(--border);
-  border: none;
-  padding: 0;
-  cursor: pointer;
   transition: all var(--dur-fast) var(--ease-out);
 }
-.sbd-tour__dot.is-active { background: var(--pacific); width: 20px; border-radius: 4px; }
-/* Invisible hit area so the visual dot can stay small (matches the mockup)
-   while the tap target still clears the 44px a11y floor. */
+.sbd-tour__dot.is-active::after { background: var(--pacific); width: 20px; border-radius: 4px; }
+/* The comfortable thumb area, wider than the audited box. */
 .sbd-tour__dot::before {
   content: "";
   position: absolute;
@@ -3461,13 +3475,25 @@
 .sbd-horizon {
   margin-top: var(--space-2);
 }
+/* R1 W6.2/W6.5 (D7, TP-C1-01, TP-C6-01). Six pills at 390px will not fit on one
+   line, so the row WRAPS rather than forcing the page to scroll sideways. The
+   page-level overflow was the single most visible layout defect in the audit
+   (404px of content in a 390px viewport), and the WHEN segment was one of its
+   two causes. Wrapping also means every pill stays reachable at 200% zoom
+   without horizontal panning. */
 .sbd-horizon .sbd-seg {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   width: 100%;
+  max-width: 100%;
 }
 .sbd-horizon .sbd-seg__btn {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0;
   text-align: center;
+  /* R1 W6.2 (EXP-021): 44px tall, the touch-target floor. */
+  min-height: var(--tap-min);
 }
 
 /* Discovery sheet tile grid (the bottom sheet's contents) */
@@ -3759,9 +3785,13 @@
   color: #fff;
   letter-spacing: -0.2px;
 }
+/* R1 W6.9. Full white, not 85% of it. At 0.85 alpha over terracotta this line
+   resolved to 3.8:1, under the 4.5:1 floor for 14px text; at full strength it is
+   4.65:1. The 15% was buying a softness the eye barely registers and costing the
+   only line on the card that says what the button does. */
 .sbd-build-cta__sub {
   font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.85);
+  color: #fff;
   line-height: 1.35;
 }
 .sbd-build-cta__arrow {
@@ -7124,11 +7154,17 @@ textarea.sbd-field__input {
   pointer-events: auto;
 }
 
+/* R1 W6.6 (EXP-036). The overlay lives in the SAME column as everything else.
+   It used to span the full browser width while every other surface was a 480px
+   column, so opening search visually broke the app out of its own frame on a
+   desktop viewport. Matches .sbd-shell exactly. */
 .sbd-search-panel {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
+  margin: 0 auto;
+  max-width: 480px;
   z-index: 121;
   transform: translateY(-100%);
   transition: transform var(--dur-base) var(--ease-out);
@@ -7184,11 +7220,12 @@ textarea.sbd-field__input {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+/* R1 W6.6 (EXP-011). Sentence case. The uppercase transform turned a dead end
+   ("No matches for musuem.") into a shout at the visitor who mistyped. */
 .sbd-search-panel__meta {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
   color: var(--ink-2);
   background: var(--paper);
   padding: 0 var(--space-5);
@@ -7198,6 +7235,33 @@ textarea.sbd-field__input {
   padding-top: var(--space-2);
   padding-bottom: var(--space-1);
 }
+/* R1 W6.6 (EXP-011). The way forward from a missed query: the fuzzy matcher's
+   best guess, tappable, so a typo costs one tap instead of a retype. */
+.sbd-search-panel__suggest {
+  background: var(--paper);
+  padding: 0 var(--space-5) var(--space-2);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+.sbd-search-panel__suggest button {
+  min-height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: var(--weight-bold);
+  color: var(--pacific);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.sbd-search-panel__suggest button:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
 .sbd-search-panel__results {
   list-style: none;
   margin: 0 var(--space-5) var(--space-3);
@@ -7501,4 +7565,241 @@ textarea.sbd-field__input {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+/* R1 W6.4 (D6) — a collapsed series card says how many dates it stands for. */
+.sbd-listcard__dates {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-left: var(--space-2);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   R1 W6.4 (A11Y-001, TP-A6). The whole card is the link, for real.
+   --------------------------------------------------------------------------- */
+
+/* The measured problem: only 2 of 7 probe points on a feed card reached the card
+   link. The top band resolved to the sticky section heading (z-index 18, above
+   the card's z-index-1 overlay) once a card was scrolled under it, and the
+   bottom-middle resolved to the card's own date line.
+
+   Two fixes, both narrow:
+   1. Cards carry scroll-margin so scrolling to one never parks it underneath the
+      sticky heading in the first place.
+   2. The card's non-interactive text stops accepting pointer events, so the
+      stretched overlay receives the tap instead of the text node. Save and Share
+      opt back in: they are the only controls that must not navigate. */
+.sbd-card {
+  scroll-margin-top: 120px;
+}
+.sbd-listcard__blurb,
+.sbd-listcard__meta .sbd-eyebrow-date,
+.sbd-listcard__dates,
+.sbd-pick__meta,
+.sbd-pick__blurb,
+.sbd-pick__eyebrow {
+  pointer-events: none;
+}
+.sbd-listcard__acts,
+.sbd-listcard__meta .sbd-cardact,
+.sbd-cardact,
+.sbd-cardact__btn,
+.sbd-pick__acts,
+.sbd-pick__heart {
+  pointer-events: auto;
+}
+
+/* ===========================================================================
+   R1 W6.5. Phone-width layout, zoom, tap targets and the text floor.
+   (TP-C1-01 to TP-C1-07, TP-C6-01, TP-C6-02, EXP-021)
+   =========================================================================== */
+
+/* --- Tap targets. Every one of these was measured under 44x44. ------------- */
+
+/* Search was 40x40 (TP-C1-04). */
+.sbd-search-btn {
+  width: var(--tap-min);
+  height: var(--tap-min);
+}
+
+/* The wordmark was 36px tall, and it is the way home from every screen. */
+.sbd-brandhdr__logo {
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The skip link was 42px tall. It is the first thing a keyboard user meets. */
+.sbd-skip {
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The guide sketch-map jump targets were 21x21 SVG nodes (TP-C1-05): the
+   smallest controls on the site, and the ones most likely to be tapped with a
+   thumb while walking. The hit area grows without changing the drawing. */
+.sbd-gd-sketch [role="button"],
+.sbd-gd-sketch a,
+.sbd-gd-sketch g[aria-label] {
+  pointer-events: bounding-box;
+}
+
+/* Plan's back button was 16px wide (TP-C1-06). */
+.sbd-plan-back {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+}
+
+/* Saved's Near Me control was 85x26 (TP-C1-06). */
+.sbd-ctrl__near {
+  min-height: var(--tap-min);
+}
+
+/* --- Text floor: nothing under 12px (TP-C1-07). --------------------------- */
+.sbd-nav__label,
+.sbd-brandhdr__eyebrow,
+.sbd-pick__ribbon-star,
+.sbd-tag--micro,
+.sbd-pill {
+  font-size: var(--text-xs); /* 12px */
+}
+
+/* --- Narrow widths: the two overflow sources, and the detail action row. --- */
+
+/* At 320px the bottom nav ran to 347px (TP-C1-02) because three labels plus
+   padding cannot fit. Let the labels shrink into the space they have rather
+   than pushing the page sideways; the icons and aria-labels carry the meaning. */
+@media (max-width: 380px) {
+  .sbd-nav__btn {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  .sbd-nav__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+}
+
+/* The detail action row (Share, Directions) ran to 347px at 320 (TP-C1-02).
+   It wraps now instead. */
+.sbd-detail__actionrow {
+  flex-wrap: wrap;
+}
+.sbd-detailact {
+  flex: 1 1 140px;
+}
+
+/* At 200% zoom (a 195px effective viewport) the header row still pushed 29px
+   past the edge, which put the search button and three WHEN pills off-screen
+   with no way to reach them but horizontal panning (TP-C6-01). The header wraps
+   and the hero sun stops reserving width it does not need. */
+@media (max-width: 300px) {
+  .sbd-hero__sun {
+    display: none; /* decorative; carries no information */
+  }
+  .sbd-door__label {
+    font-size: var(--text-xs);
+  }
+}
+
+/* R1 W6.5 (TP-C6-01). At 200% zoom a long, unbroken listing title ("Intermediate
+   Spanish Conversation Class") was wider than the 195px viewport and pushed the
+   page sideways. Titles break rather than the page scrolling. */
+.sbd-listcard__title,
+.sbd-listcard__title .sbd-stretch,
+.sbd-pick__title,
+.sbd-pick__title .sbd-stretch,
+.sbd-savedcard__title,
+.sbd-savedcard__title .sbd-stretch,
+.sbd-listcard__blurb,
+.sbd-listcard__meta {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* R1 W6.5 (TP-C6-01). The subscribe row is an input plus a fixed-width button;
+   at 200% zoom the pair was wider than the viewport and took the whole page
+   with it. It stacks when there is not room to sit side by side. */
+@media (max-width: 300px) {
+  .sbd-signup__form {
+    flex-wrap: wrap;
+  }
+  .sbd-signup__form .sbd-btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* ==========================================================================
+   R1 W6.7 (EDG-001) — NOT FOUND
+   A bad URL used to land on Next's bare default page: no header, no nav, no way
+   back. This is the same column, the same type, the same tokens as every other
+   surface, so a 404 still looks like the site it happened on.
+   ========================================================================== */
+.sbd-notfound {
+  padding: var(--space-8) 0 var(--space-6);
+  text-align: center;
+}
+.sbd-notfound__code {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0.12em;
+  color: var(--ink-2);
+}
+.sbd-notfound__title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+.sbd-notfound__msg {
+  margin: 0 auto var(--space-6);
+  max-width: 34ch;
+  font-size: var(--text-base);
+  line-height: var(--leading-body);
+  color: var(--ink-2);
+}
+.sbd-notfound__ways {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+.sbd-notfound__go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--pacific);
+  color: var(--paper);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-sm);
+  text-decoration: none;
+}
+.sbd-notfound__alt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  color: var(--pacific);
+  font-weight: var(--weight-semi);
+  font-size: var(--text-sm);
+  text-decoration: underline;
+}
+.sbd-notfound__go:focus-visible,
+.sbd-notfound__alt:focus-visible {
+  outline: 3px solid var(--pacific);
+  outline-offset: 2px;
 }

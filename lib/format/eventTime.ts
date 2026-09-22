@@ -43,6 +43,14 @@ export function eventCardWhen(iso: string): string {
   return `${only(WEEKDAY_SHORT, iso)} ${eventClock(iso)}`;
 }
 
+/** R1 W6.6 (EXP-009). Date alone, e.g. "Sep 26". Search rows use it in place of
+ *  the word "Event", because "All Day Happy Hour" appearing once as an event and
+ *  once as a venue read to the auditor as the same row twice. Labeling the event
+ *  row with its date says what the two rows actually differ by. */
+export function eventShortDate(iso: string): string {
+  return only(MONTH_DAY, iso);
+}
+
 /** Detail token: full weekday + date + exact clock, e.g. "Friday, Aug 1, 8:30 PM".
  *  Shares eventClock() with the card, so the time portion is byte-identical. */
 export function eventDetailWhen(iso: string): string {

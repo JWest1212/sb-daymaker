@@ -8,7 +8,13 @@ import { sbHour } from "./format/daypart";
 // Elevation v1 · Gate 3 · G3.3, "This weekend" is a first-class horizon alongside
 // Today / Week / Month. Fri 5pm to Sun 11:59pm SB (or from now, if it's already
 // the weekend).
-export type Horizon = "today" | "week" | "weekend" | "month";
+/** R1 W6.2 (D7). The locked six, in the order they are shown. "tomorrow" and
+ *  "next_weekend" are new; the other four keep their existing keys so saved and
+ *  shared URLs keep working. */
+export type Horizon = "today" | "tomorrow" | "weekend" | "next_weekend" | "week" | "month";
+
+/** The WHEN row's order, locked by D7. */
+export const HORIZONS: Horizon[] = ["today", "tomorrow", "weekend", "next_weekend", "week", "month"];
 
 // SB is always America/Los_Angeles; en-CA gives YYYY-MM-DD without extra config.
 const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
@@ -220,21 +226,60 @@ export function withinHorizon(
   if (horizon === "weekend" && thing.happening_tier === 2) {
     return tier2OccursThisWeekend(thing);
   }
+  // R1 W6.2: Tomorrow is a single SB calendar day, so a recurring thing has to
+  // actually fall on it, exactly as Today does.
+  if (horizon === "tomorrow" && thing.happening_tier === 2) {
+    return tier2OccursOnDay(thing, tomorrowKey(now));
+  }
+  if (horizon === "next_weekend" && thing.happening_tier === 2) {
+    return tier2OccursThisWeekend(thing);
+  }
   if (thing.happening_tier !== 1 || !thing.starts_at) return true;
   const start = new Date(thing.starts_at).getTime();
   const todayKey = sbDay(now);
   const startKey = sbDay(start);
   if (startKey < todayKey) return false; // already passed in SB time
   if (horizon === "today") return startKey === todayKey;
+  if (horizon === "tomorrow") return startKey === tomorrowKey(now);
   // G3.3: Fri 5pm to Sun 11:59pm. Friday counts only from 5pm; Sat/Sun any time.
   if (horizon === "weekend") {
     const { fri, sat, sun } = weekendKeys(now);
     if (startKey === fri) return sbHour(thing.starts_at) >= 17;
     return startKey === sat || startKey === sun;
   }
+  // R1 W6.2 (D7). The weekend after the coming one.
+  if (horizon === "next_weekend") {
+    const { fri, sat, sun } = nextWeekendKeys(now);
+    if (startKey === fri) return sbHour(thing.starts_at) >= 17;
+    return startKey === sat || startKey === sun;
+  }
   const days = (start - now) / 86_400_000;
   if (horizon === "week") return days < 7;
   return days < 31;
+}
+
+/** The SB calendar day after today, as a YYYY-MM-DD key. */
+export function tomorrowKey(now: number): string {
+  const [y, m, d] = sbDay(now).split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d) + 86_400_000).toISOString().slice(0, 10);
+}
+
+/** R1 W6.2. The weekend AFTER the one weekendKeys() returns. */
+export function nextWeekendKeys(now: number): { fri: string; sat: string; sun: string } {
+  const this_ = weekendKeys(now);
+  const shift = (k: string) => new Date(Date.parse(`${k}T00:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10);
+  return { fri: shift(this_.fri), sat: shift(this_.sat), sun: shift(this_.sun) };
+}
+
+/** Does a recurring Tier-2 thing fire on one specific SB day? */
+function tier2OccursOnDay(thing: Thing, dayKey: string): boolean {
+  const dows = [
+    ...(thing.type === "happyhour" ? thing.happyHours.map((w) => w.day_of_week) : []),
+    ...thing.recurring.map((s) => s.day_of_week),
+  ];
+  if (dows.length === 0) return true; // no schedule: cannot prove it is off
+  const dow = new Date(`${dayKey}T12:00:00Z`).getUTCDay();
+  return dows.includes(dow);
 }
 
 /** Days elapsed since Jan 1 of that year for an SB "YYYY-MM-DD" key (0-based). */
@@ -467,4 +512,118 @@ export function pickPerfectDay(things: Thing[]): string[] {
 export function filterByArea(things: Thing[], area: AreaKey | null): Thing[] {
   if (!area) return things;
   return things.filter((t) => areaForThing(t) === area);
+}
+
+const SB_WEEKDAY_MONTH_DAY = new Intl.DateTimeFormat("en-US", {
+  timeZone: SB_TZ, weekday: "long", month: "long", day: "numeric",
+});
+const SB_MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, month: "short", day: "numeric" });
+
+/**
+ * R1 W6.2 (D7/EXP-034). One place that says what a horizon covers, in words.
+ *
+ * Used for the WHEN pill's accessible name, so "Weekend" announces the dates it
+ * actually means rather than leaving the visitor to guess which weekend, and for
+ * section headings. The visible pill label stays short.
+ */
+export function horizonRangeLabel(horizon: Horizon, now: number = Date.now()): string {
+  const day = (key: string) => SB_MONTH_DAY.format(new Date(`${key}T12:00:00Z`));
+  switch (horizon) {
+    case "today":
+      return SB_WEEKDAY_MONTH_DAY.format(new Date(now));
+    case "tomorrow":
+      return SB_WEEKDAY_MONTH_DAY.format(new Date(`${tomorrowKey(now)}T12:00:00Z`));
+    case "weekend": {
+      const { fri, sun } = weekendKeys(now);
+      return `${day(fri)} to ${day(sun)}`;
+    }
+    case "next_weekend": {
+      const { fri, sun } = nextWeekendKeys(now);
+      return `${day(fri)} to ${day(sun)}`;
+    }
+    case "week":
+      return `${day(sbDay(now))} to ${day(sbDay(now + 6 * 86_400_000))}`;
+    case "month":
+      return `${day(sbDay(now))} to ${day(sbDay(now + 30 * 86_400_000))}`;
+  }
+}
+
+/** The short label on the pill itself. */
+export const HORIZON_PILL: Record<Horizon, string> = {
+  today: "Today",
+  tomorrow: "Tomorrow",
+  weekend: "Weekend",
+  next_weekend: "Next Wknd",
+  week: "Week",
+  month: "Month",
+};
+
+export interface SeriesGroup {
+  /** The occurrence to render: the soonest one still ahead. */
+  lead: Thing;
+  /** Every occurrence in this series inside the current horizon. */
+  occurrences: Thing[];
+  /** "Every Sunday", "Tuesdays and Thursdays", or null for a one-off. */
+  cadence: string | null;
+}
+
+const DAY_NAME = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** The cadence a set of occurrence dates describes. Mirrors ingest/series.ts's
+ *  seriesCadence, kept here so the client can derive it without importing the
+ *  pipeline. */
+export function cadenceOf(startsAt: string[]): string | null {
+  const days = [...new Set(startsAt.map(sbWeekdayIndex).filter((d) => d >= 0))].sort();
+  if (startsAt.length < 2 || days.length === 0) return null;
+  if (days.length === 1) return `Every ${DAY_NAME[days[0]]}`;
+  if (days.length >= 6) return "Most days";
+  if (days.length >= 4) return "Several days a week";
+  const names = days.map((d) => `${DAY_NAME[d]}s`);
+  return names.length === 2
+    ? `${names[0]} and ${names[1]}`
+    : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+function sbWeekdayIndex(iso: string): number {
+  const s = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, weekday: "short" }).format(new Date(iso));
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(s);
+}
+
+/**
+ * R1 W6.4 (D6). Collapse a feed to one entry per series per horizon.
+ *
+ * The audit found 619 extra rows that were occurrences of 154 series: the Arts
+ * and Crafts Show once per Sunday for 17 weeks, Recreation Swim 38 times. A feed
+ * that lists the same thing seventeen times is not a feed, it is a calendar
+ * export. One card says "Every Sunday, next Sep 27" and links to the detail page
+ * for the rest.
+ *
+ * Rows with no `series_key` (evergreen places, one-off events) pass through
+ * untouched and keep their position, so the cascade order is preserved.
+ */
+export function collapseSeries(things: Thing[]): SeriesGroup[] {
+  const out: SeriesGroup[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const t of things) {
+    if (!t.series_key) {
+      out.push({ lead: t, occurrences: [t], cadence: null });
+      continue;
+    }
+    const at = indexByKey.get(t.series_key);
+    if (at === undefined) {
+      indexByKey.set(t.series_key, out.length);
+      out.push({ lead: t, occurrences: [t], cadence: null });
+    } else {
+      out[at].occurrences.push(t);
+    }
+  }
+  for (const g of out) {
+    if (g.occurrences.length < 2) continue;
+    // The lead is the soonest occurrence; the feed is already sorted, but a
+    // series can arrive out of order across tiers.
+    g.occurrences.sort((a, b) => (a.starts_at ?? "").localeCompare(b.starts_at ?? ""));
+    g.lead = g.occurrences[0];
+    g.cadence = cadenceOf(g.occurrences.map((o) => o.starts_at).filter((s): s is string => !!s));
+  }
+  return out;
 }

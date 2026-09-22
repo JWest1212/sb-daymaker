@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { thingPath } from "@/lib/seo/site";
 import Link from "next/link";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
@@ -86,7 +87,7 @@ export function PinPickerSheet({ things, onBuild, onClose }: PinPickerSheetProps
               </div>
             </button>
             <Link
-              href={`/thing/${thing.id}`}
+              href={thingPath(thing)}
               className="sbd-pinopt__info"
               aria-label={`Details for ${thing.title}`}
               onClick={(e) => e.stopPropagation()}

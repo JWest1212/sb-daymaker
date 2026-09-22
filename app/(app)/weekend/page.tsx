@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getPublishedThings } from "@/lib/things";
+import { getPublishedThings, stripForBrowse } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
 import { getVenuePhotoPools } from "@/lib/venues";
@@ -40,7 +40,8 @@ export default async function WeekendPage() {
 
   return (
     <ExploreClient
-      things={things}
+      /* R1 W6.9 (TP-B-05): fields no browse card reads are not serialized. */
+      things={stripForBrowse(things)}
       tod={getTimeOfDay()}
       dateLabel={getDateLabel()}
       weather={weather}

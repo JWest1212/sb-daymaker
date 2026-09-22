@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { exploreQuery, parseExploreState, PARAM, type ExploreState } from "@/lib/exploreParams";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Thing } from "@/lib/things";
 import type { TimeOfDay, Weather } from "@/lib/weather";
 import type { PoolPhoto } from "@/lib/venuePool";
@@ -48,6 +49,9 @@ export function ExploreClient({
   pinnedHeroId = null,
   venuePools = {},
   initialHorizon = "today",
+  initialArea = null,
+  initialOccasion = null,
+  initialActivity = null,
 }: {
   things: Thing[];
   tod: TimeOfDay;
@@ -64,12 +68,13 @@ export function ExploreClient({
    *  "weekend" so it's the crawlable web twin of the newsletter; Explore defaults
    *  to "today". */
   initialHorizon?: Horizon;
+  /** R1 W6.1. Server-parsed URL state, so the first paint already matches the
+   *  link that was opened. */
+  initialArea?: AreaKey | null;
+  initialOccasion?: OccasionKey | null;
+  initialActivity?: ActivityKey | null;
 }) {
   const { openTour } = useTour();
-  const [vibe, setVibe] = useState<OccasionKey | null>(null);
-  const [place, setPlace] = useState<AreaKey | null>(null);
-  const [activity, setActivity] = useState<ActivityKey | null>(null);
-  const [horizon, setHorizon] = useState<Horizon>(initialHorizon);
   const [sheetOpen, setSheetOpen] = useState<Dimension | null>(null);
   // Home Rework spec §11.4, the order dimensions were (most recently) set, so
   // "Show the closest matches" knows which filter to drop first.
@@ -79,36 +84,57 @@ export function ExploreClient({
   // Sets or clears one dimension's filter (key === null clears it) and keeps
   // filterOrder in sync. The single entry point for every way a filter can
   // change: doors/sheet taps, chip removal, and the header-search tag bridge.
+  // applyFilter is declared before writeUrl (it is used by the effects above),
+  // so it reaches it through a ref rather than being reordered.
   const applyFilter = (dimension: Dimension, key: string | null) => {
-    if (dimension === "vibe") setVibe(key as OccasionKey | null);
-    else if (dimension === "place") setPlace(key as AreaKey | null);
-    else setActivity(key as ActivityKey | null);
     setFilterOrder((prev) => {
       const rest = prev.filter((d) => d !== dimension);
       return key ? [...rest, dimension] : rest;
     });
+    writeUrl({
+      [dimension === "vibe" ? "occasion" : dimension === "place" ? "area" : "activity"]:
+        key as never,
+    });
   };
 
-  // Header search (spec §9.2 "Tags" group) sets a Vibe/Place filter from anywhere
-  // in the app via a `?vibe=`/`?place=` query param, since the search panel lives
-  // in the global header, outside this component's subtree. Applied once per
-  // param, then cleared so re-searching the same tag still triggers a change.
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  useEffect(() => {
-    const vibeParam = searchParams.get("vibe");
-    const placeParam = searchParams.get("place");
-    // G3.2 #3, the Activity door was already wired in the UI (setActivity via
-    // applyFilter); this adds the header-search bridge so an Activity tag hit
-    // lands on a working Activity-filtered Explore, mirroring vibe/place.
-    const activityParam = searchParams.get("activity");
-    if (!vibeParam && !placeParam && !activityParam) return;
-    if (vibeParam && vibeParam in OCCASION_BY_KEY) applyFilter("vibe", vibeParam);
-    if (placeParam && placeParam in AREA_BY_KEY) applyFilter("place", placeParam);
-    if (activityParam && activityParam in ACTIVITY_BY_KEY) applyFilter("activity", activityParam);
-    router.replace("/", { scroll: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+
+  // R1 W6.1. The URL IS the state. Not mirrored into React state, derived from
+  // it, so there is exactly one source of truth and nothing to keep in sync.
+  //
+  // This is what makes the rest work: a shared link opens the same view, the
+  // back button restores the previous one (the browser keeps scroll per history
+  // entry), and a filter sheet reading the "current" value cannot disagree with
+  // the feed, because they read the same place (EXP-016, EXP-019, DET-015).
+  //
+  // The server passes the same values it parsed, so the first paint matches
+  // before hydration.
+  const urlState = useMemo(
+    () => (searchParams ? parseExploreState((k) => searchParams.get(k)) : null),
+    [searchParams],
+  );
+  const horizon: Horizon =
+    urlState == null
+      ? initialHorizon
+      : pathname === "/weekend" && !searchParams?.get(PARAM.when)
+        ? "weekend"
+        : urlState.horizon;
+  const place = urlState ? urlState.area : (initialArea ?? null);
+  const vibe = urlState ? urlState.occasion : (initialOccasion ?? null);
+  const activity = urlState ? urlState.activity : (initialActivity ?? null);
+
+  const writeUrl = useCallback(
+    (next: Partial<ExploreState>) => {
+      const state: ExploreState = { horizon, area: place, occasion: vibe, activity, ...next };
+      // /weekend is a real route with its own metadata; a visitor who landed
+      // there stays on it until they choose a different horizon.
+      const base = pathname === "/weekend" && state.horizon === "weekend" ? "/weekend" : "/";
+      router.push(`${base}${exploreQuery(state)}`, { scroll: false });
+    },
+    [router, pathname, horizon, place, vibe, activity],
+  );
 
   const inHorizon = useMemo(
     () => things.filter((t) => withinHorizon(t, horizon, nowMs)),
@@ -185,10 +211,8 @@ export function ExploreClient({
 
   const clearAllFilters = () => {
     setRelaxedNote(null);
-    setVibe(null);
-    setPlace(null);
-    setActivity(null);
     setFilterOrder([]);
+    writeUrl({ area: null, occasion: null, activity: null });
   };
 
   // Home Rework spec §11.4 (required), drop the most-recently-added filter and
@@ -213,10 +237,8 @@ export function ExploreClient({
       const candidate = cascade(filterByArea(filterByActivity(filterByLens(inHorizon, v), a), p));
       if (candidate.length > 0) break;
     }
-    setVibe(v);
-    setPlace(p);
-    setActivity(a);
     setFilterOrder(order);
+    writeUrl({ occasion: v, area: p, activity: a });
     setRelaxedNote(
       relaxed.length > 0
         ? relaxed.map((d) => RELAXED_LABEL[d]).join(", ")
@@ -234,7 +256,9 @@ export function ExploreClient({
     setRelaxedNote(null);
     const dimension = sheetOpen;
     applyFilter(dimension, key);
-    if (dimension === "vibe" && key) trackEvent("lens_select", { tag: key });
+    // R1 W6.10. All three lenses, not just Occasion. The key and the dimension,
+    // nothing else: no titles, no URLs, no free text.
+    if (key) trackEvent("lens_select", { tag: key, dimension });
     setTimeout(() => setSheetOpen(null), 200);
   };
 
@@ -249,7 +273,8 @@ export function ExploreClient({
           onRemoveChip={(dimension) => applyFilter(dimension, null)}
           onResetChips={clearAllFilters}
           horizon={horizon}
-          onHorizonChange={setHorizon}
+          nowMs={nowMs}
+          onHorizonChange={(h) => writeUrl({ horizon: h })}
           resultCount={ordered.length}
         />
         <CascadeFeed

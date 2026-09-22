@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { thingPath } from "@/lib/seo/site";
 import Link from "next/link";
 import { ListCard, Button } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
@@ -40,7 +41,7 @@ export function SharedListView({ items }: { items: Thing[] }) {
                 title={t.title}
                 blurb={cardBlurb(t)}
                 when={[alreadyHappenedLine(t), cardFacts(t).join(" · ")].filter(Boolean).join(" · ")}
-                href={`/thing/${t.id}`}
+                href={thingPath(t)}
                 photo={t.photo_url ?? undefined}
                 photoAlt={imageAlt(t)}
                 visual={cardVisual(t)}

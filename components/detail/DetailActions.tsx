@@ -15,10 +15,15 @@ import { SBIcon } from "@/components/ui/SBIcon";
 export function DetailActions({
   id,
   title,
+  path,
   directionsHref,
 }: {
   id: string;
   title: string;
+  /** R1 W6.7 (MAP-001). The page's own canonical path, so Share hands out the
+   *  same readable URL the address bar shows. It used to rebuild the URL from
+   *  the id, which meant sharing a slug page still sent a UUID. */
+  path: string;
   directionsHref: string | null;
 }) {
   const { isSaved, toggle } = useSaves();
@@ -55,7 +60,7 @@ export function DetailActions({
         className="sbd-detailact"
         aria-label={`Share ${title}`}
         onClick={() => {
-          const url = `${window.location.origin}/thing/${id}`;
+          const url = `${window.location.origin}${path}`;
           void share(url, title);
         }}
       >

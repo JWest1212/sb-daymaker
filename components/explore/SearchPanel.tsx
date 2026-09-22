@@ -9,6 +9,7 @@ const EMPTY: SearchResults = {
   events: [], eventsOverflow: 0,
   venues: [], venuesOverflow: 0,
   tags: [], tagsOverflow: 0,
+  didYouMean: null,
 };
 
 const KIND_LABEL: Record<SearchHit["kind"], string> = {
@@ -129,13 +130,25 @@ export function SearchPanel({
           </button>
         </div>
 
+        {/* R1 W6.6 (EXP-011). Sentence case, not the shouting capitals the audit
+            found, and a way forward when a query misses: the fuzzy matcher's best
+            guess is offered as a tappable correction rather than a dead end. */}
         <div className="sbd-search-panel__meta" aria-live="polite">
           {trimmed
             ? total > 0
               ? `${total} match${total === 1 ? "" : "es"} for "${trimmed}"`
-              : `No matches for "${trimmed}".`
+              : `No matches for "${trimmed}". Try a venue, a neighborhood, or a tag.`
             : null}
         </div>
+        {trimmed && results.didYouMean ? (
+          <div className="sbd-search-panel__suggest">
+            Did you mean{" "}
+            <button type="button" onClick={() => setQuery(results.didYouMean!)}>
+              {results.didYouMean}
+            </button>
+            ?
+          </div>
+        ) : null}
 
         {total > 0 ? (
           <ul className="sbd-search-panel__results">
@@ -144,7 +157,7 @@ export function SearchPanel({
                 <li key={`${r.hit.kind}-${r.hit.id}`}>
                   {r.hit.href ? (
                     <Link href={r.hit.href} className="sbd-search-row" onClick={close}>
-                      <SearchRowTag kind={r.hit.kind} />
+                      <SearchRowTag kind={r.hit.kind} chip={r.hit.chip} />
                       <span className="sbd-search-row__name">{r.hit.label}</span>
                     </Link>
                   ) : (
@@ -156,7 +169,7 @@ export function SearchPanel({
                         close();
                       }}
                     >
-                      <SearchRowTag kind={r.hit.kind} />
+                      <SearchRowTag kind={r.hit.kind} chip={r.hit.chip} />
                       <span className="sbd-search-row__name">{r.hit.label}</span>
                       {/* G3.2 #4, door origin so overlapping tags (Nightlife) are distinguishable. */}
                       {r.hit.door ? <span className="sbd-search-row__door">{r.hit.door}</span> : null}
@@ -176,8 +189,13 @@ export function SearchPanel({
   );
 }
 
-function SearchRowTag({ kind }: { kind: SearchHit["kind"] }) {
-  return <span className={`sbd-search-row__tag sbd-search-row__tag--${kind}`}>{KIND_LABEL[kind]}</span>;
+/** R1 W6.6 (EXP-009). An event row is chipped with its DATE, a venue row with
+ *  the word Venue. The audit read "All Day Happy Hour" appearing as both as a
+ *  duplicate; the two rows now say plainly how they differ. */
+function SearchRowTag({ kind, chip }: { kind: SearchHit["kind"]; chip?: string }) {
+  return (
+    <span className={`sbd-search-row__tag sbd-search-row__tag--${kind}`}>{chip ?? KIND_LABEL[kind]}</span>
+  );
 }
 
 function SearchIcon() {

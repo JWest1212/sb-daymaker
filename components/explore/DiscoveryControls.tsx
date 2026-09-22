@@ -13,6 +13,7 @@ export function DiscoveryControls({
   onRemoveChip,
   onResetChips,
   horizon,
+  nowMs,
   onHorizonChange,
   resultCount,
 }: {
@@ -21,6 +22,9 @@ export function DiscoveryControls({
   onRemoveChip: (dimension: Dimension) => void;
   onResetChips: () => void;
   horizon: Horizon;
+  /** R1 W6.2. Server-supplied clock, so the date-derived pill labels do not
+   *  differ between the server render and hydration. */
+  nowMs: number;
   onHorizonChange: (h: Horizon) => void;
   /** Elevation v1 · Gate 3 · G3.8, live count of things matching the current
    *  door + horizon selection. Updates on every filter change. */
@@ -35,7 +39,7 @@ export function DiscoveryControls({
       <DiscoveryChips chips={chips} onRemove={onRemoveChip} onReset={onResetChips} />
       <div className="sbd-disco__axis">
         <span className="sbd-disco__axis-label" aria-hidden="true">When</span>
-        <HorizonSegment horizon={horizon} onChange={onHorizonChange} />
+        <HorizonSegment horizon={horizon} onChange={onHorizonChange} nowMs={nowMs} />
       </div>
       {typeof resultCount === "number" ? (
         <div className="sbd-disco__count" aria-live="polite">

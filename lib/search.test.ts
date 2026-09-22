@@ -78,11 +78,15 @@ describe("searchThings, events", () => {
     const r = searchThings({ query: "jazz", things, venueNames: {} });
     expect(r.events.map((h) => h.id)).toEqual(["b", "a"]);
   });
+  // R1 W6.6 (EXP-009). The three rows used to share one title. Since search now
+  // collapses a repeated title to a single row, identical titles would test the
+  // dedupe rather than the tie-break, so each row gets its own title. The rule
+  // under test is unchanged: same rank, same field, soonest first, undated last.
   it("breaks ties by soonest starts_at, undated last", () => {
     const things = [
-      thing({ id: "later", title: "Jazz Night", starts_at: "2026-08-01T00:00:00Z" }),
-      thing({ id: "soon", title: "Jazz Night", starts_at: "2026-07-15T00:00:00Z" }),
-      thing({ id: "undated", title: "Jazz Night", starts_at: null }),
+      thing({ id: "later", title: "Jazz Night Uptown", starts_at: "2026-08-01T00:00:00Z" }),
+      thing({ id: "soon", title: "Jazz Night Downtown", starts_at: "2026-07-15T00:00:00Z" }),
+      thing({ id: "undated", title: "Jazz Night Always", starts_at: null }),
     ];
     const r = searchThings({ query: "jazz night", things, venueNames: {} });
     expect(r.events.map((h) => h.id)).toEqual(["soon", "later", "undated"]);
@@ -218,5 +222,96 @@ describe("searchThings, G3.2 slug links", () => {
   it("falls back to the id when no slug yet", () => {
     const r = searchThings({ query: "jazz", things: [thing({ id: "u", slug: null, title: "Jazz Night" })], venueNames: {} });
     expect(r.events[0].href).toBe("/thing/u");
+  });
+});
+
+// ─── R1 W6.6 · search dedupe, chips, and the typo path ──────────────────────
+
+describe("search dedupe and labels (EXP-009)", () => {
+  const swim = (i: number) =>
+    thing({
+      id: `swim${i}`,
+      title: "Recreation Swim",
+      series_key: "recreation swim :: los banos pool",
+      starts_at: `2026-09-${20 + i}T18:00:00Z`,
+    });
+
+  it("collapses a series to one row instead of 38 occurrences", () => {
+    const r = searchThings({
+      query: "swim",
+      things: [swim(1), swim(2), swim(3), swim(4)],
+      venueNames: {},
+    });
+    expect(r.events).toHaveLength(1);
+    expect(r.eventsOverflow).toBe(0);
+  });
+
+  it("collapses same-title rows with no series key", () => {
+    const r = searchThings({
+      query: "crafts",
+      things: [
+        thing({ id: "a", title: "Santa Barbara Arts & Crafts Show", starts_at: "2026-09-27T10:00:00Z" }),
+        thing({ id: "b", title: "Santa Barbara Arts & Crafts Show", starts_at: "2026-10-04T10:00:00Z" }),
+      ],
+      venueNames: {},
+    });
+    expect(r.events).toHaveLength(1);
+  });
+
+  it("keeps genuinely different titles apart", () => {
+    const r = searchThings({
+      query: "swim",
+      things: [swim(1), thing({ id: "z", title: "Open Swim Night", starts_at: "2026-09-25T18:00:00Z" })],
+      venueNames: {},
+    });
+    expect(r.events).toHaveLength(2);
+  });
+
+  it("chips an event with its date and a venue with the word Venue", () => {
+    const t = thing({ id: "hh", title: "All Day Happy Hour", venue_id: "v1", starts_at: "2026-09-26T16:00:00Z" });
+    const r = searchThings({ query: "happy hour", things: [t], venueNames: { v1: "All Day Happy Hour" } });
+    expect(r.events[0].chip).toBe("Sep 26");
+    expect(r.venues[0].chip).toBe("Venue");
+  });
+
+  it("chips an undated place as Ongoing", () => {
+    const r = searchThings({
+      query: "mesa",
+      things: [thing({ id: "p", type: "place", title: "Mesa Lane Steps", starts_at: null })],
+      venueNames: {},
+    });
+    expect(r.events[0].chip).toBe("Ongoing");
+  });
+});
+
+describe("did you mean (EXP-011)", () => {
+  const pool = [
+    thing({ id: "m1", title: "Santa Barbara Museum of Art" }),
+    thing({ id: "m2", title: "Natural History Museum" }),
+    thing({ id: "s", title: "Sunset Sail" }),
+  ];
+
+  it("suggests the intended word for a one-edit typo", () => {
+    expect(searchThings({ query: "musuem", things: pool, venueNames: {} }).didYouMean).toBe("museum");
+  });
+
+  it("stays quiet when the query matched as typed", () => {
+    expect(searchThings({ query: "museum", things: pool, venueNames: {} }).didYouMean).toBeNull();
+  });
+
+  it("stays quiet when nothing is close (the honest dead end)", () => {
+    expect(searchThings({ query: "qwxz", things: pool, venueNames: {} }).didYouMean).toBeNull();
+  });
+
+  it("stays quiet for short queries, where one edit is most of the word", () => {
+    expect(searchThings({ query: "sai", things: pool, venueNames: {} }).didYouMean).toBeNull();
+  });
+
+  it("the typo also RETURNS the museums, not just a suggestion", () => {
+    const r = searchThings({ query: "musuem", things: pool, venueNames: {} });
+    expect(r.events.map((h) => h.label)).toEqual([
+      "Santa Barbara Museum of Art",
+      "Natural History Museum",
+    ]);
   });
 });

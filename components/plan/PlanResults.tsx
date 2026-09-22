@@ -217,6 +217,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           blurb: t.reason_to_go ?? "",
           category: t.happening_category ?? t.type ?? "",
           thingId: t.id,
+          slug: t.slug ?? null, // R1 W6.7 (MAP-001), the shared plan links by slug
           photo_url: t.photo_url ?? null,
           meal: s.meal ?? null,
           transition: tr ? { label: tr.label, parkingNote: tr.parkingNote } : null,

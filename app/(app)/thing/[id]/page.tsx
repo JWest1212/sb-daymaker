@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { areaLabelForThing } from "@/lib/areas";
 import { priceLabel, imageAlt } from "@/components/explore/derive";
-import { Tag, EmptyState } from "@/components/ui";
+import { Tag } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { OpenNow } from "@/components/detail/OpenNow";
@@ -16,7 +17,8 @@ import { eventDetailWhenWithYear } from "@/lib/format/eventTime";
 import { resolveOutbound } from "@/lib/links/outbound";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
-import { absoluteUrl, thingPath, guidePath } from "@/lib/seo/site";
+import { absoluteUrl, thingPath, guidePath, isUuid } from "@/lib/seo/site";
+import { redirectTargetFor } from "@/lib/links/redirects";
 
 export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
@@ -107,6 +109,12 @@ export default async function ThingPage({
   const { id } = await params;
   const t = await getThingBySlugOrId(id);
 
+  // R1 W6.7 (DET-007). A page with a slug has ONE address. A UUID URL still
+  // works, because old saves, old shares and old inbound links use it, but it
+  // moves permanently to the slug: a 308, so a share of a share carries the
+  // readable URL and search engines fold the two into one page.
+  if (t?.slug && isUuid(id)) permanentRedirect(thingPath(t));
+
   // G3.5, cross-link data: guides this thing stars in, and nearby same-zone things.
   const [guidesFeaturing, nearby] = t
     ? await Promise.all([
@@ -117,18 +125,17 @@ export default async function ThingPage({
     : [[], []];
 
   if (!t) {
-    return (
-      <div style={{ paddingTop: "var(--space-6)" }}>
-        <div className="sbd-backrow">
-          <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
-        </div>
-        <EmptyState
-          icon="🔍"
-          title="Not found"
-          message="This place or event may have been removed. Head back to Explore."
-        />
-      </div>
-    );
+    // R1 W6.7 (DET-007). Before giving up, ask whether this path MOVED. An old
+    // slug (one that was shortened, or a duplicate folded into its survivor) has
+    // a row in url_redirects; the proxy only catches UUID-shaped segments, so
+    // until now an old slug fell straight through to this dead end.
+    const moved = await redirectTargetFor(`/thing/${id}`);
+    if (moved) permanentRedirect(moved);
+    // R1 W6.7 (EDG-001). notFound(), not an inline empty state: the words were
+    // already right, the STATUS was not. This used to answer 200, which tells a
+    // crawler a dead listing is a healthy page. The copy now lives in this
+    // segment's not-found.tsx and the response is a real 404.
+    notFound();
   }
 
   // G1.3, the human-readable neighborhood/zone, granular first (Riviera, Funk
@@ -289,7 +296,7 @@ export default async function ThingPage({
           </a>
         ) : null}
         {/* G1.3, the Save / Share / Directions action row. */}
-        <DetailActions id={t.id} title={t.title} directionsHref={directionsHref} />
+        <DetailActions id={t.id} title={t.title} path={thingPath(t)} directionsHref={directionsHref} />
       </div>
 
       {/* G3.5, Nearby / pairs-with: 2-3 same-zone things, Tier-1 first. */}

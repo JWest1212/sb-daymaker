@@ -249,3 +249,44 @@ export function alreadyHappenedLine(t: Thing): string | null {
 export function imageAlt(t: Thing): string {
   return t.venue_name?.trim() ? `${t.title} at ${t.venue_name.trim()}` : t.title;
 }
+
+/**
+ * R1 W6.4 (EXP-025/EXP-026). The card's meta line, in ONE fixed order:
+ *
+ *   [Short area] · [Tue 7 PM] · [price]
+ *
+ * Every horizon uses this, so a card means the same thing wherever it appears.
+ * Before this, Today, Week and Month each assembled their own line in their own
+ * order, and the Month view used a different card entirely.
+ *
+ * A slot with nothing to say is dropped rather than rendered as a bare
+ * separator (EXP-030, G0.7).
+ */
+export function cardMeta(t: Thing): string {
+  const when =
+    t.type === "event" && t.starts_at
+      ? eventCardWhen(t.starts_at)
+      : recurringWhen(t) ?? undefined;
+  return [areaShortForThing(t), when, priceLabel(t)].filter(Boolean).join(" · ");
+}
+
+/**
+ * R1 W6.4 (D6). The meta line for a collapsed series card: the cadence and the
+ * next date, e.g. "Funk Zone · Every Sunday, next Sep 27 · Free".
+ */
+export function seriesMeta(t: Thing, cadence: string | null, nextStart: string | null): string {
+  const when = cadence
+    ? nextStart
+      ? `${cadence}, next ${SERIES_NEXT_FMT.format(new Date(nextStart))}`
+      : cadence
+    : nextStart
+      ? eventCardWhen(nextStart)
+      : undefined;
+  return [areaShortForThing(t), when, priceLabel(t)].filter(Boolean).join(" · ");
+}
+
+const SERIES_NEXT_FMT = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+  month: "short",
+  day: "numeric",
+});

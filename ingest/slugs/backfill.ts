@@ -15,7 +15,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getDb } from "../db";
-import { makeSlug, disambiguate } from "../../lib/slug/makeSlug";
+import { makeSlug, disambiguate, shortHash } from "../../lib/slug/makeSlug";
 import { isMain } from "../audits/_util";
 
 interface SlugRow {
@@ -32,16 +32,19 @@ async function slugTable(
   table: "things" | "guides",
   dry: boolean,
 ): Promise<{ idToSlug: Map<string, string>; assigned: number }> {
-  const { data, error } = await sb
-    .from(table)
-    .select("id, title, slug")
-    .eq("status", "published");
-  if (error) throw new Error(`${table} slug select: ${error.message}`);
-  const rows = (data ?? []) as unknown as SlugRow[];
+  // R1 W6.7. Archived rows too, for two reasons. They stay READABLE (W1.1/W2.2:
+  // a saved or shared link to something that already happened must still
+  // resolve), so they need a slug of their own. And their slugs must be in the
+  // taken-set, or a new row could be handed a slug an archived page is already
+  // serving, and one of the two URLs would resolve to the wrong thing.
+  const rows = await allRows(sb, table);
 
-  // Seed the taken-set with existing slugs so we never collide with a live URL.
-  const taken = new Set<string>();
-  for (const r of rows) if (r.slug) taken.add(r.slug);
+  // R1 W6.7. Seed the taken-set from EVERY row in the table, whatever its
+  // status, not just the ones being slugged. `things_slug_uidx` is a table-wide
+  // unique index: a draft, a rejected row or a merged duplicate can be holding
+  // "sunset-sail", and assigning it again fails the insert. Selecting only the
+  // public statuses is what made this backfill die partway through.
+  const taken = await allTakenSlugs(sb, table);
 
   const idToSlug = new Map<string, string>();
   let assigned = 0;
@@ -57,10 +60,108 @@ async function slugTable(
     assigned++;
     if (!dry) {
       const { error: upErr } = await sb.from(table).update({ slug }).eq("id", r.id);
-      if (upErr) throw new Error(`${table} slug update ${r.id}: ${upErr.message}`);
+      // R1 W6.7. One row losing a race for a slug must not abandon the other
+      // four hundred. It keeps its UUID URL, which still resolves, and the next
+      // sweep tries again.
+      if (upErr) {
+        console.warn(`  [slug] ${table} ${r.id} kept its uuid: ${upErr.message}`);
+        idToSlug.delete(r.id);
+        assigned--;
+      }
     }
   }
   return { idToSlug, assigned };
+}
+
+/**
+ * R1 W6.7 (DET-007). Drop a disambiguating hash that is no longer earning its
+ * place.
+ *
+ * "baby-and-me-808c" is what a collision looks like: two rows wanted
+ * "baby-and-me", so the second got its id's first four hex characters. When the
+ * other row is later archived, merged away or retitled, the bare slug comes free
+ * and the hash is just noise in a URL a person is meant to read and trust.
+ *
+ * Only ever shortens, never renames on any other grounds, and only when the bare
+ * base is claimed by nobody. The old slug gets a redirect row, so a link someone
+ * already has (or a browser's cached 301 from the UUID era) still arrives.
+ * Deterministic by id, so two rows that both want the same freed base resolve
+ * the same way on every run.
+ */
+export function planShortenings(
+  rows: { id: string; title: string; slug: string | null }[],
+  /** Every slug in the table, whatever the row's status: the unique index is
+   *  table-wide, so a base held by a draft row is not free. Defaults to the
+   *  given rows' own slugs, which is what the tests exercise. */
+  allTaken?: Iterable<string>,
+): { id: string; from: string; to: string }[] {
+  const taken = new Set<string>(allTaken ?? []);
+  for (const r of rows) if (r.slug) taken.add(r.slug);
+
+  const out: { id: string; from: string; to: string }[] = [];
+  for (const r of [...rows].sort((a, b) => a.id.localeCompare(b.id))) {
+    if (!r.slug) continue;
+    const base = makeSlug(r.title);
+    // Only the exact shape this generator produces. A slug that merely happens
+    // to end in four hex-ish characters is left alone.
+    if (r.slug !== `${base}-${shortHash(r.id)}`) continue;
+    if (taken.has(base)) continue;
+    taken.delete(r.slug);
+    taken.add(base);
+    out.push({ id: r.id, from: r.slug, to: base });
+  }
+  return out;
+}
+
+/**
+ * R1 W6.7. Every row this sweep may slug, paged.
+ *
+ * Same 1,000-row ceiling as the taken-set below. Unpaged, this select simply
+ * stopped at a thousand rows and the sweep reported success while leaving the
+ * rest of the catalog without slugs, which is why UUID URLs kept turning up in
+ * the feed long after the backfill had "run".
+ */
+async function allRows(sb: SupabaseClient, table: "things" | "guides"): Promise<SlugRow[]> {
+  const PAGE = 1000;
+  const statuses = table === "things" ? ["published", "archived"] : ["published"];
+  const out: SlugRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from(table)
+      .select("id, title, slug")
+      .in("status", statuses)
+      .order("id", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table} slug select: ${error.message}`);
+    const rows = (data ?? []) as unknown as SlugRow[];
+    out.push(...rows);
+    if (rows.length < PAGE) return out;
+  }
+}
+
+/**
+ * R1 W6.7. Every slug in one table, paged.
+ *
+ * A single select would stop at PostgREST's 1,000-row ceiling (CLAUDE.md), and
+ * this table is past that. A short taken-set is worse than useless here: it
+ * reports slugs as free that are not, and the assignment then fails against the
+ * table-wide unique index, one row at a time, for the rest of the run.
+ */
+async function allTakenSlugs(sb: SupabaseClient, table: "things" | "guides"): Promise<Set<string>> {
+  const PAGE = 1000;
+  const taken = new Set<string>();
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await sb
+      .from(table)
+      .select("slug")
+      .not("slug", "is", null)
+      .order("slug", { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table} taken-slug select: ${error.message}`);
+    const rows = (data ?? []) as { slug: string }[];
+    for (const r of rows) taken.add(r.slug);
+    if (rows.length < PAGE) return taken;
+  }
 }
 
 /** Upsert a batch of redirect rows (idempotent on from_path). */
@@ -69,7 +170,13 @@ async function upsertRedirects(
   rows: { from_path: string; to_path: string }[],
   dry: boolean,
 ): Promise<number> {
-  const clean = rows.filter((r) => r.from_path !== r.to_path);
+  // R1 W6.7. One row per from_path, last write winning. Postgres refuses an
+  // ON CONFLICT batch that touches the same key twice ("cannot affect row a
+  // second time"), and a shortened slug legitimately rewrites a from_path the
+  // canonical pass already queued.
+  const byFrom = new Map<string, { from_path: string; to_path: string }>();
+  for (const r of rows) if (r.from_path !== r.to_path) byFrom.set(r.from_path, r);
+  const clean = [...byFrom.values()];
   if (dry || clean.length === 0) return clean.length;
   const { error } = await sb.from("url_redirects").upsert(clean, { onConflict: "from_path" });
   if (error) throw new Error(`url_redirects upsert: ${error.message}`);
@@ -81,6 +188,25 @@ export interface SlugResult {
   guides: number;
   redirects: number;
   dupeRedirects: number;
+  /** R1 W6.7 (DET-007). Slugs whose no-longer-needed hash was dropped. */
+  shortened: number;
+}
+
+/** Apply planShortenings to one table. Returns what it changed (or would). */
+async function shortenSlugs(
+  sb: SupabaseClient,
+  table: "things" | "guides",
+  dry: boolean,
+): Promise<{ id: string; from: string; to: string }[]> {
+  const plan = planShortenings(await allRows(sb, table), await allTakenSlugs(sb, table));
+  if (dry) return plan;
+  const done: { id: string; from: string; to: string }[] = [];
+  for (const p of plan) {
+    const { error: upErr } = await sb.from(table).update({ slug: p.to }).eq("id", p.id);
+    if (upErr) continue; // self-heals next run; the hashed slug still works
+    done.push(p);
+  }
+  return done;
 }
 
 export async function ensureSlugs(sb: SupabaseClient, opts: { dry?: boolean } = {}): Promise<SlugResult> {
@@ -110,8 +236,27 @@ export async function ensureSlugs(sb: SupabaseClient, opts: { dry?: boolean } = 
     }
   }
 
+  // R1 W6.7 (DET-007). Shorten any slug whose hash is no longer needed, and
+  // leave a redirect behind so the old URL never breaks.
+  const shortenedThings = await shortenSlugs(sb, "things", dry);
+  const shortenedGuides = await shortenSlugs(sb, "guides", dry);
+  for (const [prefix, list] of [["/thing", shortenedThings], ["/discover", shortenedGuides]] as const) {
+    for (const sh of list) {
+      redirectRows.push({ from_path: `${prefix}/${sh.from}`, to_path: `${prefix}/${sh.to}` });
+      // The UUID path now points at the shortened slug, not the hashed one.
+      const idx = redirectRows.findIndex((r) => r.from_path === `${prefix}/${sh.id}`);
+      if (idx >= 0) redirectRows[idx] = { from_path: `${prefix}/${sh.id}`, to_path: `${prefix}/${sh.to}` };
+    }
+  }
+
   const redirects = await upsertRedirects(sb, [...redirectRows, ...dupeRows], dry);
-  return { things: things.assigned, guides: guides.assigned, redirects, dupeRedirects };
+  return {
+    things: things.assigned,
+    guides: guides.assigned,
+    redirects,
+    dupeRedirects,
+    shortened: shortenedThings.length + shortenedGuides.length,
+  };
 }
 
 async function main() {
@@ -122,6 +267,7 @@ async function main() {
   console.log(`  things:  ${r.things} newly slugged`);
   console.log(`  guides:  ${r.guides} newly slugged`);
   console.log(`  redirects upserted: ${r.redirects} (incl. ${r.dupeRedirects} merged-dupe -> survivor)`);
+  console.log(`  hashes dropped:     ${r.shortened} (R1 W6.7, DET-007)`);
   console.log("");
 }
 

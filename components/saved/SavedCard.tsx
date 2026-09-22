@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { thingPath } from "@/lib/seo/site";
 import type { Thing } from "@/lib/things";
 import type { SaveState } from "@/components/saves/SavesProvider";
 import { Tag } from "@/components/ui";
@@ -66,7 +67,7 @@ export function SavedCard({
         </div>
       ) : (
         /* Card body tap → opens detail screen */
-        <Link href={`/thing/${thing.id}`} className="sbd-savedcard__top sbd-savedcard__top--link">
+        <Link href={thingPath(thing)} className="sbd-savedcard__top sbd-savedcard__top--link">
           <div
             className={`sbd-savedcard__thumb sbd-media--${cardTone(index)}`}
             aria-hidden="true"

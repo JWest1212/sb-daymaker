@@ -405,6 +405,39 @@ export async function getThingBySlugOrId(param: string): Promise<Thing | null> {
   return fetchThing("slug", param);
 }
 
+/**
+ * R1 W6.9 (TP-B-05). Drop the fields no browse surface reads, before the pool
+ * crosses to the client.
+ *
+ * The homepage was shipping 935 KB of HTML: 408 rows, every column, so a client
+ * component could render fourteen cards. Most of that weight is text only the
+ * detail page shows. Nothing here changes what the SERVER fetched (the detail
+ * page, the plan engine and the sitemap still read the full row from their own
+ * queries); it changes what gets serialized into the page.
+ *
+ * Each field below was checked against every reader on the browse path. The
+ * three that look droppable and are not (`buy_url`, `setting`, `last_confirmed`,
+ * all read by components/explore/derive.ts) are deliberately kept.
+ */
+const NOT_ON_BROWSE = [
+  "blurb_long",      // detail page only
+  "local_note",      // detail page only
+  "practical_note",  // detail page only
+  "hours",           // the plan engine's open-hours check, from its own query
+  "updated_at",      // the sitemap's lastModified, from its own query
+  "photo_source",    // attribution, shown on the detail page
+  "verified_at",     // the detail page's "Verified" stamp
+  "verified_by",
+] as const satisfies readonly (keyof Thing)[];
+
+export function stripForBrowse(things: Thing[]): Thing[] {
+  return things.map((t) => {
+    const out = { ...t };
+    for (const k of NOT_ON_BROWSE) (out as Record<string, unknown>)[k] = null;
+    return out;
+  });
+}
+
 /** How many rows to scan before deduping. The list shows at most 5, but a zone
  *  full of one weekly series needs headroom to find 5 DISTINCT titles. */
 const NEARBY_SCAN_LIMIT = 200;

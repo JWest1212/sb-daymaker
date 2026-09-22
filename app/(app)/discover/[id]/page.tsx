@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   getGuideBySlugOrId,
   matchGuideThings,
@@ -9,7 +10,7 @@ import {
   getStopThingMap,
   shortGuideTitle,
 } from "@/lib/guides";
-import { getPublishedThings } from "@/lib/things";
+import { getPublishedThings, stripForBrowse } from "@/lib/things";
 import { getVenuePhotoPools } from "@/lib/venues";
 import { cascade } from "@/lib/explore";
 import { CascadeFeed } from "@/components/explore/CascadeFeed";
@@ -20,7 +21,8 @@ import type { StopDisplay } from "@/components/discover/GuideWalkSection";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { GuideShare } from "@/components/discover/GuideShare";
 import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
-import { guidePath } from "@/lib/seo/site";
+import { guidePath, isUuid } from "@/lib/seo/site";
+import { redirectTargetFor } from "@/lib/links/redirects";
 
 export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
@@ -89,19 +91,22 @@ export default async function GuidePage({
   const { id } = await params;
   const [result, things, venuePools] = await Promise.all([getGuideBySlugOrId(id), getPublishedThings(), getVenuePhotoPools()]);
 
+  // R1 W6.8 (TP-B-01). The server's clock, read once here and passed down, so
+  // the "Now" chapter badge is identical on both sides of hydration. Reading it
+  // inside the client component was the guide pages' React #418.
+  const nowMs = Date.now();
+
+  // R1 W6.7 (DET-007, DSC-004). A guide with a slug has ONE address; the UUID
+  // URL keeps working but moves there permanently.
+  if (result?.guide.slug && isUuid(id)) permanentRedirect(guidePath(result.guide));
+
   if (!result) {
-    return (
-      <div style={{ paddingTop: "var(--space-6)" }}>
-        <div className="sbd-backrow">
-          <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
-        </div>
-        <EmptyState
-          icon="🧭"
-          title="Guide not found"
-          message="This guide may have been unpublished. Head back to Discover SB."
-        />
-      </div>
-    );
+    // R1 W6.7 (DET-007). An old guide slug that has since been shortened still
+    // has a url_redirects row; the proxy only catches UUID segments, so without
+    // this the old link dead-ends.
+    const moved = await redirectTargetFor(`/discover/${id}`);
+    if (moved) permanentRedirect(moved);
+    notFound(); // R1 W6.7 (EDG-001), a real 404 status behind the same words
   }
 
   const { guide, stops } = result;
@@ -189,7 +194,7 @@ export default async function GuidePage({
               <h2 className="sbd-disc__title">What&rsquo;s on right now</h2>
             </div>
             {happenings.length > 0 ? (
-              <CascadeFeed items={happenings} horizon="today" venuePools={venuePools} />
+              <CascadeFeed items={stripForBrowse(happenings)} horizon="today" venuePools={venuePools} />
             ) : (
               <EmptyState
                 icon="🌙"
@@ -245,6 +250,7 @@ export default async function GuidePage({
         asides={content.asides}
         stopCount={stopCount}
         walkLine={content.walk_line}
+        nowMs={nowMs}
       />
 
       {/* title block */}

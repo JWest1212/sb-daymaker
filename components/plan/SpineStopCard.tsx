@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { thingPath } from "@/lib/seo/site";
 import { areaForThing } from "@/lib/areas";
 import { Badge } from "@/components/ui";
 import { SaveHeart } from "@/components/ui/SaveHeart";
@@ -58,7 +59,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
           <span className="sbd-scard__eb">{timeStr}</span>
         ) : null}
         <h3 className="sbd-scard__nm">
-          <Link href={`/thing/${thing.id}`} className="sbd-stretch">
+          <Link href={thingPath(thing)} className="sbd-stretch">
             {thing.title}
           </Link>
           {/* R1 W3.5. Separated from the title, so this reads "Cooking dinner"
@@ -82,7 +83,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
         <div className="sbd-scard__acttop">
           {/* ⓘ info, visual affordance; stretch link is the keyboard path */}
           <Link
-            href={`/thing/${thing.id}`}
+            href={thingPath(thing)}
             className="sbd-scard__info"
             aria-label={`Details for ${thing.title}`}
             tabIndex={-1}

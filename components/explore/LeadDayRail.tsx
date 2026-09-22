@@ -1,6 +1,7 @@
 import { ListCard } from "@/components/ui";
-import { groupByDay } from "@/lib/explore";
-import { cardBlurb, cardFacts, cardVisual, imageAlt } from "./derive";
+import { thingPath } from "@/lib/seo/site";
+import { collapseSeries, groupByDay } from "@/lib/explore";
+import { cardBlurb, cardMeta, cardVisual, imageAlt, seriesMeta } from "./derive";
 import type { Thing } from "@/lib/things";
 
 const SB_TZ = "America/Los_Angeles";
@@ -22,7 +23,13 @@ function formatDayLabel(starts_at: string): string {
 // (.sbd-dayhead) followed by ListCard rows. Same sticky-handoff mechanic as
 // Month's .sbd-weekhead, see components.css. groupByDay() order/logic unchanged.
 export function LeadDayRail({ items }: { items: Thing[] }) {
-  const days = groupByDay(items);
+  // R1 W6.4 (D6). One card per series per horizon, so a weekly thing appears
+  // once under its next date instead of on every day it runs. Collapsed BEFORE
+  // the day grouping, for the same reason Month collapses before week grouping:
+  // grouping first means a series only ever meets itself across groups.
+  const groups = collapseSeries(items);
+  const byLeadId = new Map(groups.map((g) => [g.lead.id, g]));
+  const days = groupByDay(groups.map((g) => g.lead));
 
   return (
     <div className="sbd-daygroup-list">
@@ -48,8 +55,13 @@ export function LeadDayRail({ items }: { items: Thing[] }) {
                     title={t.title}
                     blurb={cardBlurb(t)}
                     occasionKey={t.tags[0]}
-                    when={cardFacts(t).join(" · ")}
-                    href={`/thing/${t.id}`}
+                    when={
+                      (byLeadId.get(t.id)?.occurrences.length ?? 1) > 1
+                        ? seriesMeta(t, byLeadId.get(t.id)!.cadence, t.starts_at)
+                        : cardMeta(t)
+                    }
+                    dateCount={byLeadId.get(t.id)?.occurrences.length}
+                    href={thingPath(t)}
                     photo={t.photo_url ?? undefined}
                     photoAlt={imageAlt(t)}
                     visual={cardVisual(t)}

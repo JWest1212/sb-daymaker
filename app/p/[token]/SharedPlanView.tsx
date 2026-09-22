@@ -162,7 +162,10 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
                     </span>
                   </div>
                   <Link
-                    href={`/thing/${s.thingId}`}
+                    /* R1 W6.7 (MAP-001). The slug when the share carries one.
+                       Older shares only stored the id; that URL still resolves,
+                       and now redirects to the slug. */
+                    href={`/thing/${s.slug ?? s.thingId}`}
                     className="sbd-rcard__det"
                     aria-label={`Details for ${s.title}`}
                   >
