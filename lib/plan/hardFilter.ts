@@ -14,6 +14,7 @@ import { blockHourRange, recurringStartHours, hourInBlockRange } from "./rankCan
 import { openStateAt, type SbNow } from "@/lib/format/openNow";
 import { sameWalkCluster, adjacentZones } from "./zoneGraph";
 import type { Zone } from "@/lib/zones";
+import { withinZoneBox } from "@/lib/zones";
 
 // Budget rank: the lower the number, the cheaper. `free` sits below `$`.
 const BAND_RANK: Record<string, number> = { free: 0, $: 1, $$: 2, $$$: 3 };
@@ -115,6 +116,15 @@ export function violationReason(t: Thing, ctx: HardFilterContext): string | null
 
   // --- Transport reachability (only when BOTH the anchor and the candidate have a
   //     known zone; unknown zone is not a violation). ---
+  // R1 W3.3. On foot, an area-less candidate that DOES have coordinates is
+  // checked against the chosen area's rough box. A walking day is the one shape
+  // where "we don't know where it is" cannot be waved through: the visitor is
+  // going to walk there. Rows with no coordinates remain unknown and are capped
+  // by count at assembly time instead of excluded here.
+  if (anchorZone && !t.nearby_zone && params.transport === "walk" && t.lat != null && t.lng != null) {
+    if (!withinZoneBox(anchorZone, t.lat, t.lng)) return "walk_out_of_cluster";
+  }
+
   if (anchorZone && t.nearby_zone) {
     const z = t.nearby_zone as Zone;
     if (params.transport === "walk") {

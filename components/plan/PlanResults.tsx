@@ -69,6 +69,16 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
   const [pickerBlock, setPickerBlock] = useState<Block | null>(null);
   const [clearConfirm, setClearConfirm] = useState(false);
   const [didRegen, setDidRegen] = useState(false);
+  // R1 W3.2. Blocks the engine reported as unfillable, keyed by notes.ts.
+  const unfilledBlocks = useMemo(
+    () =>
+      new Set(
+        notes
+          .filter((n) => n.key?.startsWith("block:"))
+          .map((n) => n.key!.slice("block:".length) as Block),
+      ),
+    [notes],
+  );
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
   >("idle");
@@ -77,7 +87,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
 
   // Event 6: the draft spine is first produced from the questionnaire.
   useEffect(() => {
-    trackEvent("plan_built", { stops: stops.length });
+    // R1 W3.7, integers only, no free text.
+    trackEvent("plan_built", { stops: stops.length, notes: notes.length });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fire once on mount; stops.length at mount is the built draft size
 
@@ -143,9 +154,32 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     // Keep user-added stops; replace only fromDraft ones with fresh picks.
     const userStops = stops.filter((s) => !s.fromDraft);
     const alreadyPlaced = new Set(userStops.map((s) => s.thingId));
-    const fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced });
+    // R1 W3.2. Exclude the draft stops currently on screen too, so Regenerate
+    // reaches for genuinely different picks rather than re-ranking to the same
+    // ones. Tapping it and watching nothing change reads as a broken button.
+    const currentDraftIds = stops.filter((s) => s.fromDraft).map((s) => s.thingId);
+    const excluded = new Set([...alreadyPlaced, ...currentDraftIds]);
+    let fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced: excluded });
+
+    // If excluding them left nothing, the pool genuinely has no alternative.
+    // Fall back to the original draft and say so, rather than emptying the day.
+    const exhausted = fresh.stops.length === 0 && currentDraftIds.length > 0;
+    if (exhausted) {
+      fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced });
+    }
     setStops([...userStops, ...fresh.stops]);
-    setNotes(fresh.notes);
+    setNotes(
+      exhausted
+        ? [
+            ...fresh.notes,
+            {
+              kind: "empty_block" as const,
+              key: "no_alternatives",
+              text: "That is everything we have for this shape of day. Widen the plan for more options.",
+            },
+          ]
+        : fresh.notes,
+    );
     setDidRegen(true);
   }
 
@@ -264,6 +298,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           onAddStop={(block) => setPickerBlock(block)}
           onRemoveStop={removeStop}
           onSwapStop={swapStop}
+          unfilledBlocks={unfilledBlocks}
         />
 
         <div style={{ height: "120px" }} />

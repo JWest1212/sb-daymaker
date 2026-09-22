@@ -10,3 +10,4 @@ export { SBIcon, type IconName } from "./SBIcon";
 export { CardActions } from "./CardActions";
 export { Pill, DateEyebrow, PlacePill } from "./Pill";
 export { SectionHeader } from "./SectionHeader";
+export { Badge } from "./Badge";

@@ -14,6 +14,7 @@ function thing(over: Partial<Thing> = {}): Thing {
     status: "published",
     hero_eligible: true,
     is_civic: false,
+    source: null,
     title: over.id ?? "x",
     blurb: null,
     blurb_long: null,

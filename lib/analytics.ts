@@ -16,7 +16,9 @@ export function trackEvent(name: "save_been", props: { thingId: string }): void;
 export function trackEvent(name: "share_create", props: { kind: "list" | "plan" | "single" | "guide"; count: number }): void;
 export function trackEvent(name: "share_open", props: { kind: "list" | "plan"; count: number }): void;
 export function trackEvent(name: "lens_select", props: { tag: string }): void;
-export function trackEvent(name: "plan_built", props: { stops: number }): void;
+/** R1 W3.7 adds `notes`. Integers only, never free text: a note's wording can
+ *  contain a listing title, and no event carries content. */
+export function trackEvent(name: "plan_built", props: { stops: number; notes: number }): void;
 export function trackEvent(name: "subscribe_submit", props: { status: "pending" | "already" }): void;
 export function trackEvent(name: string, props: Record<string, string | number>): void {
   try {

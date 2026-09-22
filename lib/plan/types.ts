@@ -93,8 +93,14 @@ export interface Transition {
 /** Gate 4 · G4.6, an honest note surfaced when the solver could not satisfy a
  *  request (e.g. no in-budget dinner nearby), instead of shipping a broken plan. */
 export interface PlanNote {
-  kind: "meal_unfilled" | "empty_block" | "budget" | "cluster";
+  /** R1 W3.2 adds "thin_day" (fewer than two stops) and W3.3 adds "widened"
+   *  (the draft had to reach outside the chosen area). */
+  kind: "meal_unfilled" | "empty_block" | "budget" | "cluster" | "thin_day" | "widened";
   text: string;
+  /** R1 W3.2. Stable identity for the SUBJECT of the note, so two modules
+   *  describing the same problem in different words collapse to one sentence.
+   *  See lib/plan/notes.ts. Falls back to kind+text when absent. */
+  key?: string;
 }
 
 /** A saved single-day itinerary (localStorage). */

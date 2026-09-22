@@ -23,5 +23,7 @@ export function blockShortName(block: Block): string {
 export const BLOCK_LABEL: Record<Block, string> = {
   morning:   "Morning",
   afternoon: "Afternoon",
-  night:     "Night",
+  // R1 W3.6, "Evening" matches the site's greeting vocabulary ("Golden hour",
+  // "After dark"); "Night" was the only surface calling it something else.
+  night:     "Evening",
 };

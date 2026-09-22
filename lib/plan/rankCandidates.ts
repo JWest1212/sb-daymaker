@@ -123,8 +123,15 @@ export function rankCandidates(
       if (answers.vibes.some((v) => (t.tags as string[]).includes(v))) s += 3;
       // Who boost.
       if (whoBoost(answers.who, t)) s += 1;
-      // Zone proximity.
-      if (answers.zone && t.nearby_zone === answers.zone) s += 2;
+      // Zone proximity. R1 W3.3: when the visitor named an area, a known match
+      // in that area must outrank an area-less candidate, which previously scored
+      // the same as one across town. 38% of published rows have no nearby_zone
+      // (TP-A2-08), so without this the chosen area barely influenced the draft.
+      if (answers.zone) {
+        if (t.nearby_zone === answers.zone) s += 6;
+        else if (t.nearby_zone) s -= 2; // known, and somewhere else
+        // unknown zone scores neutrally: not a violation, just not preferred
+      }
       // Dated-on-date items already guaranteed by filter; reward with score.
       if (t.starts_at) s += 2;
       const savedState = savedStateFor(t.id);

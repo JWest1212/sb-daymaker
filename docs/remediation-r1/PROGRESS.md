@@ -1,9 +1,9 @@
 # R1 Progress (Claude Code keeps this current)
 
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
-Current run: A
-Current wave: Run A complete (Waves 1 and 2)
-Current task: awaiting "start Run B"
+Current run: B
+Current wave: 3 complete, starting 4
+Current task: W4.1
 
 ## Done (wave.task, commit)
 
@@ -29,6 +29,14 @@ Current task: awaiting "start Run B"
 - W2.6 the nearby list dedupes by normalized title, excludes civic and finished events, and caps at 5.
 - W2.7 the Live catalog gained an Archived filter, a civic filter, and Civic/Archived chips per row. Read-only; no new write route.
 - W2 commit: `feat(r1-w2): archive finished events, civic flag, real pick eligibility, eyebrow and nearby fixes`
+- W3.1 `isFood()` now excludes civic rows, food-service titles (food bank, pantry, meal service, soup kitchen), library-source programming, and free food EVENTS outside a named allowlist (market, tasting, pop-up, food truck, happy hour). Data pass recategorized 47 rows out of the food category (25 Food Distribution, 22 LOTG bookmobile stops), more than the spec's four because archiving had since revealed the rest.
+- W3.2 one notes reducer (`lib/plan/notes.ts`). Both meals.ts and validate.ts now key their notes by subject, so the same gap is stated once in the more informative wording. A draft under two stops says so; an unfillable block renders its slot with "Nothing found for [block] yet"; Regenerate excludes the current draft and, when the pool is exhausted, says so rather than emptying the day.
+- W3.3 the chosen area now outranks area-less candidates in the ranker, at most one area-less stop may ride along, walking days check an area-less candidate's coordinates against the area's box, and the draft says "We widened beyond [area] to fill the day" when it had to reach outside.
+- W3.4 the Plan horizon is 31 days, matching Explore's Month reach.
+- W3.5 a shared `Badge` component with a real space in the text stream and its own aria-label, fixing "Cookingdinner", "AFTERNOONNOW" and "THE CORENOW" in one change.
+- W3.6 "Seven quick questions"; "Night" is "Evening" everywhere; a stop shows "From your saves" OR "Suggested", never both.
+- W3.7 `plan_built` carries `stops` and `notes` counts, integers only.
+- W3 commit: `fix(r1-w3): plan honors meals and area, honest notes, badge component, horizon to 31 days`
 
 ## Checkpoints
 - CP1 archive dry-run: approved 2026-09-21

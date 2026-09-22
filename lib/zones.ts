@@ -60,3 +60,24 @@ export function nearestZone(lat: number, lng: number): Zone {
   }
   return best.zone;
 }
+
+/**
+ * R1 Wave 3 (W3.3). A rough box around each zone anchor, used for one narrow
+ * question: on foot, is this area-less candidate actually near the chosen area?
+ *
+ * Deliberately not a boundary file. The only decision it makes is whether a row
+ * with coordinates but no `nearby_zone` may join a walking day, so a coarse box
+ * is honest about its own precision. Rows with no coordinates stay "unknown" and
+ * are capped by count instead (see buildConciergeDay).
+ */
+export const ZONE_BOX_DEGREES = 0.018; // roughly 1.2 miles at this latitude
+
+/** True when a coordinate sits within the rough box around `zone`. */
+export function withinZoneBox(zone: Zone, lat: number, lng: number): boolean {
+  const anchor = ZONES.find((z) => z.zone === zone);
+  if (!anchor) return false;
+  return (
+    Math.abs(anchor.lat - lat) <= ZONE_BOX_DEGREES &&
+    Math.abs(anchor.lng - lng) <= ZONE_BOX_DEGREES
+  );
+}

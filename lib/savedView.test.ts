@@ -10,6 +10,7 @@ function thing(id: string, over: Partial<Thing> = {}): Thing {
     status: "published",
     hero_eligible: true,
     is_civic: false,
+    source: null,
     title: id,
     blurb: null,
     blurb_long: null,

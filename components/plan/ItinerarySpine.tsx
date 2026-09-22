@@ -20,6 +20,11 @@ interface ItinerarySpineProps {
   onAddStop: (block: Block) => void;
   onRemoveStop: (stopId: string) => void;
   onSwapStop?: (stopId: string) => void;
+  /** R1 W3.2. Blocks the engine could not fill from the pool at all, as opposed
+   *  to blocks the visitor emptied themselves. Only the former gets the "nothing
+   *  found" line; the slot itself renders either way, so the shape of the day
+   *  still reads. */
+  unfilledBlocks?: Set<Block>;
 }
 
 export function ItinerarySpine({
@@ -30,6 +35,7 @@ export function ItinerarySpine({
   onAddStop,
   onRemoveStop,
   onSwapStop,
+  unfilledBlocks,
 }: ItinerarySpineProps) {
   return (
     <div className="sbd-spine">
@@ -79,6 +85,15 @@ export function ItinerarySpine({
                   </div>
                 );
               })}
+
+              {/* R1 W3.2. Say why the slot is empty when the pool had nothing,
+                  rather than leaving an inviting "add your first stop" that
+                  implies the visitor simply has not got round to it. */}
+              {sectionStops.length === 0 && unfilledBlocks?.has(block) ? (
+                <p className="sbd-section__unfilled">
+                  Nothing found for {label.toLowerCase()} yet. Add a stop or widen the plan.
+                </p>
+              ) : null}
 
               {/* Trailing empty slot, always present */}
               <button

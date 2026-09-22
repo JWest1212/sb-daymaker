@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { Badge } from "@/components/ui";
 import Link from "next/link";
 import { useSaves } from "@/components/saves/SavesProvider";
 import type { GuideContent, GuideChapter } from "@/lib/guides";
@@ -245,7 +246,9 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
               <div className="sbd-gd-chband__body">
                 <div className="sbd-gd-chband__k">
                   {ch.k}
-                  {isNow && <span className="sbd-gd-chband__now">Now</span>}
+                  {/* R1 W3.5. Its own element with a real space, so this reads
+                      "AFTERNOON Now" rather than "AFTERNOONNOW". */}
+                  {isNow && <Badge tone="now" label="happening now" className="sbd-gd-chband__now">Now</Badge>}
                 </div>
                 <div className="sbd-gd-chband__nm">{ch.name}</div>
                 <div className="sbd-gd-chband__sum">{ch.sum}</div>

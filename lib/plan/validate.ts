@@ -6,6 +6,7 @@
 // broken plan. Pure, no I/O, no AI. No em dash (Golden Rule).
 
 import type { Thing } from "@/lib/things";
+import { noteKeys } from "./notes";
 import type { PlanNote, ResolvedParams, Stop } from "./types";
 import { violationReason } from "./hardFilter";
 import { withinClusterFootprint, anchorZoneFor } from "./cluster";
@@ -85,7 +86,9 @@ export function validatePlan(
       return t ? isFood(t) : false;
     })());
     if (!hasFood) {
-      notes.push({ kind: "meal_unfilled", text: `No ${meal} stop yet. Add one so the day has a meal at mealtime.` });
+      // R1 W3.2. Same key as meals.ts, so whichever ran first supplies the
+      // wording and the visitor never reads two sentences about one gap.
+      notes.push({ kind: "meal_unfilled", key: noteKeys.meal(meal), text: `No ${meal} stop yet. Add one so the day has a meal at mealtime.` });
     }
   }
 

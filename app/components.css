@@ -7448,3 +7448,34 @@ textarea.sbd-field__input {
   outline: 2px solid var(--pacific);
   outline-offset: 2px;
 }
+
+/* R1 W3.5 — the shared Badge. The separation that matters is the space inside
+   the component (a text node), not this margin: a margin fixes the look, not the
+   accessible name. These rules only make it look right once it reads right. */
+.sbd-badge {
+  display: inline-block;
+  vertical-align: baseline;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  background: var(--plaster-2);
+  color: var(--ink-2);
+}
+.sbd-badge--now { background: var(--terracotta); color: var(--paper); }
+.sbd-badge--meal { background: var(--plaster-2); color: var(--ink-2); text-transform: none; }
+.sbd-badge--suggested { background: var(--plaster-2); color: var(--ink-2); }
+/* Terracotta is a large-text-only token (the accessibility usage rule), so
+   the small badge label stays Ink-2 on a plaster ground. */
+.sbd-badge--saved { background: var(--plaster-2); color: var(--ink-2); }
+
+/* R1 W3.2 — an active part of day the engine could not fill. Stated in the slot
+   so the shape of the day still reads, instead of the section disappearing. */
+.sbd-section__unfilled {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+  color: var(--text-muted);
+}

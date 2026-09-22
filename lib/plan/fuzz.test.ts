@@ -4,6 +4,7 @@
 // Deterministic (seeded LCG), so a failure reproduces.
 
 import { describe, it, expect } from "vitest";
+import { noteKey } from "./notes";
 import { thing } from "./_fixture";
 import { buildConciergeDay } from "./buildConciergeDay";
 import { validatePlan } from "./validate";
@@ -104,10 +105,17 @@ describe("Gate 4 · A4.6 fuzz: 100 input combos, zero silent broken plans", () =
       const vr = validatePlan(res.stops, thingMap, res.params, NOW);
 
       // The contract: if validation is not clean, the solver must have surfaced a
-      // note (never a silent broken plan). Every fresh validate note must also be
-      // present in the returned notes.
+      // note (never a silent broken plan). Every problem a fresh validate finds
+      // must be covered by the returned notes.
+      //
+      // R1 W3.2: matched by note KEY, not by exact text. One reducer now decides
+      // the wording for each subject, so meals.ts's specific "we couldn't find an
+      // open lunch spot in your area and budget" legitimately replaces
+      // validate.ts's generic "No lunch stop yet". Comparing strings would call
+      // that a silent failure when it is the opposite: the visitor is told more,
+      // once, instead of the same gap twice in two voices.
       if (!vr.ok) {
-        const missing = vr.notes.filter((n) => !res.notes.some((x) => x.text === n.text));
+        const missing = vr.notes.filter((n) => !res.notes.some((x) => noteKey(x) === noteKey(n)));
         if (missing.length > 0) silentFailures.push({ combo: answers, badNotes: missing.map((m) => m.text) });
       }
 

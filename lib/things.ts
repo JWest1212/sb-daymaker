@@ -63,6 +63,9 @@ export interface Thing {
   hero_eligible: boolean;
   /** R1 W2.3. A municipal meeting. Never in the public pool; see D3/D14. */
   is_civic: boolean;
+  /** The source URL this row came from. R1 W3.1 reads it to tell a library's
+   *  cooking class (programming) from a restaurant. */
+  source: string | null;
   lat: number | null;
   lng: number | null;
   price_band: string | null;
@@ -126,7 +129,7 @@ const BASE_COLS = `id, type, title, blurb, blurb_long, reason_to_go, status,
 // fallback select) so a DB that somehow lacks them still renders a degraded feed
 // rather than 400ing both the primary and the fallback. Same "prefer the richer
 // select, fall back if it 400s" posture the activities/local_note columns use.
-const G1_COLS = `quality_tier, hours, verified_at, verified_by, last_confirmed, setting, address, lat, lng, practical_note, slug, updated_at, hero_eligible, is_civic`;
+const G1_COLS = `quality_tier, hours, verified_at, verified_by, last_confirmed, setting, address, lat, lng, practical_note, slug, updated_at, hero_eligible, is_civic, source`;
 // G1.9, `confidence` now comes back with each tag so the read path can order the
 // card/detail chips by it (the card shows the single highest-confidence tag).
 const RELATIONS = `thing_tags ( tag, confidence ),
@@ -181,6 +184,7 @@ function mapThing(row: Record<string, unknown>, dogFriendlyVenueIds: Set<string>
     address: (row.address as string) ?? null,
     hero_eligible: (row.hero_eligible as boolean) ?? true,
     is_civic: (row.is_civic as boolean) ?? false,
+    source: (row.source as string) ?? null,
     lat: (row.lat as number) ?? null,
     lng: (row.lng as number) ?? null,
     price_band: (row.price_band as string) ?? null,

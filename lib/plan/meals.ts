@@ -10,16 +10,75 @@ import type { Block, Meal, PlanNote, ResolvedParams, Stop } from "./types";
 import { hardFilter, withinBudgetBand } from "./hardFilter";
 import { rankCandidates } from "./rankCandidates";
 import { anchorZoneFor } from "./cluster";
+import { noteKeys } from "./notes";
 import type { Zone } from "@/lib/zones";
 
 const FOOD_CATEGORIES = new Set(["food_drink_spot", "food_drink_event"]);
 
-/** A thing that reads as a place to eat/drink (a meal candidate). */
+/**
+ * R1 Wave 3 (W3.1). Things that are tagged food but are not somewhere you eat a
+ * meal. A food bank is the audit's case: "Food Distribution | Westside
+ * Neighborhood Center" carries happening_category "food_drink_event" and the
+ * activity "food-drink", so it satisfied the lunch check, seated itself as the
+ * single stop of a couple's afternoon, and in doing so SUPPRESSED both honest
+ * "we could not find lunch" notes (TP-A9-04). Sending a couple on a date to a
+ * food bank is the worst single output the audit found.
+ */
+const NOT_A_MEAL = [
+  /\bfood\s+distribution\b/i,
+  /\bfood\s+bank\b/i,
+  /\bfood\s+pantry\b/i,
+  /\bpantry\b/i,
+  /\bmeal\s+service\b/i,
+  /\bmeal\s+delivery\b/i,
+  /\bsoup\s+kitchen\b/i,
+  /\bfree\s+(?:meals?|lunch|groceries|grocery)\b/i,
+  /\bcommunity\s+fridge\b/i,
+];
+
+/** Free food-ish events that ARE somewhere you would choose to eat or drink. */
+const FREE_FOOD_ALLOWLIST = [
+  /\bfarmers?\s*'?\s*market\b/i,
+  /\bmarket\b/i,
+  /\btasting\b/i,
+  /\bpop[-\s]?up\b/i,
+  /\bfood\s+truck\b/i,
+  /\bhappy\s+hour\b/i,
+];
+
+/** Sources that publish programming, not restaurants. A library's cooking class
+ *  is a class; it is not where you take someone to lunch. */
+function isLibrarySource(t: Thing): boolean {
+  return /library/i.test(t.source ?? "");
+}
+
+/**
+ * A thing that reads as a place to eat or drink (a meal candidate).
+ *
+ * R1 W3.1 narrowed this. It used to accept any row carrying a food category, the
+ * "food-drink" activity, or the wine_food tag, with no exclusions at all.
+ */
 export function isFood(t: Thing): boolean {
-  if (t.happening_category && FOOD_CATEGORIES.has(t.happening_category)) return true;
-  if ((t.activities as string[]).includes("food-drink")) return true;
-  if ((t.tags as string[]).includes("wine_food")) return true;
-  return false;
+  // A municipal meeting is never lunch, whatever else it carries.
+  if (t.is_civic) return false;
+  if (NOT_A_MEAL.some((re) => re.test(t.title))) return false;
+  if (isLibrarySource(t)) return false;
+
+  const isFoodish =
+    (t.happening_category != null && FOOD_CATEGORIES.has(t.happening_category)) ||
+    (t.activities as string[]).includes("food-drink") ||
+    (t.tags as string[]).includes("wine_food");
+  if (!isFoodish) return false;
+
+  // A free food EVENT is usually a giveaway or a community service rather than a
+  // meal out. Markets, tastings and pop-ups are the real exceptions, so they are
+  // named rather than inferred. Free PLACES are unaffected: a free-to-enter cafe
+  // is still a cafe.
+  const isFree = t.free === true || t.price_band === "free";
+  if (isFree && t.happening_category === "food_drink_event") {
+    return FREE_FOOD_ALLOWLIST.some((re) => re.test(t.title));
+  }
+  return true;
 }
 
 /** Which block seats which meal in the 3-block model. Lunch prefers the afternoon
@@ -101,8 +160,11 @@ export function insertMeals(input: InsertMealsInput): InsertMealsResult {
     const ranked = rankCandidates(block, params, searchPool, savedStateFor, placed);
     const pick = ranked[0];
     if (!pick) {
+      // R1 W3.2. Keyed by the meal, so validate.ts's generic version of the same
+      // problem collapses into this more informative one instead of doubling it.
       notes.push({
         kind: "meal_unfilled",
+        key: noteKeys.meal(meal),
         text: `We couldn't find an open ${MEAL_NOUN[meal]} spot in your area and budget. Add one you like, or widen the plan.`,
       });
       continue;

@@ -48,7 +48,7 @@ const DOT_OF: Partial<Record<Step, number>> = {
 const PERIODS: { value: Block; glyph: string; label: string; desc: string }[] = [
   { value: "morning",   glyph: "🌅", label: "Morning", desc: "Coffee, a walk, the marine layer burning off" },
   { value: "afternoon", glyph: "⛅", label: "Afternoon", desc: "The heart of the day" },
-  { value: "night",     glyph: "🌙", label: "Night", desc: "Dinner, a show, a nightcap" },
+  { value: "night",     glyph: "🌙", label: "Evening", desc: "Dinner, a show, a nightcap" },
 ];
 
 const WHO: { value: Who; glyph: string; label: string; desc: string }[] = [
@@ -207,7 +207,10 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
     if (when === "pick") return pickDate;
     return todayISO();
   }, [when, pickDate]);
-  const dayChoices = useMemo(() => nextDays(14), []);
+  // R1 W3.4. 31 days, matching Explore's Month reach. Plan used to stop at 14,
+  // so a visitor could see something on Explore's Month view and then find Plan
+  // would not build a day for it.
+  const dayChoices = useMemo(() => nextDays(31), []);
 
   // Advance with a brief highlight so the tap registers before the screen turns.
   function advance(key: string, to: Step) {
@@ -283,7 +286,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             <p className="sbd-wizintro__eyebrow">The concierge day</p>
             <h1 className="sbd-wizintro__title">Tell us the shape, we&rsquo;ll draft the day.</h1>
             <p className="sbd-wizintro__sub">
-              A handful of taps and you get a Santa Barbara day that actually works:
+              Seven quick questions and you get a Santa Barbara day that actually works:
               open when it says, clustered so you&rsquo;re not driving in circles, parked
               where a local parks, fed at mealtimes.
             </p>
@@ -324,7 +327,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
           options={[
             { key: "today", glyph: "☀️", label: "Today" },
             { key: "tomorrow", glyph: "🌤️", label: "Tomorrow" },
-            { key: "pick", glyph: "📅", label: "Pick a date", desc: pickOpen ? undefined : "Choose any day in the next two weeks" },
+            { key: "pick", glyph: "📅", label: "Pick a date", desc: pickOpen ? undefined : "Choose any day in the next month" },
           ]}
           isSelected={(k) => when === k}
           onSelect={(k) => {

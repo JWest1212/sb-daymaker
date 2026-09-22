@@ -12,6 +12,8 @@ import { rankCandidates, type RankedThing } from "./rankCandidates";
 import { clusterBoost, anchorZoneFor } from "./cluster";
 import { insertMeals } from "./meals";
 import { validatePlan } from "./validate";
+import { reduceNotes, emptyBlockText, noteKeys } from "./notes";
+import { ZONE_LABEL } from "@/lib/zones";
 import type { SbNow } from "@/lib/format/openNow";
 import type { Zone } from "@/lib/zones";
 
@@ -125,23 +127,74 @@ export function buildConciergeDay(
     return [...meals, ...acts];
   });
 
-  // Honest empty-block note when an active period got nothing at all.
+  // R1 W3.3. When the visitor named an area, at most ONE area-less stop may ride
+  // along. 38% of rows have no nearby_zone, so without a cap a "Funk Zone" day
+  // could fill entirely with things whose area nobody knows, which honors the
+  // request in name only. Known-area matches already outrank them in the ranker;
+  // this bounds what is left.
+  const MAX_UNKNOWN_AREA_STOPS = 1;
+  let droppedForUnknownArea = 0;
+  if (params.zone) {
+    const byId = new Map(pool.map((t) => [t.id, t]));
+    let unknownSeen = 0;
+    const kept: Stop[] = [];
+    for (const st of stops) {
+      const t = byId.get(st.thingId);
+      if (t && !t.nearby_zone) {
+        unknownSeen++;
+        if (unknownSeen > MAX_UNKNOWN_AREA_STOPS) { droppedForUnknownArea++; continue; }
+      }
+      kept.push(st);
+    }
+    stops.length = 0;
+    stops.push(...kept);
+  }
+
+  // R1 W3.3. Say so when the day could not be filled from the chosen area. The
+  // visitor asked for one place; reaching outside it is a reasonable thing to do
+  // and an unreasonable thing to do silently.
+  if (params.zone) {
+    const byId = new Map(pool.map((t) => [t.id, t]));
+    const outside = stops.some((st) => {
+      const t = byId.get(st.thingId);
+      return t != null && t.nearby_zone != null && t.nearby_zone !== params.zone;
+    });
+    if (outside) {
+      notes.push({
+        kind: "widened",
+        key: noteKeys.widened,
+        text: `We widened beyond ${ZONE_LABEL[params.zone]} to fill the day.`,
+      });
+    }
+  }
+
+  // Honest empty-block note when an active period got nothing at all. R1 W3.2:
+  // the slot itself still renders (see PlanResults), so the shape of the day
+  // reads even where a period could not be filled.
+  const emptyBlocks: Block[] = [];
   for (const block of params.periods) {
     const any = stops.some((s) => s.block === block);
     if (!any) {
-      notes.push({ kind: "empty_block", text: `Nothing open matched your ${block} filters. Loosen a filter or add a stop.` });
+      emptyBlocks.push(block);
+      notes.push({ kind: "empty_block", key: noteKeys.block(block), text: emptyBlockText(block) });
     }
   }
 
   // Final validation (auto-notes; UI can offer swap/repair). Does not mutate.
   const thingMap = new Map(pool.map((t) => [t.id, t]));
   const validation = validatePlan(stops, thingMap, params, now);
-  for (const nte of validation.notes) {
-    // De-dupe with meal/empty notes already added.
-    if (!notes.some((x) => x.text === nte.text)) notes.push(nte);
-  }
+  notes.push(...validation.notes);
 
-  return { stops, notes, params };
+  // R1 W3.2. One reducer decides what the draft says about itself, so two
+  // modules can never contradict each other about the same gap, and a day too
+  // thin to be a day always says so.
+  const reduced = reduceNotes(notes, {
+    stopCount: stops.length,
+    meals: params.meals,
+    emptyBlocks,
+  });
+
+  return { stops, notes: reduced, params };
 }
 
 /**
