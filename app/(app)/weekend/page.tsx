@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMeta({
   title: "Things to Do in Santa Barbara This Weekend · SB Daymaker",
   description:
-    "The weekend in Santa Barbara: events, live music, markets, and outings worth your time this weekend, refreshed daily by a local.",
+    "The weekend in Santa Barbara: events, live music, markets, and outings worth your time this weekend, refreshed daily.",
   path: "/weekend",
 });
 

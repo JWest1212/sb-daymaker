@@ -3,7 +3,7 @@
 Branch: remediation-r1 (cut from `main` at `e823ab1`, the production branch)
 Current run: C complete (Waves 6, 7, 8)
 Current wave: 8 complete, committed; CP5 approved 2026-09-22
-Current task: none. R1 complete, pending push (Blocked)
+Current task: none. R1 complete, pending push (Blocked). Post-R1 follow-ups committed 2026-09-22: claims removed, plain horizon headings, picker tile art.
 
 ## Done (wave.task, commit)
 

@@ -21,22 +21,22 @@ export interface Activity {
   key: ActivityKey;
   label: string;
   description: string;
-  /** /public/tiles/activity/{key}.jpg, founder-curated (§6.3); missing files fall
+  /** /public/tiles/activity/{key}.svg (scripts/gen-tile-art.mjs); was .jpg, founder-curated (§6.3); missing files fall
    *  back to a token-colored tile (the Activity door's terracotta accent), label only. */
   tile: string;
 }
 
 export const ACTIVITIES: Activity[] = [
-  { key: "live-music", label: "Live Music", description: "Bands, DJs, and open mics.", tile: "/tiles/activity/live-music.jpg" },
-  { key: "arts-galleries", label: "Arts & Culture", description: "Openings, exhibits, and studio visits.", tile: "/tiles/activity/arts-galleries.jpg" },
-  { key: "food-drink", label: "Food & Drink", description: "Restaurants, tastings, and pop-ups.", tile: "/tiles/activity/food-drink.jpg" },
-  { key: "outdoors", label: "Outdoors", description: "Hikes, beaches, and open air.", tile: "/tiles/activity/outdoors.jpg" },
-  { key: "markets", label: "Markets", description: "Farmers markets and maker fairs.", tile: "/tiles/activity/markets.jpg" },
-  { key: "family-kids", label: "Family & Kids", description: "All-ages, kid-friendly programming.", tile: "/tiles/activity/family-kids.jpg" },
-  { key: "film-talks", label: "Film & Talks", description: "Screenings, lectures, and author talks.", tile: "/tiles/activity/film-talks.jpg" },
-  { key: "wellness-fitness", label: "Wellness & Fitness", description: "Yoga, studios, and active recovery.", tile: "/tiles/activity/wellness-fitness.jpg" },
-  { key: "nightlife", label: "Nightlife", description: "Bars, late sets, and after-dark spots.", tile: "/tiles/activity/nightlife.jpg" },
-  { key: "community-festivals", label: "Community & Festivals", description: "Fairs, festivals, and community gatherings.", tile: "/tiles/activity/community-festivals.jpg" },
+  { key: "live-music", label: "Live Music", description: "Bands, DJs, and open mics.", tile: "/tiles/activity/live-music.svg" },
+  { key: "arts-galleries", label: "Arts & Culture", description: "Openings, exhibits, and studio visits.", tile: "/tiles/activity/arts-galleries.svg" },
+  { key: "food-drink", label: "Food & Drink", description: "Restaurants, tastings, and pop-ups.", tile: "/tiles/activity/food-drink.svg" },
+  { key: "outdoors", label: "Outdoors", description: "Hikes, beaches, and open air.", tile: "/tiles/activity/outdoors.svg" },
+  { key: "markets", label: "Markets", description: "Farmers markets and maker fairs.", tile: "/tiles/activity/markets.svg" },
+  { key: "family-kids", label: "Family & Kids", description: "All-ages, kid-friendly programming.", tile: "/tiles/activity/family-kids.svg" },
+  { key: "film-talks", label: "Film & Talks", description: "Screenings, lectures, and author talks.", tile: "/tiles/activity/film-talks.svg" },
+  { key: "wellness-fitness", label: "Wellness & Fitness", description: "Yoga, studios, and active recovery.", tile: "/tiles/activity/wellness-fitness.svg" },
+  { key: "nightlife", label: "Nightlife", description: "Bars, late sets, and after-dark spots.", tile: "/tiles/activity/nightlife.svg" },
+  { key: "community-festivals", label: "Community & Festivals", description: "Fairs, festivals, and community gatherings.", tile: "/tiles/activity/community-festivals.svg" },
 ];
 
 export const ACTIVITY_BY_KEY: Record<ActivityKey, Activity> = Object.fromEntries(

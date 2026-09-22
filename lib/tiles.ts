@@ -27,7 +27,7 @@ export function placeTiles(inHorizon: Thing[]): Tile[] {
   return AREAS.map((a) => ({
     key: a.key,
     label: a.label,
-    image: `/tiles/place/${a.key}.jpg`,
+    image: `/tiles/place/${a.key}.svg`, // scripts/gen-tile-art.mjs
     count: inHorizon.filter((t) => areaForThing(t) === a.key).length,
   }));
 }
@@ -48,7 +48,7 @@ export function vibeTiles(inHorizon: Thing[]): Tile[] {
   return occasions.map((o) => ({
     key: o.key,
     label: o.label,
-    image: `/tiles/vibe/${o.key}.jpg`,
+    image: `/tiles/vibe/${o.key}.svg`, // scripts/gen-tile-art.mjs
     count: inHorizon.filter((t) => t.tags.includes(o.key)).length,
   }));
 }

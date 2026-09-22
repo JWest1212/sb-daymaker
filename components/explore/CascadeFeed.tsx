@@ -16,13 +16,16 @@ import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isG
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
+// Section heading per horizon. 2026-09-22 (Jim): plain "Today" and its siblings.
+// Today keeps events from earlier in the day on purpose; "Happening" implied
+// they were all still on.
 const HORIZON_LABEL: Record<Horizon, string> = {
-  today: "Happening Today",
-  tomorrow: "Happening Tomorrow",
-  weekend: "Happening This Weekend",
-  next_weekend: "Happening Next Weekend",
-  week: "Happening This Week",
-  month: "Happening This Month",
+  today: "Today",
+  tomorrow: "Tomorrow",
+  weekend: "This Weekend",
+  next_weekend: "Next Weekend",
+  week: "This Week",
+  month: "This Month",
 };
 
 // Home Rework spec §12, the R1 ribbon label maps to the current horizon.

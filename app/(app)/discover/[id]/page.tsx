@@ -379,13 +379,13 @@ export default async function GuidePage({
         </div>
       )}
 
-      {/* colophon */}
-      <div className="sbd-gd-colophon">
-        <span className="sbd-gd-colophon__text">
-          WRITTEN BY A LOCAL
-          {refreshedLabel ? ` · REFRESHED ${refreshedLabel}` : ""}
-        </span>
-      </div>
+      {/* colophon. "WRITTEN BY A LOCAL" removed 2026-09-22 (Jim): no copy claims
+          a person wrote or curates what the site shows. The date stays. */}
+      {refreshedLabel ? (
+        <div className="sbd-gd-colophon">
+          <span className="sbd-gd-colophon__text">REFRESHED {refreshedLabel}</span>
+        </div>
+      ) : null}
 
       {/* G5.1, share the guide as a designed OG card (no PII, native share). */}
       <div className="sbd-gd-sharerow">

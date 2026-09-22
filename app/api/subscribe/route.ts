@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     preheader: "One tap and Santa Barbara lands in your inbox.",
     heading: "Confirm your subscription",
     paragraphs: [
-      "Tap the button and you're in: a local's pick, a few more worth your time, and one evergreen spot.",
+      "Tap the button and you're in: the pick of what's on, a few more worth your time, and one evergreen spot.",
     ],
     button: { label: "Confirm my subscription", url: confirmUrl },
     footNote: "Didn't sign up? Ignore this email, or {unsubscribe}.",

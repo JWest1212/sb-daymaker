@@ -56,13 +56,15 @@ Per the index (line 93), these audit items were retracted or found not to be def
 
 - **`git push`**: iCloud has evicted most of the repo's loose git objects, so the branch exists only locally and no Vercel preview can be built. Fix: move the repo out of `~/Documents` (a non-synced path).
 
-## Open for Jim (not bugs to surprise-fix)
+## Decided by Jim after R1 (2026-09-22)
 
-Canon §10 in CLAUDE.md v11 carries the full list. The ones that need a decision rather than work:
+- **Curation and process claims removed.** The site is largely automated, so nothing says a person curates, reviews, writes or hand-picks: the hero sub-line, the home and weekend descriptions, the submit page and its success line, the newsletter block and emails, the edition copy pools, and the guides' "WRITTEN BY A LOCAL" stamp.
+- **The Gmail check passed** (Jim saw the confirmation email).
+- **"Today" keeps events from earlier in the day** (it already did; the feed keys on the calendar day). The headings are now plain: Today, Tomorrow, This Weekend, Next Weekend, This Week, This Month.
+- **Picker tiles have artwork.** 26 generated SVGs (`scripts/gen-tile-art.mjs`), a line icon on the picker's own colour, replacing photographs that were never shipped.
 
-- Voice and process claims the code cannot back: "curated by someone who knows the town", "Refreshed every day by a local", "A local reads every submission within a few days", "The best submissions get featured", "one local's pick". Keep only if they describe what you actually do.
+## Still open for Jim
+
 - The hero line "Everything worth doing in Santa Barbara, in one place" stays (W8.2). The gap to know about: 86 percent of upcoming events are Downtown, and Waterfront, the Mesa and Upper State have none.
-- "Happening Today" still lists events that ended earlier today (the Today horizon keys on the calendar day).
 - Plan's parking tip for the Funk Zone ("park once in the lot off Garden") contradicts the Funk Zone guide ("the lots are a trap").
-- The door sheet tile photographs were never shipped and 404 in production.
-- Gmail rendering of the confirmation email (evidence/w7-email-confirm-390.png shows the browser render).
+- The push: move the repo out of iCloud (steps given 2026-09-22), then push and remeasure LCP on a preview.

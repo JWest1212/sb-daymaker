@@ -12,6 +12,6 @@ export default function Image() {
   return ogCard({
     eyebrow: "Santa Barbara, daily",
     title: "What's worth doing today",
-    line: "Find it, save it, share it. Refreshed every day by a local.",
+    line: "Find it, save it, share it. Refreshed every day.",
   });
 }

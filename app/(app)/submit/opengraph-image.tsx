@@ -7,8 +7,8 @@ export const alt = "Suggest an event or business to SB Daymaker";
 
 export default function Image() {
   return ogCard({
-    eyebrow: "Tell a local",
+    eyebrow: "Know something good?",
     title: "Suggest an event or business",
-    line: "A local reads every submission within a few days.",
+    line: "Know something worth doing? Add it here.",
   });
 }

@@ -68,7 +68,7 @@ export const PREHEADER_POOLS: Record<EditionType, PoolLine[]> = {
     L("Our shortlist for the next three days.", "safe"),
     L("{hero_neighborhood} and a few more worth the trip.", "token"),
     L("Everything worth leaving the couch for, in one scroll.", "safe"),
-    L("Hand-picked, no filler.", "safe"),
+    L("No filler.", "safe"),
     L("A calmer one this week. Still worth it.", "evergreen"),
   ],
   week_ahead: [
@@ -103,7 +103,7 @@ export const GREETING_POOLS: Record<EditionType, PoolLine[]> = {
 // [evergreen] lines that need no token), so a bug never renders "{hero_title}".
 const FALLBACK: Record<"subject" | "preheader" | "greeting", string> = {
   subject: "Santa Barbara, worth getting out for",
-  preheader: "A few things worth doing, hand-picked.",
+  preheader: "A few things worth doing.",
   greeting: "Here's what's worth doing.",
 };
 

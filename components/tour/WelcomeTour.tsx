@@ -24,7 +24,7 @@ function FeedCardIllustration() {
 
       {/* section label */}
       <text x="14" y="16" fontFamily="'JetBrains Mono',monospace" fontSize="8" letterSpacing="1.5" fill="var(--ink-2)">
-        HAPPENING TODAY
+        TODAY
       </text>
 
       {/* card */}

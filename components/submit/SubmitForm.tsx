@@ -79,8 +79,7 @@ export function SubmitForm() {
         </div>
         <h2 className="sbd-form__done-title">Thanks, got it.</h2>
         <p>
-          A local reads every submission within a few days. The best ones get
-          featured in the newsletter.
+          It&rsquo;s in. Every submission is checked before anything is published.
         </p>
       </div>
     );

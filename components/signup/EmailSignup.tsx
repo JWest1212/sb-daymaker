@@ -68,12 +68,11 @@ export function EmailSignup() {
     <section className="sbd-signup">
       <h2 className="sbd-signup__title">{NEWSLETTER_HEADING}</h2>
       <p className="sbd-signup__desc">
-        A local&rsquo;s pick, a few more worth your time, and one evergreen spot.
+        The pick of what&rsquo;s on, a few more worth your time, and one evergreen spot.
         {" "}{CADENCE_LINE}. No wall, unsubscribe anytime.
       </p>
       <p className="sbd-signup__proof">
         <a className="sbd-signup__sample" href="/digest/sample">See a sample issue →</a>
-        <span className="sbd-signup__hook">The best submissions get featured here.</span>
       </p>
 
       {status === "done" || status === "already" ? (

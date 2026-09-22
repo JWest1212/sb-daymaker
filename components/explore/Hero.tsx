@@ -69,14 +69,16 @@ export function Hero({
         </div>
         <ConditionChips weather={weather} />
 
-        {/* Home Rework spec §10/§13, locked Voice 1 copy, verbatim. */}
+        {/* Home Rework spec §10/§13 Voice 1 copy. The sub-line's "curated by
+            someone who knows the town" was removed 2026-09-22 (Jim): the site is
+            largely automated, so no copy claims a person picks what appears. */}
         <div className="sbd-hero__vp">
           <h1 className="sbd-hero__vp-headline">
             Everything worth doing in Santa Barbara, in one place.
           </h1>
           <p className="sbd-hero__vp-sub">
-            Scattered across a dozen sites, gathered here and curated by someone
-            who knows the town. Find it, save it, make a plan.
+            Scattered across dozens of sites, gathered here every day. Find it,
+            save it, make a plan.
           </p>
         </div>
       </div>

@@ -8131,3 +8131,15 @@ section.sbd-foot {
   text-align: center;
   line-height: 1.25;
 }
+
+/* 2026-09-22. Picker tiles carry generated line art (scripts/gen-tile-art.mjs),
+   pinned to the top right. Long names stop short of it rather than running
+   underneath it. */
+.sbd-tile--place,
+.sbd-tile--vibe,
+.sbd-tile--activity {
+  background-position: right top;
+}
+.sbd-tile__label {
+  max-width: 72%;
+}
