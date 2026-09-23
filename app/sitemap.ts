@@ -1,5 +1,5 @@
+import { getPublishedThingsCached } from "@/lib/cachedData";
 import type { MetadataRoute } from "next";
-import { getPublishedThings } from "@/lib/things";
 import { getPublishedGuides } from "@/lib/guides";
 import { SITE_URL, thingPath, guidePath } from "@/lib/seo/site";
 
@@ -10,7 +10,7 @@ import { SITE_URL, thingPath, guidePath } from "@/lib/seo/site";
 export const revalidate = 3600; // rebuild hourly
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [things, guides] = await Promise.all([getPublishedThings(), getPublishedGuides()]);
+  const [things, guides] = await Promise.all([getPublishedThingsCached(), getPublishedGuides()]);
 
   const core: MetadataRoute.Sitemap = [
     { url: SITE_URL, changeFrequency: "daily", priority: 1 },

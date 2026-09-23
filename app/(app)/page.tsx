@@ -1,9 +1,9 @@
+import { getPublishedThingsCached, getVenuePhotoPoolsCached } from "@/lib/cachedData";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo/pageMeta";
-import { getPublishedThings, stripForBrowse } from "@/lib/things";
+import {stripForBrowse } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
-import { getVenuePhotoPools } from "@/lib/venues";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 import { parseHorizon, parseArea, parseOccasion, parseActivity, exploreQuery } from "@/lib/exploreParams";
 import { redirect } from "next/navigation";
@@ -53,10 +53,10 @@ export default async function ExplorePage({
     })}`);
   }
   const [things, weather, pinnedHeroId, venuePools] = await Promise.all([
-    getPublishedThings(),
+    getPublishedThingsCached(),
     getWeather(),
     getLiveHeroPinId(), // today's founder hero pin, if any (overrides the ranker)
-    getVenuePhotoPools(), // Card Imagery Phase 2 §5.4, feeds CascadeFeed's per-feed dedupe
+    getVenuePhotoPoolsCached(), // Card Imagery Phase 2 §5.4, feeds CascadeFeed's per-feed dedupe
   ]);
 
   return (

@@ -23,6 +23,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
+import sharp from "sharp";
 
 const LIVE = process.argv.includes("--live");
 const BUCKET = "edition-media";
@@ -56,12 +57,24 @@ async function rehostOne(row) {
     const buf = Buffer.from(await res.arrayBuffer());
     if (!buf.byteLength || buf.byteLength > MAX_BYTES) return { id: row.id, ok: false, reason: "size" };
 
+    // Speed pass: store a copy no wider than 1200px (JPEG q78), the same size
+    // resize_hosted_photos.mjs brought the existing photos down to. Full-size
+    // originals were 3 to 4 times heavier than any screen shows.
+    let body = buf, bodyType = contentType, bodyExt = ext;
+    try {
+      body = await sharp(buf).rotate().resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 78, mozjpeg: true }).toBuffer();
+      bodyType = "image/jpeg";
+      bodyExt = "jpg";
+    } catch {
+      // Unreadable by sharp: keep the original bytes rather than lose the photo.
+    }
+
     const hash = createHash("sha256").update(row.photo_url).digest("hex").slice(0, 24);
-    const path = `things/${hash}.${ext}`;
+    const path = `things-1200/${hash}.${bodyExt}`;
 
     if (!LIVE) return { id: row.id, ok: true, dryRun: true, path };
 
-    const up = await sb.storage.from(BUCKET).upload(path, buf, { contentType, upsert: true });
+    const up = await sb.storage.from(BUCKET).upload(path, body, { contentType: bodyType, upsert: true });
     if (up.error) return { id: row.id, ok: false, reason: `upload ${up.error.message}` };
     const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
     const hosted = data?.publicUrl;

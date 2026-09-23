@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import { WANT_TO_GO } from "@/lib/strings";
 
 import { SBIcon } from "@/components/ui/SBIcon";
@@ -70,7 +72,7 @@ export function SavedCard({
           >
             {thing.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="sbd-card__img" src={thing.photo_url} alt={imageAlt(thing)} loading="lazy" />
+              <img className="sbd-card__img" src={sizedPhoto(thing.photo_url, "thumb") ?? thing.photo_url} alt={imageAlt(thing)} loading="lazy" decoding="async" />
             ) : null}
           </div>
           <div className="sbd-savedcard__body">
@@ -91,7 +93,7 @@ export function SavedCard({
           >
             {thing.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="sbd-card__img" src={thing.photo_url} alt={imageAlt(thing)} loading="lazy" />
+              <img className="sbd-card__img" src={sizedPhoto(thing.photo_url, "thumb") ?? thing.photo_url} alt={imageAlt(thing)} loading="lazy" decoding="async" />
             ) : null}
           </div>
           <div className="sbd-savedcard__body">

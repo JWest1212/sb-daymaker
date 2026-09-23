@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto, type PhotoSlot } from "@/lib/photoSize";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { OccasionKey } from "@/lib/occasions";
@@ -24,11 +26,33 @@ export interface CardVisual {
   category: string | null;
 }
 
+/**
+ * Performance pass (2026-09-22). The photo to show, at the size the slot needs.
+ * Tries the resized copy first (lib/photoSize.ts); if that fails to load, the
+ * original; only if both fail does the card fall back to its colour art. So
+ * asking for a smaller photo can never cost a card its picture.
+ */
+export function usePhoto(
+  original: string | null | undefined,
+  slot: PhotoSlot,
+): { src: string | null; onError: () => void; broken: boolean } {
+  const sized = sizedPhoto(original, slot);
+  // The stage is remembered together with the URL it belongs to, so a new photo
+  // starts fresh at the resized copy without an effect to reset it.
+  const [fail, setFail] = useState<{ url: string | null | undefined; stage: number }>({ url: original, stage: 0 });
+  const stage = fail.url === original ? fail.stage : 0; // 0 sized, 1 original, 2 broken
+  const src = !original ? null : stage === 0 ? sized : stage === 1 ? original : null;
+  const onError = () =>
+    setFail({ url: original, stage: stage === 0 && sized !== original ? 1 : 2 });
+  return { src, onError, broken: !original || stage === 2 };
+}
+
 /** Card Imagery Build Spec Phase 2 §5.5, "fallback resilience": a Google
  *  `serving_url` can 403/404 between nightly refreshes (no cheap server-side way to
  *  detect that ahead of render), so the client falls back to the gradient itself.
  *  Resets whenever the photo URL changes so a fresh pick gets its own chance to
  *  load rather than inheriting a prior URL's failure. */
+
 export function usePhotoFallback(photo: string | undefined): [boolean, () => void] {
   const [broken, setBroken] = useState(false);
   useEffect(() => setBroken(false), [photo]);
@@ -108,7 +132,7 @@ export function PickCard({
    *  the thing being recommended and is therefore not decorative. */
   photoAlt?: string;
 }) {
-  const [broken, markBroken] = usePhotoFallback(photo);
+  const pic = usePhoto(photo, "card");
   return (
     <article className="sbd-card sbd-card--interactive sbd-pick">
       {ribbonLabel ? (
@@ -118,8 +142,8 @@ export function PickCard({
         </span>
       ) : null}
       <div className={`sbd-pick__media sbd-media--${tone}`}>
-        {photo && !broken ? (
-          <img className="sbd-card__img" src={photo} alt={photoAlt ?? ""} loading="lazy" fetchPriority="low" decoding="async" onError={markBroken} />
+        {pic.src ? (
+          <img className="sbd-card__img" src={pic.src} alt={photoAlt ?? ""} loading="lazy" fetchPriority="low" decoding="async" onError={pic.onError} />
         ) : null}
         {occasionKey ? (
           <span className="sbd-pick__tag">
@@ -205,8 +229,8 @@ export function ListCard({
   visual?: CardVisual | null;
 }) {
   const occ = occasionKey ? OCCASION_BY_KEY[occasionKey] : null;
-  const [broken, markBroken] = usePhotoFallback(photo);
-  const nophoto = !photo || broken;
+  const pic = usePhoto(photo, "rail");
+  const nophoto = pic.broken;
 
   const motif = nophoto && visual?.kind === "motif" && visual.key ? MOTIFS[visual.key as MotifKey] : undefined;
   const showBigType = nophoto && !motif && visual?.kind === "bigtype";
@@ -224,10 +248,10 @@ export function ListCard({
             : undefined
         }
       >
-        {photo && !broken && (
+        {pic.src && (
           <img
             className="sbd-card__img"
-            src={photo}
+            src={pic.src}
             alt={photoAlt ?? ""}
             loading="lazy"
             /* R1 W6.9 (TP-B-05). A card photograph is never the thing the
@@ -235,7 +259,7 @@ export function ListCard({
                the connection while the hero is still arriving. */
             fetchPriority="low"
             decoding="async"
-            onError={markBroken}
+            onError={pic.onError}
           />
         )}
         {motif && <motif.Art />}

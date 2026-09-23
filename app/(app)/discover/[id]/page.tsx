@@ -1,18 +1,10 @@
+import { getGuideBySlugOrIdOnce, getPublishedThingsCached, getVenuePhotoPoolsCached } from "@/lib/cachedData";
 import { SBIcon } from "@/components/ui/SBIcon";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import {
-  getGuideBySlugOrId,
-  matchGuideThings,
-  parseGuideContent,
-  deriveStopSub,
-  directionsUrl,
-  getStopThingMap,
-  shortGuideTitle,
-} from "@/lib/guides";
-import { getPublishedThings, stripForBrowse } from "@/lib/things";
-import { getVenuePhotoPools } from "@/lib/venues";
+import {matchGuideThings, parseGuideContent, deriveStopSub, directionsUrl, getStopThingMap, shortGuideTitle } from "@/lib/guides";
+import {stripForBrowse } from "@/lib/things";
 import { cascade } from "@/lib/explore";
 import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
@@ -25,10 +17,22 @@ import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
 import { guidePath, isUuid } from "@/lib/seo/site";
 import { redirectTargetFor } from "@/lib/links/redirects";
 
-export const revalidate = 300;
+export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
+
+/**
+ * Performance pass (2026-09-22). An empty list turns on caching for pages that
+ * are built the first time someone visits them. Without it, this route could
+ * not be cached at all (TP-A3-03) and every visitor waited for a full rebuild
+ * from the database (measured 0.7 to 0.9 s on production). Now the first
+ * visitor builds the page and everyone after gets the stored copy, refreshed on
+ * the same 5-minute window and immediately by revalidatePublic().
+ */
+export async function generateStaticParams() {
+  return [];
+}
 
 /** R1 W8.2. Marking guide stops is not built; nothing may promise it until it is. */
-const STOP_MARKING_LIVE = false; // R1 W1.6, ISR safety net behind /api/revalidate
+const STOP_MARKING_LIVE = false;
 
 function truncate(s: string, n: number): string {
   const clean = s.trim();
@@ -44,7 +48,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const result = await getGuideBySlugOrId(id);
+  const result = await getGuideBySlugOrIdOnce(id);
   // R1 W7.8 (DET-013). Says what happened, like the listing's "Not found".
   if (!result) return { title: "Guide not found · SB Daymaker", robots: { index: false, follow: true } };
   const g = result.guide;
@@ -94,7 +98,7 @@ export default async function GuidePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [result, things, venuePools] = await Promise.all([getGuideBySlugOrId(id), getPublishedThings(), getVenuePhotoPools()]);
+  const [result, things, venuePools] = await Promise.all([getGuideBySlugOrIdOnce(id), getPublishedThingsCached(), getVenuePhotoPoolsCached()]);
 
   // R1 W6.8 (TP-B-01). The server's clock, read once here and passed down, so
   // the "Now" chapter badge is identical on both sides of hydration. Reading it

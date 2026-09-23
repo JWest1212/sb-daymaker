@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import { Fragment, useEffect } from "react";
 import Link from "next/link";
 import { shortStamp } from "@/lib/plan/dates";
@@ -111,7 +113,7 @@ export function SharedPlanView({ payload }: { payload: SharedPlanPayload }) {
                   {s.photo_url ? (
                     <img
                       className="sbd-rcard__thumb"
-                      src={s.photo_url}
+                      src={sizedPhoto(s.photo_url, "rail") ?? s.photo_url}
                       alt=""
                       loading="lazy"
                     />

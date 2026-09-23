@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import Link from "next/link";
 import { thingPath } from "@/lib/seo/site";
 import { areaForThing } from "@/lib/areas";
@@ -65,7 +67,7 @@ export function SwapSheet({
           {thing.photo_url ? (
             <img
               className="sbd-swapopt__thumb"
-              src={thing.photo_url}
+              src={sizedPhoto(thing.photo_url, "thumb") ?? thing.photo_url}
               alt=""
               loading="lazy"
             />

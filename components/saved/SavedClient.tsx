@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { getThingsByIds, type Thing } from "@/lib/things";
@@ -407,7 +409,7 @@ export function SavedClient() {
           <div className="sbd-c2__content">
             {c2Item.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img className="sbd-c2__thumb" src={c2Item.photo_url} alt="" loading="lazy" />
+              <img className="sbd-c2__thumb" src={sizedPhoto(c2Item.photo_url, "thumb") ?? c2Item.photo_url} alt="" loading="lazy" />
             ) : null}
             <p className="sbd-c2__question">Did you make it to {c2Item.title}?</p>
           </div>

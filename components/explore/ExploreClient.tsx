@@ -129,7 +129,16 @@ export function ExploreClient({
       // /weekend is a real route with its own metadata; a visitor who landed
       // there stays on it until they choose a different horizon.
       const base = pathname === "/weekend" && state.horizon === "weekend" ? "/weekend" : "/";
-      router.push(`${base}${exploreQuery(state)}`, { scroll: false });
+      const url = `${base}${exploreQuery(state)}`;
+      // Performance pass (2026-09-22). Same page: update the address bar only.
+      // The page already holds every listing it filters, but router.push asked
+      // the server to rebuild the whole homepage (about 1 s, plus the payload)
+      // before a tap could show anything. The browser's own history API keeps
+      // the URL shareable and Back working, and Next updates useSearchParams
+      // from it directly (docs: Linking and Navigating, window.history.pushState).
+      // A different page (/weekend to /) is still a real navigation.
+      if (base === pathname) window.history.pushState(null, "", url);
+      else router.push(url, { scroll: false });
     },
     [router, pathname, horizon, place, vibe, activity],
   );

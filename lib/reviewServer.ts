@@ -3,8 +3,9 @@
 // Server-only cockpit data access (service-role reads + the auth guard). Kept
 // separate from lib/review.ts so the pure formatters stay client-safe.
 
+import { PUBLIC_DATA_TAG } from "./cachedData";
 import "server-only";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getServerSupabase } from "./supabaseServer";
 import { getAdminSupabase } from "./supabaseAdmin";
 import {
@@ -18,6 +19,10 @@ import { confidenceReasons, type SourceMeta, type ThingForConfidence } from "../
 /** Refresh the ISR-cached public surfaces after a publish/edit/reject so approved
  *  content appears promptly instead of waiting up to 10 minutes. */
 export function revalidatePublic() {
+  // Performance pass (2026-09-22). The catalog is now cached (lib/cachedData.ts);
+  // expire it immediately so a cockpit edit or a new ingest shows on the very
+  // next view, exactly as before.
+  revalidateTag(PUBLIC_DATA_TAG, { expire: 0 });
   revalidatePath("/");
   revalidatePath("/discover");
   revalidatePath("/saved");

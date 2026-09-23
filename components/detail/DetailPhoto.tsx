@@ -1,6 +1,6 @@
 "use client";
 
-import { usePhotoFallback } from "@/components/ui/Card";
+import { usePhoto } from "@/components/ui/Card";
 
 /** Card Imagery Build Spec Phase 2 §5.5 "fallback resilience", the thing detail
  *  page renders its own photo block (not ListCard/PickCard), so it needs the same
@@ -23,12 +23,12 @@ export function DetailPhoto({
    *  top-right). Sits inside the overflow-hidden media so it clips to the image. */
   children?: React.ReactNode;
 }) {
-  const [broken, markBroken] = usePhotoFallback(photoUrl ?? undefined);
+  const pic = usePhoto(photoUrl, "hero");
   return (
     <div className={`sbd-detail__media sbd-media--${tone}`}>
-      {photoUrl && !broken ? (
+      {pic.src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="sbd-card__img" src={photoUrl} alt={alt ?? ""} onError={markBroken} />
+        <img className="sbd-card__img" src={pic.src} alt={alt ?? ""} fetchPriority="high" onError={pic.onError} />
       ) : null}
       {children}
     </div>
