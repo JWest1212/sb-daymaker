@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import Link from "next/link";
 import { thingPath } from "@/lib/seo/site";
 import { areaForThing } from "@/lib/areas";
@@ -45,7 +47,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
       {thing.photo_url ? (
         <img
           className="sbd-scard__thumb"
-          src={thing.photo_url}
+          src={sizedPhoto(thing.photo_url, "rail") ?? thing.photo_url}
           alt=""
           loading="lazy"
         />

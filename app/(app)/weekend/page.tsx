@@ -1,9 +1,9 @@
+import { getPublishedThingsCached, getVenuePhotoPoolsCached } from "@/lib/cachedData";
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo/pageMeta";
-import { getPublishedThings, stripForBrowse } from "@/lib/things";
+import {stripForBrowse } from "@/lib/things";
 import { getTimeOfDay, getDateLabel, getWeather } from "@/lib/weather";
 import { getLiveHeroPinId } from "@/lib/heroServer";
-import { getVenuePhotoPools } from "@/lib/venues";
 import { ExploreClient } from "@/components/explore/ExploreClient";
 
 // Elevation v1 · Gate 2 · G2.7 reserved the URL + metadata; Gate 3 · G3.3 makes it
@@ -23,10 +23,10 @@ export const metadata: Metadata = pageMeta({
 
 export default async function WeekendPage() {
   const [things, weather, pinnedHeroId, venuePools] = await Promise.all([
-    getPublishedThings(),
+    getPublishedThingsCached(),
     getWeather(),
     getLiveHeroPinId(),
-    getVenuePhotoPools(),
+    getVenuePhotoPoolsCached(),
   ]);
 
   return (

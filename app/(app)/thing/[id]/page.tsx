@@ -1,7 +1,8 @@
+import { getThingBySlugOrIdOnce } from "@/lib/cachedData";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
+import {getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
 import { areaLabelForThing, areaShortForThing } from "@/lib/areas";
@@ -23,6 +24,18 @@ import { redirectTargetFor } from "@/lib/links/redirects";
 import { isOver } from "@/components/explore/derive";
 
 export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
+
+/**
+ * Performance pass (2026-09-22). An empty list turns on caching for pages that
+ * are built the first time someone visits them. Without it, this route could
+ * not be cached at all (TP-A3-03) and every visitor waited for a full rebuild
+ * from the database (measured 0.7 to 0.9 s on production). Now the first
+ * visitor builds the page and everyone after gets the stored copy, refreshed on
+ * the same 5-minute window and immediately by revalidatePublic().
+ */
+export async function generateStaticParams() {
+  return [];
+}
 
 const TONE_BY_TYPE: Record<string, string> = {
   event: "gold",
@@ -83,7 +96,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const t = await getThingBySlugOrId(id);
+  const t = await getThingBySlugOrIdOnce(id);
   if (!t) return { title: "Not found · SB Daymaker" };
   const title = `${t.title} · ${whereLabel(t)} · SB Daymaker`;
   const description = truncate(
@@ -109,7 +122,7 @@ export default async function ThingPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const t = await getThingBySlugOrId(id);
+  const t = await getThingBySlugOrIdOnce(id);
 
   // R1 W6.7 (DET-007). A page with a slug has ONE address. A UUID URL still
   // works, because old saves, old shares and old inbound links use it, but it

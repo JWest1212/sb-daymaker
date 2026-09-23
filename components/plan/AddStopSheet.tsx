@@ -1,5 +1,7 @@
 "use client";
 
+import { sizedPhoto } from "@/lib/photoSize";
+
 import Link from "next/link";
 import { thingPath } from "@/lib/seo/site";
 import { areaForThing } from "@/lib/areas";
@@ -83,7 +85,7 @@ export function AddStopSheet({
           disabled={pendingId !== null}
         >
           {r.thing.photo_url ? (
-            <img className="sbd-swapopt__thumb" src={r.thing.photo_url} alt="" loading="lazy" />
+            <img className="sbd-swapopt__thumb" src={sizedPhoto(r.thing.photo_url, "thumb") ?? r.thing.photo_url} alt="" loading="lazy" />
           ) : (
             <div className="sbd-swapopt__thumb sbd-media--sage" aria-hidden="true" />
           )}

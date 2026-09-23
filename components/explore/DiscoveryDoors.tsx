@@ -1,6 +1,8 @@
 import { ACTIVITY, ACTIVITY_SHEET_TITLE, AREA, AREA_SHEET_TITLE, OCCASION, OCCASION_SHEET_TITLE } from "@/lib/strings";
 import type { Dimension } from "@/lib/tiles";
 
+// Performance pass (2026-09-22): WebP at display size, 925 KB of JPEG down to
+// 72 KB for the three doors (the .jpg originals stay in public/ as sources).
 export const DOOR_META: Record<
   Dimension,
   { label: string; sheetTitle: string; ariaLabel: string; tile: string }
@@ -9,19 +11,19 @@ export const DOOR_META: Record<
     label: AREA,
     sheetTitle: AREA_SHEET_TITLE,
     ariaLabel: "Filter by area",
-    tile: "/tiles/door/place.jpg",
+    tile: "/tiles/door/place.webp",
   },
   vibe: {
     label: OCCASION,
     sheetTitle: OCCASION_SHEET_TITLE,
     ariaLabel: "Filter by occasion",
-    tile: "/tiles/door/vibe.jpg",
+    tile: "/tiles/door/vibe.webp",
   },
   activity: {
     label: ACTIVITY,
     sheetTitle: ACTIVITY_SHEET_TITLE,
     ariaLabel: "Filter by activity",
-    tile: "/tiles/door/activity.jpg",
+    tile: "/tiles/door/activity.webp",
   },
 };
 

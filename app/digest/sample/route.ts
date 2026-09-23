@@ -1,3 +1,4 @@
+import { getPublishedThingsCached } from "@/lib/cachedData";
 // Elevation v1 · Gate 5 · G5.3, the sample weekend edition. Gives the subscribe
 // box real proof of what an issue looks like, WITHOUT building the send path (that
 // stays a separate founder priority). It assembles a representative edition from
@@ -6,7 +7,7 @@
 // 600s. No em dash (Golden Rule; the renderer + content already strip them).
 
 import { NextResponse } from "next/server";
-import { getPublishedThings, type Thing } from "@/lib/things";
+import {type Thing } from "@/lib/things";
 import { cascade } from "@/lib/explore";
 import { renderEditionEmailHtml, type RenderPick, type RenderableEdition } from "@/lib/edition/render";
 import { eventCardWhen } from "@/lib/format/eventTime";
@@ -56,7 +57,7 @@ function toPick(t: Thing, withDayLabel = false): RenderPick {
 }
 
 export async function GET() {
-  const things = await getPublishedThings();
+  const things = await getPublishedThingsCached();
   if (things.length === 0) {
     return new NextResponse("No sample available yet.", {
       status: 200,

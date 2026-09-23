@@ -1,10 +1,9 @@
+import { getPublishedThingsCached, getVenueNamesCached } from "@/lib/cachedData";
 // Home Rework spec §9.3, public, deterministic, no admin gate, no AI. In-memory
 // filter over the already-loaded published set (Phase 0 finding: this page has no
 // ISR to piggyback on anyway, every request already reads fresh from Supabase).
 
 import { NextResponse, type NextRequest } from "next/server";
-import { getPublishedThings } from "@/lib/things";
-import { getVenueNames } from "@/lib/venues";
 import { searchThings } from "@/lib/search";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +45,6 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const [things, venueNames] = await Promise.all([getPublishedThings(), getVenueNames()]);
+  const [things, venueNames] = await Promise.all([getPublishedThingsCached(), getVenueNamesCached()]);
   return NextResponse.json(searchThings({ query: q, things, venueNames }));
 }

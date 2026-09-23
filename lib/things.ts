@@ -453,13 +453,23 @@ const NOT_ON_BROWSE = [
   "photo_source",    // attribution, shown on the detail page
   "verified_at",     // the detail page's "Verified" stamp
   "verified_by",
+  // Speed pass: five more no browse screen reads (checked against components/
+  // explore, ui, visuals, saved, discover and lib/explore). Pipeline and
+  // cockpit fields, dead weight in every homepage load.
+  "source",
+  "visual_seed",
+  "photo_attribution",
+  "time_of_day_fit",
+  "quality_tier",
 ] as const satisfies readonly (keyof Thing)[];
 
 export function stripForBrowse(things: Thing[]): Thing[] {
   return things.map((t) => {
-    const out = { ...t };
-    for (const k of NOT_ON_BROWSE) (out as Record<string, unknown>)[k] = null;
-    return out;
+    const out = { ...t } as Record<string, unknown>;
+    // Speed pass: the key is removed, not set to null, so it costs nothing in
+    // the serialized page (a null still ships its name on every row).
+    for (const k of NOT_ON_BROWSE) delete out[k];
+    return out as unknown as Thing;
   });
 }
 
