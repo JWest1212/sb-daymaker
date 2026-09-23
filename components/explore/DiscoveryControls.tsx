@@ -37,10 +37,7 @@ export function DiscoveryControls({
           the time axis. */}
       <DiscoveryDoors onOpen={onOpenSheet} />
       <DiscoveryChips chips={chips} onRemove={onRemoveChip} onReset={onResetChips} />
-      <div className="sbd-disco__axis">
-        <span className="sbd-disco__axis-label" aria-hidden="true">When</span>
-        <HorizonSegment horizon={horizon} onChange={onHorizonChange} nowMs={nowMs} />
-      </div>
+      <HorizonSegment horizon={horizon} onChange={onHorizonChange} nowMs={nowMs} />
       {typeof resultCount === "number" ? (
         <div className="sbd-disco__count" aria-live="polite">
           {resultCount} {resultCount === 1 ? "thing" : "things"}
