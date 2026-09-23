@@ -6,6 +6,14 @@ code stay reconcilable. Newest first.
 
 ---
 
+## 2026-09-22 · WHEN row redesign: one scrolling line of dated tabs
+
+Asked for by Jim ("find a much cleaner UI solution"). The WHEN row was a pill track that wrapped six pills onto two misaligned rows (100px of the pinned control block) beside a separate "WHEN" label. It is now one line of text tabs that scrolls sideways inside itself, with the chosen tab marked by the same terracotta rule that sits under the section headings. Each tab shows its dates under the name ("Tue 22", "Sep 25-27", "Next 7 days"), so "Weekend" and "Week" are no longer a guess. The edges fade only when there is more row that way, and the chosen tab is centred on every change. The pinned block drops from 220px to 173px.
+
+Changes to D7: the six options and their order are unchanged. "Next Wknd" is spelled out as "Next weekend" now that width is no longer the constraint. The visible "WHEN" label is removed; the row keeps "When" as its accessible name, and the dates make it self-evident. Each tab's accessible name is now its visible text ("Weekend, Sep 25-27") instead of a separate full-words label, so screen readers still hear the dates (EXP-034) and voice control matches what is on screen; the unused `horizonRangeLabel` was removed. Three alternatives were prototyped and rejected (plain tabs without dates, rounded chips, boxed date cards); the chips and cards read as heavy under the three picture doors. Code: `components/explore/HorizonSegment.tsx`, `horizonDateLine` in `lib/explore.ts`, `.sbd-when` in `app/components.css`. `SegmentedControl` is unchanged and still serves the submit form.
+
+---
+
 ## 2026-09-22 · R1 Wave 8: names, voice, welcome, canon v11
 
 Source: `docs/remediation-r1/08_R1_W8_Names_Voice_Welcome_Canon.md` (index and ledger `docs/remediation-r1/00_R1_INDEX.md`; record `docs/remediation-r1/PROGRESS.md`; final numbers `docs/remediation-r1/FINAL.md`). Commit: `feat(r1-w8): vocabulary module, promises audit, first-visit strip, icons and dash policy, canon v11`. Decisions D8, D9, D10, D11. CP5 approved 2026-09-22.

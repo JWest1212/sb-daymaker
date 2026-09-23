@@ -514,49 +514,57 @@ export function filterByArea(things: Thing[], area: AreaKey | null): Thing[] {
   return things.filter((t) => areaForThing(t) === area);
 }
 
-const SB_WEEKDAY_MONTH_DAY = new Intl.DateTimeFormat("en-US", {
-  timeZone: SB_TZ, weekday: "long", month: "long", day: "numeric",
-});
-const SB_MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, month: "short", day: "numeric" });
-
-/**
- * R1 W6.2 (D7/EXP-034). One place that says what a horizon covers, in words.
- *
- * Used for the WHEN pill's accessible name, so "Weekend" announces the dates it
- * actually means rather than leaving the visitor to guess which weekend, and for
- * section headings. The visible pill label stays short.
- */
-export function horizonRangeLabel(horizon: Horizon, now: number = Date.now()): string {
-  const day = (key: string) => SB_MONTH_DAY.format(new Date(`${key}T12:00:00Z`));
-  switch (horizon) {
-    case "today":
-      return SB_WEEKDAY_MONTH_DAY.format(new Date(now));
-    case "tomorrow":
-      return SB_WEEKDAY_MONTH_DAY.format(new Date(`${tomorrowKey(now)}T12:00:00Z`));
-    case "weekend": {
-      const { fri, sun } = weekendKeys(now);
-      return `${day(fri)} to ${day(sun)}`;
-    }
-    case "next_weekend": {
-      const { fri, sun } = nextWeekendKeys(now);
-      return `${day(fri)} to ${day(sun)}`;
-    }
-    case "week":
-      return `${day(sbDay(now))} to ${day(sbDay(now + 6 * 86_400_000))}`;
-    case "month":
-      return `${day(sbDay(now))} to ${day(sbDay(now + 30 * 86_400_000))}`;
-  }
-}
-
-/** The short label on the pill itself. */
+/** The short label on the pill itself. "Next weekend" is spelled out now that
+ *  the WHEN row scrolls in one line and no longer has to squeeze six into two
+ *  rows (it was "Next Wknd"). */
 export const HORIZON_PILL: Record<Horizon, string> = {
   today: "Today",
   tomorrow: "Tomorrow",
   weekend: "Weekend",
-  next_weekend: "Next Wknd",
+  next_weekend: "Next weekend",
   week: "Week",
   month: "Month",
 };
+
+const SB_WEEKDAY_SHORT = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, weekday: "short" });
+const SB_DAY_NUM = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, day: "numeric" });
+const SB_MONTH_SHORT = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, month: "short" });
+
+/**
+ * The small date line under each WHEN tab: "Tue 22", "Sep 25-27", "Next 7 days".
+ * It shows on screen what the accessible name already said, so "Weekend" and
+ * "Week" stop being a guess. A range that crosses a month names both months
+ * ("Sep 30-Oct 2"). Numeric ranges use a hyphen (D9).
+ */
+export function horizonDateLine(horizon: Horizon, now: number = Date.now()): string {
+  const at = (key: string) => new Date(`${key}T12:00:00Z`);
+  const oneDay = (key: string) => `${SB_WEEKDAY_SHORT.format(at(key))} ${SB_DAY_NUM.format(at(key))}`;
+  const range = (a: string, b: string) => {
+    const ma = SB_MONTH_SHORT.format(at(a));
+    const mb = SB_MONTH_SHORT.format(at(b));
+    const da = SB_DAY_NUM.format(at(a));
+    const db = SB_DAY_NUM.format(at(b));
+    return ma === mb ? `${ma} ${da}-${db}` : `${ma} ${da}-${mb} ${db}`;
+  };
+  switch (horizon) {
+    case "today":
+      return oneDay(sbDay(now));
+    case "tomorrow":
+      return oneDay(tomorrowKey(now));
+    case "weekend": {
+      const { fri, sun } = weekendKeys(now);
+      return range(fri, sun);
+    }
+    case "next_weekend": {
+      const { fri, sun } = nextWeekendKeys(now);
+      return range(fri, sun);
+    }
+    case "week":
+      return "Next 7 days";
+    case "month":
+      return "Next 30 days";
+  }
+}
 
 export interface SeriesGroup {
   /** The occurrence to render: the soonest one still ahead. */
