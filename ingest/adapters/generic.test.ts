@@ -42,7 +42,11 @@ describe('toRawCandidate, the trust firewall boundary', () => {
       title: 'Barrel Room Sessions', start_date: '2026-07-24', start_time: '19:00',
       venue: 'Carr Winery', address: 'Santa Barbara, CA', price: 'Free', confidence: 'high',
     };
-    const c = toRawCandidate(e, sourceRow, sourceRow.url);
+    // Inject the clock, as every other dated case in this file does. Without it
+    // `now` defaults to the real date, and once the real date passed 2026-07-24
+    // isPastDate correctly dropped the start and this test began failing on a
+    // calendar roll rather than on a code change.
+    const c = toRawCandidate(e, sourceRow, sourceRow.url, new Date('2026-07-17T12:00:00-07:00'));
     expect(c.startStrategy).toBe('ai_extracted');
     expect(c.startISO).toBe('2026-07-24T19:00:00-07:00');
     expect(c.explicitlyFree).toBe(true);

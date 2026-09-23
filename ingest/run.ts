@@ -34,6 +34,9 @@ import { assignVisual } from '../lib/visualAssignment';
 import { haversineMeters } from '../lib/geo';
 import { sbDay } from '../lib/explore';
 import { sourceKeyOf } from './dedupe';
+import { retirePastEvents, formatRetireReport } from './retire';
+import { backfillCivic, formatCivicReport } from './civicBackfill';
+import { applyHeroEligibility, formatEligibilityReport } from './heroEligibility';
 import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
 import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR, type PublishBand } from './publishGate';
 import { computeEventKey, canonicalVenue, type VenueDictEntry as EventKeyVenueDictEntry } from './eventKey';
@@ -77,6 +80,29 @@ const EVENT_KEY_DRYRUN = process.env.EVENT_KEY_DRYRUN === '1';
 // whole existing catalog (the column now exists). Still doesn't change dedupe
 // behavior, see EVENT_KEY_DRYRUN comment above.
 const EVENT_KEY_BACKFILL = process.env.EVENT_KEY_BACKFILL === '1';
+// R1 W2.1, the archive-past step. RETIRE_DRYRUN reports without writing (CP1);
+// RETIRE_APPLY runs it once by hand. The nightly run calls it automatically.
+const RETIRE_DRYRUN = process.env.RETIRE_DRYRUN === '1';
+const RETIRE_APPLY = process.env.RETIRE_APPLY === '1';
+// R1 W2.3, the one-time is_civic backfill over rows that landed before the
+// adapters started flagging it.
+const CIVIC_DRYRUN = process.env.CIVIC_DRYRUN === '1';
+const CIVIC_BACKFILL = process.env.CIVIC_BACKFILL === '1';
+// R1 W2.4, the hero_eligible data pass (CP2).
+const HERO_ELIGIBLE_DRYRUN = process.env.HERO_ELIGIBLE_DRYRUN === '1';
+const HERO_ELIGIBLE_APPLY = process.env.HERO_ELIGIBLE_APPLY === '1';
+// R1 W3.1, move community food services out of the food category.
+const RECAT_MEALS_DRYRUN = process.env.RECAT_MEALS_DRYRUN === '1';
+const RECAT_MEALS_APPLY = process.env.RECAT_MEALS_APPLY === '1';
+// R1 W4.4, the one-time area backfill (CP3).
+const AREAS_DRYRUN = process.env.AREAS_DRYRUN === '1';
+const AREAS_BACKFILL = process.env.AREAS_BACKFILL === '1';
+// R1 W5.1, title cleaning over rows that already landed.
+const TITLES_DRYRUN = process.env.TITLES_DRYRUN === '1';
+const TITLES_BACKFILL = process.env.TITLES_BACKFILL === '1';
+// R1 W5.2, series keys.
+const SERIES_DRYRUN = process.env.SERIES_DRYRUN === '1';
+const SERIES_BACKFILL = process.env.SERIES_BACKFILL === '1';
 // Data Arch Redesign 26 Phase 2, read-only pairwise audit of dedupe.ts's live
 // venue-aware matcher (evaluateMatch/dedupeVenueAware) vs the plain
 // deterministic baseline (dedupe()), run over the existing catalog. Writes
@@ -713,7 +739,7 @@ function printConfidenceHistogram(scored: ScoredThing[], label: string): void {
   buckets.forEach((n, i) => {
     const lo = (i / 10).toFixed(1);
     const hi = ((i + 1) / 10).toFixed(1);
-    console.log(`${lo}–${hi}          ${String(n).padStart(4)}   ${'#'.repeat(n)}`);
+    console.log(`${lo}-${hi}          ${String(n).padStart(4)}   ${'#'.repeat(n)}`);
   });
 }
 
@@ -1906,6 +1932,20 @@ async function main() {
   if (DEDUPE_VENUE_SHADOW) return dedupeVenueShadowReport();
   if (DEDUPE_ADJUDICATE_SHADOW) return dedupeAdjudicateShadowReport();
   if (EVENT_SOURCES_BACKFILL) return eventSourcesBackfill();
+  if (RETIRE_DRYRUN) return retireOnce(true);
+  if (RETIRE_APPLY) return retireOnce(false);
+  if (CIVIC_DRYRUN) return civicOnce(true);
+  if (CIVIC_BACKFILL) return civicOnce(false);
+  if (HERO_ELIGIBLE_DRYRUN) return heroEligibleOnce(true);
+  if (HERO_ELIGIBLE_APPLY) return heroEligibleOnce(false);
+  if (RECAT_MEALS_DRYRUN) return recatMealsOnce(true);
+  if (RECAT_MEALS_APPLY) return recatMealsOnce(false);
+  if (AREAS_DRYRUN) return areasOnce(true);
+  if (AREAS_BACKFILL) return areasOnce(false);
+  if (TITLES_DRYRUN) return titlesOnce(true);
+  if (TITLES_BACKFILL) return titlesOnce(false);
+  if (SERIES_DRYRUN) return seriesOnce(true);
+  if (SERIES_BACKFILL) return seriesOnce(false);
 
   const win = window();
   const sb = DRY ? null : getDb();
@@ -2258,7 +2298,7 @@ async function main() {
     try {
       const { ensureSlugs } = await import('./slugs/backfill');
       const s = await ensureSlugs(sb);
-      console.log(`  slugs                things +${s.things} · guides +${s.guides} · redirects ${s.redirects}`);
+      console.log(`  slugs                things +${s.things} · guides +${s.guides} · redirects ${s.redirects} · shortened ${s.shortened}`);
     } catch (err) {
       console.log(`  slugs                skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -2302,6 +2342,16 @@ async function main() {
       console.log(`  venue-data           skipped: ${err instanceof Error ? err.message : String(err)}`);
     }
 
+    // R1 W2.1, retire events that finished more than a week ago, so the published
+    // catalog stops growing without bound. Isolated: a failure here must not sink
+    // a run that has already landed good content.
+    try {
+      const retired = await retirePastEvents(sb);
+      console.log(`  archive-past         archived ${retired.archived} of ${retired.matched} matched · skipped ${retired.skippedPendingEdit.length} with a pending edit`);
+    } catch (err) {
+      console.log(`  archive-past         skipped: ${err instanceof Error ? err.message : String(err)}`);
+    }
+
     await sendDigest(sb, {
       landed,
       gateDropped: totalGateDropped,
@@ -2312,6 +2362,84 @@ async function main() {
       venueFallbacks,
       autoPausedSources,
     });
+
+    // R1 W1.6. Purge the ISR-cached public surfaces now that this run has
+    // written. Without this, /saved, /plan and /discover keep serving the
+    // pre-update pool until their own window lapses, and a save made inside that
+    // window lands on a page that does not know the thing exists (TP-A3-04,
+    // TP-A3-05). Never fatal: a failed purge costs freshness, and the lowered
+    // revalidate windows are the safety net underneath it.
+    await revalidatePublicSurfaces();
+  }
+}
+
+/** R1 W2.1. One-off CLI entry point (RETIRE_DRYRUN=1 / RETIRE_APPLY=1) for the
+ *  archive-past step, the same function the nightly run calls below. */
+async function retireOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await retirePastEvents(sb, { dryRun });
+  console.log(formatRetireReport(report));
+}
+
+/** R1 W2.3. One-off CLI entry point (CIVIC_DRYRUN=1 / CIVIC_BACKFILL=1). */
+async function civicOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await backfillCivic(sb, { dryRun });
+  console.log(formatCivicReport(report));
+}
+
+/** R1 W2.4. One-off CLI entry point (HERO_ELIGIBLE_DRYRUN=1 / HERO_ELIGIBLE_APPLY=1). */
+async function heroEligibleOnce(dryRun: boolean) {
+  const sb = getDb();
+  const report = await applyHeroEligibility(sb, { dryRun });
+  console.log(formatEligibilityReport(report));
+}
+
+/** R1 W3.1. One-off CLI entry point (RECAT_MEALS_DRYRUN=1 / RECAT_MEALS_APPLY=1). */
+async function recatMealsOnce(dryRun: boolean) {
+  const { recategorizeMeals, formatRecatReport } = await import('./audits/meal_recategorize');
+  const sb = getDb();
+  console.log(formatRecatReport(await recategorizeMeals(sb, { dryRun })));
+}
+
+/** R1 W4.4. One-off CLI entry point (AREAS_DRYRUN=1 / AREAS_BACKFILL=1). */
+async function areasOnce(dryRun: boolean) {
+  const { backfillAreas, formatBackfillReport } = await import('./areasBackfill');
+  const sb = getDb();
+  console.log(formatBackfillReport(await backfillAreas(sb, { dryRun })));
+}
+
+/** R1 W5.1. One-off CLI entry point (TITLES_DRYRUN=1 / TITLES_BACKFILL=1). */
+async function titlesOnce(dryRun: boolean) {
+  const { backfillTitles, formatTitleReport } = await import('./audits/title_clean_backfill');
+  const sb = getDb();
+  console.log(formatTitleReport(await backfillTitles(sb, { dryRun })));
+}
+
+/** R1 W5.2. One-off CLI entry point (SERIES_DRYRUN=1 / SERIES_BACKFILL=1). */
+async function seriesOnce(dryRun: boolean) {
+  const { backfillSeries, formatSeriesReport } = await import('./audits/series_backfill');
+  const sb = getDb();
+  console.log(formatSeriesReport(await backfillSeries(sb, { dryRun })));
+}
+
+/** POST /api/revalidate with the shared cron secret. Logs, never throws. */
+async function revalidatePublicSurfaces(): Promise<void> {
+  const site = process.env.NEXT_PUBLIC_SITE_URL;
+  const secret = process.env.CRON_SECRET;
+  if (!site || !secret) {
+    console.log('  revalidate           skipped: NEXT_PUBLIC_SITE_URL or CRON_SECRET not set');
+    return;
+  }
+  try {
+    const res = await fetch(`${site.replace(/\/$/, '')}/api/revalidate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const body = await res.text();
+    console.log(`  revalidate           HTTP ${res.status} ${body.slice(0, 120)}`);
+  } catch (err) {
+    console.log(`  revalidate           failed: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 

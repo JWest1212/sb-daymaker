@@ -23,9 +23,9 @@ function sbDay(iso: string): string {
 }
 
 // Returns [startHour, endHour) in 24h SB local time for a block.
-//   morning:   12am – 12pm  (0–12)
-//   afternoon: 12pm – 5pm   (12–17)
-//   night:     5pm – 12am   (17–24)
+//   morning:   12am to 12pm  (0-12)
+//   afternoon: 12pm to 5pm   (12-17)
+//   night:     5pm to 12am   (17-24)
 export function blockHourRange(block: Block): [number, number] {
   switch (block) {
     case "morning":   return [0,  12];
@@ -123,8 +123,15 @@ export function rankCandidates(
       if (answers.vibes.some((v) => (t.tags as string[]).includes(v))) s += 3;
       // Who boost.
       if (whoBoost(answers.who, t)) s += 1;
-      // Zone proximity.
-      if (answers.zone && t.nearby_zone === answers.zone) s += 2;
+      // Zone proximity. R1 W3.3: when the visitor named an area, a known match
+      // in that area must outrank an area-less candidate, which previously scored
+      // the same as one across town. 38% of published rows have no nearby_zone
+      // (TP-A2-08), so without this the chosen area barely influenced the draft.
+      if (answers.zone) {
+        if (t.nearby_zone === answers.zone) s += 6;
+        else if (t.nearby_zone) s -= 2; // known, and somewhere else
+        // unknown zone scores neutrally: not a violation, just not preferred
+      }
       // Dated-on-date items already guaranteed by filter; reward with score.
       if (t.starts_at) s += 2;
       const savedState = savedStateFor(t.id);

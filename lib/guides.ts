@@ -1,4 +1,5 @@
 import { getSupabase } from "./supabase";
+import { PUBLIC_STATUSES } from "./things";
 import type { Thing } from "./things";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
@@ -32,7 +33,8 @@ export interface Guide {
   stamp_code: string | null;
   /** Editorial freshness date (ISO "YYYY-MM-DD"). Drives "REFRESHED JUL 2026". */
   refreshed_on: string | null;
-  /** "Right now" block body text. Null = block is hidden. Edited in cockpit. */
+  /** "Right now" block body text. Null = block is hidden. Edited in the
+   *  Supabase table editor (no cockpit screen edits guides). */
   now_note: string | null;
   /** ISO date when now_note was last updated. Drives "updated Jun 28". */
   now_note_on: string | null;
@@ -48,7 +50,10 @@ function mapGuide(row: Record<string, unknown>): Guide {
   return {
     id: row.id as string,
     // G0.9 render guard (last line of defense against a stray em dash).
-    title: cleanText(row.title as string),
+    // R1 W8.5 (DSC-009). One public name per guide, everywhere: the index card,
+    // <title>, og, breadcrumbs, share text and "Featured in" links all read
+    // this. "State Street (First-timer)" is the row; "State Street" is the name.
+    title: shortGuideTitle(cleanText(row.title as string)),
     kicker: cleanText((row.kicker as string) ?? null),
     intro: cleanText((row.intro as string) ?? null),
     kind: row.kind as GuideKind,
@@ -57,7 +62,7 @@ function mapGuide(row: Record<string, unknown>): Guide {
     cover_url: (row.cover_url as string) ?? null,
     stamp_code: (row.stamp_code as string) ?? null,
     refreshed_on: (row.refreshed_on as string) ?? null,
-    now_note: (row.now_note as string) ?? null,
+    now_note: cleanText((row.now_note as string) ?? null),
     now_note_on: (row.now_note_on as string) ?? null,
     content: row.content ?? {},
     slug: (row.slug as string) ?? null,
@@ -72,7 +77,7 @@ function mapStop(row: Record<string, unknown>): GuideStop {
     note: cleanText((row.note as string) ?? null),
     thing_id: (row.thing_id as string) ?? null,
     chapter: typeof row.chapter === "number" ? row.chapter : 1,
-    sub: (row.sub as string) ?? null,
+    sub: cleanText((row.sub as string) ?? null),
     maps_query: (row.maps_query as string) ?? null,
   };
 }
@@ -135,10 +140,22 @@ export async function getStopThingMap(
   if (ids.length === 0) return new Map();
   const sb = getSupabase();
   if (!sb) return new Map();
+  // R1 W1.3, one row-eligibility rule across every id lookup. A guide renders a
+  // save heart on each stop, so the set of rows a guide can resolve must never be
+  // wider than the set /saved can resolve, or a guide offers a heart on something
+  // Saved cannot render (TP-A1-07). PUBLIC_STATUSES is the shared answer, and it
+  // is the same set getThingsByIds() uses.
+  //
+  // The COLUMN list stays narrow on purpose. These are the curated fields the
+  // stop derivations read, and `category` in particular is a hand-set guide field
+  // populated on ~109 rows; it is NOT the same thing as `happening_category`, so
+  // this read cannot simply be swapped for the pool's select without changing
+  // what guide sub-lines say.
   const { data, error } = await sb
     .from("things")
     .select("id, category, address, lat, lng, price_band, free, slug")
-    .in("id", ids);
+    .in("id", ids)
+    .in("status", [...PUBLIC_STATUSES]);
   if (error || !data) return new Map();
   const map = new Map<string, StopThingFields & { id: string }>();
   for (const row of data as Record<string, unknown>[]) {
@@ -174,13 +191,13 @@ export async function getGuidesFeaturingThing(
     .in("id", guideIds as string[]);
   return ((guides ?? []) as { id: string; title: string; slug: string | null }[]).map((g) => ({
     id: g.id,
-    title: cleanText(g.title),
+    title: shortGuideTitle(cleanText(g.title)), // R1 W8.5, the one public name
     slug: g.slug,
   }));
 }
 
-/** Strip a trailing parenthetical qualifier from a guide title for the
- *  short-label surfaces (sticky bar `who`, passport `lbl`), e.g.
+/** A guide's one public name (R1 W8.5: applied in mapGuide, so every surface
+ *  uses it). Strips a trailing parenthetical qualifier, e.g.
  *  "State Street (First-timer)" -> "State Street". A no-op for titles with
  *  no trailing parenthetical (e.g. "The Funk Zone"). Spec: Guide2 §1/§8.5. */
 export function shortGuideTitle(title: string): string {
@@ -224,7 +241,7 @@ export type ChapterTod = "morning" | "afternoon" | "golden" | "evening";
 
 /** Copy for one chapter band; the array index aligns with `guide_stops.chapter`. */
 export interface GuideChapter {
-  /** Band label, e.g. "Stops 1–3 · Morning". */
+  /** Band label, e.g. "Stops 1-3 · Morning". */
   k: string | null;
   /** Chapter name. */
   name: string | null;
@@ -274,6 +291,11 @@ export interface GuideSketch {
 /** Parsed shape of `guides.content` (jsonb). Empty `{}` → all-empty defaults. */
 export interface GuideContent {
   meta: GuideContentMeta;
+  /** R1 W5.9 (DSC-008). This guide's own one-line description of the route,
+   *  e.g. "Tracks to sand, in order." It was a hardcoded shared string, so
+   *  State Street claimed a walk it does not have. Null falls back to a neutral
+   *  line rather than borrowing another guide's geography. */
+  walk_line: string | null;
   chapters: GuideChapter[];
   asides: GuideAside[];
   take: GuideTake;
@@ -281,6 +303,48 @@ export interface GuideContent {
   postcard_captions: GuidePostcardCaptions;
   secret_tease: string | null;
   sketch: GuideSketch;
+  /** R1 W8.5 (DSC-005). The next guide, named on the Discover index. Lives in
+   *  this jsonb column so no schema change was needed; any published guide may
+   *  carry it (the soonest wins). Null hides the notice. */
+  upcoming: GuideUpcoming | null;
+}
+
+export interface GuideUpcoming {
+  /** The next guide's name, e.g. "The Mesa". */
+  title: string;
+  /** When it is due, "YYYY-MM". */
+  month: string;
+}
+
+function asUpcoming(v: unknown): GuideUpcoming | null {
+  if (!isRecord(v)) return null;
+  const title = typeof v.title === "string" ? v.title.trim() : "";
+  const month = typeof v.month === "string" ? v.month.trim() : "";
+  if (!title || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return null;
+  return { title: cleanText(title), month };
+}
+
+const MONTH_NAME = new Intl.DateTimeFormat("en-US", { month: "long", timeZone: "UTC" });
+
+/**
+ * R1 W8.5 (DSC-005). The notice for the Discover index, or null to show none.
+ * Replaces the vague "More guides are on their way". Hidden when nothing is
+ * set, when the month has passed, or when that guide is already published.
+ */
+export function nextUpcomingGuide(
+  guides: { title: string; content: unknown }[],
+  now: Date = new Date(),
+): { title: string; monthLabel: string } | null {
+  const thisMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  const published = new Set(guides.map((g) => g.title.toLowerCase()));
+  const candidates = guides
+    .map((g) => parseGuideContent(g.content).upcoming)
+    .filter((u): u is GuideUpcoming => !!u && u.month >= thisMonth && !published.has(u.title.toLowerCase()))
+    .sort((a, b) => a.month.localeCompare(b.month));
+  const next = candidates[0];
+  if (!next) return null;
+  const [y, m] = next.month.split("-").map(Number);
+  return { title: next.title, monthLabel: MONTH_NAME.format(new Date(Date.UTC(y, m - 1, 15))) };
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -289,6 +353,12 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 function asString(v: unknown): string | null {
   return typeof v === "string" ? v : null;
+}
+
+/** R1 W8.4 (D9). Prose from guides.content, through the dash normalizer. The
+ *  row-level fields were cleaned; the jsonb prose never was. */
+function asText(v: unknown): string | null {
+  return typeof v === "string" ? cleanText(v) : null;
 }
 
 function asNumber(v: unknown): number | null {
@@ -318,6 +388,7 @@ function asTod(v: unknown): ChapterTod | null {
 export function parseGuideContent(raw: unknown): GuideContent {
   const empty: GuideContent = {
     meta: { distance_mi: null, plan_hrs: [] },
+    walk_line: null,
     chapters: [],
     asides: [],
     take: { h: null, items: [], landing: null },
@@ -325,6 +396,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
     postcard_captions: {},
     secret_tease: null,
     sketch: { kind: "sketch", asset: null, no: null },
+    upcoming: null,
   };
   if (!isRecord(raw)) return empty;
 
@@ -334,9 +406,9 @@ export function parseGuideContent(raw: unknown): GuideContent {
 
   const chapters: GuideChapter[] = Array.isArray(raw.chapters)
     ? raw.chapters.filter(isRecord).map((c) => ({
-        k: asString(c.k),
-        name: asString(c.name),
-        sum: asString(c.sum),
+        k: asText(c.k),
+        name: asText(c.name),
+        sum: asText(c.sum),
         tod: asTod(c.tod),
       }))
     : [];
@@ -344,19 +416,19 @@ export function parseGuideContent(raw: unknown): GuideContent {
   const asides: GuideAside[] = Array.isArray(raw.asides)
     ? raw.asides.filter(isRecord).map((a) => ({
         after_chapter: asNumber(a.after_chapter),
-        text: asString(a.text),
+        text: asText(a.text),
       }))
     : [];
 
   const take: GuideTake = {
-    h: asString(takeRaw.h),
+    h: asText(takeRaw.h),
     items: Array.isArray(takeRaw.items)
       ? takeRaw.items.filter(isRecord).map((i) => ({
-          b: asString(i.b),
-          rest: asString(i.rest),
+          b: asText(i.b),
+          rest: asText(i.rest),
         }))
       : [],
-    landing: asString(takeRaw.landing),
+    landing: asText(takeRaw.landing),
   };
 
   const know_before: GuideKnowBefore[] = Array.isArray(raw.know_before)
@@ -374,6 +446,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
   }
 
   return {
+    walk_line: asText(raw.walk_line),
     meta: {
       distance_mi: asNumber(metaRaw.distance_mi),
       plan_hrs: asNumberArray(metaRaw.plan_hrs),
@@ -383,7 +456,8 @@ export function parseGuideContent(raw: unknown): GuideContent {
     take,
     know_before,
     postcard_captions,
-    secret_tease: asString(raw.secret_tease),
+    secret_tease: asText(raw.secret_tease),
+    upcoming: asUpcoming(raw.upcoming),
     sketch: {
       kind: sketchRaw.kind === "emblem" ? "emblem" : "sketch",
       asset: asString(sketchRaw.asset),
@@ -392,7 +466,7 @@ export function parseGuideContent(raw: unknown): GuideContent {
   };
 }
 
-// ─── Stop derivations (Call-1 rules, spec §3.2–3.3) ─────────────────────────
+// ─── Stop derivations (Call-1 rules, spec §3.2-3.3) ─────────────────────────
 // Minimal structural inputs so these stay pure and unit-testable without
 // pulling the full Guide/Thing DB-mapped types (which this phase doesn't widen).
 
@@ -466,4 +540,32 @@ export function directionsUrl(
     return `https://maps.google.com/?q=${thing.lat},${thing.lng}`;
   }
   return null;
+}
+
+/** R1 W5.9 (DSC-006). How long a "Right now" note stays true. */
+export const NOW_NOTE_MAX_AGE_DAYS = 45;
+
+/**
+ * Is this guide's "Right now" note still worth showing?
+ *
+ * The State Street guide was still saying "the long July evenings are the
+ * reward down here" in late September, 76 days after it was written. A stale
+ * seasonal note is worse than no note: it is a specific, checkable claim that
+ * happens to be wrong, and it undermines the rest of the guide with it. Past the
+ * window the block hides and the stat line's "Refreshed [month]" carries the
+ * freshness story instead.
+ */
+export function isNowNoteFresh(
+  nowNoteOn: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!nowNoteOn) return false;
+  // `now_note_on` is a DATE, so the age is counted in whole calendar days. Using
+  // the raw timestamps would make a note written 45 days ago read as 45.8 days
+  // old purely because of the time of day it is being viewed.
+  const written = Date.parse(`${nowNoteOn.slice(0, 10)}T00:00:00Z`);
+  if (Number.isNaN(written)) return false;
+  const today = Date.parse(`${now.toISOString().slice(0, 10)}T00:00:00Z`);
+  const ageDays = (today - written) / 86_400_000;
+  return ageDays <= NOW_NOTE_MAX_AGE_DAYS && ageDays >= -1;
 }

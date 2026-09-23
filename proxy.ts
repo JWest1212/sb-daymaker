@@ -4,14 +4,14 @@ import { createServerClient } from "@supabase/ssr";
 // This Next version uses the `proxy` file convention (formerly `middleware`).
 // Two responsibilities, kept separate so listing requests never pay for the
 // cockpit auth client:
-//   1. Elevation v1 · Gate 2 · G2.2, 301 legacy /thing/<uuid> and /discover/<uuid>
+//   1. Elevation v1 · Gate 2 · G2.2, 308 legacy /thing/<uuid> and /discover/<uuid>
 //      paths (and Gate 0 merged-dupe paths) to their canonical slug URL.
 //   2. Guard /cockpit/* behind a Supabase auth session.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** For a legacy UUID-shaped /thing or /discover path, look up url_redirects and
- *  return a 301 to the slug. null when there's nothing to redirect (the common
+ *  return a 308 to the slug. null when there's nothing to redirect (the common
  *  slug case never even hits the DB). Direct PostgREST fetch, no supabase-js. */
 async function redirectLegacyPath(req: NextRequest): Promise<NextResponse | null> {
   const { pathname } = req.nextUrl;
@@ -30,7 +30,10 @@ async function redirectLegacyPath(req: NextRequest): Promise<NextResponse | null
     if (res.ok) {
       const rows = (await res.json()) as { to_path: string }[];
       const to = rows[0]?.to_path;
-      if (to && to !== pathname) return NextResponse.redirect(new URL(to, req.url), 301);
+      // R1 W6.7 (DET-007). 308, not 301, so this agrees with the page-level
+      // permanentRedirect that now catches every UUID with a slug. Two paths to
+      // the same destination should not answer with two different statuses.
+      if (to && to !== pathname) return NextResponse.redirect(new URL(to, req.url), 308);
     }
   } catch {
     // Never let a redirect-lookup failure break the page; fall through to render.

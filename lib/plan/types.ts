@@ -3,7 +3,7 @@
 // Itineraries live in localStorage (no accounts); no AI at tap time.
 
 import type { OccasionKey } from "@/lib/occasions";
-import type { Zone } from "@/lib/zones";
+import type { AreaKey } from "@/lib/areas";
 
 // UI blocks, three time-of-day periods shown to the user.
 // DB `tod` enum has 4 values; Night maps to evening + late via BLOCK_TO_TOD.
@@ -85,7 +85,7 @@ export interface Transition {
   minutes: number;
   /** e.g. "4 min walk" or "8 min drive". */
   label: string;
-  /** Zone-level parking truth, appended once at the first drive/inter-cluster
+  /** AreaKey-level parking truth, appended once at the first drive/inter-cluster
    *  hop (null when there is nothing worth saying). */
   parkingNote: string | null;
 }
@@ -93,8 +93,14 @@ export interface Transition {
 /** Gate 4 · G4.6, an honest note surfaced when the solver could not satisfy a
  *  request (e.g. no in-budget dinner nearby), instead of shipping a broken plan. */
 export interface PlanNote {
-  kind: "meal_unfilled" | "empty_block" | "budget" | "cluster";
+  /** R1 W3.2 adds "thin_day" (fewer than two stops) and W3.3 adds "widened"
+   *  (the draft had to reach outside the chosen area). */
+  kind: "meal_unfilled" | "empty_block" | "budget" | "cluster" | "thin_day" | "widened";
   text: string;
+  /** R1 W3.2. Stable identity for the SUBJECT of the note, so two modules
+   *  describing the same problem in different words collapse to one sentence.
+   *  See lib/plan/notes.ts. Falls back to kind+text when absent. */
+  key?: string;
 }
 
 /** A saved single-day itinerary (localStorage). */
@@ -114,7 +120,9 @@ export interface PlanAnswers {
   periods: Block[];    // selected Time-of-Day → spine sections
   who: Who;
   vibes: VibeKey[];
-  zone: Zone | null;   // null = "Anywhere"; also the plan's anchor/cluster origin
+  /** R1 W4.3: one of the 8 public areas, or null for "Anywhere in SB". Also
+   *  the plan's anchor/cluster origin. */
+  zone: AreaKey | null;
   // ---- Gate 4 (all optional; the engine defaults when absent) --------------
   kidBand?: KidBand | null;  // Family only
   transport?: Transport;     // default "car" (least restrictive on reachability)
@@ -132,7 +140,7 @@ export interface ResolvedParams {
   who: Who;
   kidBand: KidBand | null;
   vibes: VibeKey[];
-  zone: Zone | null;
+  zone: AreaKey | null;
   transport: Transport;
   budget: Budget | null;
   meals: Meal[];
@@ -152,10 +160,16 @@ export interface SharedPlanPayload {
     blockLabel: string;        // section label, e.g. "Afternoon"
     startsAt?: string | null;  // ISO datetime, only if thing.starts_at is set
     title: string;
-    area: string;
+    /** R1 W4.1: null when the area is genuinely unknown. A shared plan shows
+     *  nothing there rather than the city name as a stand-in. */
+    area: string | null;
     blurb: string;
     category: string;
     thingId: string;
+    /** R1 W6.7 (MAP-001). The thing's slug at share time, so the Details link on
+     *  a shared plan is a readable URL. Optional: plans shared before this still
+     *  carry only the id, and that id now 308s to the slug anyway. */
+    slug?: string | null;
     photo_url?: string | null;
     /** Gate 4 · G4.5, the meal chip label ("lunch"/"dinner"/"breakfast"). */
     meal?: Meal | null;

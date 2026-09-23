@@ -1,5 +1,7 @@
+import { SBIcon } from "@/components/ui/SBIcon";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import {
   getGuideBySlugOrId,
   matchGuideThings,
@@ -9,19 +11,24 @@ import {
   getStopThingMap,
   shortGuideTitle,
 } from "@/lib/guides";
-import { getPublishedThings } from "@/lib/things";
+import { getPublishedThings, stripForBrowse } from "@/lib/things";
 import { getVenuePhotoPools } from "@/lib/venues";
 import { cascade } from "@/lib/explore";
 import { CascadeFeed } from "@/components/explore/CascadeFeed";
 import { EmptyState } from "@/components/ui";
 import { GuideWalkSection } from "@/components/discover/GuideWalkSection";
+import { isNowNoteFresh } from "@/lib/guides";
 import type { StopDisplay } from "@/components/discover/GuideWalkSection";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { GuideShare } from "@/components/discover/GuideShare";
 import { guideBreadcrumbJsonLd } from "@/lib/seo/jsonLd";
-import { guidePath } from "@/lib/seo/site";
+import { guidePath, isUuid } from "@/lib/seo/site";
+import { redirectTargetFor } from "@/lib/links/redirects";
 
-export const revalidate = 600;
+export const revalidate = 300;
+
+/** R1 W8.2. Marking guide stops is not built; nothing may promise it until it is. */
+const STOP_MARKING_LIVE = false; // R1 W1.6, ISR safety net behind /api/revalidate
 
 function truncate(s: string, n: number): string {
   const clean = s.trim();
@@ -38,7 +45,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const result = await getGuideBySlugOrId(id);
-  if (!result) return { title: "Guide · SB Daymaker" };
+  // R1 W7.8 (DET-013). Says what happened, like the listing's "Not found".
+  if (!result) return { title: "Guide not found · SB Daymaker", robots: { index: false, follow: true } };
   const g = result.guide;
   const title = `${g.title} · Discover SB · SB Daymaker`;
   const description = truncate(
@@ -88,19 +96,22 @@ export default async function GuidePage({
   const { id } = await params;
   const [result, things, venuePools] = await Promise.all([getGuideBySlugOrId(id), getPublishedThings(), getVenuePhotoPools()]);
 
+  // R1 W6.8 (TP-B-01). The server's clock, read once here and passed down, so
+  // the "Now" chapter badge is identical on both sides of hydration. Reading it
+  // inside the client component was the guide pages' React #418.
+  const nowMs = Date.now();
+
+  // R1 W6.7 (DET-007, DSC-004). A guide with a slug has ONE address; the UUID
+  // URL keeps working but moves there permanently.
+  if (result?.guide.slug && isUuid(id)) permanentRedirect(guidePath(result.guide));
+
   if (!result) {
-    return (
-      <div style={{ paddingTop: "var(--space-6)" }}>
-        <div className="sbd-backrow">
-          <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
-        </div>
-        <EmptyState
-          icon="🧭"
-          title="Guide not found"
-          message="This guide may have been unpublished. Head back to Discover SB."
-        />
-      </div>
-    );
+    // R1 W6.7 (DET-007). An old guide slug that has since been shortened still
+    // has a url_redirects row; the proxy only catches UUID segments, so without
+    // this the old link dead-ends.
+    const moved = await redirectTargetFor(`/discover/${id}`);
+    if (moved) permanentRedirect(moved);
+    notFound(); // R1 W6.7 (EDG-001), a real 404 status behind the same words
   }
 
   const { guide, stops } = result;
@@ -148,7 +159,7 @@ export default async function GuidePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(guideJsonLd) }}
         />
         <div className="sbd-backrow">
-          <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+          <Link href="/discover" className="sbd-backrow__btn"><SBIcon name="chevron" rotate="left" size={14} /> Discover SB</Link>
         </div>
         <div className="sbd-guide">
           <div className={`sbd-guide-hero sbd-guidecard--${isTheme ? "theme" : "hood"}`}>
@@ -184,11 +195,11 @@ export default async function GuidePage({
 
           <section className="sbd-guide__section">
             <div className="sbd-disc__head">
-              <div className="sbd-disc__eyebrow">📅 {happeningsEyebrow}</div>
+              <div className="sbd-disc__eyebrow">{happeningsEyebrow}</div>
               <h2 className="sbd-disc__title">What&rsquo;s on right now</h2>
             </div>
             {happenings.length > 0 ? (
-              <CascadeFeed items={happenings} horizon="today" venuePools={venuePools} />
+              <CascadeFeed items={stripForBrowse(happenings)} horizon="today" venuePools={venuePools} />
             ) : (
               <EmptyState
                 icon="🌙"
@@ -222,7 +233,7 @@ export default async function GuidePage({
 
       {/* back row */}
       <div className="sbd-backrow">
-        <Link href="/discover" className="sbd-backrow__btn">‹ Discover SB</Link>
+        <Link href="/discover" className="sbd-backrow__btn"><SBIcon name="chevron" rotate="left" size={14} /> Discover SB</Link>
       </div>
 
       {/* guide identity header */}
@@ -243,6 +254,8 @@ export default async function GuidePage({
         chapters={content.chapters}
         asides={content.asides}
         stopCount={stopCount}
+        walkLine={content.walk_line}
+        nowMs={nowMs}
       />
 
       {/* title block */}
@@ -259,7 +272,7 @@ export default async function GuidePage({
           )}
           {content.meta.plan_hrs.length >= 2 && (
             <span className="sbd-gd-meta__new">
-              PLAN {content.meta.plan_hrs[0]}–{content.meta.plan_hrs[1]} HRS
+              PLAN {content.meta.plan_hrs[0]}-{content.meta.plan_hrs[1]} HRS
             </span>
           )}
           {refreshedLabel && <span>REFRESHED {refreshedLabel}</span>}
@@ -274,8 +287,11 @@ export default async function GuidePage({
         </span>
       </div>
 
-      {/* now block (only if now_note is present) */}
-      {guide.now_note && (
+      {/* R1 W5.9 (DSC-006). Shown only while the note is still true: a "Right
+          now" written 76 days ago was still promising long July evenings in late
+          September. Past the window it hides, and REFRESHED in the stat line
+          above carries the freshness story instead. */}
+      {guide.now_note && isNowNoteFresh(guide.now_note_on) && (
         <div className="sbd-gd-now" role="note" aria-label={`Right now in ${shortTitle}`}>
           <div className="sbd-gd-now__eyebrow">
             Right now{nowDateLabel ? ` · updated ${nowDateLabel}` : ""}
@@ -293,14 +309,16 @@ export default async function GuidePage({
                 {happenings[0]?.title ?? "Happenings"}
                 {happenings.length > 1 ? ` · +${happenings.length - 1} more` : ""}
               </span>
-              <span className="sbd-gd-haptoggle__chev" aria-hidden="true">▾</span>
+              <span className="sbd-gd-haptoggle__chev" aria-hidden="true"><SBIcon name="chevron" rotate="down" size={14} /></span>
             </button>
           )}
         </div>
       )}
 
-      {/* passport slab, zero state (static in Phase 2) */}
-      {guide.stamp_code && (
+      {/* R1 W8.2 (XC-004). The passport slab is hidden: it promised that marking
+          stops would "press the stamp", and marking was never built (every Been
+          button was disabled). Flip STOP_MARKING_LIVE when it is. */}
+      {STOP_MARKING_LIVE && guide.stamp_code && (
         <div className="sbd-gd-passport" aria-label={`Your ${shortTitle} passport`}>
           <div className="sbd-gd-passport__left">
             <div className="sbd-gd-passport__row">
@@ -361,13 +379,13 @@ export default async function GuidePage({
         </div>
       )}
 
-      {/* colophon */}
-      <div className="sbd-gd-colophon">
-        <span className="sbd-gd-colophon__text">
-          WRITTEN BY A LOCAL
-          {refreshedLabel ? ` · REFRESHED ${refreshedLabel}` : ""}
-        </span>
-      </div>
+      {/* colophon. "WRITTEN BY A LOCAL" removed 2026-09-22 (Jim): no copy claims
+          a person wrote or curates what the site shows. The date stays. */}
+      {refreshedLabel ? (
+        <div className="sbd-gd-colophon">
+          <span className="sbd-gd-colophon__text">REFRESHED {refreshedLabel}</span>
+        </div>
+      ) : null}
 
       {/* G5.1, share the guide as a designed OG card (no PII, native share). */}
       <div className="sbd-gd-sharerow">

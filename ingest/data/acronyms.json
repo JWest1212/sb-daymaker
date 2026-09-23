@@ -1,0 +1,31 @@
+{
+  "_comment": [
+    "R1 Wave 5 (W5.1). Acronyms that appear in scraped titles, and what to do with them.",
+    "",
+    "`expand` replaces the token with readable words. `drop` removes it when it is only",
+    "the venue repeated (the venue belongs in the card meta line, not the title).",
+    "`keep` leaves a genuine initialism alone, so the all-caps normalizer does not turn",
+    "SBCC into Sbcc.",
+    "",
+    "Edit this file to change how a title reads. The matcher never changes."
+  ],
+  "acronyms": [
+    { "token": "LOTG", "action": "expand", "to": "Library on the Go", "note": "the library bookmobile, D4" },
+    { "token": "SBPL", "action": "expand", "to": "Santa Barbara Public Library" },
+    { "token": "SBMA", "action": "expand", "to": "Santa Barbara Museum of Art" },
+    { "token": "USSB", "action": "expand", "to": "Unitarian Society of Santa Barbara" },
+    { "token": "SMHS", "action": "expand", "to": "San Marcos High School" },
+    { "token": "SBCC", "action": "keep", "note": "reads as SBCC locally" },
+    { "token": "UCSB", "action": "keep" },
+    { "token": "MOXI", "action": "keep" },
+    { "token": "SB", "action": "keep" },
+    { "token": "UC", "action": "keep" },
+    { "token": "DJ", "action": "keep" },
+    { "token": "PM", "action": "keep" },
+    { "token": "AM", "action": "keep" },
+    { "token": "IWC", "action": "keep" },
+    { "token": "II", "action": "keep", "note": "a numeral, not an acronym" },
+    { "token": "III", "action": "keep" },
+    { "token": "ME", "action": "keep" }
+  ]
+}

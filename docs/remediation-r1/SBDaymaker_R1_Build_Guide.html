@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SB Daymaker Remediation R1: the build, explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --plaster:#F6F1E7;--plaster2:#EFE7D8;--paper:#FCFAF5;--ink:#241C16;--ink2:#4A4038;
+  --pacific:#16586A;--pacific-dark:#0E3C49;--terra:#C0532E;--gold:#E0A82E;--sage:#7E8B6B;--line:#D8CDB8;
+  --gold-text:#7A5E13;--sage-text:#566049;--terra-text:#9E3F20;
+  --bg:var(--plaster);--surface:var(--paper);--text:var(--ink);--muted:var(--ink2);--link:var(--pacific);--border:var(--line);
+  --shadow:0 1px 2px rgba(36,28,22,.06),0 8px 24px rgba(36,28,22,.06);
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#1C1612;--surface:#26201B;--text:#F3EDE2;--muted:#CDBFAE;--link:#8EC6D3;--border:#4A4038;--gold-text:#E0A82E;--sage-text:#A9B598;--terra-text:#E08A5B;--plaster2:#2E2620;--shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);}
+}
+:root[data-theme="dark"]{--bg:#1C1612;--surface:#26201B;--text:#F3EDE2;--muted:#CDBFAE;--link:#8EC6D3;--border:#4A4038;--gold-text:#E0A82E;--sage-text:#A9B598;--terra-text:#E08A5B;--plaster2:#2E2620;}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:28px 18px 80px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.1;margin:0}
+h1{font-size:clamp(34px,7vw,52px);font-weight:900;letter-spacing:-.01em}
+h2{font-size:28px;font-weight:700;margin:56px 0 14px}
+h3{font-size:21px;font-weight:700}
+p{margin:0 0 14px}
+a{color:var(--link)}
+.lead{font-size:19px;color:var(--muted);max-width:60ch}
+.mono{font-family:"JetBrains Mono",monospace;font-size:13px}
+.story{border-left:4px solid var(--terra);padding:6px 0 6px 18px;margin:28px 0 8px}
+.story p{margin:0 0 10px}
+.grid{display:grid;gap:14px;margin:18px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 18px 16px;box-shadow:var(--shadow)}
+.card h3{margin-bottom:6px}
+.card p:last-child{margin-bottom:0}
+.small{font-size:15px;color:var(--muted)}
+.chain{counter-reset:step}
+.chain li{margin:0 0 10px 0}
+.numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:22px 0 4px}
+.num{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center}
+.num b{display:block;font-family:Fraunces,serif;font-size:36px;font-weight:900;color:var(--terra);line-height:1}
+.num span{font-size:13px;color:var(--muted)}
+/* route */
+.route{position:relative;margin:24px 0 0;padding-left:34px}
+.route::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:4px;border-radius:2px;background:linear-gradient(var(--pacific),var(--sage))}
+.run{position:relative;margin:0 0 34px}
+.run::before{content:"";position:absolute;left:-34px;top:8px;width:26px;height:26px;border-radius:50%;background:var(--pacific);border:4px solid var(--bg);box-shadow:0 0 0 2px var(--pacific)}
+.run h3{font-size:24px;margin-bottom:4px}
+.run .why{color:var(--muted);margin-bottom:12px}
+.wave{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 16px 14px;margin:0 0 12px;box-shadow:var(--shadow)}
+.wave header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.wave .n{font-family:"JetBrains Mono",monospace;font-size:13px;color:var(--pacific);background:var(--plaster2);padding:2px 8px;border-radius:999px}
+.wave h4{font-family:Fraunces,serif;font-size:20px;font-weight:700;margin:0}
+.wave dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:15.5px}
+.wave dt{color:var(--muted);font-weight:500;white-space:nowrap}
+.wave dd{margin:0}
+.cp{position:relative;background:#FBF3DD;border:1px solid var(--gold);border-radius:14px;padding:14px 16px 12px 52px;margin:0 0 12px;color:var(--ink)}
+.cp::before{content:"";position:absolute;left:16px;top:16px;width:22px;height:22px;background:var(--gold);clip-path:polygon(0 0,100% 30%,0 60%);}
+.cp::after{content:"";position:absolute;left:14px;top:14px;width:3px;height:28px;background:var(--gold-text);border-radius:2px}
+.cp b{font-family:Fraunces,serif;font-size:18px;display:block;margin-bottom:2px}
+.cp p{margin:0;font-size:15.5px;color:var(--ink2)}
+/* you do */
+.todo{list-style:none;padding:0;margin:14px 0}
+.todo li{display:grid;grid-template-columns:34px 1fr;gap:10px;padding:12px 0;border-top:1px solid var(--border)}
+.todo li:last-child{border-bottom:1px solid var(--border)}
+.todo .k{font-family:Fraunces,serif;font-weight:900;font-size:22px;color:var(--pacific);line-height:1.2}
+.todo b{display:block}
+.todo span{color:var(--muted);font-size:15.5px}
+/* prompts */
+.prompt{position:relative;margin:14px 0 22px}
+.prompt pre{margin:0;background:var(--pacific-dark);color:#F3EDE2;border-radius:14px;padding:18px 16px 18px;font-family:"JetBrains Mono",monospace;font-size:12.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word;overflow-x:auto}
+.prompt button{position:absolute;top:10px;right:10px;background:var(--gold);color:var(--ink);border:0;border-radius:999px;padding:8px 14px;font:600 13px Inter,sans-serif;min-height:36px;cursor:pointer}
+.prompt button:focus-visible{outline:3px solid var(--paper);outline-offset:2px}
+.prompt .label{font-weight:600;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:15px;margin:12px 0 4px}
+th,td{text-align:left;vertical-align:top;padding:9px 8px;border-top:1px solid var(--border)}
+th{color:var(--muted);font-weight:500;border-top:0}
+.scroll{overflow-x:auto}
+details{border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:0 16px;margin:10px 0}
+summary{cursor:pointer;padding:14px 0;font-weight:600}
+details[open] summary{border-bottom:1px solid var(--border);margin-bottom:8px}
+.foot{margin-top:56px;color:var(--muted);font-size:14px;border-top:1px solid var(--border);padding-top:16px}
+@media (max-width:420px){.numbers{grid-template-columns:1fr 1fr}.wave dl{grid-template-columns:1fr}.wave dt{margin-top:6px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="mono" style="color:var(--terra-text);margin-bottom:10px">SB Daymaker, Remediation R1</p>
+  <h1>One paste, three runs, five stops.</h1>
+  <p class="lead" style="margin-top:14px">Everything both audits found, fixed in an order that keeps visitors' saves safe. Claude Code does the work. You approve five moments and read three summaries.</p>
+</header>
+
+<div class="numbers">
+  <div class="num"><b>3</b><span>runs, each one Claude Code session or a resume</span></div>
+  <div class="num"><b>5</b><span>checkpoints where you say go</span></div>
+  <div class="num"><b>1</b><span>paste into Supabase, before anything starts</span></div>
+</div>
+
+<h2>What was actually wrong</h2>
+<p>Most of what the audits saw traces back to four chains. Fixing the chains fixes dozens of findings at once.</p>
+<div class="story">
+  <p><strong>Saves were being deleted.</strong> Finished events were never retired, so the catalog grew to 1,529 listings. The database only hands back 1,000 at a time. The cut fell on every evergreen place, and the Saved page deletes anything it cannot see. Every heart in the Discover guides erased itself.</p>
+  <p><strong>The day's pick had no rules.</strong> A flag meant to gate it was set to true on every row, and the fallback picked the first thing in the list. A city planning hearing became the recommendation of the day.</p>
+  <p><strong>The site did not know where things were.</strong> Two different area systems, 38 percent of listings with no area, and a Place door that only re-sorted. Plan and Near Me ignored your choice for the same reason.</p>
+  <p><strong>The pipeline published raw data.</strong> Pipe-delimited titles, blurbs that repeated the title, a car photo on a football party, a food bank classified as lunch, and 619 rows that were really repeat sessions of the same weekly event.</p>
+</div>
+
+<h2>The route</h2>
+<p>Three runs. Inside a run, Claude Code keeps going on its own. The flags are the only places it stops and waits for you.</p>
+
+<div class="route">
+
+<section class="run">
+  <h3>Run A: Trust</h3>
+  <p class="why">Stop the damage, then clean up the cause. Saves must be made safe before dead events are archived, or the cleanup would delete more.</p>
+
+  <article class="wave">
+    <header><span class="n">Wave 1</span><h4>Stop the loss</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Saved looks up each saved item directly and never deletes. The catalog query stops cutting off at 1,000 and leaves out finished events. The share link always shows on screen with a copy button. The backup form appears from the first save. Caches refresh after every nightly ingest.</dd>
+      <dt>You'll notice</dt><dd>Saving from a guide or a detail page sticks. The Month view suddenly has all the restaurants, museums, and regulars back. Sharing on a laptop shows the link.</dd>
+    </dl>
+  </article>
+
+  <article class="wave">
+    <header><span class="n">Wave 2</span><h4>Retire the dead, gate the pick</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Events archive a week after they end and their pages stay reachable with an "already happened" banner. City meetings get a civic flag and leave the feed, search, and Plan. The day's pick needs an address, a real blurb, and a start time that has not passed. "Gray day move" only appears on truly gray days. The nearby list stops repeating one title.</dd>
+      <dt>You'll notice</dt><dd>The pick is something you would tell a friend about. Today's list is leisure, not agendas. Detail pages show a year when the date is not this month.</dd>
+    </dl>
+  </article>
+
+  <div class="cp"><b>Checkpoint 1: archive about 1,100 finished events</b><p>You see counts by month and 20 example titles before anything moves to archived. Archived is reversible.</p></div>
+  <div class="cp"><b>Checkpoint 2: which listings can be the pick</b><p>You see how many rows lose pick eligibility under each rule, with 20 examples, before the flag is written.</p></div>
+</section>
+
+<section class="run">
+  <h3>Run B: Foundations</h3>
+  <p class="why">Fix what the screens depend on before the screens are rebuilt: Plan's logic, one area vocabulary, and the pipeline that writes the words and pictures.</p>
+
+  <article class="wave">
+    <header><span class="n">Wave 3</span><h4>Plan keeps its promises</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Food banks and library stops are not lunch. A thin day always gets an honest note. A chosen area is honored, or the plan says it widened. Dates work up to a month out. Badges stop welding onto words ("Cookingdinner"). "A handful of taps" becomes "Seven quick questions".</dd>
+      <dt>You'll notice</dt><dd>The audit's couple-on-foot-wanting-lunch plan returns a real afternoon.</dd>
+    </dl>
+  </article>
+
+  <article class="wave">
+    <header><span class="n">Wave 4</span><h4>Where things are</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>One list of eight areas with one spelling each, used by Explore, Plan, Saved, detail pages, and the digest. The Place door becomes a real filter; empty areas show as disabled with a count. Listings without an area get one from the venue, coordinates, or address. "Use my location" times out politely.</dd>
+      <dt>You'll notice</dt><dd>Choosing Funk Zone shows the Funk Zone. Near Me on Saved visibly reorders. "OTHER" and "Santa Barbara, Santa Barbara" disappear.</dd>
+    </dl>
+  </article>
+
+  <div class="cp"><b>Checkpoint 3: fill in missing areas</b><p>You see a table of proposed area assignments by source and 30 examples before the backfill writes. Nothing is guessed; unresolved rows go to your sweep console.</p></div>
+
+  <article class="wave">
+    <header><span class="n">Wave 5</span><h4>Pipeline and content quality</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Titles are cleaned on import (no pipes, "LOTG" becomes "Library on the Go"). Repeat sessions get a series key so they can show as one card. Cross-source duplicates merge. The nightly blurb rules require saying what a thing is, never repeating the title, matching the listed day, and no filler words. Prices get a note and a key. Outbound buttons say where they go. Events use the category motif instead of a random Wikimedia photo. Every image has alt text. The digest sample renders from this week. The guides' copy errors and the "wrong on purpose" line are fixed.</dd>
+      <dt>You'll notice</dt><dd>Cards read like a local wrote them. The digest sample is current. No more cars on football parties.</dd>
+    </dl>
+  </article>
+</section>
+
+<section class="run">
+  <h3>Run C: The screens</h3>
+  <p class="why">Rebuild the front door on clean data, close the loops around Saved and share, then align every name and update the canon.</p>
+
+  <article class="wave">
+    <header><span class="n">Wave 6</span><h4>Explore shell and cards</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Filters and the time range live in the address bar, so back works and views can be shared. The six locked WHEN pills, including Tomorrow. One card design for every range, carrying area, time, and price in the same order, with series shown as "Every Sunday, next Sep 27". The whole card is tappable. No sideways scrolling on phones, everything reachable at 200 percent zoom, 44px tap targets. Search tolerates a typo and dedupes. Readable links everywhere, a branded 404, the guide-page error fixed, and load time remeasured.</dd>
+      <dt>You'll notice</dt><dd>This is the visible rebuild. The homepage feels like one app instead of three card styles.</dd>
+    </dl>
+  </article>
+
+  <div class="cp"><b>Checkpoint 4: the new homepage</b><p>You see the homepage at phone width in Today, Weekend, and Month after the card rebuild, before the layout and search work continues.</p></div>
+
+  <article class="wave">
+    <header><span class="n">Wave 7</span><h4>Saved, share, offline, forms, metadata</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>Badge and list counts agree. "Did you make it?" says "This morning" for a morning event. The empty Saved page links somewhere. Recipients of a shared link see the wordmark and a line explaining what this is. Saved works offline. Forms validate in the site's own style and set expectations. Confirmation emails use the digest template. Every page previews with its own title and image.</dd>
+      <dt>You'll notice</dt><dd>Sharing a link to a friend looks like it came from a real product.</dd>
+    </dl>
+  </article>
+
+  <article class="wave">
+    <header><span class="n">Wave 8</span><h4>Names, voice, welcome, canon</h4></header>
+    <dl>
+      <dt>What changes</dt><dd>One word per idea sitewide: Area, Occasion, Activity, Reset, Evening, and one newsletter cadence line. Copy stops promising a map or a memory the product does not have. The blocking welcome overlay becomes a dismissible strip over real content. Emoji become icons. A build check fails on any em dash. CLAUDE.md moves to v11 and the deltas ledger records every decision.</dd>
+      <dt>You'll notice</dt><dd>Nothing surprises you twice. The docs match the site.</dd>
+    </dl>
+  </article>
+
+  <div class="cp"><b>Checkpoint 5: the canon update</b><p>You see the CLAUDE.md and Doc 14 diffs before they are committed.</p></div>
+</section>
+
+</div>
+
+<h2>What you do</h2>
+<ol class="todo">
+  <li><span class="k">1</span><div><b>Put the specs in the repo</b><span>Copy the remediation-r1 folder to docs/remediation-r1/ and the audit log to docs/audits/.</span></div></li>
+  <li><span class="k">2</span><div><b>Paste the SQL block into Supabase</b><span>Once, before kickoff. It only adds columns, one index, and one read rule. Safe to run twice.</span></div></li>
+  <li><span class="k">3</span><div><b>Paste the Kickoff prompt into Claude Code</b><span>It reads the specs, checks the SQL landed, creates the branch, records a baseline, and starts Run A.</span></div></li>
+  <li><span class="k">4</span><div><b>Say "go" at five checkpoints</b><span>Two in Run A, one in Run B, two in Run C. Each shows you evidence first.</span></div></li>
+  <li><span class="k">5</span><div><b>Say "start Run B" and "start Run C"</b><span>After each run summary. If a session stops early for any reason, paste the Resume prompt.</span></div></li>
+</ol>
+
+<h2>The paste and the prompts</h2>
+
+<div class="prompt">
+  <div class="label">SQL, once, in the Supabase SQL editor</div>
+  <pre id="p-sql">-- R1 additive schema. Safe to run more than once.
+alter table things add column if not exists is_civic boolean not null default false;
+alter table things add column if not exists archived_at timestamptz;
+alter table things add column if not exists series_key text;
+alter table things add column if not exists venue_name text;
+alter table things add column if not exists price_note text;
+create index if not exists things_pool_idx on things (status, happening_tier, starts_at) where status = 'published';
+create index if not exists things_series_idx on things (series_key) where status = 'published';
+-- Saved and shared links must be able to render items that already happened.
+drop policy if exists things_read_archived on things;
+create policy things_read_archived on things for select to anon using (status = 'archived');</pre>
+  <button type="button" data-copy="p-sql">Copy</button>
+</div>
+
+<div class="prompt">
+  <div class="label">Kickoff, once, in Claude Code</div>
+  <pre id="p-kick">We are starting Remediation R1 for SB Daymaker. The specs live in docs/remediation-r1/.
+
+1. Read docs/remediation-r1/00_R1_INDEX.md in full. The prime directive, "How the build runs", the decision ledger, and the invariants are hard rules for the entire build. Then read CLAUDE.md and docs/audits/2026-09-21-technical-pass.md.
+2. Confirm the R1 DDL landed: the columns is_civic, archived_at, series_key, venue_name, price_note exist on things and the anon role can select archived rows. If anything is missing, stop and tell me exactly what to paste.
+3. Create the branch remediation-r1 from the current production branch and tell me which branch that was. Run the test suite and record the count in docs/remediation-r1/BASELINE.md with: published row count, rows returned by getPublishedThings(), happening_tier 2 and 3 rows in the pool, Lighthouse mobile LCP for /, and a 390px homepage screenshot.
+4. Create docs/remediation-r1/PROGRESS.md and keep it current after every task.
+5. Run Run A (Waves 1 and 2) end to end. Stop only at CP1 and CP2 as defined in the index, show the evidence, and wait for my "go". Commit after each wave with the message in the spec. Run every Acceptance line yourself and report only failures.
+6. When Run A is complete, give me a plain-language summary of what changed, what I should look at on the live preview (three URLs), anything blocked, and then stop and wait before Run B.
+
+Run B (Waves 3, 4, 5) stops only at CP3. Run C (Waves 6, 7, 8) stops only at CP4 and CP5. I will say "start Run B" and "start Run C". I never run terminal commands; you handle all execution and explain in plain terms.</pre>
+  <button type="button" data-copy="p-kick">Copy</button>
+</div>
+
+<div class="prompt">
+  <div class="label">Resume, whenever a session ended early</div>
+  <pre id="p-resume">Resume Remediation R1. Read docs/remediation-r1/PROGRESS.md, then the index and the spec for the wave in progress. Continue from the first task not marked done, without repeating completed tasks. The checkpoint rules in the index still apply: stop only at CP1 to CP5, and only if that checkpoint has not already been approved (PROGRESS.md records approvals). Report when the current run is complete.</pre>
+  <button type="button" data-copy="p-resume">Copy</button>
+</div>
+
+<div class="prompt">
+  <div class="label">Start the next run</div>
+  <pre id="p-next">Start Run B. Follow docs/remediation-r1/00_R1_INDEX.md: Waves 3, 4, and 5, stopping only at CP3. Keep PROGRESS.md current, commit after each wave, run the acceptance lines yourself, and give me the run summary at the end.</pre>
+  <button type="button" data-copy="p-next">Copy</button>
+  <p class="small" style="margin-top:8px">For Run C, change it to "Start Run C. Waves 6, 7, and 8, stopping only at CP4 and CP5."</p>
+</div>
+
+<h2>Decisions already made for you</h2>
+<p class="small">Defaults, recorded in the index. Say so before the wave that uses one if you want it changed.</p>
+<div class="scroll">
+<table>
+<tr><th>Decision</th><th>Wave</th></tr>
+<tr><td>Saved never auto-deletes. Unknown items show "No longer listed" with a remove control.</td><td>1</td></tr>
+<tr><td>Finished events archive after 7 days. Their pages stay reachable with an "already happened" banner.</td><td>1 and 2</td></tr>
+<tr><td>City meetings get a civic flag and never publish to the feed. No civic surface yet.</td><td>2</td></tr>
+<tr><td>Library programs stay. "LOTG" becomes "Library on the Go".</td><td>5</td></tr>
+<tr><td>The Place door becomes a real filter. Eight areas are the public vocabulary. Empty areas show disabled, not hidden.</td><td>4</td></tr>
+<tr><td>Repeat sessions display as one card per series ("Every Sunday, next Sep 27"). The data model change waits.</td><td>5 and 6</td></tr>
+<tr><td>The WHEN row ships the locked six pills: Today, Tomorrow, Weekend, Next Wknd, Week, Month.</td><td>6</td></tr>
+<tr><td>The blocking welcome overlay becomes a dismissible strip. The tour lives under "How it works".</td><td>8</td></tr>
+<tr><td>No em dashes anywhere. En dashes become "to" in prose and a hyphen in number ranges.</td><td>5 and 8</td></tr>
+<tr><td>The first-three-visits hero rule is dropped. Near Me on Explore is dropped; the Area door covers it.</td><td>8</td></tr>
+<tr><td>The digest sample renders from live data each week.</td><td>5</td></tr>
+<tr><td>The guides' "one detail is wrong on purpose" game is retired until accidental errors are gone.</td><td>5</td></tr>
+</table>
+</div>
+
+<h2>Coverage</h2>
+<div class="numbers">
+  <div class="num"><b>103</b><span>UI audit findings mapped</span></div>
+  <div class="num"><b>71</b><span>technical pass lines mapped</span></div>
+  <div class="num"><b>9</b><span>dropped after verification</span></div>
+</div>
+<p class="small">Dropped as not defects: the count jump during your mid-audit update, the Today chip label, the doubled count (a screen-reader region), the Saved past-event grouping, the Supabase console warning (the audit extension's own), focus rings (drawn on the card), pre-filled recipient hearts (same browser profile), and three harness artifacts. Every other line is in the coverage matrix with the task that closes it.</p>
+
+<details>
+  <summary>What runs without a checkpoint, and why that is safe</summary>
+  <p class="small">Wave 5's data passes (title cleaning, series keys, duplicate merges, blurb re-enrichment, image re-resolution) run on Claude Code's own review rules and their samples land in the run summary. They are reversible: titles keep their slugs, merged duplicates are archived not deleted, and images can be re-resolved. The blurb re-run is capped at a $5 estimate; above that it is logged as blocked and skipped for you to decide. Wave 3's small recategorization of five rows is listed in the summary. Everything else is code, which each wave commits separately so any wave can be reverted on its own.</p>
+</details>
+
+<details>
+  <summary>If something goes wrong</summary>
+  <p class="small">Every wave is its own commit on the remediation-r1 branch, so any wave can be undone without touching the others. Nothing deploys to production until you merge. If Claude Code reports a task as Blocked, it has skipped it and moved on; the run summary lists what would unblock it. If a checkpoint's evidence looks wrong, say "adjust" and describe what is off in plain words; the spec tells Claude Code to redo the dry-run.</p>
+</details>
+
+<p class="foot">Specs: docs/remediation-r1/00_R1_INDEX.md and the eight wave files. Findings: docs/audits/SB_Daymaker_UI_Audit_Log.md and docs/audits/2026-09-21-technical-pass.md. Prepared September 21, 2026.</p>
+
+</div>
+<script>
+document.querySelectorAll('[data-copy]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=document.getElementById(b.getAttribute('data-copy')).innerText;
+    var done=function(){var o=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=o},1600)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){fallback(t,done)})}else{fallback(t,done)}
+  });
+});
+function fallback(t,done){var ta=document.createElement('textarea');ta.value=t;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+</script>
+</body>
+</html>

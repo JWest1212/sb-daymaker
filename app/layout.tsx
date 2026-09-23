@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import { SavesProvider } from "@/components/saves/SavesProvider";
 import { ItinerariesProvider } from "@/components/plan/ItinerariesProvider";
+import { TourProvider } from "@/components/tour/TourProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { SvgDefs } from "@/components/visuals";
 import { Analytics } from "@vercel/analytics/react";
@@ -79,7 +80,12 @@ export default function RootLayout({
       <body className="min-h-full">
         <SvgDefs />
         <SavesProvider>
-          <ItinerariesProvider>{children}</ItinerariesProvider>
+          {/* R1 W8.3. Here, not in the (app) group: now that the tour never
+              opens itself, every page's "How it works" can offer it, Plan and
+              the not-found page included. */}
+          <ItinerariesProvider>
+            <TourProvider>{children}</TourProvider>
+          </ItinerariesProvider>
         </SavesProvider>
         <ServiceWorkerRegister />
         <Analytics />

@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
+  nextUpcomingGuide,
   shortGuideTitle,
   parseGuideContent,
   deriveStopSub,
   directionsUrl,
   type StopThingFields,
+  isNowNoteFresh,
 } from "./guides";
 
 // ─── parseGuideContent (empty / full / malformed) ───────────────────────────
@@ -12,6 +14,7 @@ import {
 describe("parseGuideContent", () => {
   it("empty {} → all-empty defaults (renders a plain v1 guide)", () => {
     expect(parseGuideContent({})).toEqual({
+      walk_line: null,
       meta: { distance_mi: null, plan_hrs: [] },
       chapters: [],
       asides: [],
@@ -20,6 +23,7 @@ describe("parseGuideContent", () => {
       postcard_captions: {},
       secret_tease: null,
       sketch: { kind: "sketch", asset: null, no: null },
+      upcoming: null,
     });
   });
 
@@ -28,7 +32,7 @@ describe("parseGuideContent", () => {
       meta: { distance_mi: 1.3, plan_hrs: [3, 5] },
       chapters: [
         {
-          k: "Stops 1–3 · Morning",
+          k: "Stops 1-3 · Morning",
           name: "Pastry, science, murals",
           sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
@@ -47,10 +51,11 @@ describe("parseGuideContent", () => {
       surprise_extra_key: "ignored",
     };
     expect(parseGuideContent(raw)).toEqual({
+      walk_line: null,
       meta: { distance_mi: 1.3, plan_hrs: [3, 5] },
       chapters: [
         {
-          k: "Stops 1–3 · Morning",
+          k: "Stops 1-3 · Morning",
           name: "Pastry, science, murals",
           sum: "The zone before the crowds, start with the croissant.",
           tod: "morning",
@@ -66,6 +71,7 @@ describe("parseGuideContent", () => {
       postcard_captions: { b1_3: "Off and walking.", b9: "Every stop." },
       secret_tease: "One detail is wrong on purpose.",
       sketch: { kind: "sketch", asset: "funk-zone", no: 1 },
+      upcoming: null,
     });
   });
 
@@ -190,5 +196,53 @@ describe("shortGuideTitle", () => {
 
   it("no-op for a title with no trailing parenthetical", () => {
     expect(shortGuideTitle("The Funk Zone")).toBe("The Funk Zone");
+  });
+});
+
+describe("isNowNoteFresh (R1 W5.9, DSC-006)", () => {
+  const NOW = new Date("2026-09-22T12:00:00-07:00");
+  const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000).toISOString().slice(0, 10);
+
+  it("shows a note written this week", () => {
+    expect(isNowNoteFresh(daysAgo(3), NOW)).toBe(true);
+  });
+
+  it("hides the live case: a July note still being shown in late September", () => {
+    // "The long July evenings are the reward down here", written 2026-07-08.
+    expect(isNowNoteFresh("2026-07-08", NOW)).toBe(false);
+  });
+
+  it("treats the 45-day boundary as inclusive", () => {
+    expect(isNowNoteFresh(daysAgo(45), NOW)).toBe(true);
+    expect(isNowNoteFresh(daysAgo(46), NOW)).toBe(false);
+  });
+
+  it("hides a note with no date, rather than assuming it is current", () => {
+    expect(isNowNoteFresh(null, NOW)).toBe(false);
+    expect(isNowNoteFresh(undefined, NOW)).toBe(false);
+    expect(isNowNoteFresh("not-a-date", NOW)).toBe(false);
+  });
+});
+
+describe("nextUpcomingGuide (R1 W8.5, DSC-005)", () => {
+  const NOW = new Date("2026-09-22T12:00:00Z");
+  const g = (title: string, upcoming?: unknown) => ({ title, content: upcoming ? { upcoming } : {} });
+  it("names the next guide and its month", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone", { title: "The Mesa", month: "2026-10" })], NOW))
+      .toEqual({ title: "The Mesa", monthLabel: "October" });
+  });
+  it("shows nothing when nothing is set", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone"), g("State Street")], NOW)).toBeNull();
+  });
+  it("hides a past month and a guide that is already out", () => {
+    expect(nextUpcomingGuide([g("The Funk Zone", { title: "The Mesa", month: "2026-08" })], NOW)).toBeNull();
+    expect(nextUpcomingGuide([g("The Mesa"), g("The Funk Zone", { title: "The Mesa", month: "2026-11" })], NOW)).toBeNull();
+  });
+  it("ignores a malformed entry and picks the soonest valid one", () => {
+    expect(nextUpcomingGuide([
+      g("A", { title: "Later", month: "2026-12" }),
+      g("B", { title: "", month: "2026-10" }),
+      g("C", { title: "Sooner", month: "2026-11" }),
+    ], NOW)).toEqual({ title: "Sooner", monthLabel: "November" });
   });
 });

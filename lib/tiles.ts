@@ -5,7 +5,7 @@
 // dimensions), spec §18 open decision #2 defaults to the simpler version for v1.
 
 import type { Thing } from "./things";
-import { DOOR_ZONES, doorZoneForNeighborhood } from "./doorZones";
+import { AREAS, areaForThing } from "./areas";
 import { DOOR_OCCASIONS, OCCASION_BY_KEY } from "./occasions";
 import { ACTIVITIES } from "./activities";
 
@@ -21,11 +21,14 @@ export interface Tile {
 // Sweep). Distinct from lib/zones.ts's 6-value `nearby_zone` anchors, which
 // remain the Near Me sort's own system (NearMeSheet.tsx, Saved).
 export function placeTiles(inHorizon: Thing[]): Tile[] {
-  return DOOR_ZONES.map((z) => ({
-    key: z.key,
-    label: z.label,
-    image: `/tiles/place/${z.key}.jpg`,
-    count: inHorizon.filter((t) => doorZoneForNeighborhood(t.neighborhood) === z.key).length,
+  // R1 W4.1/W4.2. Counts come from the one area module and are computed over the
+  // corrected pool, so a tile's number is what the filter will actually show.
+  // They were previously computed over the truncated 996-row pool (TP-A2-11).
+  return AREAS.map((a) => ({
+    key: a.key,
+    label: a.label,
+    image: `/tiles/place/${a.key}.svg`, // scripts/gen-tile-art.mjs
+    count: inHorizon.filter((t) => areaForThing(t) === a.key).length,
   }));
 }
 
@@ -45,7 +48,7 @@ export function vibeTiles(inHorizon: Thing[]): Tile[] {
   return occasions.map((o) => ({
     key: o.key,
     label: o.label,
-    image: `/tiles/vibe/${o.key}.jpg`,
+    image: `/tiles/vibe/${o.key}.svg`, // scripts/gen-tile-art.mjs
     count: inHorizon.filter((t) => t.tags.includes(o.key)).length,
   }));
 }

@@ -359,7 +359,13 @@
 .sbd-cockpit .lmeta .dot { opacity: .5; }
 .sbd-cockpit .lacts { display: flex; gap: 8px; align-items: center; }
 .sbd-cockpit .pendpill { font-family: var(--font-mono); font-size: var(--text-dense-2); letter-spacing: .06em; background: var(--tint-gold-18); color: var(--gold-text); border-radius: var(--radius-pill); padding: 3px 8px; }
-.sbd-cockpit .budget-chip { font-family: var(--font-mono); font-size: var(--text-dense-8); font-weight: 600; letter-spacing: .02em; background: var(--plaster-2); color: var(--ink-2); border-radius: var(--radius-pill); padding: 4px 10px; white-space: nowrap; }
+
+
+/* R1 W2.7: what the R1 pipeline did, visible in the Live catalog.
+   Civic: excluded from the public feed, pick, search and Plan (D3/D14).
+   Archived: retired by the archive step, still reachable by saved/shared links. */
+.sbd-cockpit .civicpill { font-family: var(--font-mono); font-size: var(--text-dense-2); letter-spacing: .06em; background: var(--tint-ink-08); color: var(--ink-2); border-radius: var(--radius-pill); padding: 3px 8px; }
+.sbd-cockpit .archpill { font-family: var(--font-mono); font-size: var(--text-dense-2); letter-spacing: .06em; background: var(--tint-pacific-08); color: var(--pacific); border-radius: var(--radius-pill); padding: 3px 8px; }.sbd-cockpit .budget-chip { font-family: var(--font-mono); font-size: var(--text-dense-8); font-weight: 600; letter-spacing: .02em; background: var(--plaster-2); color: var(--ink-2); border-radius: var(--radius-pill); padding: 4px 10px; white-space: nowrap; }
 .sbd-cockpit .budget-chip.is-near { background: var(--tint-gold-18); color: var(--gold-text); }
 /* phone: let the row's actions drop to their own full-width line. S4, aligned 560->600. */
 @media (max-width: 600px) {

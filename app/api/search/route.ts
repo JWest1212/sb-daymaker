@@ -38,7 +38,12 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q") ?? "";
   if (!q.trim()) {
-    return NextResponse.json({ events: [], eventsOverflow: 0, venues: [], venuesOverflow: 0, tags: [], tagsOverflow: 0 });
+    return NextResponse.json({
+      events: [], eventsOverflow: 0,
+      venues: [], venuesOverflow: 0,
+      tags: [], tagsOverflow: 0,
+      didYouMean: null,
+    });
   }
 
   const [things, venueNames] = await Promise.all([getPublishedThings(), getVenueNames()]);

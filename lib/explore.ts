@@ -1,4 +1,5 @@
 import type { Thing } from "./things";
+import { areaForThing, type AreaKey } from "./areas";
 import type { OccasionKey } from "./occasions";
 import type { Zone } from "./zones";
 import type { ActivityKey } from "./activities";
@@ -7,7 +8,13 @@ import { sbHour } from "./format/daypart";
 // Elevation v1 · Gate 3 · G3.3, "This weekend" is a first-class horizon alongside
 // Today / Week / Month. Fri 5pm to Sun 11:59pm SB (or from now, if it's already
 // the weekend).
-export type Horizon = "today" | "week" | "weekend" | "month";
+/** R1 W6.2 (D7). The locked six, in the order they are shown. "tomorrow" and
+ *  "next_weekend" are new; the other four keep their existing keys so saved and
+ *  shared URLs keep working. */
+export type Horizon = "today" | "tomorrow" | "weekend" | "next_weekend" | "week" | "month";
+
+/** The WHEN row's order, locked by D7. */
+export const HORIZONS: Horizon[] = ["today", "tomorrow", "weekend", "next_weekend", "week", "month"];
 
 // SB is always America/Los_Angeles; en-CA gives YYYY-MM-DD without extra config.
 const SB_DATE_FMT = new Intl.DateTimeFormat("en-CA", {
@@ -99,23 +106,83 @@ export function cascade(things: Thing[]): Thing[] {
  *  with `editorial_weight > 0`, pick the highest weight; ties break to the soonest
  *  starts_at. If none qualify, fall back to `ordered[0]` (the pre-W2.1 behavior).
  *  `ordered` must already be cascade()-sorted. */
-export function pickAutoHero(ordered: Thing[], sbTodayKey: string): Thing | null {
-  const boostedToday = ordered.filter(
-    (t) =>
-      t.happening_tier === 1 &&
-      t.editorial_weight > 0 &&
-      t.starts_at != null &&
-      sbDay(new Date(t.starts_at).getTime()) === sbTodayKey,
-  );
-  if (boostedToday.length > 0) {
-    return boostedToday.reduce((best, t) => {
-      if (t.editorial_weight !== best.editorial_weight)
-        return t.editorial_weight > best.editorial_weight ? t : best;
-      // tie on weight → soonest starts_at wins
-      return (t.starts_at ?? "") < (best.starts_at ?? "") ? t : best;
-    });
+/** R1 W2.4. How far past its start a dated event can still be the day's pick.
+ *  A show that began two hours ago is not a recommendation for tonight. */
+export const PICK_GRACE_MINUTES = 30;
+
+/** R1 W2.4. The placeholder the geocoder writes when it knows only the city. */
+const PLACEHOLDER_ADDRESS = "Santa Barbara, Santa Barbara, CA";
+
+/**
+ * R1 W2.4. Is this row fit to be the day's pick right now?
+ *
+ * `hero_eligible` carries the slow-moving editorial judgement (set by the
+ * nightly pass in ingest/heroEligibility.ts). The rest is the time-sensitive
+ * part, which only the request knows: has it already started, and can a visitor
+ * find it. Civic rows never reach here because the pool excludes them, but the
+ * check is repeated rather than assumed, because this is the front page.
+ */
+export function isPickable(t: Thing, nowMs: number): boolean {
+  if (!t.hero_eligible) return false;
+  if (t.is_civic) return false;
+  const address = t.address?.trim() ?? "";
+  if (!address || address === PLACEHOLDER_ADDRESS) return false;
+  if (t.starts_at != null) {
+    const startMs = new Date(t.starts_at).getTime();
+    if (Number.isNaN(startMs)) return false;
+    if (startMs < nowMs - PICK_GRACE_MINUTES * 60_000) return false;
   }
-  return ordered[0] ?? null;
+  return true;
+}
+
+/**
+ * The day's pick, sponsor-blind.
+ *
+ * R1 W2.4. The old version ended `return ordered[0] ?? null`, a bare fallback
+ * that checked no category, no eligibility, no address and no start time. That
+ * one line is why a municipal design-review hearing was the site's editorial
+ * recommendation for the day (TP-A8-06, TP-A8-07). The fallback chain is now
+ * explicit, and every link in it is eligibility-checked:
+ *
+ *   1. an eligible, boosted, not-yet-started Tier 1 happening today
+ *   2. any other eligible Tier 1 happening today
+ *   3. an eligible Tier 2 (recurring) occurring today
+ *   4. the caller's evergreen rotation, then the static card
+ *
+ * Returning null is a real answer, and the caller's parachute
+ * (pickEvergreenFallback, then the static Courthouse card) handles it. That is
+ * better than putting something unfit on the front page.
+ */
+export function pickAutoHero(ordered: Thing[], sbTodayKey: string, nowMs: number = Date.now()): Thing | null {
+  const pickable = ordered.filter((t) => isPickable(t, nowMs));
+  const today = (t: Thing) =>
+    t.starts_at != null && sbDay(new Date(t.starts_at).getTime()) === sbTodayKey;
+
+  const tier1Today = pickable.filter((t) => t.happening_tier === 1 && today(t));
+
+  // 1. Founder-boosted, soonest first on a tie. Editorial curation is allowed
+  //    (editorial_weight); sponsor status is never read (schema §A7).
+  const boosted = tier1Today.filter((t) => t.editorial_weight > 0);
+  if (boosted.length > 0) return bestOf(boosted);
+
+  // 2. Any eligible dated thing happening today.
+  if (tier1Today.length > 0) return bestOf(tier1Today);
+
+  // 3. An eligible recurring session occurring today.
+  const tier2Today = pickable.filter((t) => t.happening_tier === 2 && today(t));
+  if (tier2Today.length > 0) return bestOf(tier2Today);
+
+  return null;
+}
+
+/** Highest editorial weight, then soonest start. */
+function bestOf(rows: Thing[]): Thing {
+  return rows.reduce((best, t) => {
+    if (t.editorial_weight !== best.editorial_weight) {
+      return t.editorial_weight > best.editorial_weight ? t : best;
+    }
+    return (t.starts_at ?? "") < (best.starts_at ?? "") ? t : best;
+  });
 }
 
 /** The Fri/Sat/Sun SB date keys of the current (or upcoming) weekend. If today is
@@ -159,21 +226,60 @@ export function withinHorizon(
   if (horizon === "weekend" && thing.happening_tier === 2) {
     return tier2OccursThisWeekend(thing);
   }
+  // R1 W6.2: Tomorrow is a single SB calendar day, so a recurring thing has to
+  // actually fall on it, exactly as Today does.
+  if (horizon === "tomorrow" && thing.happening_tier === 2) {
+    return tier2OccursOnDay(thing, tomorrowKey(now));
+  }
+  if (horizon === "next_weekend" && thing.happening_tier === 2) {
+    return tier2OccursThisWeekend(thing);
+  }
   if (thing.happening_tier !== 1 || !thing.starts_at) return true;
   const start = new Date(thing.starts_at).getTime();
   const todayKey = sbDay(now);
   const startKey = sbDay(start);
   if (startKey < todayKey) return false; // already passed in SB time
   if (horizon === "today") return startKey === todayKey;
+  if (horizon === "tomorrow") return startKey === tomorrowKey(now);
   // G3.3: Fri 5pm to Sun 11:59pm. Friday counts only from 5pm; Sat/Sun any time.
   if (horizon === "weekend") {
     const { fri, sat, sun } = weekendKeys(now);
     if (startKey === fri) return sbHour(thing.starts_at) >= 17;
     return startKey === sat || startKey === sun;
   }
+  // R1 W6.2 (D7). The weekend after the coming one.
+  if (horizon === "next_weekend") {
+    const { fri, sat, sun } = nextWeekendKeys(now);
+    if (startKey === fri) return sbHour(thing.starts_at) >= 17;
+    return startKey === sat || startKey === sun;
+  }
   const days = (start - now) / 86_400_000;
   if (horizon === "week") return days < 7;
   return days < 31;
+}
+
+/** The SB calendar day after today, as a YYYY-MM-DD key. */
+export function tomorrowKey(now: number): string {
+  const [y, m, d] = sbDay(now).split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d) + 86_400_000).toISOString().slice(0, 10);
+}
+
+/** R1 W6.2. The weekend AFTER the one weekendKeys() returns. */
+export function nextWeekendKeys(now: number): { fri: string; sat: string; sun: string } {
+  const this_ = weekendKeys(now);
+  const shift = (k: string) => new Date(Date.parse(`${k}T00:00:00Z`) + 7 * 86_400_000).toISOString().slice(0, 10);
+  return { fri: shift(this_.fri), sat: shift(this_.sat), sun: shift(this_.sun) };
+}
+
+/** Does a recurring Tier-2 thing fire on one specific SB day? */
+function tier2OccursOnDay(thing: Thing, dayKey: string): boolean {
+  const dows = [
+    ...(thing.type === "happyhour" ? thing.happyHours.map((w) => w.day_of_week) : []),
+    ...thing.recurring.map((s) => s.day_of_week),
+  ];
+  if (dows.length === 0) return true; // no schedule: cannot prove it is off
+  const dow = new Date(`${dayKey}T12:00:00Z`).getUTCDay();
+  return dows.includes(dow);
 }
 
 /** Days elapsed since Jan 1 of that year for an SB "YYYY-MM-DD" key (0-based). */
@@ -209,16 +315,27 @@ export function filterByActivity(things: Thing[], activity: ActivityKey | null):
 }
 
 /** Stable sort that bubbles items in the chosen zone to the top. */
-export function nearMeSort(things: Thing[], zone: Zone | null): Thing[] {
-  if (!zone) return things;
+export function nearMeSort(things: Thing[], area: AreaKey | null): Thing[] {
+  if (!area) return things;
+  // R1 W4.3: resolved through the one area module, so Saved and Explore agree
+  // about which area a thing is in. Still a SORT, not a filter: on a saved list
+  // the visitor wants their whole list, ordered by what is closest.
   return things
     .map((t, i) => [t, i] as const)
     .sort((a, b) => {
-      const na = a[0].nearby_zone === zone ? 0 : 1;
-      const nb = b[0].nearby_zone === zone ? 0 : 1;
+      const na = areaForThing(a[0]) === area ? 0 : 1;
+      const nb = areaForThing(b[0]) === area ? 0 : 1;
       return na - nb || a[1] - b[1];
     })
     .map((x) => x[0]);
+}
+
+/** R1 W4.3. How many of `things` are in `area`, for the Near Me button's
+ *  "Funk Zone, 3 of 7". Saying how many matched is the difference between a
+ *  sort that looks broken on a short list and one that explains itself. */
+export function areaMatchCount(things: Thing[], area: AreaKey | null): number {
+  if (!area) return things.length;
+  return things.filter((t) => areaForThing(t) === area).length;
 }
 
 export const TIER_META: Record<number, { key: string; title: string }> = {
@@ -252,7 +369,7 @@ export function byDateAsc(items: Thing[]): Thing[] {
 }
 
 /** Format a date range for the rock tile "when" pill.
- *  Single-day or null ends_at → "Jul 4". Multi-day → "Jul 17–18". */
+ *  Single-day or null ends_at → "Jul 4". Multi-day → "Jul 17-18". */
 export function formatWhen(
   starts_at: string | null,
   ends_at: string | null
@@ -263,7 +380,7 @@ export function formatWhen(
   if (!ends_at) return startLabel;
   const end = new Date(ends_at);
   if (sbDay(start.getTime()) === sbDay(end.getTime())) return startLabel;
-  return `${startLabel}–${SB_SHORT_DATE.format(end)}`;
+  return `${startLabel}-${SB_SHORT_DATE.format(end)}`;
 }
 
 /** Group items by SB-local calendar day, days ascending, items in incoming order within each day. */
@@ -302,7 +419,7 @@ const UTC_LONG_MONTH = new Intl.DateTimeFormat("en-US", {
 });
 
 /** "5th" / "11th" / "22nd", the standard English ordinal exceptions are the
- *  11th–13th (never "1st"/"2nd"/"3rd"). */
+ *  11th to 13th (never "1st"/"2nd"/"3rd"). */
 export function ordinal(day: number): string {
   if (day % 10 === 1 && day % 100 !== 11) return `${day}st`;
   if (day % 10 === 2 && day % 100 !== 12) return `${day}nd`;
@@ -325,7 +442,7 @@ function formatWeekLabel(startMs: number, endMs: number): string {
   return `${startLabel} through ${endLabel}`;
 }
 
-/** Group items by SB-local calendar week (Sun–Sat), weeks ascending. Week bounds
+/** Group items by SB-local calendar week (Sun to Sat), weeks ascending. Week bounds
  *  are computed via UTC-anchored date math off the SB day key (same DST-safe
  *  technique as dayOfYear above) so a late-night browser timezone can't shift
  *  the boundary. Items without starts_at can't be dated to a week, they're
@@ -377,4 +494,136 @@ export function pickPerfectDay(things: Thing[]): string[] {
     ids.push(p.id);
   }
   return ids.slice(0, 5);
+}
+
+/**
+ * R1 Wave 4 (W4.2). Filter the feed to one area.
+ *
+ * This replaces `sortByDoorZone`, which only BUBBLED matches to the top and kept
+ * everything else. The control was labelled "Filter by place" and produced a
+ * removable chip in the same row as Vibe and Activity, both of which really do
+ * filter, so choosing "Funk Zone" and then scrolling past Goleta made the site
+ * look broken or dishonest (TP-A2-03, TP-A2-04).
+ *
+ * A row whose area is unknown is EXCLUDED, not passed through. The visitor asked
+ * for one area; a row nobody can place is not an answer to that question. The
+ * W4.4 backfill is what makes this affordable, by resolving most of the unknowns.
+ */
+export function filterByArea(things: Thing[], area: AreaKey | null): Thing[] {
+  if (!area) return things;
+  return things.filter((t) => areaForThing(t) === area);
+}
+
+const SB_WEEKDAY_MONTH_DAY = new Intl.DateTimeFormat("en-US", {
+  timeZone: SB_TZ, weekday: "long", month: "long", day: "numeric",
+});
+const SB_MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, month: "short", day: "numeric" });
+
+/**
+ * R1 W6.2 (D7/EXP-034). One place that says what a horizon covers, in words.
+ *
+ * Used for the WHEN pill's accessible name, so "Weekend" announces the dates it
+ * actually means rather than leaving the visitor to guess which weekend, and for
+ * section headings. The visible pill label stays short.
+ */
+export function horizonRangeLabel(horizon: Horizon, now: number = Date.now()): string {
+  const day = (key: string) => SB_MONTH_DAY.format(new Date(`${key}T12:00:00Z`));
+  switch (horizon) {
+    case "today":
+      return SB_WEEKDAY_MONTH_DAY.format(new Date(now));
+    case "tomorrow":
+      return SB_WEEKDAY_MONTH_DAY.format(new Date(`${tomorrowKey(now)}T12:00:00Z`));
+    case "weekend": {
+      const { fri, sun } = weekendKeys(now);
+      return `${day(fri)} to ${day(sun)}`;
+    }
+    case "next_weekend": {
+      const { fri, sun } = nextWeekendKeys(now);
+      return `${day(fri)} to ${day(sun)}`;
+    }
+    case "week":
+      return `${day(sbDay(now))} to ${day(sbDay(now + 6 * 86_400_000))}`;
+    case "month":
+      return `${day(sbDay(now))} to ${day(sbDay(now + 30 * 86_400_000))}`;
+  }
+}
+
+/** The short label on the pill itself. */
+export const HORIZON_PILL: Record<Horizon, string> = {
+  today: "Today",
+  tomorrow: "Tomorrow",
+  weekend: "Weekend",
+  next_weekend: "Next Wknd",
+  week: "Week",
+  month: "Month",
+};
+
+export interface SeriesGroup {
+  /** The occurrence to render: the soonest one still ahead. */
+  lead: Thing;
+  /** Every occurrence in this series inside the current horizon. */
+  occurrences: Thing[];
+  /** "Every Sunday", "Tuesdays and Thursdays", or null for a one-off. */
+  cadence: string | null;
+}
+
+const DAY_NAME = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** The cadence a set of occurrence dates describes. Mirrors ingest/series.ts's
+ *  seriesCadence, kept here so the client can derive it without importing the
+ *  pipeline. */
+export function cadenceOf(startsAt: string[]): string | null {
+  const days = [...new Set(startsAt.map(sbWeekdayIndex).filter((d) => d >= 0))].sort();
+  if (startsAt.length < 2 || days.length === 0) return null;
+  if (days.length === 1) return `Every ${DAY_NAME[days[0]]}`;
+  if (days.length >= 6) return "Most days";
+  if (days.length >= 4) return "Several days a week";
+  const names = days.map((d) => `${DAY_NAME[d]}s`);
+  return names.length === 2
+    ? `${names[0]} and ${names[1]}`
+    : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+function sbWeekdayIndex(iso: string): number {
+  const s = new Intl.DateTimeFormat("en-US", { timeZone: SB_TZ, weekday: "short" }).format(new Date(iso));
+  return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(s);
+}
+
+/**
+ * R1 W6.4 (D6). Collapse a feed to one entry per series per horizon.
+ *
+ * The audit found 619 extra rows that were occurrences of 154 series: the Arts
+ * and Crafts Show once per Sunday for 17 weeks, Recreation Swim 38 times. A feed
+ * that lists the same thing seventeen times is not a feed, it is a calendar
+ * export. One card says "Every Sunday, next Sep 27" and links to the detail page
+ * for the rest.
+ *
+ * Rows with no `series_key` (evergreen places, one-off events) pass through
+ * untouched and keep their position, so the cascade order is preserved.
+ */
+export function collapseSeries(things: Thing[]): SeriesGroup[] {
+  const out: SeriesGroup[] = [];
+  const indexByKey = new Map<string, number>();
+  for (const t of things) {
+    if (!t.series_key) {
+      out.push({ lead: t, occurrences: [t], cadence: null });
+      continue;
+    }
+    const at = indexByKey.get(t.series_key);
+    if (at === undefined) {
+      indexByKey.set(t.series_key, out.length);
+      out.push({ lead: t, occurrences: [t], cadence: null });
+    } else {
+      out[at].occurrences.push(t);
+    }
+  }
+  for (const g of out) {
+    if (g.occurrences.length < 2) continue;
+    // The lead is the soonest occurrence; the feed is already sorted, but a
+    // series can arrive out of order across tiers.
+    g.occurrences.sort((a, b) => (a.starts_at ?? "").localeCompare(b.starts_at ?? ""));
+    g.lead = g.occurrences[0];
+    g.cadence = cadenceOf(g.occurrences.map((o) => o.starts_at).filter((s): s is string => !!s));
+  }
+  return out;
 }

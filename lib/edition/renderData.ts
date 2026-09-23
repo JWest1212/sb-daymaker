@@ -25,6 +25,8 @@ const DATE_LABEL_FMT = new Intl.DateTimeFormat("en-US", {
 
 export interface ThingRow {
   title: string;
+  /** R1 W6.7 (MAP-001). Every link the email sends out uses the slug. */
+  slug: string | null;
   blurb: string | null;
   blurb_long: string | null;
   local_note: string | null;
@@ -55,7 +57,7 @@ interface PickRow {
 
 const PICK_SELECT = `slot, position, thing_id, override_title, override_blurb, override_when,
   override_neighborhood, override_local_note, override_image_url, cached_image_url,
-  things ( title, blurb, blurb_long, local_note, reason_to_go, neighborhood, starts_at, happening_tier,
+  things ( title, slug, blurb, blurb_long, local_note, reason_to_go, neighborhood, starts_at, happening_tier,
     photo_attribution, recurring_schedules ( day_of_week, label, start_time, end_time, frequency ) )`;
 
 /** Noon-UTC anchor for a "YYYY-MM-DD" key (same convention as window.ts /
@@ -99,7 +101,8 @@ function toRenderPick(row: PickRow, siteUrl: string): RenderPick {
     imageUrl: row.override_image_url ?? row.cached_image_url,
     imageAttribution: t.photo_attribution,
     dayLabel: row.slot === "secondary" ? dayLabelFor(t) : null,
-    href: `${siteUrl}/thing/${row.thing_id}`,
+    // R1 W6.7 (MAP-001). The slug, so a forwarded email carries a readable URL.
+    href: `${siteUrl}/thing/${t.slug ?? row.thing_id}`,
   };
 }
 

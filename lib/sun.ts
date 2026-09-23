@@ -12,7 +12,7 @@ const acosD = (x: number) => Math.acos(x) / RAD;
 const atanD = (x: number) => Math.atan(x) / RAD;
 const mod = (x: number, m: number) => ((x % m) + m) % m;
 
-/** Day of the year (1–366) for a Gregorian date. */
+/** Day of the year (1-366) for a Gregorian date. */
 function dayOfYear(y: number, m: number, d: number): number {
   const n1 = Math.floor((275 * m) / 9);
   const n2 = Math.floor((m + 9) / 12);
@@ -31,7 +31,7 @@ function dayOfYear(y: number, m: number, d: number): number {
  */
 export function sunsetMs(
   year: number,
-  month: number, // 1–12
+  month: number, // 1-12
   day: number,
   lat: number,
   lng: number,

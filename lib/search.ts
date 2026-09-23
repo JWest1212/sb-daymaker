@@ -13,6 +13,7 @@
 //   4. Tag rows carry their door origin; event/venue links use the Gate 2 slug.
 
 import type { Thing } from "./things";
+import { eventShortDate } from "./format/eventTime";
 import { DOOR_OCCASIONS, OCCASION_BY_KEY, type OccasionKey } from "./occasions";
 import { DOOR_ZONES, DOOR_ZONE_BY_KEY, doorZoneForNeighborhood, type DoorZoneKey } from "./doorZones";
 import { ACTIVITIES, type ActivityKey } from "./activities";
@@ -22,7 +23,7 @@ export type SearchHitKind = "event" | "venue" | "tag";
 
 /** The door a tag row belongs to, shown as a qualifier so overlapping labels
  *  (Nightlife is both an Occasion and an Activity) are distinguishable (G3.2 #4). */
-export type TagDoor = "Place" | "Occasion" | "Activity";
+export type TagDoor = "Area" | "Occasion" | "Activity"; // R1 W8.1: "Place" retired
 
 export interface SearchHit {
   kind: SearchHitKind;
@@ -32,6 +33,9 @@ export interface SearchHit {
   href?: string;
   /** Tags only: which door this tag belongs to (row qualifier). */
   door?: TagDoor;
+  /** R1 W6.6 (EXP-009). The row's kind chip. Events carry their date ("Sep 26")
+   *  or "Ongoing"; venues and tags carry their kind. */
+  chip?: string;
   /** Tags only, which dimension + key to set (Home Rework spec §9.2 "Tags" group).
    *  Activity is wired end-to-end in Gate 3 (ExploreClient reads `?activity=`). */
   filter?:
@@ -47,6 +51,9 @@ export interface SearchResults {
   venuesOverflow: number;
   tags: SearchHit[];
   tagsOverflow: number;
+  /** R1 W6.6 (EXP-011). The word the query was probably meant to be, when the
+   *  query matched nothing exactly. Null when the query matched as typed. */
+  didYouMean: string | null;
 }
 
 const CAP = 5;
@@ -55,9 +62,18 @@ const CAP = 5;
 // ABOVE fuzzy (2), so a real match can never be displaced by a typo hit.
 type Rank = 0 | 1 | 2;
 
-/** True when `a` and `b` are within one edit (insertion/deletion/substitution).
- *  O(n), early-exits on length gap, no matrix, so it's cheap over ~265 rows and
- *  keeps the matcher pure and in-memory (no trigram, no DB, no network). */
+/** True when `a` and `b` are within one edit: insertion, deletion, substitution,
+ *  or a swap of two neighbouring letters.
+ *
+ *  R1 W6.6 (EXP-011). The swap case is new, and it is the whole point. The
+ *  audit's example is "musuem", which is "museum" with two letters transposed:
+ *  plain Levenshtein scores that as distance 2, so the fuzzy matcher that was
+ *  already here scored it a miss. A transposition is the single most common way
+ *  a fast typist misspells a word, and it is one physical mistake, so it counts
+ *  as one edit (this is Damerau-Levenshtein, not Levenshtein).
+ *
+ *  O(n), early-exits on the length gap, no matrix, so it stays cheap over ~265
+ *  rows and keeps the matcher pure and in-memory (no trigram, no DB, no network). */
 function withinEdit1(a: string, b: string): boolean {
   if (a === b) return true;
   const la = a.length;
@@ -65,7 +81,11 @@ function withinEdit1(a: string, b: string): boolean {
   if (Math.abs(la - lb) > 1) return false;
   let i = 0;
   while (i < la && i < lb && a[i] === b[i]) i++;
-  if (la === lb) return a.slice(i + 1) === b.slice(i + 1); // substitution
+  if (la === lb) {
+    if (a.slice(i + 1) === b.slice(i + 1)) return true; // substitution
+    // transposition: the two letters at the mismatch are each other's
+    return a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2);
+  }
   if (la > lb) return a.slice(i + 1) === b.slice(i); // deletion from a
   return a.slice(i) === b.slice(i + 1); // insertion into a
 }
@@ -131,8 +151,27 @@ function searchEvents(things: Thing[], q: string): { hits: SearchHit[]; overflow
       if (!b.t.starts_at) return -1;
       return a.t.starts_at.localeCompare(b.t.starts_at);
     })
-    .map((r) => ({ kind: "event" as const, id: r.t.id, label: r.t.title, href: `/thing/${r.t.slug ?? r.t.id}` }));
-  return splitCap(ranked);
+    .map((r) => ({
+      kind: "event" as const,
+      id: r.t.id,
+      label: r.t.title,
+      href: `/thing/${r.t.slug ?? r.t.id}`,
+      chip: r.t.starts_at ? eventShortDate(r.t.starts_at) : "Ongoing",
+      seriesKey: r.t.series_key,
+    }));
+
+  // R1 W6.6 (EXP-009). One row per series, then one per title. Searching
+  // "swim" used to return the same Recreation Swim 38 times, which is a list of
+  // occurrences rather than a list of answers. The best-ranked occurrence wins,
+  // and the results are already sorted, so the first of each key is the right one.
+  const seen = new Set<string>();
+  const deduped = ranked.filter((h) => {
+    const key = h.seriesKey ?? `title:${h.label.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).map((h) => ({ kind: h.kind, id: h.id, label: h.label, href: h.href, chip: h.chip }));
+  return splitCap(deduped);
 }
 
 /** Venues: distinct venue names among published things (Home Rework spec §18 #1).
@@ -159,7 +198,7 @@ function searchVenues(
         .filter((t) => t.starts_at)
         .sort((a, b) => a.starts_at!.localeCompare(b.starts_at!))[0];
       const target = place ?? soonestEvent ?? r.group[0];
-      return { kind: "venue" as const, id: r.id, label: r.name, href: `/thing/${target.slug ?? target.id}` };
+      return { kind: "venue" as const, id: r.id, label: r.name, href: `/thing/${target.slug ?? target.id}`, chip: "Venue" };
     });
   return splitCap(ranked);
 }
@@ -176,7 +215,7 @@ const TAG_VOCAB: { door: TagDoor; id: string; label: string; filter: NonNullable
     filter: { dimension: "vibe" as const, key: o.key },
   })),
   ...DOOR_ZONES.map((z) => ({
-    door: "Place" as const,
+    door: "Area" as const,
     id: `place-${z.key}`,
     label: z.label,
     filter: { dimension: "place" as const, key: z.key },
@@ -210,7 +249,13 @@ export function searchThings({
   venueNames: Record<string, string>;
 }): SearchResults {
   const q = normalizeQuery(query);
-  if (!q) return { events: [], eventsOverflow: 0, venues: [], venuesOverflow: 0, tags: [], tagsOverflow: 0 };
+  if (!q)
+    return {
+      events: [], eventsOverflow: 0,
+      venues: [], venuesOverflow: 0,
+      tags: [], tagsOverflow: 0,
+      didYouMean: null,
+    };
 
   const events = searchEvents(things, q);
   const venues = searchVenues(things, venueNames, q);
@@ -222,5 +267,35 @@ export function searchThings({
     venuesOverflow: venues.overflow,
     tags: tags.hits,
     tagsOverflow: tags.overflow,
+    // R1 W6.6 (EXP-011). When the query only matched by tolerating a typo, say
+    // what it was read as. "musuem" finding the museums is right, but silently
+    // is confusing: the visitor cannot tell whether the site understood them.
+    didYouMean: suggestion(things, q),
   };
+}
+
+
+/**
+ * R1 W6.6 (EXP-011). The word the query was probably meant to be.
+ *
+ * Only offered when the exact query matched nothing exactly: a fuzzy hit that
+ * also matched exactly needs no explanation. Returns the closest title token
+ * within one edit, so "musuem" suggests "museum".
+ */
+export function suggestion(things: Thing[], q: string): string | null {
+  if (q.length < 4) return null;
+  const exact = things.some((t) => t.title.toLowerCase().includes(q));
+  if (exact) return null;
+  const counts = new Map<string, number>();
+  for (const t of things) {
+    for (const tok of t.title.toLowerCase().split(/[\s·,&/()]+/)) {
+      if (tok.length < 4) continue;
+      if (!withinEdit1(tok, q)) continue;
+      counts.set(tok, (counts.get(tok) ?? 0) + 1);
+    }
+  }
+  if (counts.size === 0) return null;
+  // The most common near-match reads as the intended word.
+  const [best] = [...counts.entries()].sort(([, a], [, b]) => b - a || a - b);
+  return best[0];
 }

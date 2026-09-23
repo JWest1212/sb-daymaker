@@ -3,6 +3,11 @@
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    // iCloud: dependencies live in node_modules.nosync with node_modules as a
+    // symlink to it (see BASELINE.md). Without preserveSymlinks TypeScript
+    // resolves through to the real path, loses its built-in node_modules
+    // handling, and starts typechecking dependency .js sources.
+    "preserveSymlinks": true,
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -30,5 +35,5 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "docs"]
+  "exclude": ["node_modules", "node_modules.nosync", "docs", "experiments"]
 }

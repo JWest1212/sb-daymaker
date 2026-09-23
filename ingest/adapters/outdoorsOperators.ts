@@ -12,7 +12,7 @@
 // SB Adventure Co: "book a time" on demand, no fixed weekly schedule published.
 // Excluded per §1: no deterministic recurring time to emit.
 //
-// Condor Express is emitted as 7 weekly candidates (Mon–Sun) because it departs
+// Condor Express is emitted as 7 weekly candidates (Mon to Sun) because it departs
 // daily; each day-of-week entry generates one occurrence per week in the registry.
 //
 // useManagedScrape: false. Schedules are hardcoded (stable public schedules).

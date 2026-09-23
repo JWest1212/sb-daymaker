@@ -109,6 +109,11 @@ export interface CatalogRow {
   nearby_zone: string | null;
   price_band: string | null;
   hero_eligible: boolean;
+  /** R1 W2.7. Caught by the civic rule (ingest/civic.ts). Shown as a chip so a
+   *  real community event caught by a broad word can be spotted and flipped. */
+  is_civic: boolean;
+  /** R1 W2.7. When the pipeline retired this row, if it did. */
+  archived_at: string | null;
   editorial_weight: number; // W2.1c founder ranking nudge (−5..+5)
   photo_url: string | null;
   photo_source: string | null;
@@ -241,7 +246,7 @@ export function whenString(tier: number, starts_at: string | null, scheds: Sched
   if (tier === 3) return "Evergreen · open daily";
   const s = scheds[0];
   if (!s) return "Recurring · time TBD";
-  const time = [hhmm(s.start_time), hhmm(s.end_time)].filter(Boolean).join("–") || "time TBD";
+  const time = [hhmm(s.start_time), hhmm(s.end_time)].filter(Boolean).join(" to ") || "time TBD";
   if (s.label) return s.label.includes("TBD") || s.start_time ? s.label : `${s.label} · ${time}`;
   const day = s.day_of_week != null ? DOW[s.day_of_week] : "";
   if (s.frequency === "monthly") return `1st ${day}/month · ${time}`.trim();

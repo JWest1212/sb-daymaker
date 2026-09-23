@@ -9,6 +9,7 @@
 // thing_tags (no AI yet) and no recurring_schedules to write.
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isCivic } from './civic';
 import type { Candidate } from '../packages/shared/types';
 import type { DropRecord } from './dedupe';
 import { deriveNearbyZone } from '../lib/geo';
@@ -84,6 +85,10 @@ function toThingRow(c: Candidate, dictionary: VenueDictEntry[] = []): Record<str
     local_note: cleanText(c.local_note ?? null),
     last_confirmed: c.last_confirmed,
     source: c.source_url,
+    // R1 W2.3 (D3/D14). Flagged once, at land time, so every adapter inherits it
+    // and no public surface has to remember to filter. Civic rows still land and
+    // still appear in the cockpit; they just never reach the public pool.
+    is_civic: isCivic({ title: c.title, sourceUrl: c.source_url }),
     // Data Arch Redesign 26 Phase 4, canonical event identity, computed
     // post-dedupe in run.ts's main() (undefined for Tier-3 evergreen places).
     event_key: c.event_key ?? null,

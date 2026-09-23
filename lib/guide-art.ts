@@ -21,7 +21,7 @@ export interface ArtMarker {
 }
 
 /** A registered sketch/emblem asset. `markers` maps a stop position (string
- *  key "1"–"9") to its center point; `secretMark` is the ✵ placement. */
+ *  key "1" to "9") to its center point; `secretMark` is the ✵ placement. */
 export interface GuideArt {
   kind: "sketch" | "emblem";
   /** Base SVG component, renders art WITHOUT marker circles. */

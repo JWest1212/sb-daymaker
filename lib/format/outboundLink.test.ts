@@ -7,32 +7,38 @@ describe("outboundLink", () => {
     expect(outboundLink({ type: "place", buy_url: "   " })).toBeNull();
   });
 
-  it("labels a free event with a source page 'Event details' (the LOTG fix)", () => {
+  it("names the destination on a free event, and never says tickets (W5.6)", () => {
     const link = outboundLink({
       type: "event",
       free: true,
       buy_url: "https://sbplibrary.org/events/game-day",
     });
-    expect(link?.label).toBe("Event details ↗");
+    expect(link?.label).toBe("Event details at sbplibrary.org ↗");
   });
 
-  it("labels a priced event 'Get tickets'", () => {
+  it("names the destination on a priced event (W5.6)", () => {
     const link = outboundLink({
       type: "event",
       free: false,
       price_band: "$$",
       buy_url: "https://thebowl.example.com/show",
     });
-    expect(link?.label).toBe("Get tickets ↗");
+    expect(link?.label).toBe("Tickets at thebowl.example.com ↗");
   });
 
-  it("labels any ticket-host URL 'Get tickets' regardless of price flags", () => {
+  it("names the ticketing brand on a ticket-host URL (W5.6)", () => {
     expect(outboundLink({ type: "event", free: null, buy_url: "https://www.axs.com/events/123" })?.label).toBe(
-      "Get tickets ↗",
+      "Tickets at AXS ↗",
     );
     expect(
       outboundLink({ type: "event", buy_url: "https://www.ticketmaster.com/event/456" })?.label,
-    ).toBe("Get tickets ↗");
+    ).toBe("Tickets at Ticketmaster ↗");
+  });
+
+  it("never says tickets on a free row, whatever the host (W5.6)", () => {
+    // A free event on a ticketing host still has nothing to buy.
+    expect(outboundLink({ type: "event", free: true, buy_url: "https://www.axs.com/e/1" })?.label)
+      .toBe("Event details at AXS ↗");
   });
 
   it("labels a place/venue website 'Visit website' (the MOXI fix)", () => {

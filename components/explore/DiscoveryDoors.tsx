@@ -1,3 +1,4 @@
+import { ACTIVITY, ACTIVITY_SHEET_TITLE, AREA, AREA_SHEET_TITLE, OCCASION, OCCASION_SHEET_TITLE } from "@/lib/strings";
 import type { Dimension } from "@/lib/tiles";
 
 export const DOOR_META: Record<
@@ -5,20 +6,20 @@ export const DOOR_META: Record<
   { label: string; sheetTitle: string; ariaLabel: string; tile: string }
 > = {
   place: {
-    label: "Place",
-    sheetTitle: "Where to?",
-    ariaLabel: "Filter by place",
+    label: AREA,
+    sheetTitle: AREA_SHEET_TITLE,
+    ariaLabel: "Filter by area",
     tile: "/tiles/door/place.jpg",
   },
   vibe: {
-    label: "Occasion",
-    sheetTitle: "What are you up to?",
+    label: OCCASION,
+    sheetTitle: OCCASION_SHEET_TITLE,
     ariaLabel: "Filter by occasion",
     tile: "/tiles/door/vibe.jpg",
   },
   activity: {
-    label: "Activity",
-    sheetTitle: "What are you after?",
+    label: ACTIVITY,
+    sheetTitle: ACTIVITY_SHEET_TITLE,
     ariaLabel: "Filter by activity",
     tile: "/tiles/door/activity.jpg",
   },

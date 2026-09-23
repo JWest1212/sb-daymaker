@@ -32,6 +32,7 @@
 // shouldn't be rewritten upstream of this pass.
 
 import { stripEmDashes } from "./emdash";
+import { CADENCE_LINE } from "./cadence";
 import type { EditionType } from "./types";
 
 // ---- tokens (sbdaymaker_tokens.css, literal hex, never re-derived) --------
@@ -219,7 +220,7 @@ export function renderEditionEmailHtml(ed: RenderableEdition): string {
 <tr><td style="padding:20px 20px 14px;">
   <table role="presentation" cellpadding="0" cellspacing="0"><tr>
     <td style="width:26px;padding-right:9px;"><div style="width:22px;height:22px;border-radius:999px;background-color:${C.gold};font-size:1px;line-height:22px;">&nbsp;</div></td>
-    <td class="sbd-fd sbd-text" style="font-family:${FONT_DISPLAY};font-weight:700;font-size:30px;color:${C.ink};">SB Daymaker</td>
+    <td class="sbd-fd sbd-text" style="font-family:${FONT_DISPLAY};font-weight:700;font-size:30px;color:${C.ink};"><h1 style="margin:0;font:inherit;color:inherit;">SB Daymaker</h1></td>
   </tr></table>
   <div style="height:5px;margin-top:14px;border-radius:3px;background-color:${C.gold};font-size:1px;line-height:5px;">&nbsp;</div>
   <p class="sbd-fm sbd-accent" style="font-family:${FONT_MONO};font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:${C.pacific};margin:13px 0 0;">${clean(ed.windowLabel)} &middot; ${clean(ed.dateLabel)}</p>
@@ -261,7 +262,7 @@ ${anchorRow ? `<tr><td><table role="presentation" width="100%" cellpadding="0" c
     <a href="${esc(ed.subscribeUrl)}" style="display:inline-block;font-size:18px;font-weight:700;color:${C.paper};background-color:${C.pacific};border-radius:999px;padding:15px 26px;text-decoration:none;">Get it in your inbox &rarr;</a>
   </td></tr></table>
   <p class="sbd-muted" style="font-size:17px;line-height:1.45;color:${C.ink2};margin:20px 0 12px;">You're getting this because you asked SB Daymaker what's worth doing in Santa Barbara.</p>
-  <p class="sbd-muted" style="font-size:17px;line-height:1.45;color:${C.ink2};margin:0 0 12px;">Two a week: Thursday and Sunday. No more than that.${ed.unsubscribeUrl ? ` &middot; <a href="${esc(ed.unsubscribeUrl)}" class="sbd-accent" style="color:${C.pacific};">Unsubscribe</a>` : ""}</p>
+  <p class="sbd-muted" style="font-size:17px;line-height:1.45;color:${C.ink2};margin:0 0 12px;">${CADENCE_LINE}. No more than that.${ed.unsubscribeUrl ? ` &middot; <a href="${esc(ed.unsubscribeUrl)}" class="sbd-accent" style="color:${C.pacific};">Unsubscribe</a>` : ""}</p>
   <p class="sbd-fm sbd-muted" style="font-family:${FONT_MONO};font-size:15px;color:${C.ink2};margin:0;">SB Daymaker &middot; 78 Brandon Drive, Goleta, CA 93117</p>
 </td></tr>
 
@@ -337,7 +338,7 @@ export function renderEditionPlainText(ed: RenderableEdition): string {
   push(`Get it in your inbox: ${ed.subscribeUrl}`);
   push("");
   push("You're getting this because you asked SB Daymaker what's worth doing in Santa Barbara.");
-  push("Two a week: Thursday and Sunday. No more than that.");
+  push(`${CADENCE_LINE}. No more than that.`);
   if (ed.unsubscribeUrl) push(`Unsubscribe: ${ed.unsubscribeUrl}`);
   push("SB Daymaker, 78 Brandon Drive, Goleta, CA 93117");
 

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { thingPath } from "@/lib/seo/site";
+import { areaForThing } from "@/lib/areas";
+import { Badge } from "@/components/ui";
 import { SaveHeart } from "@/components/ui/SaveHeart";
 import { useSaves } from "@/components/saves/SavesProvider";
 import { planZoneLabel } from "@/lib/plan/labels";
@@ -28,7 +31,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
   const { isSaved, toggle } = useSaves();
   const saved = isSaved(thing.id);
 
-  const zone = thing.nearby_zone ? planZoneLabel(thing.nearby_zone) : null;
+  const zone = areaForThing(thing) ? planZoneLabel(areaForThing(thing)) : null;
   const meta = [zone ? `📍 ${zone}` : null, thing.reason_to_go]
     .filter(Boolean)
     .join(" · ");
@@ -56,19 +59,22 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
           <span className="sbd-scard__eb">{timeStr}</span>
         ) : null}
         <h3 className="sbd-scard__nm">
-          <Link href={`/thing/${thing.id}`} className="sbd-stretch">
+          <Link href={thingPath(thing)} className="sbd-stretch">
             {thing.title}
           </Link>
+          {/* R1 W3.5. Separated from the title, so this reads "Cooking dinner"
+              rather than "Cookingdinner". */}
           {stop.meal ? (
-            <span className="sbd-scard__meal">{stop.meal}</span>
+            <Badge tone="meal" label={`the ${stop.meal} stop`} className="sbd-scard__meal">{stop.meal}</Badge>
           ) : null}
         </h3>
         {meta ? <span className="sbd-scard__mt">{meta}</span> : null}
-        {stop.fromDraft ? (
-          <span className="sbd-scard__chip sbd-scard__chip--suggested">Suggested</span>
-        ) : null}
+        {/* R1 W3.6. One provenance badge, never both. A stop the visitor already
+            saved is theirs first; "Suggested" is only for a planner choice. */}
         {stop.fromSaved ? (
-          <span className="sbd-scard__chip sbd-scard__chip--saved">♥ Saved</span>
+          <Badge tone="saved" label="from your saved list" className="sbd-scard__chip sbd-scard__chip--saved">♥ From your saves</Badge>
+        ) : stop.fromDraft ? (
+          <Badge tone="suggested" label="suggested by the planner" className="sbd-scard__chip sbd-scard__chip--suggested">Suggested</Badge>
         ) : null}
       </div>
 
@@ -77,7 +83,7 @@ export function SpineStopCard({ stop, thing, onRemove, onSwap }: SpineStopCardPr
         <div className="sbd-scard__acttop">
           {/* ⓘ info, visual affordance; stretch link is the keyboard path */}
           <Link
-            href={`/thing/${thing.id}`}
+            href={thingPath(thing)}
             className="sbd-scard__info"
             aria-label={`Details for ${thing.title}`}
             tabIndex={-1}

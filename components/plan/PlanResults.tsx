@@ -1,6 +1,9 @@
 "use client";
 
+import { RESET } from "@/lib/strings";
+
 import { useEffect, useMemo, useState } from "react";
+import { areaForThing } from "@/lib/areas";
 import { ItinerarySpine } from "./ItinerarySpine";
 import { AddStopSheet } from "./AddStopSheet";
 import { shortStamp } from "@/lib/plan/dates";
@@ -19,7 +22,7 @@ import { useSaves } from "@/components/saves/SavesProvider";
 import type { PlanAnswers, Block, Stop, PlanNote } from "@/lib/plan/types";
 import type { Thing } from "@/lib/things";
 import { createSharedPlan } from "@/lib/shares";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { trackEvent } from "@/lib/analytics";
 
 function genStopId(): string {
@@ -69,13 +72,26 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
   const [pickerBlock, setPickerBlock] = useState<Block | null>(null);
   const [clearConfirm, setClearConfirm] = useState(false);
   const [didRegen, setDidRegen] = useState(false);
+  // R1 W3.2. Blocks the engine reported as unfillable, keyed by notes.ts.
+  const unfilledBlocks = useMemo(
+    () =>
+      new Set(
+        notes
+          .filter((n) => n.key?.startsWith("block:"))
+          .map((n) => n.key!.slice("block:".length) as Block),
+      ),
+    [notes],
+  );
   const [shareState, setShareState] = useState<
     "idle" | "pending" | "shared" | "copied" | "failed"
   >("idle");
+  // R1 W1.5, the share sheet that guarantees the link is visible.
+  const { share: shareLink, sheet: shareSheet } = useShareLink();
 
   // Event 6: the draft spine is first produced from the questionnaire.
   useEffect(() => {
-    trackEvent("plan_built", { stops: stops.length });
+    // R1 W3.7, integers only, no free text.
+    trackEvent("plan_built", { stops: stops.length, notes: notes.length });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // fire once on mount; stops.length at mount is the built draft size
 
@@ -141,9 +157,32 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     // Keep user-added stops; replace only fromDraft ones with fresh picks.
     const userStops = stops.filter((s) => !s.fromDraft);
     const alreadyPlaced = new Set(userStops.map((s) => s.thingId));
-    const fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced });
+    // R1 W3.2. Exclude the draft stops currently on screen too, so Regenerate
+    // reaches for genuinely different picks rather than re-ranking to the same
+    // ones. Tapping it and watching nothing change reads as a broken button.
+    const currentDraftIds = stops.filter((s) => s.fromDraft).map((s) => s.thingId);
+    const excluded = new Set([...alreadyPlaced, ...currentDraftIds]);
+    let fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced: excluded });
+
+    // If excluding them left nothing, the pool genuinely has no alternative.
+    // Fall back to the original draft and say so, rather than emptying the day.
+    const exhausted = fresh.stops.length === 0 && currentDraftIds.length > 0;
+    if (exhausted) {
+      fresh = buildConciergeDay(answers, things, savedStateFor, { alreadyPlaced });
+    }
     setStops([...userStops, ...fresh.stops]);
-    setNotes(fresh.notes);
+    setNotes(
+      exhausted
+        ? [
+            ...fresh.notes,
+            {
+              kind: "empty_block" as const,
+              key: "no_alternatives",
+              text: "That is everything we have for this shape of day. Widen the plan for more options.",
+            },
+          ]
+        : fresh.notes,
+    );
     setDidRegen(true);
   }
 
@@ -168,7 +207,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
       stops: stops.flatMap((s) => {
         const t = thingMap.get(s.thingId);
         if (!t) return [];
-        const area = t.nearby_zone ? planZoneLabel(t.nearby_zone) : "Santa Barbara";
+        // R1 W4.1: unknown shows nothing, never the city name as a stand-in.
+        const area = areaForThing(t) ? planZoneLabel(areaForThing(t)) : null;
         const tr = transitionByStop.get(s.id);
         return [{
           block: s.block,
@@ -179,6 +219,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           blurb: t.reason_to_go ?? "",
           category: t.happening_category ?? t.type ?? "",
           thingId: t.id,
+          slug: t.slug ?? null, // R1 W6.7 (MAP-001), the shared plan links by slug
           photo_url: t.photo_url ?? null,
           meal: s.meal ?? null,
           transition: tr ? { label: tr.label, parkingNote: tr.parkingNote } : null,
@@ -201,9 +242,11 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     // Event 3: a shared plan link was created (token never sent to analytics).
     trackEvent("share_create", { kind: "plan", count: stops.length });
     const url = `${window.location.origin}/p/${token}`;
-    const result = await shareUrl(url, title);
-    setShareState(result === "shared" ? "shared" : result === "copied" ? "copied" : "failed");
-    setTimeout(() => setShareState("idle"), 2200);
+    // R1 W1.5. Anything short of a completed native share opens the link sheet,
+    // so "Share failed" is no longer a dead end with the link thrown away.
+    const result = await shareLink(url, title);
+    setShareState(result === "shared" ? "shared" : "idle");
+    if (result === "shared") setTimeout(() => setShareState("idle"), 2200);
   }
 
   const hasStops = stops.length > 0;
@@ -211,7 +254,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
     shareState === "pending" ? "Sharing…"
     : shareState === "shared" ? "✓ Shared!"
     : shareState === "copied" ? "✓ Link copied"
-    : shareState === "failed" ? "Share failed"
+    : shareState === "failed" ? "Couldn't make a link, try again"
     : "↗ Share day";
 
   return (
@@ -228,7 +271,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           </button>
           <div>
             <div className="sbd-header__name">Your draft, editable</div>
-            <div className="sbd-header__tag">Open when it says, clustered, parked, fed</div>
+            <div className="sbd-header__tag">Clustered, with meals. Check hours before you go</div>
           </div>
         </div>
       </header>
@@ -260,6 +303,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           onAddStop={(block) => setPickerBlock(block)}
           onRemoveStop={removeStop}
           onSwapStop={swapStop}
+          unfilledBlocks={unfilledBlocks}
         />
 
         <div style={{ height: "120px" }} />
@@ -273,7 +317,7 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           onClick={handleClear}
           disabled={!hasStops}
         >
-          {clearConfirm ? "Tap again" : "Clear"}
+          {clearConfirm ? "Tap again" : RESET}
         </button>
         <button
           type="button"
@@ -297,6 +341,8 @@ export function PlanResults({ answers, things, blank = false, onBack }: PlanResu
           Fresh draft, same rules, different picks
         </p>
       ) : null}
+
+      {shareSheet}
 
       {pickerBlock != null ? (
         <AddStopSheet

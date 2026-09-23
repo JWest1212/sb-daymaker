@@ -1,10 +1,14 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import { useCallback, useRef, useState } from "react";
+import { Badge } from "@/components/ui";
 import Link from "next/link";
 import { useSaves } from "@/components/saves/SavesProvider";
 import type { GuideContent, GuideChapter } from "@/lib/guides";
 import { getGuideArt } from "@/lib/guide-art";
+import { rememberSaveTitles } from "@/lib/saveTitles";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -21,22 +25,53 @@ export interface StopDisplay {
 }
 
 interface Props {
+  /** R1 W5.9 (DSC-008). This guide's own one-line description of the route,
+   *  e.g. "Tracks to sand, in order." Falls back to a neutral line. */
+  walkLine?: string | null;
   artId: string | null;
   stops: StopDisplay[];
   chapters: GuideChapter[];
   asides: GuideContent["asides"];
   stopCount: number;
+  /** R1 W6.8 (TP-B-01). The server's clock, so the "Now" badge is the same on
+   *  both sides of hydration and is always Santa Barbara's time of day. */
+  nowMs: number;
 }
 
 // ─── Time-of-day helper ──────────────────────────────────────────────────
 
-function nowTodBand(): "morning" | "afternoon" | "golden" | "evening" {
-  const h = new Date().getHours();
+type TodBand = "morning" | "afternoon" | "golden" | "evening";
+
+/**
+ * R1 W6.8 (TP-B-01). The cause of the guide pages' hydration error.
+ *
+ * This used to be called during render. Two things were wrong with that. The
+ * server renders this component too, and the server's clock is UTC, so the
+ * "Now" badge landed on a different chapter there than in the visitor's browser
+ * and React threw #418 on every guide load. And `getHours()` reads whatever
+ * timezone the machine is in, so the band was never Santa Barbara's anyway,
+ * neither on the server nor for a visitor reading from another state.
+ *
+ * Now: the SB hour, from a `nowMs` the SERVER passes down. Same input on both
+ * sides, so both produce the same badge, and the band is Santa Barbara's
+ * wherever the reader is. This is the same convention HorizonSegment uses for
+ * its date labels, and for the same reason.
+ */
+const SB_HOUR = new Intl.DateTimeFormat("en-US", {
+  timeZone: "America/Los_Angeles",
+  hour: "numeric",
+  hour12: false,
+});
+
+function sbTodBand(now: Date = new Date()): TodBand {
+  const h = Number(SB_HOUR.format(now));
   if (h < 11) return "morning";
   if (h < 17) return "afternoon";
   if (h < 20) return "golden";
   return "evening";
 }
+
+
 
 // ─── Stop card ────────────────────────────────────────────────────────────
 
@@ -73,22 +108,15 @@ function StopCard({
                     className="sbd-gd-dir"
                     aria-label={`Directions to ${stop.label}`}
                   >
-                    ⌖ DIRECTIONS
+                    <SBIcon name="pin" size={12} /> DIRECTIONS
                   </a>
                 )}
               </div>
             )}
           </div>
           <div className="sbd-gd-stopctrls">
-            {/* ✓ Been button, disabled/static in Phase 2 */}
-            <button
-              type="button"
-              className="sbd-gd-beenbtn"
-              disabled
-              aria-label={`Mark ${stop.label} as been`}
-            >
-              ✓ Been
-            </button>
+            {/* R1 W8.2 (XC-004). The disabled "Been" button is gone: marking stops
+                was never built, so it promised a passport nobody could fill. */}
             {/* heart save, only for thing-backed stops */}
             {stop.thing_id && (
               <button
@@ -96,7 +124,10 @@ function StopCard({
                 className={`sbd-gd-heart${saved ? " sbd-gd-heart--saved" : ""}`}
                 aria-label={saved ? `Saved ${stop.label}` : `Save ${stop.label}`}
                 aria-pressed={saved}
-                onClick={() => toggle(stop.thing_id!)}
+                onClick={() => {
+                  if (!saved) rememberSaveTitles([{ id: stop.thing_id!, title: stop.label }]); // R1 W7.4
+                  toggle(stop.thing_id!);
+                }}
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M12 20s-7-4.6-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.4-7 10-7 10z" />
@@ -113,11 +144,11 @@ function StopCard({
 
 // ─── Main component ──────────────────────────────────────────────────────
 
-export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: Props) {
+export function GuideWalkSection({ artId, stops, chapters, asides, stopCount, walkLine, nowMs }: Props) {
   const art = getGuideArt(artId);
   const plateRef = useRef<HTMLDivElement>(null);
   const chapterRefs = useRef<Record<number, HTMLButtonElement | null>>({});
-  const todBand = nowTodBand();
+  const todBand = sbTodBand(new Date(nowMs)); // R1 W6.8: server-supplied clock
 
   // open chapters (1-based chapter numbers)
   const [openChapters, setOpenChapters] = useState<Set<number>>(new Set());
@@ -207,7 +238,6 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
         )}
         <div className="sbd-gd-sketchcap">
           <span>TAP A NUMBER TO JUMP</span>
-          <span>MARKED STOPS TURN SAGE</span>
         </div>
       </div>
 
@@ -215,7 +245,10 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
       <div className="sbd-gd-walkhead">
         <h3 className="sbd-gd-walkhead__h3">The walk</h3>
         <p className="sbd-gd-walkhead__desc">
-          Tracks to sand, in order. Tap a chapter to open it, mark stops <b>✓ Been</b>, and {stopCount} marks press the stamp.
+          {/* R1 W5.9 (DSC-008). Per guide. "Tracks to sand" describes the Funk
+              Zone's walk and was being printed on State Street too, where it is
+              simply not true. */}
+          {walkLine ?? "In order."} Tap a chapter to open it.
         </p>
       </div>
 
@@ -245,13 +278,14 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
               <div className="sbd-gd-chband__body">
                 <div className="sbd-gd-chband__k">
                   {ch.k}
-                  {isNow && <span className="sbd-gd-chband__now">Now</span>}
+                  {/* R1 W3.5. Its own element with a real space, so this reads
+                      "AFTERNOON Now" rather than "AFTERNOONNOW". */}
+                  {isNow && <Badge tone="now" label="happening now" className="sbd-gd-chband__now">Now</Badge>}
                 </div>
                 <div className="sbd-gd-chband__nm">{ch.name}</div>
                 <div className="sbd-gd-chband__sum">{ch.sum}</div>
               </div>
-              <span className="sbd-gd-chband__been">✓ 0/{chStops.length}</span>
-              <span className="sbd-gd-chband__chev" aria-hidden="true">{isOpen ? "▴" : "▾"}</span>
+              <span className="sbd-gd-chband__chev" aria-hidden="true"><SBIcon name="chevron" rotate={isOpen ? "up" : "down"} size={14} /></span>
             </button>
 
             {/* G2.6 (stronger): stop cards are ALWAYS in the DOM (so crawlers +
@@ -279,14 +313,14 @@ export function GuideWalkSection({ artId, stops, chapters, asides, stopCount }: 
         );
       })}
 
-      {/* ⌖ Sketch pill ------------------------------------------------- */}
+      {/* <SBIcon name="pin" size={13} /> Sketch pill ------------------------------------------------- */}
       <button
         type="button"
         className="sbd-gd-pill"
         onClick={scrollToPlate}
         aria-label="Scroll to sketch map"
       >
-        ⌖ Sketch
+        <SBIcon name="pin" size={13} /> Sketch
       </button>
     </>
   );

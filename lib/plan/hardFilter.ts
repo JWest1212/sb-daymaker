@@ -13,7 +13,7 @@ import { BLOCK_TO_TOD } from "./types";
 import { blockHourRange, recurringStartHours, hourInBlockRange } from "./rankCandidates";
 import { openStateAt, type SbNow } from "@/lib/format/openNow";
 import { sameWalkCluster, adjacentZones } from "./zoneGraph";
-import type { Zone } from "@/lib/zones";
+import { areaForThing, AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 
 // Budget rank: the lower the number, the cheaper. `free` sits below `$`.
 const BAND_RANK: Record<string, number> = { free: 0, $: 1, $$: 2, $$$: 3 };
@@ -51,7 +51,7 @@ export interface HardFilterContext {
   block: Block;
   /** The cluster the day is anchored to (zone + its walkable group). Reachability
    *  is judged against this. Null = "Anywhere" (no reachability constraint). */
-  anchorZone: Zone | null;
+  anchorZone: AreaKey | null;
   /** Optional injected "now" for tests; defaults to real SB time for the probe. */
   now?: SbNow;
 }
@@ -115,8 +115,22 @@ export function violationReason(t: Thing, ctx: HardFilterContext): string | null
 
   // --- Transport reachability (only when BOTH the anchor and the candidate have a
   //     known zone; unknown zone is not a violation). ---
-  if (anchorZone && t.nearby_zone) {
-    const z = t.nearby_zone as Zone;
+  // R1 W3.3. On foot, an area-less candidate that DOES have coordinates is
+  // checked against the chosen area's rough box. A walking day is the one shape
+  // where "we don't know where it is" cannot be waved through: the visitor is
+  // going to walk there. Rows with no coordinates remain unknown and are capped
+  // by count at assembly time instead of excluded here.
+  if (anchorZone && !areaForThing(t) && params.transport === "walk" && t.lat != null && t.lng != null) {
+    const a = AREA_BY_KEY[anchorZone];
+    const AREA_BOX_DEGREES = 0.018; // roughly 1.2 miles at this latitude
+    if (Math.abs(a.lat - t.lat) > AREA_BOX_DEGREES || Math.abs(a.lng - t.lng) > AREA_BOX_DEGREES) {
+      return "walk_out_of_cluster";
+    }
+  }
+
+  const candidateArea = areaForThing(t);
+  if (anchorZone && candidateArea) {
+    const z = candidateArea;
     if (params.transport === "walk") {
       // On foot: stay inside the anchor's walkable cluster.
       if (!sameWalkCluster(anchorZone, z)) return "walk_out_of_cluster";

@@ -1,16 +1,12 @@
 "use client";
 
 import type { Thing } from "@/lib/things";
-import { ZONES, ZONE_LABEL, type Zone } from "@/lib/zones";
+import { AREAS, AREA_BY_KEY, areaForThing, type AreaKey } from "@/lib/areas";
 
-/** Resolve a thing's SB area from its zone, falling back to its neighborhood. */
-function resolveZone(t: Thing): Zone | null {
-  if (t.nearby_zone) return t.nearby_zone;
-  if (t.neighborhood) {
-    const key = t.neighborhood.replace(/_zone$/, "") as Zone;
-    if (ZONES.some((z) => z.zone === key)) return key;
-  }
-  return null;
+// R1 W8.1. The recap counts the SAME eight areas as every other surface
+// (lib/areas.ts), not the six legacy nearby_zone values.
+function resolveZone(t: Thing): AreaKey | null {
+  return areaForThing(t);
 }
 
 /**
@@ -32,19 +28,21 @@ export function MemoryRecap({
     return (
       <section className="sbd-recap sbd-recap--empty">
         <div className="sbd-recap__kicker">Your Santa Barbara</div>
-        <h2 className="sbd-recap__title">Your map starts here.</h2>
+        {/* R1 W7.1 (SHR-004). No map, no memory: the product keeps saves on
+            this phone and nothing else. Say that. */}
+        <h2 className="sbd-recap__title">Your Santa Barbara, so far.</h2>
         <p className="sbd-recap__lead">
-          Mark a place you&rsquo;ve been and we&rsquo;ll quietly start remembering
-          the SB you&rsquo;re building, privately, on this device.
+          Mark a place you&rsquo;ve been and it shows up here. Everything you save and
+          mark stays on this phone.
         </p>
       </section>
     );
   }
 
   const hoods = [
-    ...new Set(beenItems.map(resolveZone).filter((z): z is Zone => Boolean(z))),
+    ...new Set(beenItems.map(resolveZone).filter((z): z is AreaKey => Boolean(z))),
   ];
-  const total = ZONES.length; // the canonical SB areas
+  const total = AREAS.length; // the eight areas
   const pct = Math.min(100, Math.round((hoods.length / total) * 100));
   const recent = beenItems.slice(-2).reverse();
 
@@ -67,7 +65,7 @@ export function MemoryRecap({
           <div className="sbd-recap__hoods">
             {hoods.slice(0, 5).map((z) => (
               <span key={z} className="sbd-recap__chip">
-                {ZONE_LABEL[z]}
+                {AREA_BY_KEY[z].short}
               </span>
             ))}
           </div>
@@ -75,7 +73,7 @@ export function MemoryRecap({
             <i style={{ width: `${pct}%` }} />
           </div>
           <div className="sbd-recap__barl">
-            {hoods.length} of {total} neighborhoods explored
+            {hoods.length} of {total} areas explored
           </div>
         </>
       ) : null}
@@ -90,7 +88,7 @@ export function MemoryRecap({
                 <span className="sbd-recap__dot" aria-hidden="true" />
                 <div>
                   <div className="sbd-recap__tln">{t.title}</div>
-                  {z ? <div className="sbd-recap__tld">{ZONE_LABEL[z]}</div> : null}
+                  {z ? <div className="sbd-recap__tld">{AREA_BY_KEY[z].short}</div> : null}
                 </div>
               </div>
             );

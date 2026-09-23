@@ -6,12 +6,13 @@
 // broken plan. Pure, no I/O, no AI. No em dash (Golden Rule).
 
 import type { Thing } from "@/lib/things";
+import { areaForThing, type AreaKey } from "@/lib/areas";
+import { noteKeys } from "./notes";
 import type { PlanNote, ResolvedParams, Stop } from "./types";
 import { violationReason } from "./hardFilter";
 import { withinClusterFootprint, anchorZoneFor } from "./cluster";
 import { isFood, mealBlock } from "./meals";
 import type { SbNow } from "@/lib/format/openNow";
-import type { Zone } from "@/lib/zones";
 
 export interface ValidateResult {
   ok: boolean;
@@ -31,7 +32,7 @@ export function validatePlan(
   const things = stops
     .map((s) => thingMap.get(s.thingId))
     .filter((t): t is Thing => Boolean(t));
-  const anchorZone: Zone | null = anchorZoneFor(params, things);
+  const anchorZone: AreaKey | null = anchorZoneFor(params, things);
 
   // 1. No duplicate stop.
   const seen = new Set<string>();
@@ -59,7 +60,8 @@ export function validatePlan(
   }
 
   // 3. Cluster footprint: walking stays in one walk-cluster; car/bike within two.
-  const zones = things.map((t) => t.nearby_zone).filter((z): z is Zone => Boolean(z));
+  // R1 W4.3: resolved through the one area module, not read off the raw column.
+  const zones = things.map((t) => areaForThing(t)).filter((z): z is AreaKey => Boolean(z));
   if (zones.length > 1) {
     let ok = true;
     for (let i = 1; i < zones.length; i++) {
@@ -85,7 +87,9 @@ export function validatePlan(
       return t ? isFood(t) : false;
     })());
     if (!hasFood) {
-      notes.push({ kind: "meal_unfilled", text: `No ${meal} stop yet. Add one so the day has a meal at mealtime.` });
+      // R1 W3.2. Same key as meals.ts, so whichever ran first supplies the
+      // wording and the visitor never reads two sentences about one gap.
+      notes.push({ kind: "meal_unfilled", key: noteKeys.meal(meal), text: `No ${meal} stop yet. Add one so the day has a meal at mealtime.` });
     }
   }
 

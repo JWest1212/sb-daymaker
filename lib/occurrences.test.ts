@@ -2,8 +2,8 @@ import { describe, it, expect } from "vitest";
 import { occurrencesInWindow, occurrencesByWindow, occursOnDate, type OccThing } from "./occurrences";
 
 // Anchor "today" to Wed Jul 1 2026 (noon PDT), the mockup's reference date.
-// Window offsets from here: 7d = Jul 1–7, 14d = Jul 1–14, 30d = Jul 1–30,
-// 45d = Jul 1 – Aug 14.
+// Window offsets from here: 7d = Jul 1-7, 14d = Jul 1-14, 30d = Jul 1-30,
+// 45d = Jul 1 to Aug 14.
 const NOW = Date.parse("2026-07-01T12:00:00-07:00");
 
 const t1 = (starts_at: string | null): OccThing => ({ happening_tier: 1, starts_at, recurring: [] });

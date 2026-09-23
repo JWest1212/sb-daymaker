@@ -10,7 +10,7 @@ import type { Thing } from "@/lib/things";
 // cosmetic (the engine is instant); skipped under prefers-reduced-motion.
 const SOLVE_STEPS = [
   "Checking what's open",
-  "Clustering by neighborhood",
+  "Clustering by area",
   "Placing your stops",
   "Adding parking and a lunch stop",
   "Validating the day",

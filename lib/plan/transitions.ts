@@ -4,12 +4,13 @@
 // no routing API. No em dash (Golden Rule).
 
 import type { Thing } from "@/lib/things";
+import { areaForThing } from "@/lib/areas";
 import type { Stop, Transition, ResolvedParams } from "./types";
 import { hopBetween, type Point } from "./zoneGraph";
 import { parkingNote } from "./parkingByZone";
 
 function pointOf(t: Thing): Point {
-  return { lat: t.lat, lng: t.lng, zone: t.nearby_zone };
+  return { lat: t.lat, lng: t.lng, zone: areaForThing(t) };
 }
 
 /** "4 min walk" / "8 min drive". */
@@ -41,7 +42,7 @@ export function annotateTransitions(
     // State parking once. On a car day, tie it to the destination zone; on a walk
     // day, still surface the "park once" truth for the anchor zone at the first hop.
     if (!parkingStated) {
-      const zoneForNote = cur.nearby_zone ?? prev.nearby_zone ?? params.zone;
+      const zoneForNote = areaForThing(cur) ?? areaForThing(prev) ?? params.zone;
       const raw = parkingNote(zoneForNote);
       if (raw) {
         note = params.transport === "walk" ? raw : `${raw}`;

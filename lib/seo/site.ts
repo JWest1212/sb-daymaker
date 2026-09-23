@@ -12,6 +12,15 @@ export function absoluteUrl(path: string): string {
 }
 
 /** The canonical path for a thing: its slug when set, else the id (pre-backfill). */
+/** R1 W6.7 (DET-007). The id shape the DB hands out. A slug is lowercase words
+ *  and hyphens, so the two can never be confused. Lives here, next to the path
+ *  builders, because its only job is telling a canonical URL from a legacy one. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isUuid(s: string): boolean {
+  return UUID_RE.test(s);
+}
+
 export function thingPath(t: { slug: string | null; id: string }): string {
   return `/thing/${t.slug ?? t.id}`;
 }

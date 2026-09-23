@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { thingPath } from "@/lib/seo/site";
+import { areaForThing } from "@/lib/areas";
 import { useMemo, useState } from "react";
 import { BottomSheet } from "@/components/ui";
 import { useSaves } from "@/components/saves/SavesProvider";
@@ -66,7 +68,7 @@ export function AddStopSheet({
   const blockLabel = BLOCK_LABEL[block];
 
   function renderRow(r: RankedThing, fromSaved: boolean) {
-    const zone    = r.thing.nearby_zone ? planZoneLabel(r.thing.nearby_zone) : null;
+    const zone    = planZoneLabel(areaForThing(r.thing));
     const meta    = [zone ? `📍 ${zone}` : null, r.thing.reason_to_go].filter(Boolean).join(" · ");
     const timeStr = r.thing.starts_at ? formatClockTime(r.thing.starts_at) : null;
     const isPending = pendingId === r.thing.id;
@@ -99,7 +101,7 @@ export function AddStopSheet({
           </div>
         </button>
         <Link
-          href={`/thing/${r.thing.id}`}
+          href={thingPath(r.thing)}
           className="sbd-swapopt__info"
           aria-label={`Details for ${r.thing.title}`}
           onClick={(e) => e.stopPropagation()}

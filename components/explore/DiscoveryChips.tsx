@@ -1,3 +1,4 @@
+import { SBIcon } from "@/components/ui/SBIcon";
 import type { Dimension } from "@/lib/tiles";
 
 export interface ActiveChip {
@@ -30,7 +31,7 @@ export function DiscoveryChips({
             aria-label={`Remove ${c.label} filter`}
             onClick={() => onRemove(c.dimension)}
           >
-            ×
+            <SBIcon name="close" size={12} strokeWidth={2.2} />
           </button>
         </span>
       ))}

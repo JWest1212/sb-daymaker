@@ -3,50 +3,56 @@
 // plus a coarse distance→time model. Every number here is a local-truth estimate,
 // refreshable by hand, never fetched. Pure module.
 
-import type { Zone } from "@/lib/zones";
-import { ZONES } from "@/lib/zones";
+import { AREAS, AREA_BY_KEY, type AreaKey } from "@/lib/areas";
 import type { Transport } from "./types";
 
 /** The compact, mutually-walkable SB core: park once, walk the rest. Funk Zone,
  *  Downtown/State, and the Waterfront knit together on foot. Everything else is a
  *  short drive from it. Each other zone is its own single-member cluster. */
-export const WALKABLE_CLUSTERS: Zone[][] = [
-  ["funk", "downtown", "waterfront"],
+// R1 W4.1: expressed over the 8 public areas, so the engine reasons in the same
+// vocabulary the visitor chose from. Mission and Riviera and Upper State are up
+// the hill and north of the core respectively: near Downtown by car, not on foot.
+export const WALKABLE_CLUSTERS: AreaKey[][] = [
+  ["funk_zone", "downtown_state", "waterfront_harbor"],
   ["mesa"],
-  ["montecito"],
-  ["goleta"],
+  ["mission_riviera"],
+  ["upper_state"],
+  ["montecito_carpinteria"],
+  ["goleta_isla_vista"],
 ];
 
-/** The cluster (walkable group) a zone belongs to. */
-export function clusterOf(zone: Zone): Zone[] {
-  return WALKABLE_CLUSTERS.find((c) => c.includes(zone)) ?? [zone];
+/** The cluster (walkable group) an area belongs to. */
+export function clusterOf(area: AreaKey): AreaKey[] {
+  return WALKABLE_CLUSTERS.find((c) => c.includes(area)) ?? [area];
 }
 
-/** Two zones share a walkable cluster (reachable on foot). */
-export function sameWalkCluster(a: Zone, b: Zone): boolean {
+/** Two areas share a walkable cluster (reachable on foot). */
+export function sameWalkCluster(a: AreaKey, b: AreaKey): boolean {
   return clusterOf(a).includes(b);
 }
 
 // Adjacency for a car/bike day: which zones sit next to which (a single hop that
 // doesn't cross the county). The walkable core is adjacent to Mesa and Montecito;
 // Goleta hangs off Downtown to the west.
-const ADJACENT: Record<Zone, Zone[]> = {
-  funk:       ["downtown", "waterfront", "mesa", "montecito"],
-  downtown:   ["funk", "waterfront", "mesa", "goleta", "montecito"],
-  waterfront: ["funk", "downtown", "mesa", "montecito"],
-  mesa:       ["waterfront", "downtown", "funk"],
-  montecito:  ["funk", "waterfront", "downtown"],
-  goleta:     ["downtown"],
+const ADJACENT: Record<AreaKey, AreaKey[]> = {
+  funk_zone:             ["downtown_state", "waterfront_harbor", "mesa", "montecito_carpinteria"],
+  downtown_state:        ["funk_zone", "waterfront_harbor", "mesa", "mission_riviera", "upper_state", "goleta_isla_vista", "montecito_carpinteria"],
+  waterfront_harbor:     ["funk_zone", "downtown_state", "mesa", "montecito_carpinteria"],
+  mesa:                  ["waterfront_harbor", "downtown_state", "funk_zone"],
+  mission_riviera:       ["downtown_state", "upper_state"],
+  upper_state:           ["downtown_state", "mission_riviera", "goleta_isla_vista"],
+  goleta_isla_vista:     ["downtown_state", "upper_state"],
+  montecito_carpinteria: ["funk_zone", "waterfront_harbor", "downtown_state"],
 };
 
-/** Zones directly adjacent (one hop) to `zone`. */
-export function adjacentZones(zone: Zone): Zone[] {
-  return ADJACENT[zone] ?? [];
+/** Areas directly adjacent (one hop) to `area`. */
+export function adjacentZones(area: AreaKey): AreaKey[] {
+  return ADJACENT[area] ?? [];
 }
 
-const ZONE_LATLNG: Record<Zone, { lat: number; lng: number }> = Object.fromEntries(
-  ZONES.map((z) => [z.zone, { lat: z.lat, lng: z.lng }]),
-) as Record<Zone, { lat: number; lng: number }>;
+const AREA_LATLNG: Record<AreaKey, { lat: number; lng: number }> = Object.fromEntries(
+  AREAS.map((a) => [a.key, { lat: a.lat, lng: a.lng }]),
+) as Record<AreaKey, { lat: number; lng: number }>;
 
 /** Great-circle km between two points. */
 export function haversineKm(
@@ -67,15 +73,15 @@ export function haversineKm(
 export interface Point {
   lat: number | null;
   lng: number | null;
-  zone: Zone | null;
+  zone: AreaKey | null;
 }
 
 /** Km between two stops. Prefer real coordinates; fall back to zone centroids;
  *  0 when we truly cannot tell (same-place assumption keeps the day from
  *  inventing a drive out of missing data). */
 export function distanceKm(a: Point, b: Point): number {
-  const pa = a.lat != null && a.lng != null ? { lat: a.lat, lng: a.lng } : a.zone ? ZONE_LATLNG[a.zone] : null;
-  const pb = b.lat != null && b.lng != null ? { lat: b.lat, lng: b.lng } : b.zone ? ZONE_LATLNG[b.zone] : null;
+  const pa = a.lat != null && a.lng != null ? { lat: a.lat, lng: a.lng } : a.zone ? AREA_LATLNG[a.zone] : null;
+  const pb = b.lat != null && b.lng != null ? { lat: b.lat, lng: b.lng } : b.zone ? AREA_LATLNG[b.zone] : null;
   if (!pa || !pb) return 0;
   return haversineKm(pa, pb);
 }

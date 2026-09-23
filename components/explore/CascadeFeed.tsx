@@ -1,29 +1,40 @@
 "use client";
 
+import { RESET } from "@/lib/strings";
+
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { WelcomeStrip } from "@/components/tour/WelcomeStrip";
+import { thingPath } from "@/lib/seo/site";
 import Link from "next/link";
 import { ListCard, PickCard, EmptyState, SBIcon } from "@/components/ui";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { Thing } from "@/lib/things";
 import type { Weather } from "@/lib/weather";
-import type { Horizon } from "@/lib/explore";
+import { collapseSeries, type Horizon } from "@/lib/explore";
 import { dedupeFeedVenuePhotos, type PoolPhoto } from "@/lib/venuePool";
-import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay, recurringWhen } from "./derive";
+import { cardBlurb, cardFacts, cardPlace, cardVisual, heroEyebrow, heroTime, isGrayDay, recurringWhen, imageAlt, cardMeta, seriesMeta } from "./derive";
 import { RockGrid } from "./RockTile";
 import { LeadDayRail } from "./LeadDayRail";
 
+// Section heading per horizon. 2026-09-22 (Jim): plain "Today" and its siblings.
+// Today keeps events from earlier in the day on purpose; "Happening" implied
+// they were all still on.
 const HORIZON_LABEL: Record<Horizon, string> = {
-  today: "Happening Today",
-  week: "Happening This Week",
-  weekend: "Happening This Weekend",
-  month: "Happening This Month",
+  today: "Today",
+  tomorrow: "Tomorrow",
+  weekend: "This Weekend",
+  next_weekend: "Next Weekend",
+  week: "This Week",
+  month: "This Month",
 };
 
 // Home Rework spec §12, the R1 ribbon label maps to the current horizon.
 const PICK_RIBBON_LABEL: Record<Horizon, string> = {
   today: "Today's pick",
-  week: "This week's pick",
+  tomorrow: "Tomorrow's pick",
   weekend: "This weekend's pick",
+  next_weekend: "Next weekend's pick",
+  week: "This week's pick",
   month: "This month's pick",
 };
 
@@ -46,12 +57,17 @@ function TodayPick({
   pick,
   isFallback,
   isStatic,
+  filteredEmpty,
   horizon,
   weather,
 }: {
   pick: Thing | null;
   isFallback: boolean;
   isStatic: boolean;
+  /** R1 W2.4 (EXP-017). True when the visitor's filter combination returns
+   *  nothing. The pick itself is filter-independent, so this only changes what
+   *  the card SAYS, never whether it appears. */
+  filteredEmpty: boolean;
   horizon: Horizon;
   weather: Weather | null;
 }) {
@@ -80,14 +96,20 @@ function TodayPick({
   if (!pick) return null;
 
   const meta = [cardPlace(pick), heroTime(pick)].filter(Boolean).join(" · ");
-  const contextEyebrow = isFallback
+  // R1 W2.4. Two different situations that used to share one sentence. A
+  // fallback pick means nothing DATED qualified today, which has nothing to do
+  // with the visitor's filters; blaming the filters for it was simply wrong once
+  // the pick stopped depending on them.
+  const contextEyebrow = filteredEmpty
     ? "Nothing matches that exactly today, but this is always worth it."
-    : heroEyebrow(pick, isGrayDay(weather));
+    : isFallback
+      ? "Nothing dated today, but this is always worth it."
+      : heroEyebrow(pick, isGrayDay(weather));
 
   return (
     <PickCard
       id={pick.id}
-      href={`/thing/${pick.id}`}
+      href={thingPath(pick)}
       title={pick.title}
       blurb={cardBlurb(pick)}
       occasionKey={pick.tags[0]}
@@ -95,6 +117,7 @@ function TodayPick({
       contextEyebrow={contextEyebrow}
       ribbonLabel={ribbonLabel}
       photo={pick.photo_url ?? undefined}
+      photoAlt={imageAlt(pick)}
       tone="gold"
     />
   );
@@ -113,23 +136,32 @@ function deriveLeadDek(horizon: Horizon, count: number): string | null {
 // Today opens in the standard left-rail ListCard format, the top-banner
 // feature-lead was retired so the hero pick is the sole marquee (spec §2.1).
 function TodayLead({ tier1 }: { tier1: Thing[] }) {
+  // R1 W6.4 (D6): one card per series, with the cadence and next date on the
+  // meta line, instead of the same weekly thing repeated down the feed.
+  const groups = collapseSeries(tier1);
   return (
     <div className="sbd-feed-section__list">
-      {tier1.map((t, i) => (
+      {groups.map((g, i) => (
         <div
-          key={t.id}
+          key={g.lead.id}
           className="sbd-reveal"
           style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
         >
           <ListCard
-            id={t.id}
-            href={`/thing/${t.id}`}
-            occasionKey={t.tags[0]}
-            title={t.title}
-            blurb={cardBlurb(t)}
-            when={cardFacts(t).join(" · ")}
-            photo={t.photo_url ?? undefined}
-            visual={cardVisual(t)}
+            id={g.lead.id}
+            href={thingPath(g.lead)}
+            occasionKey={g.lead.tags[0]}
+            title={g.lead.title}
+            blurb={cardBlurb(g.lead)}
+            when={
+              g.occurrences.length > 1
+                ? seriesMeta(g.lead, g.cadence, g.lead.starts_at)
+                : cardMeta(g.lead)
+            }
+            dateCount={g.occurrences.length > 1 ? g.occurrences.length : undefined}
+            photo={g.lead.photo_url ?? undefined}
+            photoAlt={imageAlt(g.lead)}
+            visual={cardVisual(g.lead)}
           />
         </div>
       ))}
@@ -145,6 +177,7 @@ function LeadSection({
   pick,
   pickIsFallback,
   pickIsStatic,
+  filteredEmpty,
   weather,
 }: {
   tier1: Thing[];
@@ -154,6 +187,7 @@ function LeadSection({
   pick: Thing | null;
   pickIsFallback: boolean;
   pickIsStatic: boolean;
+  filteredEmpty: boolean;
   weather: Weather | null;
 }) {
   return (
@@ -164,11 +198,15 @@ function LeadSection({
         dek={deriveLeadDek(horizon, tier1.length)}
         sticky={horizon === "today"}
       />
+      {/* R1 W8.3 (D8). First visit only: directly above the pick, over the real
+          page, never blocking it. */}
+      <WelcomeStrip />
       {pick || pickIsStatic ? (
         <TodayPick
           pick={pick}
           isFallback={pickIsFallback}
           isStatic={pickIsStatic}
+          filteredEmpty={filteredEmpty}
           horizon={horizon}
           weather={weather}
         />
@@ -199,6 +237,7 @@ export function CascadeFeed({
   onClearFilters,
   hasActiveFilters = false,
   onShowClosestMatches,
+  relaxedNote = null,
   venuePools,
 }: {
   items: Thing[];
@@ -217,6 +256,9 @@ export function CascadeFeed({
    *  empty result gets the stacked-filter empty state (two recovery actions)
    *  instead of the generic one. */
   hasActiveFilters?: boolean;
+  /** R1 W4.2 (EXP-015). What "Show the closest matches" just relaxed, e.g.
+   *  "Showing all areas". Null when nothing has been relaxed. */
+  relaxedNote?: string | null;
   /** Drops the most-recently-added filter (repeatedly, if needed) until something
    *  shows, or all filters are gone. Required when `hasActiveFilters` is true. */
   onShowClosestMatches?: () => void;
@@ -227,6 +269,15 @@ export function CascadeFeed({
 }) {
   const [tier2Open, setTier2Open] = useState(false);
   const [tier3Open, setTier3Open] = useState(false);
+  // R1 W6.9 (TP-B-05). A collapsed section is HIDDEN, not absent: `hidden` keeps
+  // its cards in the DOM, and the browser fetches their photographs anyway. The
+  // homepage was loading 69 images on arrival and 53 of them belonged to two
+  // accordions nobody had opened, which is what held LCP out past 13 seconds.
+  //
+  // These latch on first open and never go back, so collapsing a section again
+  // does not throw its cards away and make the next open refetch them.
+  const [tier2Ever, setTier2Ever] = useState(false);
+  const [tier3Ever, setTier3Ever] = useState(false);
   const [monthShownCount, setMonthShownCount] = useState(8);
   const feedRef = useRef<HTMLDivElement>(null);
   const onMonthShowMore = useCallback(() => setMonthShownCount((c) => c + 8), []);
@@ -246,6 +297,11 @@ export function CascadeFeed({
     setMonthShownCount(8);
     setTier2Open(false);
     setTier3Open(false);
+    // The "ever opened" latches reset too: a different horizon is a different
+    // set of cards, so keeping the old ones mounted would load photographs for
+    // a section the visitor is not looking at.
+    setTier2Ever(false);
+    setTier3Ever(false);
   }, [horizon]);
 
   // Reveal stagger, IntersectionObserver adds .is-in; skipped under reduced-motion
@@ -290,7 +346,7 @@ export function CascadeFeed({
           message={
             hasActiveFilters
               ? "Nothing matches all of those. Try loosening one."
-              : "Nothing matches that combination. Try a wider time or a different vibe."
+              : "Nothing matches that combination. Try a wider time or a different occasion."
           }
           action={
             hasActiveFilters ? (
@@ -310,7 +366,7 @@ export function CascadeFeed({
                     className="sbd-empty__reset sbd-empty__reset--ghost"
                     onClick={onClearFilters}
                   >
-                    Clear filters
+                    {RESET}
                   </button>
                 ) : null}
               </div>
@@ -329,6 +385,11 @@ export function CascadeFeed({
     );
   }
 
+  // R1 W2.4 (EXP-017). The feed is empty because of the visitor's filters, as
+  // distinct from "nothing is on today". The pick renders either way; this only
+  // decides which sentence is honest.
+  const filteredEmpty = hasActiveFilters && tier1.length + tier2.length + tier3.length === 0;
+
   const totalCount = tier1.length + tier2.length + tier3.length + (pick ? 1 : 0);
 
   return (
@@ -336,6 +397,11 @@ export function CascadeFeed({
       <div className="sbd-sr-only" aria-live="polite">
         {totalCount} {totalCount === 1 ? "thing" : "things"} found
       </div>
+      {/* R1 W4.2. Name the filter that was relaxed, so the feed changing after
+          "Show the closest matches" is explained rather than just happening. */}
+      {relaxedNote ? (
+        <p className="sbd-relaxed" role="status">{relaxedNote}</p>
+      ) : null}
       {hasLead && (
         <LeadSection
           tier1={tier1}
@@ -345,6 +411,7 @@ export function CascadeFeed({
           pick={pick}
           pickIsFallback={pickIsFallback}
           pickIsStatic={pickIsStatic}
+          filteredEmpty={filteredEmpty}
           weather={weather}
         />
       )}
@@ -375,12 +442,16 @@ export function CascadeFeed({
             label="Recurring in SB"
             count={tier2.length}
             expanded={tier2Open}
-            onToggle={() => setTier2Open((o) => !o)}
+            onToggle={() => {
+              setTier2Ever(true);
+              setTier2Open((o) => !o);
+            }}
             controlsId="explore-tier2"
           />
+          {/* The container always exists, because aria-controls points at it. */}
           <div id="explore-tier2" hidden={!tier2Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier2.map((t, i) => (
+              {tier2Ever && tier2.map((t, i) => (
                 <div
                   key={t.id}
                   className="sbd-reveal"
@@ -388,12 +459,13 @@ export function CascadeFeed({
                 >
                   <ListCard
                     id={t.id}
-                    href={`/thing/${t.id}`}
+                    href={thingPath(t)}
                     occasionKey={t.tags[0]}
                     title={t.title}
                     blurb={cardBlurb(t)}
                     when={recurringWhen(t) ?? cardFacts(t).join(" · ")}
                     photo={t.photo_url ?? undefined}
+                    photoAlt={imageAlt(t)}
                     visual={cardVisual(t)}
                   />
                 </div>
@@ -411,12 +483,15 @@ export function CascadeFeed({
             label="Anytime in SB"
             count={tier3.length}
             expanded={tier3Open}
-            onToggle={() => setTier3Open((o) => !o)}
+            onToggle={() => {
+              setTier3Ever(true);
+              setTier3Open((o) => !o);
+            }}
             controlsId="explore-tier3"
           />
           <div id="explore-tier3" hidden={!tier3Open}>
             <div className="sbd-feed-section__list sbd-feed-section__list--inner">
-              {tier3.map((t, i) => (
+              {tier3Ever && tier3.map((t, i) => (
                 <div
                   key={t.id}
                   className="sbd-reveal"
@@ -424,12 +499,13 @@ export function CascadeFeed({
                 >
                   <ListCard
                     id={t.id}
-                    href={`/thing/${t.id}`}
+                    href={thingPath(t)}
                     occasionKey={t.tags[0]}
                     title={t.title}
                     blurb={cardBlurb(t)}
-                    when={cardFacts(t).join(" · ")}
+                    when={cardMeta(t)}
                     photo={t.photo_url ?? undefined}
+                    photoAlt={imageAlt(t)}
                     visual={cardVisual(t)}
                   />
                 </div>

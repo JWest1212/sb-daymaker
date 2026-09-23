@@ -21,6 +21,9 @@ export function revalidatePublic() {
   revalidatePath("/");
   revalidatePath("/discover");
   revalidatePath("/saved");
+  // R1 W1.6. /plan reads the same pool and is ISR-cached, so it went stale after
+  // an ingest exactly like the others. It was simply missing from this list.
+  revalidatePath("/plan");
   revalidatePath("/discover/[id]", "page");
   revalidatePath("/thing/[id]", "page");
 }

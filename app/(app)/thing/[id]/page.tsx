@@ -1,23 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
 import { getThingBySlugOrId, getNearbyThings, type Thing } from "@/lib/things";
 import { getGuidesFeaturingThing } from "@/lib/guides";
 import { OCCASION_BY_KEY } from "@/lib/occasions";
-import { ZONE_LABEL } from "@/lib/zones";
-import { Tag, EmptyState } from "@/components/ui";
+import { areaLabelForThing, areaShortForThing } from "@/lib/areas";
+import { AREA_FIELD, nearbyIn } from "@/lib/strings";
+import { priceLabel, imageAlt } from "@/components/explore/derive";
+import { Tag } from "@/components/ui";
 import { DetailActions } from "@/components/detail/DetailActions";
 import { FlagButton } from "@/components/detail/FlagButton";
 import { OpenNow } from "@/components/detail/OpenNow";
 import { BackButton } from "@/components/detail/BackButton";
+import { ArchivedBanner } from "@/components/detail/ArchivedBanner";
 import { DetailPhoto } from "@/components/detail/DetailPhoto";
-import { prettify } from "@/components/explore/derive";
-import { eventDetailWhen } from "@/lib/format/eventTime";
+import { eventDetailWhenWithYear } from "@/lib/format/eventTime";
 import { resolveOutbound } from "@/lib/links/outbound";
 import { isRealSecret } from "@/lib/quality/localSecret";
 import { thingJsonLd } from "@/lib/seo/jsonLd";
-import { absoluteUrl, thingPath, guidePath } from "@/lib/seo/site";
+import { absoluteUrl, thingPath, guidePath, isUuid } from "@/lib/seo/site";
+import { redirectTargetFor } from "@/lib/links/redirects";
+import { isOver } from "@/components/explore/derive";
 
-export const revalidate = 600; // ISR: refresh published content every 10 min
+export const revalidate = 300; // R1 W1.6, ISR safety net behind /api/revalidate
 
 const TONE_BY_TYPE: Record<string, string> = {
   event: "gold",
@@ -38,20 +43,29 @@ const STAMP_FMT = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-/** "Verified · Jul 2026" from an ISO/date string, or null if undated. */
-function verifiedLabel(iso: string | null): string | null {
+/** R1 W2.2 (DET-014). "Verified · Jul 2026", but ONLY while the check is still
+ *  worth something. A stamp older than 90 days is not reassurance, it is a claim
+ *  the site cannot stand behind, so it is hidden rather than shown stale. */
+export const VERIFIED_MAX_AGE_DAYS = 90;
+
+export function verifiedLabel(iso: string | null, now: Date = new Date()): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
+  const ageDays = (now.getTime() - d.getTime()) / 86_400_000;
+  if (ageDays > VERIFIED_MAX_AGE_DAYS) return null;
+  // A stamp dated in the future is not credible either.
+  if (ageDays < -1) return null;
   return `Verified · ${STAMP_FMT.format(d)}`;
 }
 
 /** The human-readable neighborhood/zone for titles + JSON-LD, "Santa Barbara"
  *  as the safe fallback (never the placeholder "other"). */
 function whereLabel(t: Thing): string {
-  if (t.neighborhood && t.neighborhood !== "other") return prettify(t.neighborhood);
-  if (t.nearby_zone) return ZONE_LABEL[t.nearby_zone];
-  return "Santa Barbara";
+  // R1 W4.1: one label, from the one module. The city name is still the fallback
+  // HERE, because a page title needs some place name; on the page body itself an
+  // unknown area renders as nothing (see neighborhoodLabel below).
+  return areaLabelForThing(t) ?? "Santa Barbara";
 }
 
 function truncate(s: string, n: number): string {
@@ -83,6 +97,9 @@ export async function generateMetadata({
     alternates: { canonical },
     openGraph: { title, description, url: canonical, type: t.type === "event" ? "article" : "website" },
     twitter: { card: "summary_large_image", title, description },
+    // R1 W2.2. An archived page stays reachable so saved and shared links never
+    // 404, but it is not something search should be sending new people to.
+    ...(t.status === "archived" ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
@@ -94,38 +111,46 @@ export default async function ThingPage({
   const { id } = await params;
   const t = await getThingBySlugOrId(id);
 
+  // R1 W6.7 (DET-007). A page with a slug has ONE address. A UUID URL still
+  // works, because old saves, old shares and old inbound links use it, but it
+  // moves permanently to the slug: a 308, so a share of a share carries the
+  // readable URL and search engines fold the two into one page.
+  if (t?.slug && isUuid(id)) permanentRedirect(thingPath(t));
+
+  // R1 W7.3. When this render happened, for "already happened". A server
+  // component, so there is no client render to disagree with it.
+  const renderedAt = Date.now();
+
   // G3.5, cross-link data: guides this thing stars in, and nearby same-zone things.
   const [guidesFeaturing, nearby] = t
     ? await Promise.all([
         getGuidesFeaturingThing(t.id),
-        t.nearby_zone ? getNearbyThings(t.nearby_zone, t.id, 3) : Promise.resolve([]),
+        // R1 W2.6, five distinct titles, deduped by series inside getNearbyThings.
+        t.nearby_zone ? getNearbyThings(t.nearby_zone, t.id, 5) : Promise.resolve([]),
       ])
     : [[], []];
 
   if (!t) {
-    return (
-      <div style={{ paddingTop: "var(--space-6)" }}>
-        <div className="sbd-backrow">
-          <Link href="/" className="sbd-backrow__btn">‹ Explore</Link>
-        </div>
-        <EmptyState
-          icon="🔍"
-          title="Not found"
-          message="This place or event may have been removed. Head back to Explore."
-        />
-      </div>
-    );
+    // R1 W6.7 (DET-007). Before giving up, ask whether this path MOVED. An old
+    // slug (one that was shortened, or a duplicate folded into its survivor) has
+    // a row in url_redirects; the proxy only catches UUID-shaped segments, so
+    // until now an old slug fell straight through to this dead end.
+    const moved = await redirectTargetFor(`/thing/${id}`);
+    if (moved) permanentRedirect(moved);
+    // R1 W6.7 (EDG-001). notFound(), not an inline empty state: the words were
+    // already right, the STATUS was not. This used to answer 200, which tells a
+    // crawler a dead listing is a healthy page. The copy now lives in this
+    // segment's not-found.tsx and the response is a real 404.
+    notFound();
   }
 
   // G1.3, the human-readable neighborhood/zone, granular first (Riviera, Funk
   // Zone), coarse zone as a fallback. Never render the literal placeholder
   // "other" (G0.7): if the area is genuinely unknown, omit the row.
-  const neighborhoodLabel =
-    t.neighborhood && t.neighborhood !== "other"
-      ? prettify(t.neighborhood)
-      : t.nearby_zone
-        ? ZONE_LABEL[t.nearby_zone]
-        : null;
+  // R1 W4.1 (DET-009). One label from lib/areas.ts, identical to the Explore
+  // door, the Plan area step, Saved's Near Me and the digest. Unknown renders as
+  // nothing: never "other", never the city name standing in for an answer.
+  const neighborhoodLabel = areaLabelForThing(t);
 
   // G1.3, the Directions destination: a real address, else stored coordinates.
   const directionsDest = t.address?.trim()
@@ -140,19 +165,13 @@ export default async function ThingPage({
   // G1.3 facts, address FIRST, neighborhood directly beneath it.
   const facts: { k: string; v: string }[] = [];
   if (t.address?.trim()) facts.push({ k: "Address", v: t.address.trim() });
-  if (neighborhoodLabel) facts.push({ k: "Neighborhood", v: neighborhoodLabel });
+  if (neighborhoodLabel) facts.push({ k: AREA_FIELD, v: neighborhoodLabel }); // R1 W8.1
   if (t.type === "event" && t.starts_at)
-    facts.push({ k: "When", v: eventDetailWhen(t.starts_at) });
+    facts.push({ k: "When", v: eventDetailWhenWithYear(t.starts_at) });
   // G0.7, never a bare separator in the price slot. Free / a real band / a
   // ticketed event with an outbound ("Check site") / else omit the row entirely.
-  const priceValue = t.free
-    ? "Free"
-    : t.price_band
-      ? t.price_band
-      : t.type === "event" && t.buy_url
-        ? "Check site"
-        : null;
-  if (priceValue) facts.push({ k: "Price", v: priceValue });
+  // R1 W5.5 (DET-011). One price rule, shared with the card. Never blank.
+  facts.push({ k: "Price", v: priceLabel(t) });
   // G1.3, restore the Setting row from the real `setting` enum (Gate 0 had
   // suppressed the old default-false `indoor` bit that couldn't say "both").
   if (t.setting) facts.push({ k: "Setting", v: SETTING_LABEL[t.setting] });
@@ -163,7 +182,9 @@ export default async function ThingPage({
 
   // G1.6, the verification stamp: Tier 1 shows a dated "Verified" stamp (from
   // verified_at, else last_confirmed); Tier 2 shows a quieter "Listed".
-  const stamp = verifiedLabel(t.verified_at ?? t.last_confirmed);
+  // R1 W8.2 (XC-004). "Verified" means a person checked it: verified_at only.
+  // last_confirmed is the scraper seeing the listing again, which is not that.
+  const stamp = verifiedLabel(t.verified_at);
 
   // G1.8, render Local's Secret only when it's a genuine secret (not the entry's
   // own marketing said another way).
@@ -182,7 +203,14 @@ export default async function ThingPage({
       />
       <BackButton />
 
-      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={t.title}>
+      {/* R1 W2.2, said before anything else on the page, so the visitor never
+          reads a finished event as an upcoming one. */}
+      {/* R1 W7.3. The same rule as every card: archived, or over. */}
+      {isOver(t, renderedAt) ? (
+        <ArchivedBanner startsAt={t.starts_at} />
+      ) : null}
+
+      <DetailPhoto photoUrl={t.photo_url} tone={TONE_BY_TYPE[t.type] ?? "gold"} alt={imageAlt(t)}>
         {/* G1.6, Verified stamp anchored to the image top-right. Shown ONLY for
             Tier-1 entries; nothing is shown otherwise (no "Listed"). The freshness
             dot pulses but stops under prefers-reduced-motion (static). */}
@@ -207,7 +235,7 @@ export default async function ThingPage({
             const o = OCCASION_BY_KEY[k];
             return o ? (
               <Tag key={k} color="neutral">
-                {o.icon} {o.label}
+                {o.label}
               </Tag>
             ) : null;
           })}
@@ -228,6 +256,12 @@ export default async function ThingPage({
         ))}
       </dl>
 
+      {/* R1 W5.5 (DET-011). A tiny key, shown only when the price is a band, so
+          "$$" means something to someone seeing it for the first time. */}
+      {!t.price_note?.trim() && !t.free && t.price_band ? (
+        <p className="sbd-detail__pricekey">$ under 15 &middot; $$ 15 to 40 &middot; $$$ over 40</p>
+      ) : null}
+
       {/* G1.5, open-now computed client-side from stored hours; renders nothing
           when hours are unknown. */}
       <OpenNow hours={t.hours} />
@@ -243,7 +277,7 @@ export default async function ThingPage({
 
       {showSecret ? (
         <aside className="sbd-detail__secret">
-          <div className="sbd-detail__secret-k">🤫 Local&rsquo;s secret</div>
+          <div className="sbd-detail__secret-k">Local&rsquo;s secret</div>
           <p>{t.local_note}</p>
         </aside>
       ) : null}
@@ -273,13 +307,13 @@ export default async function ThingPage({
           </a>
         ) : null}
         {/* G1.3, the Save / Share / Directions action row. */}
-        <DetailActions id={t.id} title={t.title} directionsHref={directionsHref} />
+        <DetailActions id={t.id} title={t.title} path={thingPath(t)} directionsHref={directionsHref} />
       </div>
 
       {/* G3.5, Nearby / pairs-with: 2-3 same-zone things, Tier-1 first. */}
       {nearby.length > 0 && t.nearby_zone ? (
         <section className="sbd-detail__nearby">
-          <h2 className="sbd-detail__nearby-h">Nearby in {ZONE_LABEL[t.nearby_zone]}</h2>
+          <h2 className="sbd-detail__nearby-h">{nearbyIn(areaShortForThing(t) ?? neighborhoodLabel ?? "")}</h2>
           <ul className="sbd-detail__nearby-list">
             {nearby.map((n) => (
               <li key={n.id}>

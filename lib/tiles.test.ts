@@ -6,6 +6,13 @@ function thing(over: Partial<Thing> = {}): Thing {
   return {
     id: over.id ?? "x",
     type: "event",
+    status: "published",
+    hero_eligible: true,
+    is_civic: false,
+    source: null,
+    venue_name: null,
+    price_note: null,
+    series_key: null,
     title: over.id ?? "x",
     blurb: null,
     blurb_long: null,

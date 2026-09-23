@@ -18,7 +18,7 @@ import type {
   Budget,
   Meal,
 } from "@/lib/plan/types";
-import type { Zone } from "@/lib/zones";
+import { AREAS, ANYWHERE_LABEL, type AreaKey } from "@/lib/areas";
 
 // Gate 4 · The Concierge Day setup is a guided interview (one question per
 // screen, auto-advancing single-selects), not a filter form. It collects the
@@ -48,7 +48,7 @@ const DOT_OF: Partial<Record<Step, number>> = {
 const PERIODS: { value: Block; glyph: string; label: string; desc: string }[] = [
   { value: "morning",   glyph: "🌅", label: "Morning", desc: "Coffee, a walk, the marine layer burning off" },
   { value: "afternoon", glyph: "⛅", label: "Afternoon", desc: "The heart of the day" },
-  { value: "night",     glyph: "🌙", label: "Night", desc: "Dinner, a show, a nightcap" },
+  { value: "night",     glyph: "🌙", label: "Evening", desc: "Dinner, a show, a nightcap" },
 ];
 
 const WHO: { value: Who; glyph: string; label: string; desc: string }[] = [
@@ -64,14 +64,34 @@ const KID_BANDS: { value: KidBand; glyph: string; label: string; desc: string }[
   { value: "tweens", glyph: "🛹", label: "Tweens and up (10+)", desc: "They can hang with the grown-up stuff" },
 ];
 
-const ZONE_OPTS: { value: Zone | null; glyph: string; label: string; desc: string }[] = [
-  { value: null, glyph: "🧭", label: "Anywhere", desc: "Surprise me, all of Santa Barbara" },
-  { value: "downtown", glyph: "🏛️", label: "Downtown / State St", desc: "The old town, walkable core" },
-  { value: "funk", glyph: "🍇", label: "Funk Zone", desc: "Wine, murals, harbor-adjacent" },
-  { value: "waterfront", glyph: "🌊", label: "The Waterfront", desc: "Beach, pier, the harbor" },
-  { value: "mesa", glyph: "🌅", label: "The Mesa", desc: "Cliffs, quiet, local" },
-  { value: "montecito", glyph: "🌳", label: "Montecito", desc: "Coast Village, upscale calm" },
-  { value: "goleta", glyph: "🏖️", label: "Goleta", desc: "West of town, more room" },
+// R1 W4.3. The area step lists the 8 public areas, built from lib/areas.ts so
+// Plan, Explore, Saved and the digest cannot drift on what an area is called.
+// Glyphs and the one-line descriptions stay here: they are Plan's voice, not
+// part of the shared vocabulary.
+const AREA_GLYPH: Record<AreaKey, string> = {
+  downtown_state: "\u{1F3DB}\u{FE0F}",
+  funk_zone: "\u{1F347}",
+  waterfront_harbor: "\u{1F30A}",
+  mesa: "\u{1F305}",
+  mission_riviera: "\u{26EA}",
+  upper_state: "\u{1F6E3}\u{FE0F}",
+  goleta_isla_vista: "\u{1F3D6}\u{FE0F}",
+  montecito_carpinteria: "\u{1F333}",
+};
+const AREA_DESC: Record<AreaKey, string> = {
+  downtown_state: "The old town, walkable core",
+  funk_zone: "Wine, murals, harbor-adjacent",
+  waterfront_harbor: "Beach, pier, the harbor",
+  mesa: "Cliffs, quiet, local",
+  mission_riviera: "The Mission, gardens, the view",
+  upper_state: "North of the core, room to park",
+  goleta_isla_vista: "West of town, more room",
+  montecito_carpinteria: "Coast Village, upscale calm",
+};
+
+const ZONE_OPTS: { value: AreaKey | null; glyph: string; label: string; desc: string }[] = [
+  { value: null, glyph: "\u{1F9ED}", label: ANYWHERE_LABEL, desc: "Surprise me, all of Santa Barbara" },
+  ...AREAS.map((a) => ({ value: a.key, glyph: AREA_GLYPH[a.key], label: a.label, desc: AREA_DESC[a.key] })),
 ];
 
 const TRANSPORTS: { value: Transport; glyph: string; label: string; desc: string }[] = [
@@ -197,7 +217,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
   const [periods, setPeriods] = useState<Block[]>([]);
   const [who, setWho] = useState<Who | null>(null);
   const [kidBand, setKidBand] = useState<KidBand | null>(null);
-  const [zone, setZone] = useState<Zone | null>(null);
+  const [zone, setZone] = useState<AreaKey | null>(null);
   const [transport, setTransport] = useState<Transport>("car");
   const [budget, setBudget] = useState<Budget | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -207,7 +227,10 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
     if (when === "pick") return pickDate;
     return todayISO();
   }, [when, pickDate]);
-  const dayChoices = useMemo(() => nextDays(14), []);
+  // R1 W3.4. 31 days, matching Explore's Month reach. Plan used to stop at 14,
+  // so a visitor could see something on Explore's Month view and then find Plan
+  // would not build a day for it.
+  const dayChoices = useMemo(() => nextDays(31), []);
 
   // Advance with a brief highlight so the tap registers before the screen turns.
   function advance(key: string, to: Step) {
@@ -283,9 +306,9 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             <p className="sbd-wizintro__eyebrow">The concierge day</p>
             <h1 className="sbd-wizintro__title">Tell us the shape, we&rsquo;ll draft the day.</h1>
             <p className="sbd-wizintro__sub">
-              A handful of taps and you get a Santa Barbara day that actually works:
-              open when it says, clustered so you&rsquo;re not driving in circles, parked
-              where a local parks, fed at mealtimes.
+              Seven quick questions and you get a Santa Barbara day that holds together:
+              clustered so you&rsquo;re not driving in circles, with a parking tip and your
+              meals built in. Open when we schedule it, as far as we know.
             </p>
             <button
               type="button"
@@ -305,7 +328,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
             </div>
           </div>
           <ul className="sbd-wizintro__diff" aria-label="What makes it different">
-            <li>Every stop is open when we schedule it</li>
+            <li>Open when we schedule it, as far as we know; check before you go</li>
             <li>Clustered so you&rsquo;re not driving in circles</li>
             <li>Parking and lunch built in, shareable in one link</li>
           </ul>
@@ -324,7 +347,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
           options={[
             { key: "today", glyph: "☀️", label: "Today" },
             { key: "tomorrow", glyph: "🌤️", label: "Tomorrow" },
-            { key: "pick", glyph: "📅", label: "Pick a date", desc: pickOpen ? undefined : "Choose any day in the next two weeks" },
+            { key: "pick", glyph: "📅", label: "Pick a date", desc: pickOpen ? undefined : "Choose any day in the next month" },
           ]}
           isSelected={(k) => when === k}
           onSelect={(k) => {
@@ -463,7 +486,7 @@ export function PlanSetup({ onShowDay }: PlanSetupProps) {
   // ---- Transport ----------------------------------------------------------
   if (step === "transport") {
     return (
-      <StepShell step={step} onBack={back} kicker="Step 5 of 7" question="Getting around?" sub="Walking keeps it to one neighborhood; a car unlocks the coast.">
+      <StepShell step={step} onBack={back} kicker="Step 5 of 7" question="Getting around?" sub="Walking keeps it to one area; a car unlocks the coast.">
         <OptList
           ariaLabel="Getting around?"
           pending={pending}

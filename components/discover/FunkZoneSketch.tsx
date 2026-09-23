@@ -113,17 +113,9 @@ export function FunkZoneSketch({ className }: { className?: string }) {
         opacity=".85"
       />
 
-      {/* ✵ secret mark */}
-      <text
-        x="126"
-        y="177"
-        fontFamily="var(--font-display)"
-        fontSize="11.5"
-        fontWeight="700"
-        fill="var(--gold-text)"
-      >
-        ✵
-      </text>
+      {/* secret mark. R1 W8.4 (DET-012): the icon set's sparkle, drawn as a path,
+          not a glyph that depends on the display font having it. */}
+      <path transform="translate(125.5,166.5) scale(0.48)" d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3Z" fill="var(--gold-text)" />
 
       {/* THE FUNK ZONE plate */}
       <g transform="translate(268,158) rotate(-7)">

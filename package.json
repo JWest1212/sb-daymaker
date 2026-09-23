@@ -24,6 +24,18 @@
     "dedupe:venue-shadow": "DEDUPE_VENUE_SHADOW=1 tsx ingest/run.ts",
     "dedupe:adjudicate-shadow": "DEDUPE_ADJUDICATE_SHADOW=1 tsx ingest/run.ts",
     "event-sources:backfill": "EVENT_SOURCES_BACKFILL=1 tsx ingest/run.ts",
+    "retire:dryrun": "RETIRE_DRYRUN=1 tsx ingest/run.ts",
+    "retire:apply": "RETIRE_APPLY=1 tsx ingest/run.ts",
+    "civic:dryrun": "CIVIC_DRYRUN=1 tsx ingest/run.ts",
+    "civic:backfill": "CIVIC_BACKFILL=1 tsx ingest/run.ts",
+    "hero-eligible:dryrun": "HERO_ELIGIBLE_DRYRUN=1 tsx ingest/run.ts",
+    "hero-eligible:apply": "HERO_ELIGIBLE_APPLY=1 tsx ingest/run.ts",
+    "recat-meals:dryrun": "RECAT_MEALS_DRYRUN=1 tsx ingest/run.ts",
+    "recat-meals:apply": "RECAT_MEALS_APPLY=1 tsx ingest/run.ts",
+    "areas:dryrun": "AREAS_DRYRUN=1 tsx ingest/run.ts",
+    "areas:backfill": "AREAS_BACKFILL=1 tsx ingest/run.ts",
+    "titles:dryrun": "TITLES_DRYRUN=1 tsx ingest/run.ts",
+    "titles:backfill": "TITLES_BACKFILL=1 tsx ingest/run.ts",
     "extract:sample": "node --env-file=.env.local --import tsx ingest/extractSample.ts"
   },
   "dependencies": {

@@ -25,7 +25,7 @@ import { join } from 'node:path';
 
 // Venues: 0.72 keeps true dups (SBMA is 1.00) while dropping common-suffix false
 // positives ("Fox Wine Co." vs "Pali Wine Co.", "Museum of Art" vs "…Natural
-// History", "M Special Brewing" vs "Island Brewing" all land ~0.6–0.69). A
+// History", "M Special Brewing" vs "Island Brewing" all land ~0.6-0.69). A
 // same-place_id pair is flagged regardless of title.
 const PLACE_TITLE_SIM = 0.72;
 const EVENT_TITLE_SIM = 0.8; // events: high bar, plus same-day gate below

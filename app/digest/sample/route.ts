@@ -11,13 +11,28 @@ import { cascade } from "@/lib/explore";
 import { renderEditionEmailHtml, type RenderPick, type RenderableEdition } from "@/lib/edition/render";
 import { eventCardWhen } from "@/lib/format/eventTime";
 import { absoluteUrl, thingPath } from "@/lib/seo/site";
-import { ZONE_LABEL } from "@/lib/zones";
+import { areaLabelForThing } from "@/lib/areas";
 
 export const revalidate = 600;
 
+/** R1 W4.1/W5.8. One area label, the same string Explore, Plan, Saved and the
+ *  detail page use. It used to fall back to the raw enum value, so the digest
+ *  could say "mission_canyon" where the site said "Mission and Riviera". */
 function areaOf(t: Thing): string | null {
-  if (t.nearby_zone) return ZONE_LABEL[t.nearby_zone] ?? null;
-  return t.neighborhood;
+  return areaLabelForThing(t);
+}
+
+/** R1 W5.8. The coming send window: from now to the end of Sunday, in SB time.
+ *  The sample is proof of what an issue looks like, so it has to be dated for
+ *  the issue a visitor would actually receive next, not for whatever happens to
+ *  sit at the top of the pool. */
+function sendWindow(now: Date): { fromMs: number; toMs: number } {
+  const fmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", weekday: "short" });
+  const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(fmt.format(now));
+  const daysToSunday = dow === 0 ? 0 : 7 - dow;
+  const end = new Date(now.getTime() + (daysToSunday + 1) * 86_400_000);
+  end.setHours(0, 0, 0, 0);
+  return { fromMs: now.getTime(), toMs: end.getTime() };
 }
 
 function weekdayOf(iso: string | null): string | null {
@@ -50,7 +65,13 @@ export async function GET() {
   }
 
   const ordered = cascade(things);
-  const events = ordered.filter((t) => t.starts_at);
+  const { fromMs, toMs } = sendWindow(new Date());
+  // R1 W5.8. Only events inside the coming send window, so every link in the
+  // sample is something the reader could still go to. Falls back to any upcoming
+  // event if the window is thin, rather than rendering an empty edition.
+  const upcoming = ordered.filter((t) => t.starts_at && new Date(t.starts_at).getTime() >= fromMs);
+  const inWindow = upcoming.filter((t) => new Date(t.starts_at!).getTime() <= toMs);
+  const events = inWindow.length >= 4 ? inWindow : upcoming;
   const places = ordered.filter((t) => !t.starts_at);
 
   const hero = events[0] ?? ordered[0];
@@ -95,7 +116,18 @@ export async function GET() {
     unsubscribeUrl: null,
   };
 
-  const html = renderEditionEmailHtml(edition);
+  // R1 W5.8. A description and a title suffix, so a shared link to the sample
+  // previews as something rather than as an untitled document.
+  const html = renderEditionEmailHtml(edition)
+    .replace(
+      /<title>[^<]*<\/title>/i,
+      // R1 W7.8 (CON-002). Canonical too, and og values of its own.
+      `<title>Sample edition &middot; SB Daymaker</title><meta name="description" content="${edition.preheader}">` +
+        `<link rel="canonical" href="${absoluteUrl("/digest/sample")}">` +
+        `<meta property="og:title" content="A sample SB Daymaker weekend edition">` +
+        `<meta property="og:description" content="${edition.preheader}">` +
+        `<meta property="og:site_name" content="SB Daymaker">`,
+    );
   return new NextResponse(html, {
     headers: { "content-type": "text/html; charset=utf-8" },
   });

@@ -102,7 +102,7 @@ export function CoverageView({
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
     }).then((r) => r.json()).catch(() => null);
     setRestockRow(null);
-    if (res?.dispatched) showToast(`Running now: ${label}, fresh candidates land in the queue in ~10–20 min.`);
+    if (res?.dispatched) showToast(`Running now: ${label}, fresh candidates land in the queue in ~10-20 min.`);
     else if (res?.queued && res?.error) showToast(`Run-now dispatch failed (${res.error}). Queued for tonight instead.`);
     else if (res?.ok) showToast(`Queued restock: ${label}`);
     else showToast(res?.error ? `Restock failed: ${res.error}` : "Restock failed");
@@ -282,7 +282,7 @@ export function CoverageView({
             <label className={`radio${restockWhen === "now" ? " sel" : ""}`}>
               <input type="radio" name="rswhen" checked={restockWhen === "now"} onChange={() => setRestockWhen("now")} />
               <span><span className="rt">Run now</span><br />
-                <span className="rd">Dispatches the ingest worker on demand (~10–20 min) via a fresh pass across all sources. Real API spend, use it for urgent gaps; the nightly queue is free.</span></span>
+                <span className="rd">Dispatches the ingest worker on demand (~10-20 min) via a fresh pass across all sources. Real API spend, use it for urgent gaps; the nightly queue is free.</span></span>
             </label>
             <div className="gatebox">Everything found passes the same gate as the nightly run, deterministic start-time required, dedupe against the DB, category + zone checks, and arrives in your <b>review queue</b>. Nothing goes live without your approval.</div>
           </>

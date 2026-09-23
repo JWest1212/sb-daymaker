@@ -12,7 +12,7 @@ export default function BrandHeader() {
         <Link
           href="/"
           className="sbd-brandhdr__logo"
-          aria-label="SB Daymaker, Explore"
+          aria-label="Santa Barbara Daymaker, Explore"
         >
           <span className="sbd-brandhdr__mark" aria-hidden="true">
             <span className="sbd-brandhdr__glint" />

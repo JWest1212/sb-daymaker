@@ -1,8 +1,10 @@
 "use client";
 
+import { SBIcon } from "@/components/ui/SBIcon";
+
 import { useState } from "react";
 import { BottomSheet } from "@/components/ui";
-import { ZONES, nearestZone, type Zone } from "@/lib/zones";
+import { AREAS, ANYWHERE_LABEL, nearestArea, type AreaKey } from "@/lib/areas";
 
 export function NearMeSheet({
   open,
@@ -11,9 +13,9 @@ export function NearMeSheet({
   onSelect,
 }: {
   open: boolean;
-  current: Zone | null;
+  current: AreaKey | null;
   onClose: () => void;
-  onSelect: (zone: Zone | null) => void;
+  onSelect: (zone: AreaKey | null) => void;
 }) {
   const [status, setStatus] = useState<"idle" | "locating" | "denied">("idle");
 
@@ -25,12 +27,14 @@ export function NearMeSheet({
     setStatus("locating");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const zone = nearestZone(pos.coords.latitude, pos.coords.longitude);
+        const zone = nearestArea(pos.coords.latitude, pos.coords.longitude);
         setStatus("idle");
         onSelect(zone);
       },
-      () => setStatus("denied"), // denied → fall back to the manual picker below
-      { timeout: 8000 },
+      () => setStatus("denied"), // denied or timed out, fall back to the list below
+      // R1 W4.3 (SAV-007): 6 seconds, then the manual list. A spinner that
+      // never resolves is worse than an honest fallback.
+      { timeout: 6000 },
     );
   };
 
@@ -39,7 +43,7 @@ export function NearMeSheet({
       open={open}
       onClose={onClose}
       kicker="Near Me"
-      title="Sort by what's closest"
+      title="Which area are you in?"
     >
       <button
         type="button"
@@ -47,26 +51,26 @@ export function NearMeSheet({
         onClick={useMyLocation}
         disabled={status === "locating"}
       >
-        📍 {status === "locating" ? "Finding you…" : "Use my location"}
+        <SBIcon name="pin" size={16} /> {status === "locating" ? "Finding you…" : "Use my location"}
       </button>
 
       {status === "denied" ? (
         <p className="sbd-near-note">
-          No location, no problem. Pick a neighborhood instead.
+          Couldn&apos;t get your location. Pick an area instead.
         </p>
       ) : (
-        <p className="sbd-near-note">Or choose a neighborhood:</p>
+        <p className="sbd-near-note">Or choose an area:</p>
       )}
 
       <div className="sbd-near-list">
-        {ZONES.map((z) => (
+        {AREAS.map((a) => (
           <button
-            key={z.zone}
+            key={a.key}
             type="button"
-            className={`sbd-near-opt${current === z.zone ? " is-active" : ""}`}
-            onClick={() => onSelect(z.zone)}
+            className={`sbd-near-opt${current === a.key ? " is-active" : ""}`}
+            onClick={() => onSelect(a.key)}
           >
-            {z.label}
+            {a.label}
           </button>
         ))}
         <button
@@ -74,7 +78,7 @@ export function NearMeSheet({
           className={`sbd-near-opt${current === null ? " is-active" : ""}`}
           onClick={() => onSelect(null)}
         >
-          Anywhere in SB
+          {ANYWHERE_LABEL}
         </button>
       </div>
     </BottomSheet>

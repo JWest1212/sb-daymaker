@@ -15,8 +15,23 @@ export function trackEvent(name: "save_add", props: { thingId: string } | { coun
 export function trackEvent(name: "save_been", props: { thingId: string }): void;
 export function trackEvent(name: "share_create", props: { kind: "list" | "plan" | "single" | "guide"; count: number }): void;
 export function trackEvent(name: "share_open", props: { kind: "list" | "plan"; count: number }): void;
-export function trackEvent(name: "lens_select", props: { tag: string }): void;
-export function trackEvent(name: "plan_built", props: { stops: number }): void;
+/**
+ * R1 W6.10. One event for all three lenses: Occasion, Place and Activity. It
+ * used to fire for Occasion only, so two thirds of the filtering people actually
+ * do was invisible.
+ *
+ * `dimension` is here because the key alone is ambiguous: "nightlife" is both an
+ * Occasion and an Activity, and without the dimension those two taps are the
+ * same row in the report. It is a three-value enum, not content, so it stays
+ * inside the props policy above.
+ */
+export function trackEvent(
+  name: "lens_select",
+  props: { tag: string; dimension: "vibe" | "place" | "activity" },
+): void;
+/** R1 W3.7 adds `notes`. Integers only, never free text: a note's wording can
+ *  contain a listing title, and no event carries content. */
+export function trackEvent(name: "plan_built", props: { stops: number; notes: number }): void;
 export function trackEvent(name: "subscribe_submit", props: { status: "pending" | "already" }): void;
 export function trackEvent(name: string, props: Record<string, string | number>): void {
   try {

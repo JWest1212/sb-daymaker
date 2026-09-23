@@ -16,7 +16,7 @@ describe("whenString", () => {
   });
   it("monthly recurring cadence", () => {
     expect(whenString(2, null, [{ day_of_week: 4, start_time: "17:00", end_time: "20:00", frequency: "monthly", label: null }]))
-      .toBe("1st Thu/month · 5:00p–8:00p");
+      .toBe("1st Thu/month · 5:00p to 8:00p");
   });
   it("uses an explicit schedule label when present", () => {
     expect(whenString(2, null, [{ day_of_week: 3, start_time: "18:00", end_time: "19:00", frequency: "weekly", label: "Wednesday Trivia Night" }]))

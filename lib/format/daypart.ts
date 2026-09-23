@@ -7,7 +7,7 @@
 // and the enrich generator guard (ingest/enrich.ts), so the scan and the
 // generator can never disagree about what "evening" means.
 //
-// Boundaries (GATE_0 G0.2): morning <12, afternoon 12–16:59, evening 17–20:59,
+// Boundaries (GATE_0 G0.2): morning <12, afternoon 12-16:59, evening 17-20:59,
 // late ≥21.
 
 export type Daypart = 'morning' | 'afternoon' | 'evening' | 'late';
@@ -18,7 +18,7 @@ const SB_HOUR = new Intl.DateTimeFormat('en-US', {
   hour12: false,
 });
 
-/** The SB-local hour (0–23) of an instant, regardless of the machine's timezone. */
+/** The SB-local hour (0-23) of an instant, regardless of the machine's timezone. */
 export function sbHour(iso: string): number {
   const parts = SB_HOUR.formatToParts(new Date(iso));
   const h = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');

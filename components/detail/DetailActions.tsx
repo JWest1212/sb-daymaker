@@ -9,21 +9,29 @@
 
 import { useState } from "react";
 import { useSaves } from "@/components/saves/SavesProvider";
-import { shareUrl } from "@/components/saved/share";
+import { useShareLink } from "@/components/saved/useShareLink";
 import { SBIcon } from "@/components/ui/SBIcon";
+import { rememberSaveTitles } from "@/lib/saveTitles";
 
 export function DetailActions({
   id,
   title,
+  path,
   directionsHref,
 }: {
   id: string;
   title: string;
+  /** R1 W6.7 (MAP-001). The page's own canonical path, so Share hands out the
+   *  same readable URL the address bar shows. It used to rebuild the URL from
+   *  the id, which meant sharing a slug page still sent a UUID. */
+  path: string;
   directionsHref: string | null;
 }) {
   const { isSaved, toggle } = useSaves();
   const [pop, setPop] = useState(false);
   const saved = isSaved(id);
+  // R1 W1.5. Previously fire-and-forget, so a dismissed share left nothing.
+  const { share, sheet } = useShareLink();
 
   return (
     <div className="sbd-detail__actionrow">
@@ -33,6 +41,7 @@ export function DetailActions({
         aria-label={saved ? `Saved ${title}` : `Save ${title}`}
         aria-pressed={saved}
         onClick={() => {
+          if (!saved) rememberSaveTitles([{ id, title }]); // R1 W7.4
           toggle(id);
           setPop(true);
         }}
@@ -53,8 +62,8 @@ export function DetailActions({
         className="sbd-detailact"
         aria-label={`Share ${title}`}
         onClick={() => {
-          const url = `${window.location.origin}/thing/${id}`;
-          shareUrl(url, title);
+          const url = `${window.location.origin}${path}`;
+          void share(url, title);
         }}
       >
         <SBIcon name="share" size={20} strokeWidth={2} />
@@ -73,6 +82,7 @@ export function DetailActions({
           <span>Directions</span>
         </a>
       ) : null}
+      {sheet}
     </div>
   );
 }

@@ -86,6 +86,7 @@ export function PickCard({
   tone = "gold",
   href,
   photo,
+  photoAlt,
 }: {
   id: string;
   title: string;
@@ -103,6 +104,9 @@ export function PickCard({
   tone?: MediaTone;
   href?: string;
   photo?: string;
+  /** R1 W5.7. Describes the PHOTOGRAPH, which on a card is the only picture of
+   *  the thing being recommended and is therefore not decorative. */
+  photoAlt?: string;
 }) {
   const [broken, markBroken] = usePhotoFallback(photo);
   return (
@@ -115,7 +119,7 @@ export function PickCard({
       ) : null}
       <div className={`sbd-pick__media sbd-media--${tone}`}>
         {photo && !broken ? (
-          <img className="sbd-card__img" src={photo} alt="" loading="lazy" onError={markBroken} />
+          <img className="sbd-card__img" src={photo} alt={photoAlt ?? ""} loading="lazy" fetchPriority="low" decoding="async" onError={markBroken} />
         ) : null}
         {occasionKey ? (
           <span className="sbd-pick__tag">
@@ -129,10 +133,13 @@ export function PickCard({
         ) : null}
       </div>
       {/* CardActions sits outside media so it isn't clipped by overflow:hidden */}
+      {/* R1 W6.7 (MAP-001). Share the card's own href, which is already the
+          slug. Rebuilding the URL from the id meant every share off the hero
+          carried a UUID even though the card itself linked to the slug. */}
       <CardActions
         id={id}
         title={title}
-        url={`/thing/${id}`}
+        url={href ?? `/thing/${id}`}
         onImage
       />
       <div className="sbd-pick__body">
@@ -176,6 +183,8 @@ export function ListCard({
   tone = "sage",
   href,
   photo,
+  photoAlt,
+  dateCount,
   visual,
 }: {
   id: string;
@@ -186,6 +195,13 @@ export function ListCard({
   tone?: MediaTone; // kept for API compat; occasion color takes precedence in fallback
   href?: string;
   photo?: string;
+  /** R1 W5.7. Describes the PHOTOGRAPH. The generated motif and big-type
+   *  fallbacks below stay alt="" because they genuinely are decorative. */
+  photoAlt?: string;
+  /** R1 W6.4 (D6). How many dates this series has in the current horizon. Shown
+   *  as a small "N dates" affordance, so a collapsed card says what it stands
+   *  for rather than silently hiding sixteen other Sundays. */
+  dateCount?: number;
   visual?: CardVisual | null;
 }) {
   const occ = occasionKey ? OCCASION_BY_KEY[occasionKey] : null;
@@ -212,8 +228,13 @@ export function ListCard({
           <img
             className="sbd-card__img"
             src={photo}
-            alt=""
+            alt={photoAlt ?? ""}
             loading="lazy"
+            /* R1 W6.9 (TP-B-05). A card photograph is never the thing the
+               visitor is waiting for; the hero is. Low priority keeps these off
+               the connection while the hero is still arriving. */
+            fetchPriority="low"
+            decoding="async"
             onError={markBroken}
           />
         )}
@@ -229,7 +250,7 @@ export function ListCard({
         {/* Centered icon for the last-resort gradient fallback only */}
         {showGradient && (
           <span className="sbd-listcard__fallmark" aria-hidden="true">
-            {occ ? occ.icon : <SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
+            {<SBIcon name="sparkle" size={20} stroke="rgba(255,255,255,0.85)" />}
           </span>
         )}
         {/* Dark top gradient, pill legibility on any photo, motif, or gradient bg */}
@@ -250,7 +271,13 @@ export function ListCard({
         <p className="sbd-listcard__blurb">{blurb}</p>
         <div className="sbd-listcard__meta">
           {when ? <DateEyebrow>{when}</DateEyebrow> : null}
-          <CardActions id={id} title={title} url={`/thing/${id}`} onImage={false} />
+          {/* R1 W6.4 (D6). A collapsed series says how many dates it stands for.
+              Not a link of its own: the whole card already goes to the detail
+              page, which lists the dates. */}
+          {dateCount && dateCount > 1 ? (
+            <span className="sbd-listcard__dates">{dateCount} dates</span>
+          ) : null}
+          <CardActions id={id} title={title} url={href ?? `/thing/${id}`} onImage={false} />
         </div>
       </div>
     </article>

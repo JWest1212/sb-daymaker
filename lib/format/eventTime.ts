@@ -17,6 +17,7 @@ const CLOCK = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "numeric", 
 const WEEKDAY_SHORT = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" });
 const WEEKDAY_LONG = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "long" });
 const MONTH_DAY = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "short", day: "numeric" });
+const MONTH_DAY_YEAR = new Intl.DateTimeFormat("en-US", { timeZone: TZ, month: "long", day: "numeric", year: "numeric" });
 
 function only(fmt: Intl.DateTimeFormat, iso: string): string {
   // Single-field formatters render exactly one meaningful part; join non-literals.
@@ -42,8 +43,45 @@ export function eventCardWhen(iso: string): string {
   return `${only(WEEKDAY_SHORT, iso)} ${eventClock(iso)}`;
 }
 
+/** R1 W6.6 (EXP-009). Date alone, e.g. "Sep 26". Search rows use it in place of
+ *  the word "Event", because "All Day Happy Hour" appearing once as an event and
+ *  once as a venue read to the auditor as the same row twice. Labeling the event
+ *  row with its date says what the two rows actually differ by. */
+export function eventShortDate(iso: string): string {
+  return only(MONTH_DAY, iso);
+}
+
 /** Detail token: full weekday + date + exact clock, e.g. "Friday, Aug 1, 8:30 PM".
  *  Shares eventClock() with the card, so the time portion is byte-identical. */
 export function eventDetailWhen(iso: string): string {
   return `${only(WEEKDAY_LONG, iso)}, ${only(MONTH_DAY, iso)}, ${eventClock(iso)}`;
+}
+
+/** R1 W1.1 / W2.2. Full date WITH the year, e.g. "Saturday, June 27, 2026".
+ *  Used wherever a date is being called out as already past (the Saved list's
+ *  "Already happened" line, the archived detail page's banner). A past date
+ *  without a year is the ambiguity DET-001 is about, so this formatter always
+ *  prints one. Assembled from parts for the same server/client stability reason
+ *  as the formatters above. */
+export function eventDateWithYear(iso: string): string {
+  const d = new Date(iso);
+  const md = MONTH_DAY_YEAR.formatToParts(d);
+  const val = (type: Intl.DateTimeFormatPartTypes) => md.find((p) => p.type === type)?.value ?? "";
+  return `${only(WEEKDAY_LONG, iso)}, ${val("month")} ${val("day")}, ${val("year")}`;
+}
+
+/** R1 W2.2 (DET-001). The detail page's "When" line, with the year added
+ *  whenever the date is not in the current calendar month. A bare "Saturday,
+ *  Jun 27" on a page for something that happened last year reads as upcoming;
+ *  the year is what makes a past date unambiguous. Same string as
+ *  eventDetailWhen() for anything in the current month, so the common case is
+ *  unchanged. */
+export function eventDetailWhenWithYear(iso: string, now: Date = new Date()): string {
+  const ym = (d: Date) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit" }).format(d);
+  const when = new Date(iso);
+  if (ym(when) === ym(now)) return eventDetailWhen(iso);
+  const parts = MONTH_DAY_YEAR.formatToParts(when);
+  const val = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${only(WEEKDAY_LONG, iso)}, ${only(MONTH_DAY, iso)}, ${val("year")}, ${eventClock(iso)}`;
 }

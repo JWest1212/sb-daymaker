@@ -1,5 +1,7 @@
 "use client";
 
+import { exploreQuery } from "@/lib/exploreParams";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SearchButton } from "./SearchButton";
@@ -22,7 +24,14 @@ export function HeaderSearch() {
   const router = useRouter();
 
   const handleTagSelect = (filter: NonNullable<SearchHit["filter"]>) => {
-    router.push(`/?${filter.dimension}=${filter.key}`);
+    // R1 W8.1 (review of W6.1). The params Explore reads: `area`, `occasion`,
+    // `activity`. This pushed ?place= and ?vibe=, which W6.1's parser ignores,
+    // so tapping an Area or Occasion result in search did nothing.
+    const state = { horizon: "today" as const, area: null, occasion: null, activity: null };
+    if (filter.dimension === "place") Object.assign(state, { area: filter.key });
+    else if (filter.dimension === "vibe") Object.assign(state, { occasion: filter.key });
+    else Object.assign(state, { activity: filter.key });
+    router.push(`/${exploreQuery(state)}`);
   };
 
   const openPanel = () => {

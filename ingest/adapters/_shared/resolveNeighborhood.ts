@@ -61,18 +61,29 @@ const SOURCE_KEY_NEIGHBORHOOD: Partial<Record<string, Neighborhood>> = {
 
 // §4.1 step 5, street/address code table. State St is block-number-sensitive
 // (400-1300 -> downtown, below 400 -> funk_zone) so it's handled separately.
+// R1 W4.4: street TYPES are matched in both their abbreviated and spelled-out
+// forms. "Cabrillo Boulevard" used to miss `/cabrillo blvd/` and fall through to
+// a bounding box, which put the Sunday Arts and Crafts Show in the Funk Zone
+// instead of on the Waterfront it actually runs along.
+const AVE = '(?:ave|avenue)';
+const BLVD = '(?:blvd|boulevard)';
+const DR = '(?:dr|drive)';
+const RD = '(?:rd|road)';
+const LN = '(?:ln|lane)';
+const ST = '(?:st|street)';
+
 const STREET_NEIGHBORHOOD: Array<[RegExp, Neighborhood]> = [
-  [/coast village/i, 'montecito'],
+  [new RegExp(`coast village(?:\\s+${RD})?`, 'i'), 'montecito'],
   [/mission canyon/i, 'mission_canyon'],
-  [/la cumbre|hope ave/i, 'upper_state'],
-  [/hollister ave|calle real/i, 'goleta'],
-  [/carpinteria ave|linden ave/i, 'carpinteria'],
-  [/cabrillo blvd|harbor way/i, 'waterfront'],
-  [/cliff dr|mesa ln/i, 'mesa'],
+  [new RegExp(`la cumbre|hope\\s+${AVE}`, 'i'), 'upper_state'],
+  [new RegExp(`hollister\\s+${AVE}|calle real`, 'i'), 'goleta'],
+  [new RegExp(`carpinteria\\s+${AVE}|linden\\s+${AVE}`, 'i'), 'carpinteria'],
+  [new RegExp(`cabrillo\\s+${BLVD}|harbor way|stearns wharf`, 'i'), 'waterfront'],
+  [new RegExp(`cliff\\s+${DR}|mesa\\s+${LN}|shoreline\\s+${DR}`, 'i'), 'mesa'],
 ];
 
 function streetMatch(address: string): Neighborhood | null {
-  const stateMatch = address.match(/(\d+)\s+state\s+st/i);
+  const stateMatch = address.match(new RegExp(`(\\d+)\\s+state\\s+${ST}`, 'i'));
   if (stateMatch) {
     const num = parseInt(stateMatch[1], 10);
     if (num >= 400 && num <= 1300) return 'downtown';

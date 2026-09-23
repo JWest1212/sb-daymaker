@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PublicFrame } from "@/components/public/PublicFrame";
 
 export const metadata: Metadata = {
   title: "Offline · SB Daymaker",
@@ -7,9 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function OfflinePage() {
+  // R1 W7.4. Same frame as the recipient pages: wordmark, landmarks, way in.
   return (
-    <main className="sbd-public">
-      <div className="sbd-public__inner">
+    <PublicFrame explainer="SB Daymaker, what's worth doing in Santa Barbara." wayIn={{ href: "/saved", label: "Open Saved" }}>
         <p className="sbd-public__eyebrow">No connection</p>
         <h1 className="sbd-public__title">You&rsquo;re offline</h1>
         <p className="sbd-public__desc">
@@ -20,7 +21,6 @@ export default function OfflinePage() {
         <Link href="/" className="sbd-public__link">
           Try again →
         </Link>
-      </div>
-    </main>
+    </PublicFrame>
   );
 }
