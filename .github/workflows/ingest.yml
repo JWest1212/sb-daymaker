@@ -59,6 +59,10 @@ on:
         description: 'One-off: seed the venues table from marqueeVenues.ts + Tier-1 address clusters (VENUE_SEED=1) — Card Imagery Phase 2 §5.2'
         type: boolean
         default: false
+      publish_gate_now:
+        description: 'Publish every waiting green-chip item now (CONFIDENCE_GATE_APPLY=1), the same auto-publish gate the nightly runs. Skips the full ingest.'
+        type: boolean
+        default: false
       directive_id:
         description: 'Restock Run-now (C2b): process only this restock_directives.id — full fresh pass, finalizes just that directive, skips the nightly digest.'
         type: string
@@ -79,8 +83,17 @@ jobs:
       # The drafter schedule replaces the regular ingest run that night (both would
       # be redundant hours apart) — every other trigger (nightly schedule, manual
       # dispatch) still runs the full ingest as before.
+      - name: Publish waiting green-chip items now
+        if: inputs.publish_gate_now == true
+        run: npx tsx ingest/run.ts
+        env:
+          CONFIDENCE_GATE_APPLY: '1'
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
       - name: Nightly ingest
-        if: github.event.schedule != '0 13 * * 3,6'
+        if: github.event.schedule != '0 13 * * 3,6' && inputs.publish_gate_now != true
         run: npx tsx ingest/run.ts
         env:
           ENRICH_BACKFILL: ${{ inputs.enrich_backfill == true && '1' || '' }}

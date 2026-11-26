@@ -4,6 +4,8 @@
 // No server-only imports here, client components import these formatters, so
 // keep next/headers + service-role code in lib/reviewServer.ts.
 
+import { isGreenChip } from "../ingest/publishGate";
+
 export type ChipKind = "green" | "amber" | "evergreen";
 
 /** The valid neighborhood + occasion-tag vocabularies (for the inline editor). */
@@ -222,7 +224,8 @@ interface Sched {
 /** Trust chip from what's actually stored (tier + starts_at). */
 export function chipFor(tier: number, starts_at: string | null): ChipKind {
   if (tier === 3) return "evergreen";
-  return starts_at ? "green" : "amber";
+  // Same rule the nightly publish gate auto-publishes on (ingest/publishGate.ts).
+  return isGreenChip(tier, starts_at) ? "green" : "amber";
 }
 
 export function chipLabel(chip: ChipKind): string {

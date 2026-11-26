@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR } from './publishGate';
+import { classifyBand, meetsGreenChipRule, isGreenChip, AUTO_PUBLISH_GATE, HOLD_FLOOR, GREEN_CHIP_AUTO_PUBLISH } from './publishGate';
+import { chipFor } from '../lib/review';
 
 describe('classifyBand', () => {
   it('auto-publishes only when confidence, source authority, AND structured lane all clear the bar', () => {
@@ -29,5 +30,34 @@ describe('classifyBand', () => {
       sourceAuthority: AUTO_PUBLISH_GATE.minSourceAuthority,
       lane: 'structured',
     })).toBe('auto_publish');
+  });
+});
+
+describe('green-chip auto-publish (2026-11-26)', () => {
+  const low = { confidence: 0.2, sourceAuthority: 0.5, lane: 'generic' };
+
+  it('auto-publishes a dated event with a start time, whatever its confidence or source trust', () => {
+    expect(classifyBand({ ...low, tier: 1, startsAt: '2026-12-05T20:00:00-08:00', source: 'https://www.santabarbaraca.gov/x' })).toBe('auto_publish');
+  });
+  it('auto-publishes a recurring thing that carries a start time', () => {
+    expect(classifyBand({ ...low, confidence: 0.6, tier: 2, startsAt: '2026-12-02T18:00:00-08:00', source: 'https://example.com' })).toBe('auto_publish');
+  });
+  it('leaves amber (no start time) to the confidence rule', () => {
+    expect(classifyBand({ ...low, confidence: 0.6, tier: 2, startsAt: null, source: 'https://example.com' })).toBe('review');
+    expect(classifyBand({ ...low, tier: 2, startsAt: null, source: 'https://example.com' })).toBe('hold');
+  });
+  it('leaves evergreen to the confidence rule, even with a start value', () => {
+    expect(classifyBand({ ...low, confidence: 0.6, tier: 3, startsAt: '2026-12-05T20:00:00-08:00', source: 'https://example.com' })).toBe('review');
+  });
+  it('never auto-publishes a public submission on the green-chip rule', () => {
+    const sub = { ...low, confidence: 0.6, tier: 1, startsAt: '2026-12-05T20:00:00-08:00', source: 'submission:abc' };
+    expect(meetsGreenChipRule(sub)).toBe(false);
+    expect(classifyBand(sub)).toBe('review');
+  });
+  it('matches the cockpit chip exactly', () => {
+    expect(isGreenChip(1, '2026-12-05T20:00:00-08:00')).toBe(chipFor(1, '2026-12-05T20:00:00-08:00') === 'green');
+    expect(isGreenChip(2, null)).toBe(false);
+    expect(isGreenChip(3, '2026-12-05T20:00:00-08:00')).toBe(false);
+    expect(GREEN_CHIP_AUTO_PUBLISH.enabled).toBe(true);
   });
 });
