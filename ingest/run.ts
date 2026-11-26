@@ -38,7 +38,7 @@ import { retirePastEvents, formatRetireReport } from './retire';
 import { backfillCivic, formatCivicReport } from './civicBackfill';
 import { applyHeroEligibility, formatEligibilityReport } from './heroEligibility';
 import { computeDataConfidence, type SourceMeta, type ThingForConfidence } from './confidence';
-import { classifyBand, AUTO_PUBLISH_GATE, HOLD_FLOOR, type PublishBand } from './publishGate';
+import { classifyBand, meetsGreenChipRule, AUTO_PUBLISH_GATE, HOLD_FLOOR, type GateInput, type PublishBand } from './publishGate';
 import { computeEventKey, canonicalVenue, type VenueDictEntry as EventKeyVenueDictEntry } from './eventKey';
 import { adjudicatePairs, applyAmbiguousAdjudication, type AdjudicationPair } from './dedupeAdjudicate';
 import type { Candidate, RawCandidate, Tod, PhotoSource } from '../packages/shared/types';
@@ -1114,7 +1114,7 @@ async function confidenceGateShadowReport() {
 
   const { data: rows, error } = await sb
     .from('things')
-    .select('id, title, data_confidence, source')
+    .select('id, title, data_confidence, source, happening_tier, starts_at')
     .eq('status', 'needs_review');
   if (error) throw new Error(`confidence-gate-shadow things read: ${error.message}`);
 
@@ -1123,7 +1123,7 @@ async function confidenceGateShadowReport() {
     const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
     const meta = sourceByKey.get(sourceKey);
     const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
-    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+    const band = classifyBand(gateInputFor(r, confidence, meta));
     return { id: r.id as string, title: r.title as string, confidence, sourceKey, band };
   });
 
@@ -1134,7 +1134,8 @@ async function confidenceGateShadowReport() {
   console.log(`  auto_publish (would skip your queue) : ${counts.auto_publish}`);
   console.log(`  review       (stays in your queue)    : ${counts.review}`);
   console.log(`  hold         (would not show at all)  : ${counts.hold}`);
-  console.log(`\n  auto-publish requires: confidence >= ${AUTO_PUBLISH_GATE.minConfidence}, source authority >= ${AUTO_PUBLISH_GATE.minSourceAuthority}, structured lane`);
+  console.log(`\n  auto-publish: every green chip (tier 1/2 with a start time, not a public submission), or`);
+  console.log(`  auto-publish requires: confidence >= ${AUTO_PUBLISH_GATE.minConfidence}, source authority >= ${AUTO_PUBLISH_GATE.minSourceAuthority}, structured lane`);
   console.log(`  hold requires: confidence < ${HOLD_FLOOR}\n`);
 
   const autoPublishSample = labeled.filter((l) => l.band === 'auto_publish').sort((a, b) => b.confidence - a.confidence);
@@ -1155,6 +1156,23 @@ async function confidenceGateShadowReport() {
 
 interface GateApplyResult { published: number; held: number; reviewed: number }
 
+/** The gate's input for one things row: confidence + source trust, plus the
+ *  tier/start/source the green-chip rule reads (ingest/publishGate.ts). */
+function gateInputFor(
+  r: { source?: unknown; happening_tier?: unknown; starts_at?: unknown },
+  confidence: number,
+  meta: SourceMeta | undefined,
+): GateInput {
+  return {
+    confidence,
+    sourceAuthority: meta?.authority,
+    lane: meta?.lane,
+    tier: r.happening_tier == null ? undefined : Number(r.happening_tier),
+    startsAt: (r.starts_at as string | null) ?? null,
+    source: (r.source as string | null) ?? null,
+  };
+}
+
 /** Data Arch Redesign 24 Phase 3, the ONLY place the gate drives a real
  *  status write. Reads today's needs_review queue, classifies each with the
  *  same classifyBand() Phase 2 previewed, and:
@@ -1171,7 +1189,7 @@ async function applyPublishGate(sb: SupabaseClient): Promise<GateApplyResult> {
   const sourceByKey = await loadSourceMetaByKey(sb);
   const { data: rows, error } = await sb
     .from('things')
-    .select('id, data_confidence, source')
+    .select('id, data_confidence, source, happening_tier, starts_at')
     .eq('status', 'needs_review');
   if (error) throw new Error(`publish-gate read: ${error.message}`);
 
@@ -1182,7 +1200,8 @@ async function applyPublishGate(sb: SupabaseClient): Promise<GateApplyResult> {
     const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
     const meta = sourceByKey.get(sourceKey);
     const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
-    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+    const input = gateInputFor(r, confidence, meta);
+    const band = classifyBand(input);
 
     if (band === 'review') { reviewed++; continue; }
 
@@ -1196,7 +1215,10 @@ async function applyPublishGate(sb: SupabaseClient): Promise<GateApplyResult> {
       entity_type: 'thing', entity_id: r.id,
       action: band === 'auto_publish' ? 'auto_publish' : 'auto_hold',
       actor: 'rule',
-      payload: { data_confidence: confidence, source: sourceKey },
+      payload: {
+        data_confidence: confidence, source: sourceKey,
+        ...(band === 'auto_publish' ? { rule: meetsGreenChipRule(input) ? 'green_chip' : 'confidence' } : {}),
+      },
     });
     if (band === 'auto_publish') published++; else held++;
   }
@@ -1210,6 +1232,14 @@ async function runPublishGateOnce() {
   const sb = getDb();
   const result = await applyPublishGate(sb);
   console.log(`\n[publish-gate] published ${result.published} · held ${result.held} · left in review ${result.reviewed}\n`);
+  // Run on demand outside the nightly, so finish the publish the way the
+  // cockpit's approve route does: slugs + redirects, then refresh the site.
+  if (result.published) {
+    const { ensureSlugs } = await import('./slugs/backfill');
+    const s = await ensureSlugs(sb);
+    console.log(`[publish-gate] slugs things +${s.things} · redirects ${s.redirects}`);
+    await revalidatePublicSurfaces();
+  }
 }
 
 /** Data Arch Redesign 24 Phase 5, rescue: a held thing whose RESCORED
@@ -1226,7 +1256,7 @@ async function rescueHeldThings(sb: SupabaseClient): Promise<number> {
   const sourceByKey = await loadSourceMetaByKey(sb);
   const { data: rows, error } = await sb
     .from('things')
-    .select('id, data_confidence, source')
+    .select('id, data_confidence, source, happening_tier, starts_at')
     .eq('status', 'draft');
   if (error) throw new Error(`rescue read: ${error.message}`);
 
@@ -1235,7 +1265,7 @@ async function rescueHeldThings(sb: SupabaseClient): Promise<number> {
     const sourceKey = sourceKeyOf((r.source as string) ?? undefined);
     const meta = sourceByKey.get(sourceKey);
     const confidence = r.data_confidence == null ? 0 : Number(r.data_confidence);
-    const band = classifyBand({ confidence, sourceAuthority: meta?.authority, lane: meta?.lane });
+    const band = classifyBand(gateInputFor(r, confidence, meta));
     if (band === 'hold') continue; // still below floor, stays held, not deleted (spec 24 §5)
 
     const { error: upErr } = await sb.from('things').update({ status: 'needs_review' }).eq('id', r.id).eq('status', 'draft');
